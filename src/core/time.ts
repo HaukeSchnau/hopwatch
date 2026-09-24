@@ -98,8 +98,9 @@ export function formatWeekRange(weekStart: number): string {
   return `${formatDayMonth(weekStart)} – ${formatDayMonth(last)}`;
 }
 
-/** "5 min ago", "1:20 ago": for backdating choices. */
+/** "just now", "5 min ago", "1:20 ago": for backdating choices. */
 export function formatAgo(ms: number): string {
   const minutes = Math.round(ms / MINUTE);
+  if (minutes < 1) return 'just now';
   return minutes < 60 ? `${minutes} min ago` : `${formatDuration(ms)} ago`;
 }

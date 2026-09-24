@@ -30,17 +30,27 @@ export function usePickableContexts(): ResolvedContext[] {
 
 /**
  * The current time, re-rendering every `intervalMs` and when the app returns to the
- * foreground. Pass null for a value that only refreshes on foregrounding.
+ * foreground. Ticks are aligned to multiples of the interval, so a seconds display
+ * changes together with the wall clock. Pass null for a value that only refreshes on
+ * foregrounding.
  */
 export function useNow(intervalMs: number | null = 1000): number {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const tick = () => setNow(Date.now());
     const sub = AppState.addEventListener('change', (state) => state === 'active' && tick());
-    const timer = intervalMs === null ? null : setInterval(tick, intervalMs);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      if (intervalMs === null) return;
+      timer = setTimeout(() => {
+        tick();
+        schedule();
+      }, intervalMs - (Date.now() % intervalMs) + 5);
+    };
+    schedule();
     return () => {
       sub.remove();
-      if (timer) clearInterval(timer);
+      clearTimeout(timer);
     };
   }, [intervalMs]);
   return now;

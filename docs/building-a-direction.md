@@ -131,14 +131,17 @@ Expo changes every release.
 
 ## Verifying
 
-Metro runs as the `stint-metro` agent-service on port 3000 and serves every simulator.
+Each direction has its own Metro that ignores the other four directions (metro.config.js,
+`STINT_DIRECTION`), so your edits only rebuild your bundle: glass on port 3101, deck 3102,
+almanac 3103, orbit 3104, jelly 3105. Don't stop or restart them.
 
-1. Type check: `npx tsc --noEmit 2>&1 | grep '<id>'` (other directions may be mid-edit).
-2. Bundle check after each batch of edits. A syntax or import error breaks the bundle for
-   every simulator, so fix it immediately:
-   `curl -s -o /tmp/<id>-bundle.js -w '%{http_code}\n' 'http://127.0.0.1:3000/node_modules/expo-router/entry.bundle?platform=ios&dev=true&minify=false'`
-   must print 200.
-3. On your simulator, open `stintfive://<id>` to jump to your direction. Use the
-   agent-device CLI for taps and screenshots and look at every screen you build.
-   Check the running timer, switching, undo, backdating, timeline drag, gap fill, the
-   tree editor and both report modes, with sample data and with an empty database.
+1. Type check incrementally (a full run takes minutes on a busy server):
+   `npx tsc --noEmit --incremental --tsBuildInfoFile /tmp/<id>.tsbuildinfo 2>&1 | grep '<id>'`
+   (other directions may be mid-edit).
+2. Bundle check after each batch of edits: `scripts/sim.sh bundle <id>` must print 200;
+   otherwise it prints Metro's error.
+3. On your simulator, `scripts/sim.sh view UDID /<id> OUT.png` relaunches into a route
+   on your Metro and screenshots it; `scripts/sim.sh run` adds taps. Look at every screen
+   you build. Check the running timer, switching, undo, backdating, timeline drag, gap
+   fill, the tree editor and both report modes, with sample data and with an empty
+   database.

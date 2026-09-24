@@ -23,4 +23,5 @@ export * from './time';
 export type { EntryPatch, Gap } from './timeline';
 export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
 export { shareExport } from './export';
+export { requestNudgePermission } from './permissions';
 export { eraseAllData, loadSampleData } from './sample-loader';

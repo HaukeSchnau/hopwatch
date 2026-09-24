@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import * as db from './db';
 import { type DirectionId, isDirectionId } from './directions';
 import type { LinkAction } from './links';
+import { requestNudgePermission } from './permissions';
 import type { Context, ContextId, Entry, EntryId, Hue } from './model';
 import * as timeline from './timeline';
 import { offsetAt } from './time';
@@ -156,10 +157,11 @@ export const actions = {
     );
   },
 
-  updateEntry(id: EntryId, patch: timeline.EntryPatch) {
+  /** Edits an entry. `label` replaces the toast's generic "Entry updated". */
+  updateEntry(id: EntryId, patch: timeline.EntryPatch, label = 'Entry updated') {
     const rows = timeline.update(get().entries, id, patch, clock());
     const entry = rows.find((r) => r.id === id);
-    commitEntries(rows, { kind: 'edit', label: 'Entry updated', contextId: entry?.contextId ?? null });
+    commitEntries(rows, { kind: 'edit', label, contextId: entry?.contextId ?? null });
   },
 
   deleteEntry(id: EntryId) {
@@ -181,7 +183,10 @@ export const actions = {
 
   createContext(input: Omit<tree.NewContextInput, 'id'>): ContextId {
     const id = randomUUID() as ContextId;
+    const first = get().contexts.length === 0;
     commitContexts(tree.createContext(get().contexts, { ...input, id }, Date.now()));
+    // The end of onboarding is the calm moment to ask, before the first switch.
+    if (first) void requestNudgePermission();
     return id;
   },
 
