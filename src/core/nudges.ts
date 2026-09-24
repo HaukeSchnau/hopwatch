@@ -5,6 +5,7 @@
 import * as Notifications from 'expo-notifications';
 
 import * as db from './db';
+import { requestNudgePermission } from './permissions';
 import { actions, type StintState, useStint } from './store';
 import { formatDuration, MINUTE } from './time';
 import { findOpen } from './timeline';
@@ -37,9 +38,7 @@ async function sync(state: StintState) {
   }
   if (!want || want.fireAt <= Date.now()) return;
 
-  let { status } = await Notifications.getPermissionsAsync();
-  if (status === 'undetermined') ({ status } = await Notifications.requestPermissionsAsync());
-  if (status !== 'granted') return;
+  if (!(await requestNudgePermission())) return;
 
   const emoji = want.context.glyph ? `${want.context.glyph} ` : '';
   const notificationId = await Notifications.scheduleNotificationAsync({
