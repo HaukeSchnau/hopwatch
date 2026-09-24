@@ -21,7 +21,8 @@
 # to change how long run/view wait after that before the first step (default 8).
 #
 # The route's first segment picks the Metro (glass → port 3101, deck 3102, almanac 3103,
-# orbit 3104, jelly 3105);
+# orbit 3104, jelly 3105); STINT_DIRECTION=all uses metro-all on 3100, which serves every
+# direction (for checking the Lab and switching between directions);
 # for routes like /lab set STINT_DIRECTION.
 #
 # Deep links opened from outside (simctl openurl) stop at iOS's "Open in …?" prompt, so
@@ -34,8 +35,9 @@ AD='~/.t3/device/tools/agent-device@0.21.7/node_modules/.bin/agent-device'
 # Each direction has its own Metro (agent-services metro-glass, stint-metro-deck,
 # metro-almanac, stint-metro-orbit, stint-metro-jelly) that ignores the
 # other directions' files, so one builder's edits never rebuild another's bundle.
-declare -A PORTS=([glass]=3101 [deck]=3102 [almanac]=3103 [orbit]=3104 [jelly]=3105)
+declare -A PORTS=([all]=3100 [glass]=3101 [deck]=3102 [almanac]=3103 [orbit]=3104 [jelly]=3105)
 declare -A HOSTS=(
+  [all]=px-b8ee4debfe-metro-all.schnau.dev
   [glass]=px-b8ee4debfe-metro-glass.schnau.dev
   [deck]=px-b8ee4debfe-stint-metro-deck.schnau.dev
   [almanac]=px-b8ee4debfe-metro-almanac.schnau.dev
@@ -45,6 +47,7 @@ declare -A HOSTS=(
 
 # The direction a route belongs to: its first segment, else $STINT_DIRECTION, else glass.
 direction_of() {
+  if [ "${STINT_DIRECTION:-}" = all ]; then echo all; return; fi
   local first="${1#/}"
   first="${first%%/*}"
   if [ -n "${PORTS[$first]:-}" ]; then echo "$first"; else echo "${STINT_DIRECTION:-glass}"; fi
@@ -90,8 +93,8 @@ ad_cmd() {
 
 shot() {
   local remote="/tmp/stint-shot-$$-$RANDOM.png"
-  # Downscaled to 1000 px so screenshots stay cheap to look at.
-  ssh m1 "xcrun simctl io $1 screenshot --type=png $remote >/dev/null 2>&1 && sips -Z 1000 $remote >/dev/null && cat $remote && rm -f $remote" >"$2"
+  # Downscaled to 1000 px (or $SHOT_SIZE) so screenshots stay cheap to look at.
+  ssh m1 "xcrun simctl io $1 screenshot --type=png $remote >/dev/null 2>&1 && sips -Z ${SHOT_SIZE:-1000} $remote >/dev/null && cat $remote && rm -f $remote" >"$2"
 }
 
 case "${1:-}" in
