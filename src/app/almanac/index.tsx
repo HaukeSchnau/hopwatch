@@ -1,15 +1,14 @@
-import { Link } from 'expo-router';
-import { Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 
-import { useHideSplash } from '@/shell/splash';
+import { useTree } from '@/core';
+import { FirstEdition } from '@/directions/almanac/FirstEdition';
+import { FrontPage } from '@/directions/almanac/FrontPage';
 
-// Placeholder until the almanac direction is built.
-export default function Home() {
-  useHideSplash();
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-      <Text style={{ fontSize: 28, fontWeight: '700' }}>almanac</Text>
-      <Link href="/lab">Back to the Lab</Link>
-    </View>
-  );
+/** The front page, or the first edition while there are no contexts yet. */
+export default function AlmanacHome() {
+  const tree = useTree();
+  // `?preview=first` shows the first edition over existing data, for design review.
+  const { preview } = useLocalSearchParams<{ preview?: string }>();
+  if (tree.ordered.length === 0 || (__DEV__ && preview === 'first')) return <FirstEdition />;
+  return <FrontPage />;
 }
