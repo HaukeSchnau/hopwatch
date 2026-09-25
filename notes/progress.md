@@ -63,14 +63,25 @@ installable on Hauke's iPhone, built natively on the M1 builder. No Expo Go.
 
 ## State
 
-- Core committed (`feat: scaffold Stint Five …`). Five builder subagents running, one per
-  direction, owning `src/app/<id>`, `src/directions/<id>`, `docs/directions/<id>.md`.
-  They wait for `.shots/SIMULATORS_READY` before using simulators.
-- Dev client (with scene fix) installed on all five simulators; `.shots/SIMULATORS_READY`
-  exists. Builders were interrupted by the API session limit at ~01:45 and resumed ~06:20.
+- All five directions finished and committed (`feat: build the five design directions`).
+  Each builder verified its checklist on its own simulator; notes and known limitations
+  are in docs/directions/<id>.md.
+- Lab shows real screenshots (assets/lab); picking a direction clears the stack.
+- Deep links verified on the simulator (stop, resume) and land on the active direction.
+- Signed Release pipeline verified; install page at
+  https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/stint-five/ (Tailnet only).
+- Resources after wrap-up: the five simulators are shut down (not deleted), the
+  per-direction Metros are stopped, `metro-all` (port 3100, serves every direction) keeps
+  running for further work. For parallel builders again, run one Metro per direction:
+  `agent-service run metro-<d> --port <310x> --publish --cwd ~/stint -- bash -lc 'export
+  PATH=$DEVENV_PROFILE/bin:$PATH STINT_DIRECTION=<d>
+  EXPO_PACKAGER_PROXY_URL=https://px-b8ee4debfe-metro-<d>.schnau.dev; exec npx expo start
+  --dev-client --port <310x> --host lan'` and update HOSTS in scripts/sim.sh.
+- Open core requests (not done, low value so far): per-direction preferences (Deck and
+  Jelly use small JSON files instead), undo for context edits, a trim-preview helper.
 
 ## Next
 
-1. Review each direction as it lands; QA pass, fixes, core requests.
-2. Release build, development-signed IPA (`scripts/export-options.plist`), OTA install
-   link under /srv/agent-share for Hauke.
+1. Hauke installs from the install page and picks a direction after real use.
+2. Then: switch the scheme to `stint://`, drop the other four directions, consider the
+   Live Activity (expo-widgets is available in SDK 57).
