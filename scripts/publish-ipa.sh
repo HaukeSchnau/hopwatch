@@ -4,6 +4,8 @@
 # itms-services manifest plus an install page next to it.
 #
 #   scripts/publish-ipa.sh     → prints the install page URL
+#
+# A preview.jpg already in the share directory is shown on the page.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -15,7 +17,7 @@ scp -q m1:Developer/stint-five/ios/build/export/StintFive.ipa "$SHARE_DIR/StintF
 cp assets/images/icon.png "$SHARE_DIR/icon-512.png"
 
 python3 - "$SHARE_DIR" "$BASE_URL" <<'EOF'
-import html, plistlib, sys, time, zipfile
+import html, os, plistlib, sys, time, zipfile
 
 share, base = sys.argv[1], sys.argv[2]
 with zipfile.ZipFile(f"{share}/StintFive.ipa") as ipa:
@@ -40,8 +42,13 @@ manifest = {
 with open(f"{share}/manifest.plist", "wb") as f:
     plistlib.dump(manifest, f)
 
+# Optional overview of the directions, e.g. a contact sheet of the Lab screenshots.
+preview = ""
+if os.path.exists(f"{share}/preview.jpg"):
+    preview = '<a href="preview.jpg"><img class="preview" src="preview.jpg" alt="Glass, Deck, Almanac, Orbit and Jelly"></a>'
+
 install = f"itms-services://?action=download-manifest&url={base}/manifest.plist"
-built = time.strftime("%d %b %Y, %H:%M", time.localtime())
+built = time.strftime("%d %b %Y, %H:%M UTC", time.gmtime())
 page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -57,6 +64,7 @@ page = f"""<!doctype html>
   a.install {{ display: block; margin: 28px 0 18px; padding: 16px; border-radius: 16px; background: #F5F2EC;
                color: #0B0B0F; font-weight: 700; text-decoration: none; }}
   p {{ color: #A9A6B3; font-size: 15px; margin: 10px 0; }}
+  img.preview {{ width: 100%; height: auto; border-radius: 12px; box-shadow: none; margin-top: 18px; }}
 </style></head>
 <body><main>
   <img src="icon-512.png" alt="">
@@ -66,6 +74,7 @@ page = f"""<!doctype html>
   <p>Open this page in Safari on the iPhone. After installing, iOS asks for Developer Mode once:
      Settings › Privacy &amp; Security › Developer Mode, then restart.</p>
   <p>Five design directions, one app. Pick one in the Lab and switch any time from its settings.</p>
+  {preview}
 </main></body></html>
 """
 with open(f"{share}/index.html", "w") as f:
