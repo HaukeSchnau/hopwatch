@@ -1,272 +1,562 @@
-// The jelly editor sheet. Edits apply as you go for an existing jelly (the name when
-// you leave the field); a new one is drafted and made with "Make it".
+// The jelly editor: a native form under a candy header with the live jelly, then its Look
+// (the characters' own editor), name, emoji, color, place in the tree, goals, start link
+// and archive/delete. Edits to an existing jelly apply as you go (the name when you leave
+// the field); a new one is drafted and made with "Add".
 //   /jelly/context?id=…         edit
 //   /jelly/context?parent=…     new jelly inside another
 //   /jelly/context[?pin=1]      new top-level jelly
 
+import {
+  Button,
+  HStack,
+  Image,
+  LabeledContent,
+  Picker,
+  ScrollView,
+  Section,
+  Spacer,
+  Stepper,
+  Text as SwiftText,
+  TextField,
+  Toggle,
+  useNativeState,
+  VStack,
+  ZStack,
+} from '@expo/ui/swift-ui';
+import {
+  background,
+  font,
+  foregroundStyle,
+  frame,
+  monospacedDigit,
+  onTapGesture,
+  pickerStyle,
+  shapes,
+  tag,
+  textSelection,
+} from '@expo/ui/swift-ui/modifiers';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { type SharedValue, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import {
   actions,
+  type ContextId,
   DEFAULT_HUE,
   DEFAULT_NUDGE_MINUTES,
   formatDuration,
   type Hue,
+  hues,
   MINUTE,
+  newContextId,
   pathLabel,
   type ResolvedContext,
   startLink,
+  subtreeIds,
   useTree,
 } from '@/core';
 
 import { Character } from '../Character';
+import { LookEditor } from '../character/LookEditor';
+import { saveSuggestedLook, type Suggestion, suggestForContext, useModelAvailable } from '../character/suggest';
 import { buzz, play } from '../feedback';
-import { EmojiField, HuePicker, Stepper } from '../fields';
+import { EMOJI_SUGGESTIONS, firstGrapheme } from '../fields';
+import { HostedRow, JellyForm } from '../forms';
 import { useFace, useLively } from '../Gummy';
-import { candy, colors, fonts, springs } from '../theme';
-import { inkCandy, JellyButton, JellySwitch, Squishy } from '../ui';
+import type { PreviewJelly } from '../preview';
+import { suggestInput, useNameSuggestion } from '../suggestions';
+import { springs, text, useTheme } from '../theme';
 import { confirmDelete } from './StuffScreen';
 
-interface Draft {
-  name: string;
-  emoji: string | null;
-  color: Hue | null;
-  pinned: boolean;
-  targetHours: number | null;
-  nudge: number | null;
-}
+const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
+const ROOT = 'root';
 
 export function ContextEditor() {
-  const params = useLocalSearchParams<{ id?: string; parent?: string; pin?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    parent?: string;
+    pin?: string;
+  }>();
   const tree = useTree();
-  const existing = tree.ordered.find((c) => c.id === params.id) ?? null;
-  const parent = existing
-    ? (existing.ancestors[existing.ancestors.length - 1] ?? null)
-    : (tree.ordered.find((c) => c.id === params.parent) ?? null);
-
-  const [draft, setDraft] = useState<Draft>(() =>
-    existing
-      ? {
-          name: existing.name,
-          emoji: existing.emoji,
-          color: existing.color,
-          pinned: existing.pinPosition !== null,
-          targetHours: existing.weeklyTargetMinutes === null ? null : Math.round(existing.weeklyTargetMinutes / 60),
-          nudge: existing.nudgeAfterMinutes,
-        }
-      : { name: '', emoji: null, color: parent ? null : 'pink', pinned: params.pin === '1' || !parent, targetHours: null, nudge: null },
+  const existing = params.id ? (tree.ordered.find((c) => c.id === params.id) ?? null) : null;
+  if (params.id && !existing) {
+    return (
+      <JellyForm title="Jelly">
+        <Section>
+          <SwiftText modifiers={[secondary]}>This jelly no longer exists.</SwiftText>
+        </Section>
+      </JellyForm>
+    );
+  }
+  const parent = existing ? null : (tree.ordered.find((c) => c.id === params.parent) ?? null);
+  return (
+    <Editor
+      key={existing?.id ?? 'new'}
+      context={existing}
+      initialParent={existing ? existing.parentId : (parent?.id ?? null)}
+      pin={params.pin === '1' || (!existing && !parent)}
+    />
   );
+}
 
-  const face = useFace('awake');
-  useLively(face, true);
-  const jiggle = useSharedValue(0);
-  const bounce = () => jiggle.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
-  const blobStyle = useAnimatedStyle(() => ({ transform: [{ scaleY: 1 - jiggle.get() }, { scaleX: 1 + jiggle.get() * 0.8 }] }));
+interface EditorProps {
+  context: ResolvedContext | null;
+  initialParent: ContextId | null;
+  /** New jellies only: start pinned. */
+  pin: boolean;
+}
 
-  // Saves the name of an existing jelly when the sheet goes away mid-edit.
-  const latestName = useRef(draft.name);
+function Editor({ context, initialParent, pin }: EditorProps) {
+  const t = useTheme();
+  const tree = useTree();
+  const nameState = useNativeState(context?.name ?? '');
+  const emojiState = useNativeState(context?.emoji ?? '');
+  // A new jelly's preview uses the id it will be created with, so its look doesn't change on Add.
+  const [draftId] = useState(newContextId);
+  const [name, setName] = useState(context?.name ?? '');
+  const [emoji, setEmoji] = useState<string | null>(context?.emoji ?? null);
+  // A new jelly's emoji stays open to suggestions until it's touched.
+  const [emojiTouched, setEmojiTouched] = useState(context !== null);
+  const [color, setColor] = useState<Hue | null>(context ? context.color : initialParent ? null : 'pink');
+  const [parentId, setParentId] = useState<ContextId | null>(initialParent);
+  const [pinned, setPinned] = useState(context ? context.pinPosition !== null : pin);
+  const [target, setTarget] = useState<number | null>(context?.weeklyTargetMinutes ?? null);
+  const [nudge, setNudge] = useState<number | null>(context?.nudgeAfterMinutes ?? null);
+
+  const suggested = useNameSuggestion(context ? '' : name, parentId, !emojiTouched);
+  const suggestedEmoji = !emojiTouched ? (suggested?.suggestion.emoji ?? null) : null;
+  const shownEmoji = suggestedEmoji ?? emoji;
   useEffect(() => {
-    latestName.current = draft.name;
-  }, [draft.name]);
+    if (suggestedEmoji) emojiState.set(suggestedEmoji);
+  }, [emojiState, suggestedEmoji]);
+
+  const parent = parentId ? (tree.byId.get(parentId) ?? null) : null;
+  const hue: Hue = color ?? parent?.hue ?? DEFAULT_HUE;
+  const c = t.candy[hue];
+  const glyph = shownEmoji ?? parent?.glyph ?? null;
+  const inheritedNudge = parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES;
+  const excluded = context ? subtreeIds(tree, context.id) : new Set<ContextId>();
+  const parents = tree.ordered.filter((p) => !p.hidden && !excluded.has(p.id));
+
+  // An existing jelly keeps its typed name when the sheet goes away mid-edit.
+  const latestName = useRef(name);
   useEffect(() => {
-    if (!existing) return;
-    const id = existing.id;
-    const original = existing.name;
+    latestName.current = name;
+  }, [name]);
+  useEffect(() => {
+    if (!context) return;
+    const id = context.id;
+    const original = context.name;
     return () => {
-      const name = latestName.current.trim();
-      if (name && name !== original) actions.updateContext(id, { name });
+      const typed = latestName.current.trim();
+      if (typed && typed !== original) actions.updateContext(id, { name: typed });
     };
     // Only on unmount of this jelly's editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existing?.id]);
+  }, [context?.id]);
 
-  const hue: Hue = draft.color ?? parent?.hue ?? DEFAULT_HUE;
-  const glyph = draft.emoji ?? parent?.glyph ?? null;
-  const inheritedNudge = parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES;
-
-  const change = (patch: Partial<Draft>) => {
-    setDraft((d) => ({ ...d, ...patch }));
-    if (!existing) return;
-    if ('emoji' in patch) actions.updateContext(existing.id, { emoji: patch.emoji ?? null });
-    if ('color' in patch) actions.updateContext(existing.id, { color: patch.color ?? null });
-    if ('targetHours' in patch) actions.updateContext(existing.id, { weeklyTargetMinutes: patch.targetHours == null ? null : patch.targetHours * 60 });
-    if ('nudge' in patch) actions.updateContext(existing.id, { nudgeAfterMinutes: patch.nudge ?? null });
-    if ('pinned' in patch) (patch.pinned ? actions.pin : actions.unpin)(existing.id);
-  };
+  const bump = useSharedValue(0);
+  const jiggle = () => bump.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
 
   const saveName = () => {
-    const name = draft.name.trim();
-    if (existing && name && name !== existing.name) actions.updateContext(existing.id, { name });
+    const typed = name.trim();
+    if (context && typed && typed !== context.name) actions.updateContext(context.id, { name: typed });
+  };
+
+  const pickEmoji = (value: string | null) => {
+    buzz.tick();
+    setEmojiTouched(true);
+    setEmoji(value);
+    emojiState.set(value ?? '');
+    jiggle();
+    if (context) actions.updateContext(context.id, { emoji: value });
+  };
+
+  const pickColor = (value: Hue | null) => {
+    buzz.tick();
+    setColor(value);
+    jiggle();
+    if (context) actions.updateContext(context.id, { color: value });
   };
 
   const create = () => {
-    const name = draft.name.trim();
-    if (!name) return buzz.warn();
-    const id = actions.createContext({ name, parentId: parent?.id ?? null, color: draft.color, emoji: draft.emoji, pinned: draft.pinned });
-    if (draft.targetHours !== null || draft.nudge !== null) {
+    const typed = name.trim();
+    if (!typed) return buzz.warn();
+    const id = actions.createContext({
+      id: draftId,
+      name: typed,
+      parentId,
+      color,
+      emoji: shownEmoji,
+      pinned,
+    });
+    if (target !== null || nudge !== null)
       actions.updateContext(id, {
-        weeklyTargetMinutes: draft.targetHours === null ? null : draft.targetHours * 60,
-        nudgeAfterMinutes: draft.nudge,
+        weeklyTargetMinutes: target,
+        nudgeAfterMinutes: nudge,
       });
-    }
+    if (suggested && suggested.forName === typed) saveSuggestedLook(id, suggested.suggestion, typed);
     buzz.success();
     play('pop');
     router.back();
   };
 
+  // A new jelly is a draft previewed in the header; an existing one shows its Look editor,
+  // whose live jelly follows every edit since they apply at once.
+  const draft: PreviewJelly = { id: draftId, hue, glyph, name: name.trim() };
+  const title = context ? context.name : parent ? `New in ${parent.name}` : 'New Jelly';
+
   return (
-    <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
-      <View style={styles.top}>
-        <Animated.View style={[{ transformOrigin: 'bottom' }, blobStyle]}>
-          <Character context={{ id: existing?.id ?? 'new-jelly', hue, glyph }} size={112} face={face} dim={existing?.hidden} />
-        </Animated.View>
-        <Text style={styles.kicker}>{existing ? (existing.hidden ? 'Archived jelly' : 'Edit jelly') : parent ? `New inside ${parent.name}` : 'New jelly'}</Text>
-      </View>
+    <JellyForm
+      title={title}
+      tint={c.ink}
+      cancel={context ? null : { label: 'Cancel', onPress: () => router.back() }}
+      confirm={context ? { label: 'Done', onPress: () => router.back() } : { label: 'Add', onPress: create, disabled: !name.trim() }}>
+      {context ? (
+        <HostedRow
+          render={(width) => (
+            <View style={{ width }}>
+              <LookEditor context={context} />
+            </View>
+          )}
+        />
+      ) : (
+        <HostedRow
+          color={c.tint}
+          render={(width) => (
+            <Header
+              width={width}
+              jelly={draft}
+              look={suggested?.suggestion.look}
+              title={name.trim() || 'New jelly'}
+              bump={bump}
+              subtitle={parent ? `in ${pathLabel(parent)}` : 'Top level'}
+              suggested={suggestedEmoji !== null}
+            />
+          )}
+        />
+      )}
 
-      <TextInput
-        value={draft.name}
-        onChangeText={(name) => setDraft((d) => ({ ...d, name }))}
-        onBlur={saveName}
-        onSubmitEditing={existing ? saveName : create}
-        placeholder="Name"
-        placeholderTextColor={colors.faint}
-        style={styles.name}
-        returnKeyType="done"
-        maxLength={40}
-        autoFocus={!existing}
-      />
+      <Section title="Name">
+        <TextField
+          text={nameState}
+          placeholder="e.g. Deep work"
+          autoFocus={!context}
+          maxLength={40}
+          onTextChange={setName}
+          onFocusChange={(focused) => !focused && saveName()}
+        />
+      </Section>
 
-      <Label>Emoji</Label>
-      <EmojiField
-        value={draft.emoji}
-        fallback={parent ? parent.glyph : undefined}
-        onChange={(emoji) => {
-          change({ emoji });
-          bounce();
-        }}
-      />
+      <Section
+        title="Emoji"
+        footer={
+          <SwiftText>
+            {suggestedEmoji
+              ? 'Suggested for the name. Pick another any time.'
+              : parent && !emoji
+                ? `Uses ${parent.name}'s emoji when empty.`
+                : 'Type any emoji, or pick one.'}
+          </SwiftText>
+        }>
+        <LabeledContent label={suggestedEmoji ? 'Emoji ✨' : 'Emoji'}>
+          <HStack spacing={12}>
+            {context ? <SuggestButton context={context} name={name} parentId={parentId} onEmoji={pickEmoji} /> : null}
+            <TextField
+              text={emojiState}
+              placeholder={parent?.glyph ?? 'None'}
+              onTextChange={(typed) => {
+                setEmojiTouched(true);
+                const next = firstGrapheme(typed) || null;
+                setEmoji(next);
+                if (context) actions.updateContext(context.id, { emoji: next });
+              }}
+              modifiers={[frame({ width: 56 })]}
+            />
+          </HStack>
+        </LabeledContent>
+        <ScrollView axes="horizontal" showsIndicators={false}>
+          <HStack spacing={6}>
+            {EMOJI_SUGGESTIONS.map((e) => (
+              <SwiftText
+                key={e}
+                modifiers={[
+                  font({ size: 26 }),
+                  frame({ width: 44, height: 44 }),
+                  ...(shownEmoji === e ? [background(c.tint, shapes.circle())] : []),
+                  onTapGesture(() => pickEmoji(shownEmoji === e && !suggestedEmoji ? null : e)),
+                ]}>
+                {e}
+              </SwiftText>
+            ))}
+          </HStack>
+        </ScrollView>
+      </Section>
 
-      <Label>Color</Label>
-      <HuePicker
-        value={draft.color}
-        inherit={parent ? parent.hue : undefined}
-        onChange={(color) => {
-          change({ color });
-          bounce();
-        }}
-      />
-
-      <View style={[styles.card, { marginTop: 22 }]}>
-        {existing && (
-          <>
-            <Squishy
-              amount={0.04}
-              onPress={() => router.push({ pathname: '/jelly/pick', params: { mode: 'parent', id: existing.id } })}
-              accessibilityRole="button"
-              accessibilityLabel="Move to another parent">
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Inside</Text>
-                <View style={styles.rowValue}>
-                  <Text style={styles.rowValueText} numberOfLines={1}>
-                    {parent ? pathLabel(parent) : 'Top level'}
-                  </Text>
-                  <SymbolView name="chevron.right" size={13} tintColor={colors.muted} weight="bold" />
-                </View>
-              </View>
-            </Squishy>
-            <Divider />
-          </>
-        )}
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>Pinned to Now</Text>
-          <JellySwitch
-            value={draft.pinned}
-            disabled={existing?.hidden}
-            onValueChange={(pinned) => change({ pinned })}
-            color={candy[hue].fill}
-            accessibilityLabel="Pinned to Now"
+      <Section title="Color">
+        {parentId ? (
+          <Toggle
+            label={`Same as ${parent?.name ?? 'parent'}`}
+            isOn={color === null}
+            onIsOnChange={(on) => pickColor(on ? null : (parent?.hue ?? 'pink'))}
           />
-        </View>
-      </View>
+        ) : null}
+        {color !== null || !parentId ? <Swatches value={color} onChange={pickColor} /> : null}
+      </Section>
 
-      <Label hint="Counts everything inside it too">Weekly target</Label>
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Stepper value={draft.targetHours} onChange={(targetHours) => change({ targetHours })} step={1} min={1} max={100} unit="h" placeholder="No target" start={10} />
-        </View>
-        <QuickChips options={[5, 10, 20, 30, 40]} unit="h" value={draft.targetHours} hue={hue} onPick={(targetHours) => change({ targetHours })} />
-      </View>
+      <Section title="Place">
+        <Picker
+          label="Inside"
+          selection={parentId ?? ROOT}
+          onSelectionChange={(value: string) => {
+            const next = value === ROOT ? null : (parents.find((p) => p.id === value)?.id ?? null);
+            setParentId(next);
+            if (context) actions.moveContext(context.id, next);
+          }}
+          modifiers={[pickerStyle('menu')]}>
+          <SwiftText modifiers={[tag(ROOT)]}>Top level</SwiftText>
+          {parents.map((p) => (
+            <SwiftText key={p.id} modifiers={[tag(p.id)]}>
+              {`${p.glyph ? `${p.glyph} ` : ''}${pathLabel(p)}`}
+            </SwiftText>
+          ))}
+        </Picker>
+        {context?.hidden ? null : (
+          <Toggle
+            label="Pinned to Now"
+            systemImage="pin"
+            isOn={pinned}
+            onIsOnChange={(on) => {
+              setPinned(on);
+              if (context) (on ? actions.pin : actions.unpin)(context.id);
+            }}
+          />
+        )}
+      </Section>
 
-      <Label hint="A reminder when it's been running this long">Nudge after</Label>
-      <View style={styles.card}>
-        <View style={styles.row}>
+      <Section
+        title="Goals"
+        footer={<SwiftText>The target counts this jelly and everything inside it. The nudge asks whether you forgot to stop.</SwiftText>}>
+        <Toggle
+          label="Weekly target"
+          systemImage="target"
+          isOn={target !== null}
+          onIsOnChange={(on) => {
+            const next = on ? (context?.weeklyTargetMinutes ?? 10 * 60) : null;
+            setTarget(next);
+            if (context) actions.updateContext(context.id, { weeklyTargetMinutes: next });
+          }}
+        />
+        {target !== null ? (
           <Stepper
-            value={draft.nudge}
-            onChange={(nudge) => change({ nudge })}
+            label={`${formatDuration(target * MINUTE)} a week`}
+            value={target}
+            step={60}
+            min={60}
+            max={100 * 60}
+            onValueChange={(next) => {
+              setTarget(next);
+              if (context)
+                actions.updateContext(context.id, {
+                  weeklyTargetMinutes: next,
+                });
+            }}
+            modifiers={[monospacedDigit()]}
+          />
+        ) : null}
+        <Toggle
+          label="Own nudge"
+          systemImage="bell.badge"
+          isOn={nudge !== null}
+          onIsOnChange={(on) => {
+            const next = on ? inheritedNudge : null;
+            setNudge(next);
+            if (context) actions.updateContext(context.id, { nudgeAfterMinutes: next });
+          }}
+        />
+        {nudge !== null ? (
+          <Stepper
+            label={`Nudge after ${formatDuration(nudge * MINUTE)}`}
+            value={nudge}
             step={15}
             min={15}
-            max={720}
-            unit="min"
-            placeholder={`${formatDuration(inheritedNudge * MINUTE)} (inherited)`}
-            start={inheritedNudge}
+            max={12 * 60}
+            onValueChange={(next) => {
+              setNudge(next);
+              if (context) actions.updateContext(context.id, { nudgeAfterMinutes: next });
+            }}
+            modifiers={[monospacedDigit()]}
           />
-        </View>
-        <QuickChips options={[30, 60, 120, 180]} unit="min" value={draft.nudge} hue={hue} onPick={(nudge) => change({ nudge })} />
-      </View>
+        ) : (
+          <LabeledContent label="Nudges after">
+            <SwiftText modifiers={[secondary, monospacedDigit()]}>
+              {`${formatDuration(inheritedNudge * MINUTE)}${parent ? `, from ${parent.name}` : ''}`}
+            </SwiftText>
+          </LabeledContent>
+        )}
+      </Section>
 
-      {existing ? <ExistingActions context={existing} /> : <JellyButton label="Make it!" icon="sparkles" hue={hue} size="large" onPress={create} disabled={!draft.name.trim()} style={{ marginTop: 28 }} />}
-    </ScrollView>
+      {context ? <ExistingSections context={context} /> : null}
+    </JellyForm>
   );
 }
 
-function ExistingActions({ context }: { context: ResolvedContext }) {
+/** The candy header of a new jelly: the live draft, its name and where it will live. */
+function Header({
+  width,
+  jelly,
+  look,
+  title,
+  bump,
+  subtitle,
+  suggested,
+}: {
+  width: number;
+  jelly: PreviewJelly;
+  /** Suggested traits shown on the preview before they're saved. */
+  look?: Suggestion['look'];
+  title: string;
+  bump: SharedValue<number>;
+  subtitle: string;
+  suggested: boolean;
+}) {
+  const t = useTheme();
+  const face = useFace('awake');
+  useLively(face, true);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scaleY: 1 - bump.get() }, { scaleX: 1 + bump.get() * 0.8 }],
+  }));
+  return (
+    <View style={[styles.header, { width }]}>
+      <Animated.View style={[{ transformOrigin: 'bottom' }, style]}>
+        <Character context={jelly} size={116} face={face} look={look} />
+      </Animated.View>
+      <Text style={[text.title2, styles.headerName, { color: t.c.ink }]} numberOfLines={1}>
+        {title}
+      </Text>
+      <Text style={[text.footnote, { color: t.c.muted }]} numberOfLines={1}>
+        {suggested ? `✨ suggested · ${subtitle}` : subtitle}
+      </Text>
+    </View>
+  );
+}
+
+/** Asks the on-device model again. Shown only when it's available. */
+function SuggestButton({
+  context,
+  name,
+  parentId,
+  onEmoji,
+}: {
+  context: ResolvedContext;
+  name: string;
+  parentId: ContextId | null;
+  onEmoji: (emoji: string) => void;
+}) {
+  const available = useModelAvailable();
+  const [busy, setBusy] = useState(false);
+  if (!available) return null;
+  return (
+    <Button
+      label={busy ? 'Thinking…' : 'Suggest'}
+      systemImage="sparkles"
+      onPress={() => {
+        const typed = name.trim() || context.name;
+        setBusy(true);
+        suggestForContext({
+          ...suggestInput(typed, parentId, context.id, true),
+          emoji: context.emoji,
+        })
+          .then((suggestion) => {
+            if (!suggestion) return;
+            if (suggestion.emoji) onEmoji(suggestion.emoji);
+            saveSuggestedLook(context.id, suggestion, typed);
+          })
+          .catch(() => {})
+          .finally(() => setBusy(false));
+      }}
+    />
+  );
+}
+
+/** Twelve candy drops in two rows. */
+function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue) => void }) {
+  const t = useTheme();
+  return (
+    <VStack spacing={12}>
+      {[hues.slice(0, 6), hues.slice(6)].map((row, r) => (
+        <HStack key={r} spacing={12}>
+          {row.map((h) => {
+            const c = t.candy[h];
+            return (
+              <ZStack
+                key={h}
+                modifiers={[
+                  frame({ width: 38, height: 38 }),
+                  background(
+                    {
+                      type: 'linearGradient',
+                      colors: [c.light, c.fill, c.deep],
+                      startPoint: { x: 0.3, y: 0 },
+                      endPoint: { x: 0.7, y: 1 },
+                    },
+                    shapes.circle(),
+                  ),
+                  onTapGesture(() => onChange(h)),
+                ]}>
+                {value === h ? <Image systemName="checkmark" size={15} color={c.on} /> : null}
+              </ZStack>
+            );
+          })}
+          <Spacer />
+        </HStack>
+      ))}
+    </VStack>
+  );
+}
+
+function ExistingSections({ context }: { context: ResolvedContext }) {
   const [copied, setCopied] = useState(false);
   const link = startLink(context.id);
   return (
     <>
-      <Label hint="Open it from Shortcuts, the Action Button or Siri">Start link</Label>
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.link} numberOfLines={1} ellipsizeMode="middle" selectable>
-            {link}
-          </Text>
-          <Squishy
-            onPress={() => {
-              Clipboard.setStringAsync(link);
-              buzz.success();
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1600);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Copy start link">
-            <View style={[styles.copy, copied && { backgroundColor: candy.green.tint }]}>
-              <SymbolView name={copied ? 'checkmark' : 'doc.on.doc'} size={14} tintColor={copied ? candy.green.deep : colors.ink} weight="bold" />
-              <Text style={[styles.copyText, copied && { color: candy.green.deep }]}>{copied ? 'Copied' : 'Copy'}</Text>
-            </View>
-          </Squishy>
-        </View>
-      </View>
-
-      <View style={styles.actions}>
-        {!context.hidden && (
-          <JellyButton
-            label="Add inside"
-            icon="plus"
-            hue={context.hue}
-            size="medium"
-            onPress={() => router.push({ pathname: '/jelly/context', params: { parent: context.id } })}
+      <Section title="Start link" footer={<SwiftText>Open it from Shortcuts, the Action Button or Siri to switch to this jelly.</SwiftText>}>
+        <SwiftText modifiers={[font({ textStyle: 'footnote', design: 'monospaced' }), secondary, textSelection(true)]}>{link}</SwiftText>
+        <Button
+          label={copied ? 'Copied' : 'Copy Link'}
+          systemImage={copied ? 'checkmark' : 'link'}
+          onPress={() => {
+            Clipboard.setStringAsync(link);
+            buzz.success();
+            setCopied(true);
+          }}
+        />
+      </Section>
+      <Section
+        footer={
+          <SwiftText>
+            {context.archivedAt
+              ? 'Archived jellies stay in history and reports.'
+              : 'Archiving hides it from Now and the pickers. Its time stays in reports.'}
+          </SwiftText>
+        }>
+        {context.hidden ? null : (
+          <Button
+            label="Add Jelly Inside"
+            systemImage="plus"
+            onPress={() =>
+              router.push({
+                pathname: '/jelly/context',
+                params: { parent: context.id },
+              })
+            }
           />
         )}
-        <JellyButton
+        <Button
           label={context.archivedAt ? 'Unarchive' : 'Archive'}
-          icon="archivebox"
-          palette={inkCandy}
-          size="medium"
+          systemImage={context.archivedAt ? 'tray.and.arrow.up' : 'archivebox'}
           onPress={() => {
             buzz.thud();
             if (context.archivedAt) actions.unarchive(context.id);
@@ -276,82 +566,18 @@ function ExistingActions({ context }: { context: ResolvedContext }) {
             }
           }}
         />
-        <Squishy onPress={() => confirmDelete(context, () => router.back())} accessibilityRole="button" style={styles.delete}>
-          <SymbolView name="trash" size={16} tintColor={colors.danger} weight="bold" />
-          <Text style={styles.deleteText}>Delete</Text>
-        </Squishy>
-      </View>
+        <Button role="destructive" label="Delete Jelly" systemImage="trash" onPress={() => confirmDelete(context, () => router.back())} />
+      </Section>
     </>
   );
 }
 
-function QuickChips({ options, unit, value, hue, onPick }: { options: number[]; unit: string; value: number | null; hue: Hue; onPick: (v: number | null) => void }) {
-  return (
-    <View style={styles.quick}>
-      {options.map((o) => {
-        const on = value === o;
-        return (
-          <Squishy
-            key={o}
-            amount={0.14}
-            onPress={() => onPick(on ? null : o)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={`${o} ${unit}`}>
-            <View style={[styles.quickChip, on && { backgroundColor: candy[hue].fill }]}>
-              <Text style={[styles.quickText, on && { color: candy[hue].on }]}>
-                {o} {unit}
-              </Text>
-            </View>
-          </Squishy>
-        );
-      })}
-    </View>
-  );
-}
-
-function Label({ children, hint }: { children: ReactNode; hint?: string }) {
-  return (
-    <View style={styles.labelRow}>
-      <Text style={styles.label}>{children}</Text>
-      {hint ? <Text style={styles.labelHint}>{hint}</Text> : null}
-    </View>
-  );
-}
-
-const Divider = () => <View style={styles.divider} />;
-
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 60 },
-  top: { alignItems: 'center', marginBottom: 12 },
-  kicker: { fontFamily: fonts.displayMedium, fontSize: 14, color: colors.muted, letterSpacing: 0.5, textTransform: 'uppercase', marginTop: 4 },
-  name: {
-    fontFamily: fonts.display,
-    fontSize: 26,
-    color: colors.ink,
-    backgroundColor: colors.card,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: colors.line,
-    paddingHorizontal: 18,
-    height: 62,
+  header: {
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
   },
-  labelRow: { marginTop: 22, marginBottom: 10 },
-  label: { fontFamily: fonts.displayMedium, fontSize: 14, color: colors.muted, letterSpacing: 0.5, textTransform: 'uppercase' },
-  labelHint: { fontFamily: fonts.text, fontSize: 13, color: colors.faint, marginTop: 1 },
-  card: { backgroundColor: colors.card, borderRadius: 24, paddingHorizontal: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 58, gap: 12 },
-  rowLabel: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
-  rowValue: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
-  rowValueText: { fontFamily: fonts.textBold, fontSize: 15, color: colors.muted, flexShrink: 1 },
-  divider: { height: 1.5, backgroundColor: colors.line },
-  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 14 },
-  quickChip: { paddingHorizontal: 12, height: 34, borderRadius: 17, backgroundColor: colors.sunken, justifyContent: 'center' },
-  quickText: { fontFamily: fonts.display, fontSize: 15, color: colors.ink },
-  link: { flex: 1, fontFamily: fonts.textBold, fontSize: 13, color: colors.muted },
-  copy: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, backgroundColor: colors.sunken },
-  copyText: { fontFamily: fonts.display, fontSize: 15, color: colors.ink },
-  actions: { marginTop: 28, gap: 12 },
-  delete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
-  deleteText: { fontFamily: fonts.display, fontSize: 17, color: colors.danger },
+  headerName: { marginTop: 4 },
 });

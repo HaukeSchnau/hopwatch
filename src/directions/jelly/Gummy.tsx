@@ -1,26 +1,16 @@
-// The gummy blob: Jelly's character for a context. A lumpy, glossy candy drawn with
-// Skia, with a face that can sleep, wake, blink, look around and yawn. Squash and
-// bounce happen on the wrapping view's transform, so the Skia path never re-renders
-// for motion; only the face animates inside the canvas.
+// The gummy: Jelly's character for a context, drawn with Skia. A body archetype in glossy
+// candy, a face that can sleep, wake, blink, look around and yawn, and whatever the look
+// adds (hats, ears, neckwear, a coat). Everything is drawn in a 100-unit box scaled to
+// `size`; body motion (hops, tilts, puffs) happens on the wrapping view in Character, so
+// the Skia picture only redraws for face animations.
 
-import {
-  BlurMask,
-  Canvas,
-  Circle,
-  Group,
-  LinearGradient,
-  Oval,
-  Path,
-  RadialGradient,
-  Shadow,
-  Skia,
-  vec,
-} from '@shopify/react-native-skia';
-import { useEffect, useMemo } from 'react';
+import { BlurMask, Canvas, Group, LinearGradient, Oval, Path, RadialGradient, Shadow, vec } from '@shopify/react-native-skia';
+import { useEffect, useMemo, useRef } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
   type SharedValue,
   useDerivedValue,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withSequence,
@@ -30,20 +20,38 @@ import {
 
 import type { Hue } from '@/core';
 
-import { blobBox, gummyPath } from './geometry';
-import { alpha, candy, colors } from './theme';
+import { type BodyGeo, bodyGeo, UNIT } from './character/bodies';
+import { Cheeks, EyesPart, type Lod, MouthPart, mouthDrop } from './character/face';
+import { personalities } from './character/idle';
+import { accentHue, blushFor } from './character/paint';
+import { isBehind, TopperBack, TopperFront } from './character/toppers';
+import type { Look, Motion, Topper } from './character/traits';
+import { CoatPart, NeckPart } from './character/wear';
+import { alpha, type Candy, useTheme } from './theme';
 
 /** Animatable face state. 0/1 ranges unless noted. */
 export interface Face {
-  /** 0 asleep (closed arcs), 1 awake (open dot eyes). */
+  /** 0 asleep (closed eyes), 1 awake. */
   awake: SharedValue<number>;
   /** 1 open, 0 shut; multiplied into awake eyes. */
   blink: SharedValue<number>;
-  /** Pupil offset, -1 … 1. */
+  /** Glance direction, -1 … 1. */
   lookX: SharedValue<number>;
   lookY: SharedValue<number>;
   /** 0 closed, 1 mouth wide open. */
   yawn: SharedValue<number>;
+  /** Body motion, played by `useLively` and drawn by Character: hop height 0 … 1. */
+  hop: SharedValue<number>;
+  /** Positive squashes, negative stretches. */
+  squash: SharedValue<number>;
+  /** Lean in degrees. */
+  tilt: SharedValue<number>;
+  /** 0 … 1 swell. */
+  puff: SharedValue<number>;
+  /** Sideways jitter, -1 … 1. */
+  shiver: SharedValue<number>;
+  /** The personality `useLively` plays; the Character wearing this face sets it. */
+  motion: SharedValue<Motion>;
 }
 
 export function useFace(mood: 'awake' | 'asleep' = 'asleep'): Face {
@@ -52,8 +60,17 @@ export function useFace(mood: 'awake' | 'asleep' = 'asleep'): Face {
   const lookX = useSharedValue(0);
   const lookY = useSharedValue(0);
   const yawn = useSharedValue(0);
+  const hop = useSharedValue(0);
+  const squash = useSharedValue(0);
+  const tilt = useSharedValue(0);
+  const puff = useSharedValue(0);
+  const shiver = useSharedValue(0);
+  const motion = useSharedValue<Motion>('bouncy');
   // Stable identity, so effects keyed on the face don't restart.
-  return useMemo(() => ({ awake, blink, lookX, lookY, yawn }), [awake, blink, lookX, lookY, yawn]);
+  return useMemo(
+    () => ({ awake, blink, lookX, lookY, yawn, hop, squash, tilt, puff, shiver, motion }),
+    [awake, blink, lookX, lookY, yawn, hop, squash, tilt, puff, shiver, motion],
+  );
 }
 
 /** Opens the eyes with a little startled blink. */
@@ -71,42 +88,75 @@ export function sleep(face: Face, delay = 0) {
   face.awake.set(withDelay(delay + 160, withTiming(0, { duration: 420 })));
 }
 
+/** Puts the body back at rest after idling. */
+function settle(face: Face) {
+  for (const value of [face.hop, face.squash, face.tilt, face.puff, face.shiver]) value.set(withTiming(0, { duration: 180 }));
+  face.blink.set(withTiming(1, { duration: 120 }));
+}
+
 /**
- * Keeps an awake face alive: blinks every few seconds and glances around now and then.
- * Runs on JS timers so nothing ticks between events.
+ * Keeps an awake face alive in its personality (see character/idle.ts): blinks, glances
+ * and a signature move now and then, like a hop or a yawn. Runs on JS timers, so nothing
+ * ticks between events. With Reduce Motion on, it only blinks and glances.
  */
 export function useLively(face: Face, enabled: boolean) {
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
     if (!enabled) return;
     let alive = true;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const later = (ms: number, fn: () => void) => timers.push(setTimeout(() => alive && fn(), ms));
+    let busyUntil = 0;
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    const later = (ms: number, fn: () => void) => {
+      const timer = setTimeout(() => {
+        timers.delete(timer);
+        if (alive) fn();
+      }, ms);
+      timers.add(timer);
+    };
+    const who = () => personalities[face.motion.get()];
+    const pause = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min);
+    const free = () => Date.now() > busyUntil;
 
     const blink = () => {
-      const twice = Math.random() < 0.2;
-      const shut = withSequence(withTiming(0, { duration: 70 }), withTiming(1, { duration: 110 }));
-      face.blink.set(twice ? withSequence(shut, withDelay(90, shut)) : shut);
-      later(2400 + Math.random() * 3600, blink);
+      if (free()) {
+        const shut = withSequence(withTiming(0, { duration: 70 }), withTiming(1, { duration: 110 }));
+        face.blink.set(Math.random() < who().twice ? withSequence(shut, withDelay(90, shut)) : shut);
+      }
+      later(pause(who().blink), blink);
     };
     const glance = () => {
-      const centre = Math.random() < 0.4;
-      face.lookX.set(withSpring(centre ? 0 : Math.random() * 2 - 1, { damping: 12, stiffness: 160 }));
-      face.lookY.set(withSpring(centre ? 0 : Math.random() * 1.2 - 0.6, { damping: 12, stiffness: 160 }));
-      later(1600 + Math.random() * 3200, glance);
+      if (free()) {
+        const centre = Math.random() < 0.35;
+        const reach = who().reach;
+        const spring = { damping: 12, stiffness: 160 };
+        face.lookX.set(withSpring(centre ? 0 : (Math.random() * 2 - 1) * reach, spring));
+        face.lookY.set(withSpring(centre ? 0 : (Math.random() * 1.2 - 0.6) * reach, spring));
+      }
+      later(pause(who().glance), glance);
+    };
+    const move = () => {
+      if (free()) busyUntil = Date.now() + who().move(face);
+      later(pause(who().every), move);
     };
     later(1200 + Math.random() * 1500, blink);
     later(900 + Math.random() * 2000, glance);
+    if (!reduceMotion) later(pause(who().every) * 0.5, move);
     return () => {
       alive = false;
       timers.forEach(clearTimeout);
+      settle(face);
     };
-  }, [enabled, face]);
+  }, [enabled, face, reduceMotion]);
 }
+
+/** Level of detail for a size: fine details disappear first. */
+export const lodFor = (size: number): Lod => (size < 44 ? 0 : size < 84 ? 1 : 2);
 
 interface GummyProps {
   size: number;
   hue: Hue;
-  /** Seeds the silhouette; use the context id. */
+  look: Look;
+  /** Seeds the body's proportions and pattern; use the context id. */
   seed: string;
   face?: Face;
   /** Used when no `face` is passed. */
@@ -117,111 +167,139 @@ interface GummyProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** A glossy candy blob with a face, drawn in a square canvas of `size`. */
-export function Gummy({ size, hue, seed, face, mood = 'asleep', shadow = true, dim = false, style }: GummyProps) {
+/** A glossy candy character in a square canvas of `size`. */
+export function Gummy({ size, hue, look, seed, face, mood = 'asleep', shadow = true, dim = false, style }: GummyProps) {
   const own = useFace(mood);
   const f = face ?? own;
+  const { candy } = useTheme();
   const c = candy[hue];
-  const box = blobBox(size);
-  const { cx, cy, rx, ry } = box;
-  const path = useMemo(() => gummyPath(seed, blobBox(size)), [seed, size]);
-  const shadowPath = useMemo(() => {
-    const b = blobBox(size);
-    return gummyPath(seed, { ...b, cy: b.cy + b.ry * 0.14 });
-  }, [seed, size]);
-
-  // Face geometry.
-  const eyeY = cy - ry * 0.02;
-  const eyeDX = rx * 0.33;
-  const eyeR = Math.max(1.6, rx * 0.095);
-  const mouthY = cy + ry * 0.24;
-  const mouthW = rx * 0.15;
-  const stroke = Math.max(1.4, eyeR * 0.46);
-  const cheek = hue === 'pink' || hue === 'red' ? 'rgba(255,255,255,0.28)' : 'rgba(255,105,150,0.34)';
-
-  const sleepyEyes = useMemo(() => {
-    const b = Skia.PathBuilder.Make();
-    for (const ex of [cx - eyeDX, cx + eyeDX]) {
-      b.moveTo(ex - eyeR * 1.05, eyeY);
-      b.quadTo(ex, eyeY + eyeR * 1.35, ex + eyeR * 1.05, eyeY);
-    }
-    return b.detach();
-  }, [cx, eyeDX, eyeR, eyeY]);
-
-  const smile = useMemo(() => {
-    const b = Skia.PathBuilder.Make();
-    b.moveTo(cx - mouthW, mouthY);
-    b.quadTo(cx, mouthY + mouthW * 0.95, cx + mouthW, mouthY);
-    return b.detach();
-  }, [cx, mouthW, mouthY]);
-
-  const sleepyOpacity = useDerivedValue(() => 1 - f.awake.get());
-  const awakeOpacity = useDerivedValue(() => f.awake.get());
-  const smileOpacity = useDerivedValue(() => 1 - f.yawn.get());
-  const leftEye = useDerivedValue(() => eyeTransform(cx - eyeDX, eyeY, eyeR, f));
-  const rightEye = useDerivedValue(() => eyeTransform(cx + eyeDX, eyeY, eyeR, f));
-  const yawnTransform = useDerivedValue(() => [
-    { translateX: cx },
-    { translateY: mouthY + mouthW * 0.35 },
-    { scaleY: Math.max(0.001, f.yawn.get()) },
-  ]);
+  const accent = candy[accentHue[hue]];
+  const geo = bodyGeo(look.body, seed);
+  const lod = lodFor(size);
+  const unit = size / UNIT;
+  const px = 1 / unit;
+  // Small characters get a bigger face, so it still reads at 28 pt.
+  const faceScale = geo.face.s * (size < 44 ? 1.22 : size < 64 ? 1.08 : 1);
+  const faceTransform = [{ translateX: geo.face.x }, { translateY: geo.face.y }, { scale: faceScale }];
+  const facePx = px / faceScale;
+  const topper = { topper: look.topper, geo, tones: c, accent, lod, px };
+  const dress = useDress(look.topper, seed);
+  const dressed = useDerivedValue(() => [{ translateY: -(1 - dress.get()) * 16 }]);
+  const dressOpacity = useDerivedValue(() => Math.min(1, Math.max(0, dress.get() * 2.5)));
 
   return (
     <Canvas style={[{ width: size, height: size }, style]}>
-      <Group opacity={dim ? 0.45 : 1}>
+      <Group transform={[{ scale: unit }]} opacity={dim ? 0.45 : 1}>
         {shadow && (
-          <Path path={shadowPath} color={c.glow}>
-            <BlurMask blur={rx * 0.12} style="normal" />
-          </Path>
+          // Narrowed a little, so the blur of wide bodies stays inside the canvas.
+          <Group transform={[{ translateX: geo.face.x }, { translateY: 3 }, { scaleX: 0.9 }, { translateX: -geo.face.x }]}>
+            <Path path={geo.path} color={c.glow}>
+              <BlurMask blur={3.6} style="normal" />
+            </Path>
+          </Group>
         )}
-        <Path path={path}>
-          <LinearGradient start={vec(cx, cy - ry)} end={vec(cx, cy + ry)} colors={[c.light, c.fill, c.deep]} positions={[0, 0.48, 1]} />
-          <Shadow dx={0} dy={-ry * 0.16} blur={ry * 0.14} color={alpha(c.deep, 0.6)} inner />
-          <Shadow dx={0} dy={ry * 0.07} blur={ry * 0.07} color="rgba(255,255,255,0.55)" inner />
-        </Path>
-        <Path path={path}>
-          <RadialGradient c={vec(cx + rx * 0.05, cy + ry * 0.42)} r={rx * 0.75} colors={[alpha(c.light, 0.5), alpha(c.light, 0)]} />
-        </Path>
-        {/* Gloss */}
-        <Group transform={[{ translateX: cx - rx * 0.34 }, { translateY: cy - ry * 0.55 }, { rotate: -0.42 }]}>
-          <Oval x={-rx * 0.3} y={-ry * 0.12} width={rx * 0.6} height={ry * 0.24} color="rgba(255,255,255,0.7)">
-            <BlurMask blur={Math.max(0.6, rx * 0.035)} style="normal" />
-          </Oval>
+        {isBehind(look.topper) && (
+          <Group transform={dressed} opacity={dressOpacity}>
+            <TopperBack {...topper} />
+          </Group>
+        )}
+        <BodyFill geo={geo} c={c} />
+        <Group clip={geo.path}>
+          <CoatPart surface={look.surface} geo={geo} tones={c} seed={seed} lod={lod} />
+          <Gloss geo={geo} />
+          <Group transform={faceTransform}>
+            <Cheeks blush={blushFor(hue)} freckles={look.surface === 'freckles'} tones={c} lod={lod} spread={look.eyes === 'glasses' ? 21 : 19.5} />
+          </Group>
         </Group>
-        <Circle cx={cx - rx * 0.66} cy={cy - ry * 0.18} r={Math.max(1, rx * 0.05)} color="rgba(255,255,255,0.8)" />
-        {/* Cheeks */}
-        <Oval x={cx - eyeDX - rx * 0.3} y={eyeY + ry * 0.14} width={rx * 0.26} height={ry * 0.15} color={cheek}>
-          <BlurMask blur={Math.max(0.5, rx * 0.03)} style="normal" />
-        </Oval>
-        <Oval x={cx + eyeDX + rx * 0.04} y={eyeY + ry * 0.14} width={rx * 0.26} height={ry * 0.15} color={cheek}>
-          <BlurMask blur={Math.max(0.5, rx * 0.03)} style="normal" />
-        </Oval>
-        {/* Eyes */}
-        <Path path={sleepyEyes} style="stroke" strokeWidth={stroke} strokeCap="round" color={colors.ink} opacity={sleepyOpacity} />
-        <Group opacity={awakeOpacity}>
-          {[leftEye, rightEye].map((transform, i) => (
-            <Group key={i} transform={transform}>
-              <Circle cx={0} cy={0} r={eyeR} color={colors.ink} />
-              <Circle cx={-eyeR * 0.34} cy={-eyeR * 0.36} r={eyeR * 0.36} color="white" />
-            </Group>
-          ))}
+        <NeckPart neck={look.neck} geo={geo} accent={accent} lod={lod} />
+        <Group transform={faceTransform}>
+          <EyesPart style={look.eyes} face={f} lod={lod} px={facePx} tones={c} />
+          <MouthPart style={look.mouth} face={f} lod={lod} px={facePx} tones={c} drop={mouthDrop[look.eyes]} />
         </Group>
-        {/* Mouth */}
-        <Path path={smile} style="stroke" strokeWidth={stroke} strokeCap="round" color={colors.ink} opacity={smileOpacity} />
-        <Group transform={yawnTransform}>
-          <Oval x={-mouthW * 0.62} y={-mouthW * 0.8} width={mouthW * 1.24} height={mouthW * 1.6} color={colors.ink} />
-          <Oval x={-mouthW * 0.36} y={mouthW * 0.1} width={mouthW * 0.72} height={mouthW * 0.55} color="#FF7A9C" />
+        <Group transform={dressed} opacity={dressOpacity}>
+          <TopperFront {...topper} />
         </Group>
+        {lod > 0 && <Sparkles dress={dress} geo={geo} />}
       </Group>
     </Canvas>
   );
 }
 
-function eyeTransform(x: number, y: number, r: number, f: Face) {
-  'worklet';
-  return [
-    { translateX: x + f.lookX.get() * r * 0.5 },
-    { translateY: y + f.lookY.get() * r * 0.4 },
-    { scaleY: Math.max(0.08, f.blink.get()) },
+function BodyFill({ geo, c }: { geo: BodyGeo; c: Candy }) {
+  const h = geo.bottom - geo.top;
+  const w = geo.right - geo.left;
+  return (
+    <>
+      <Path path={geo.path}>
+        <LinearGradient start={vec(0, geo.top)} end={vec(0, geo.bottom)} colors={[c.light, c.fill, c.deep]} positions={[0, 0.48, 1]} />
+        <Shadow dx={0} dy={-h * 0.1} blur={h * 0.09} color={alpha(c.deep, 0.6)} inner />
+        <Shadow dx={0} dy={h * 0.045} blur={h * 0.045} color="rgba(255,255,255,0.55)" inner />
+      </Path>
+      <Path path={geo.path}>
+        <RadialGradient c={vec(geo.face.x + 2, geo.top + h * 0.8)} r={w * 0.42} colors={[alpha(c.light, 0.5), alpha(c.light, 0)]} />
+      </Path>
+    </>
+  );
+}
+
+function Gloss({ geo }: { geo: BodyGeo }) {
+  const { x, y, angle, w } = geo.gloss;
+  return (
+    <>
+      <Group transform={[{ translateX: x }, { translateY: y }, { rotate: (angle * Math.PI) / 180 }]}>
+        <Oval x={-w / 2} y={-w * 0.18} width={w} height={w * 0.36} color="rgba(255,255,255,0.7)">
+          <BlurMask blur={Math.max(0.6, w * 0.055)} style="normal" />
+        </Oval>
+      </Group>
+      <Oval x={geo.glint.x - 1.9} y={geo.glint.y - 1.9} width={3.8} height={3.8} color="rgba(255,255,255,0.8)" />
+    </>
+  );
+}
+
+/**
+ * 0 → 1 whenever the same character changes its topper, e.g. when the on-device model
+ * dresses it up or someone picks a hat, so the new one drops in with a sparkle.
+ */
+function useDress(topper: Topper, seed: string) {
+  const dress = useSharedValue(1);
+  const last = useRef({ topper, seed });
+  useEffect(() => {
+    const before = last.current;
+    last.current = { topper, seed };
+    if (before.seed !== seed || before.topper === topper) return;
+    dress.set(withSequence(withTiming(0, { duration: 0 }), withSpring(1, { damping: 9, stiffness: 150 })));
+  }, [dress, seed, topper]);
+  return dress;
+}
+
+const SPARKLE = 'M 0 -1 Q 0.16 -0.16 1 0 Q 0.16 0.16 0 1 Q -0.16 0.16 -1 0 Q -0.16 -0.16 0 -1 Z';
+
+/** Four glints around the head that pop while a new topper lands. */
+function Sparkles({ dress, geo }: { dress: SharedValue<number>; geo: BodyGeo }) {
+  const pop = useDerivedValue(() => {
+    const t = dress.get();
+    return t >= 0.999 ? 0 : Math.sin(Math.PI * Math.min(1, t));
+  });
+  const spots = [
+    { x: geo.crown.x - geo.crown.w * 0.62, y: geo.crown.y - 3, s: 4.4 },
+    { x: geo.crown.x + geo.crown.w * 0.66, y: geo.crown.y - 7, s: 5.2 },
+    { x: geo.crown.x - geo.crown.w * 0.3, y: geo.crown.y - 16, s: 3.4 },
+    { x: geo.crown.x + geo.crown.w * 0.24, y: geo.crown.y - 19, s: 3 },
   ];
+  return (
+    <Group opacity={pop}>
+      {spots.map((spot, i) => (
+        <Sparkle key={i} {...spot} pop={pop} />
+      ))}
+    </Group>
+  );
+}
+
+function Sparkle({ x, y, s, pop }: { x: number; y: number; s: number; pop: SharedValue<number> }) {
+  const transform = useDerivedValue(() => [{ translateX: x }, { translateY: Math.max(1.5 * s, y) }, { scale: s * (0.4 + pop.get() * 0.8) }, { rotate: pop.get() }]);
+  return (
+    <Group transform={transform}>
+      <Path path={SPARKLE} color="#FFF6B8" />
+    </Group>
+  );
 }

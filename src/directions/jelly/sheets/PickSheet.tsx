@@ -1,10 +1,11 @@
 // One picker for every "choose a jelly" moment, driven by the `mode` search param:
 //   start   the whole tree, one tap from Now          /jelly/pick?mode=start
-//   fill    "What was this?" for a gap                /jelly/pick?mode=fill&from=…&to=…
+//   fill    "What was this?" for a gap                /jelly/pick?mode=fill&from=…&to=…[&at=…]
+//           (`at` preselects the hour around it inside a long gap)
 //   entry   change an entry's context                 /jelly/pick?mode=entry&entry=…
 //   parent  move a context under another one          /jelly/pick?mode=parent&id=…
 
-import DateTimePicker from '@expo/ui/community/datetime-picker';
+import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
@@ -25,13 +26,17 @@ import {
 } from '@/core';
 
 import { buzz, play } from '../feedback';
-import { candy, colors, fonts } from '../theme';
-import { CandySurface, Squishy } from '../ui';
-import { sheetStyles } from './parts';
+import { Character } from '../Character';
+import { tabular, text, useTheme } from '../theme';
+import { Squishy } from '../ui';
+import { sheetBody } from './parts';
 
-type Params = { mode?: string; from?: string; to?: string; entry?: string; id?: string };
+type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string };
+
+const FIVE = 5 * MINUTE;
 
 export function PickSheet() {
+  const t = useTheme();
   const params = useLocalSearchParams<Params>();
   const mode = params.mode ?? 'start';
   const tree = useTree();
@@ -42,8 +47,8 @@ export function PickSheet() {
   const gapFrom = Number(params.from);
   const gapTo = Number(params.to);
   // The gap's bounds, adjustable so a long gap can be filled in part.
-  const [from, setFrom] = useState(gapFrom);
-  const [to, setTo] = useState(gapTo);
+  const [from, setFrom] = useState(() => aroundAt(Number(params.at), gapFrom, gapTo).from);
+  const [to, setTo] = useState(() => aroundAt(Number(params.at), gapFrom, gapTo).to);
   const entry = entries.find((e) => e.id === params.entry) ?? null;
   const moving = tree.ordered.find((c) => c.id === params.id) ?? null;
   const excluded = moving ? subtreeIds(tree, moving.id) : new Set<ContextId>();
@@ -78,69 +83,75 @@ export function PickSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={[sheetStyles.body, { paddingBottom: 40 }]} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <ScrollView contentContainerStyle={[sheetBody, { paddingBottom: 40 }]} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <Text style={[text.title2, { color: t.c.ink }]}>{title}</Text>
+      {subtitle ? <Text style={[text.subhead, tabular, styles.subtitle, { color: t.c.muted }]}>{subtitle}</Text> : null}
       {mode === 'fill' && Number.isFinite(gapFrom) && Number.isFinite(gapTo) && (
         <View style={styles.range}>
-          <Text style={styles.rangeLabel}>From</Text>
+          <Text style={[text.headline, { color: t.c.ink }]}>From</Text>
           <DateTimePicker
             value={new Date(from)}
             mode="time"
             display="compact"
             style={{ width: 92, height: 38 }}
             locale="en_GB"
-            themeVariant="light"
-            accentColor={colors.pinkDeep}
+            themeVariant={t.scheme}
+            accentColor={t.c.pinkDeep}
             onValueChange={(_, d) => setFrom(clamp(onDay(gapFrom, d), gapFrom, to - MINUTE))}
           />
-          <Text style={styles.rangeLabel}>to</Text>
+          <Text style={[text.headline, { color: t.c.ink }]}>to</Text>
           <DateTimePicker
             value={new Date(to)}
             mode="time"
             display="compact"
             style={{ width: 92, height: 38 }}
             locale="en_GB"
-            themeVariant="light"
-            accentColor={colors.pinkDeep}
+            themeVariant={t.scheme}
+            accentColor={t.c.pinkDeep}
             onValueChange={(_, d) => setTo(clamp(onDay(gapTo, d), from + MINUTE, gapTo))}
           />
         </View>
       )}
       {pickable.length > 8 && (
-        <View style={styles.search}>
-          <SymbolView name="magnifyingglass" size={16} tintColor={colors.muted} weight="bold" />
+        <View style={[styles.search, { backgroundColor: t.c.sunken }]}>
+          <SymbolView name="magnifyingglass" size={16} tintColor={t.c.muted} weight="bold" />
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Find a jelly"
-            placeholderTextColor={colors.faint}
-            style={styles.searchInput}
+            placeholderTextColor={t.c.faint}
+            style={[text.body, styles.searchInput, { color: t.c.ink }]}
             autoCorrect={false}
             clearButtonMode="while-editing"
           />
         </View>
       )}
       <View style={styles.list}>
-        {mode === 'parent' && moving && !q && <Row label="Top level" glyph="🏠" hue="gray" depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
+        {mode === 'parent' && moving && !q && <Row label="Top level" context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
         {list.map((c) => (
           <Row
             key={c.id}
             label={q ? pathLabel(c) : c.name}
-            glyph={c.glyph}
-            hue={c.hue}
+            context={c}
             depth={q ? 0 : c.depth}
             selected={(mode === 'entry' && entry?.contextId === c.id) || (mode === 'parent' && moving?.parentId === c.id)}
             onPress={() => pick(c)}
           />
         ))}
-        {list.length === 0 && <Text style={styles.empty}>No jelly matches "{query}".</Text>}
+        {list.length === 0 && <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{`No jelly matches “${query}”.`}</Text>}
       </View>
     </ScrollView>
   );
 }
 
 const clamp = (t: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, t));
+
+/** The whole gap, or the hour around `at` when the gap is much longer than that. */
+function aroundAt(at: number, gapFrom: number, gapTo: number) {
+  if (!Number.isFinite(at) || gapTo - gapFrom <= 90 * MINUTE) return { from: gapFrom, to: gapTo };
+  const from = clamp(Math.round((at - 30 * MINUTE) / FIVE) * FIVE, gapFrom, gapTo - 60 * MINUTE);
+  return { from, to: Math.min(gapTo, from + 60 * MINUTE) };
+}
 
 /** The day of `base` at the picked wall-clock time. */
 function onDay(base: number, picked: Date): number {
@@ -149,58 +160,49 @@ function onDay(base: number, picked: Date): number {
   return d.getTime();
 }
 
+/** One jelly to pick, with its sleeping character; `context` null is "Top level". */
 function Row({
   label,
-  glyph,
-  hue,
+  context,
   depth,
   selected,
   onPress,
 }: {
   label: string;
-  glyph: string | null;
-  hue: ResolvedContext['hue'];
+  context: ResolvedContext | null;
   depth: number;
   selected?: boolean;
   onPress: () => void;
 }) {
+  const t = useTheme();
+  const c = t.candy[context?.hue ?? 'gray'];
   return (
     <Squishy amount={0.06} onPress={onPress} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }}>
-      <View style={[styles.row, { marginLeft: depth * 22 }, selected && { backgroundColor: candy[hue].tint }]}>
-        <CandySurface hue={hue} radius={17} flat style={styles.dot}>
-          <Text style={styles.dotEmoji}>{glyph ?? ''}</Text>
-        </CandySurface>
-        <Text style={styles.rowLabel} numberOfLines={1}>
+      <View style={[styles.row, { marginLeft: depth * 20 }, selected && { backgroundColor: c.tint }]}>
+        {context ? (
+          <Character context={context} size={38} shadow={false} />
+        ) : (
+          <View style={[styles.home, { backgroundColor: t.c.sunken }]}>
+            <SymbolView name="house.fill" size={16} tintColor={t.c.muted} />
+          </View>
+        )}
+        <Text style={[text.body, styles.rowLabel, { color: t.c.ink }]} numberOfLines={1}>
           {label}
         </Text>
-        {selected && <SymbolView name="checkmark" size={16} tintColor={candy[hue].deep} weight="heavy" />}
+        {selected && <SymbolView name="checkmark" size={16} tintColor={c.ink} weight="heavy" />}
       </View>
     </Squishy>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: fonts.displayBold, fontSize: 26, color: colors.ink, letterSpacing: -0.3 },
-  subtitle: { fontFamily: fonts.textBold, fontSize: 16, color: colors.muted, marginTop: 2, fontVariant: ['tabular-nums'] },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.card,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    height: 46,
-    marginTop: 16,
-    borderWidth: 2,
-    borderColor: colors.line,
-  },
-  searchInput: { flex: 1, fontFamily: fonts.text, fontSize: 17, color: colors.ink },
+  subtitle: { marginTop: 2 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, paddingHorizontal: 12, height: 42, marginTop: 16 },
+  searchInput: { flex: 1 },
   list: { marginTop: 14, gap: 2 },
   range: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  rangeLabel: { fontFamily: fonts.display, fontSize: 17, color: colors.ink },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, paddingHorizontal: 8, borderRadius: 18 },
-  dot: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
-  dotEmoji: { fontSize: 17 },
-  rowLabel: { flex: 1, fontFamily: fonts.display, fontSize: 18, color: colors.ink },
-  empty: { fontFamily: fonts.text, fontSize: 16, color: colors.muted, textAlign: 'center', marginTop: 20 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 54, paddingHorizontal: 8, borderRadius: 18 },
+  home: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  rowLabel: { flex: 1 },
+  empty: { textAlign: 'center', marginTop: 20 },
 });

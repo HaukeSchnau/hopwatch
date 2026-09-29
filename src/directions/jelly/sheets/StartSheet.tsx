@@ -10,7 +10,7 @@ import { actions, type Entry, formatClock, MINUTE, useEntries, useNow, useRunnin
 import { play } from '../feedback';
 import { noteSource } from '../now/choreo';
 import { JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, SheetHeader, sheetStyles, TimeWheel } from './parts';
+import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, TimeWheel, useSheetStyles } from './parts';
 
 const roundDown = (t: number, step: number) => Math.floor(t / step) * step;
 
@@ -21,11 +21,12 @@ export function StartSheet() {
   const running = useRunning();
   const entries = useEntries();
   const now = useNow(15_000);
+  const ss = useSheetStyles();
   const [picked, setPicked] = useState(() => new Date(roundDown(Date.now() - 15 * MINUTE, 5 * MINUTE)));
 
   if (!context) {
     return (
-      <ScrollView contentContainerStyle={sheetStyles.body}>
+ <ScrollView contentContainerStyle={sheetBody}>
         <SheetHeader context={null} title="That jelly is gone" subtitle="It may have been deleted." />
       </ScrollView>
     );
@@ -46,17 +47,17 @@ export function StartSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={sheetStyles.body}>
+    <ScrollView contentContainerStyle={sheetBody}>
       <SheetHeader
         context={context}
         title={isRunning ? `${context.name} started earlier` : `Start ${context.name} earlier`}
         subtitle={isRunning && running ? `Running since ${formatClock(running.entry.startUtc)}` : 'When did it really start?'}
       />
-      <Text style={sheetStyles.label}>Started</Text>
+      <Text style={ss.label}>Started</Text>
       <AgoChips hue={context.hue} now={now} options={AGO} onPick={start} />
-      <Text style={sheetStyles.label}>Or at</Text>
+      <Text style={ss.label}>Or at</Text>
       <TimeWheel value={picked} onChange={setPicked} hue={context.hue} />
-      <Text style={sheetStyles.hint}>{consequence(entries, (e) => tree.byId.get(e.contextId)?.name ?? 'Something', context.id, at, now) ?? ' '}</Text>
+      <Text style={ss.hint}>{consequence(entries, (e) => tree.byId.get(e.contextId)?.name ?? 'Something', context.id, at, now) ?? ' '}</Text>
       <JellyButton
         label={isRunning ? `Move start to ${formatClock(at)}` : `Start at ${formatClock(at)}`}
         hue={context.hue}

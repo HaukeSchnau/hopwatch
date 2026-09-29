@@ -59,7 +59,8 @@ from its id, so blobs can be told apart by shape as well as by color and emoji.
 
 Code lives in `src/directions/jelly/`, with thin routes in `src/app/jelly/`: a `(tabs)`
 group (Now, Day, Week, Stuff, Settings) inside a Stack that presents the sheets (`start`,
-`stop`, `pick`, `context`, `entry`) as native form sheets.
+`stop`, `pick`, `context`, `entry`) as native form sheets. Round two replaced the frame;
+see [Round two](#round-two) below.
 
 ### Signature moments
 
@@ -139,20 +140,155 @@ drags label their toast, e.g. "Deep work ends at 11:40".
 - Beans shorter than about 8 minutes have no knobs, because they'd cover their
   neighbours. Their times are still editable in the entry detail.
 - During a knob drag the dragged bean overlaps its neighbour; the trim shows on release.
-- The toast lives in the tabs layout, so it sits under open sheets and appears once the
-  sheet closes.
+- The toast sits under open sheets and appears once the sheet closes.
 - Switching from another tab or a sheet swaps the stage blob without a flight, since
   the Now screen isn't on screen to measure.
 - Pin slots can't be rearranged in the UI (`movePin` is unused); new pins take the
   lowest free slot and never move.
-- No night mode. Jelly always uses its light candy palette.
 - Checked on the simulator only. The nudge-to-stop-sheet path was checked in code, not
   with a real notification, and haptics and sound levels still need a real phone.
 
+### Round two
+
+Hauke picked Jelly's vibe but wanted it to feel native, like Glass, with Orbit's dial.
+Round two keeps everything that is Jelly (the jellies with faces, the hop, beans, jars,
+beads, confetti, sounds) and swaps the frame for iOS's own: native tabs, headers,
+menus, sheets and forms, SF Pro Rounded, and a night mode. The stage became a candy
+version of Orbit's 24-hour dial. The characters themselves (every jelly its own look)
+were a parallel job, documented in [jelly-characters.md](jelly-characters.md).
+
+#### The native frame
+
+- **Tabs.** `JellyTabs.tsx` renders `NativeTabs` (Liquid Glass) with four SF Symbol tabs:
+  Now (`face.smiling`), Day, Week (`circle.hexagongrid`, bubbles) and Stuff. The tint is
+  the running jelly's candy ink, pink when nothing runs. The tab bar minimizes on scroll.
+  Settings moved from a fifth tab to the gear in Stuff's header.
+- **Mini player.** Away from Now, `NativeTabs.BottomAccessory` shows the running jelly
+  awake at 38 pt with its name, "since 09:12", a ticking h:mm:ss and Stop (hold Stop for
+  the "stopped earlier" menu). Tapping it goes to Now. In the minimized, inline placement
+  it drops to the face and the timer.
+- **Headers.** Day, Week and Stuff each sit in their own native Stack (`nav.tsx`,
+  `TabStack`) with a transparent header whose buttons are tinted in the running candy
+  color. Day and Week get a two-line rounded title ("Today" over "Tue 29 Sep") that
+  jumps back to the present when tapped, and glass chevron buttons to step days or weeks.
+  Stuff has a native large title, a stacked search field (`Stack.SearchBar`), the gear on
+  the left and "+" on the right. Now has no header: the dial's corners carry the date,
+  greeting and today's total, and the page fades out under the status bar.
+- **Type.** Fredoka and Nunito are gone; everything is SF Pro Rounded through
+  `fontFamily: 'ui-rounded'` with system weights (`text` styles in `theme.ts`) and
+  tabular digits for times. Native titles (large titles, form sheet titles) stay SF Pro:
+  UIKit headers and SwiftUI navigation titles can't take the rounded design from React
+  Native.
+- **Sheets.** Everything that isn't a tab is a native form sheet with a grabber. Settings,
+  the jelly editor and entry detail are SwiftUI forms (`forms.tsx`: `NavigationStack`,
+  `Form` on the page's cream or plum background, toolbar Close/Done/Add). Each opens with
+  a candy row: React Native content in the form through `RNHostView` (the mascot and the
+  idea in settings, the jelly with its time in entry detail, the draft jelly for a new
+  one). For an existing jelly the characters' `LookEditor` is that row: its big live
+  jelly, trait pickers, "Surprise me" and "Automatic". The time sheets (start, stop) and
+  the picker keep their candy chips and use the native wheel and compact pickers.
+- **Controls.** Native context menus (`MenuView` long-press) on the pinned tiles, the
+  recents beans and the back pill ("Started earlier: 5 · 10 · 15 · 30 · 45 min ago", each
+  with its clock time, "At a time…", "Edit X"), on Stop and the mini player's Stop
+  ("Stopped earlier …", "At a time…"), and on every row in Stuff (the same starts plus
+  Add inside, Pin, Move…, Archive, Delete). For the running jelly the "started" choices
+  move its start. The menus live in `menus.ts`; a backdated start still hops out of the
+  tile that was held. Stuff rows swipe (pin on the left; edit and archive on the right,
+  `ReanimatedSwipeable`). Week's Day/Week switch is the native segmented control; "Show
+  archived" and the sounds switch are native switches; the entry sheet uses SwiftUI date
+  pickers in 24-hour time; the editor uses native pickers, toggles and steppers.
+- **Night candy.** `theme.ts` has a light and a dark palette and `useTheme()` picks by the
+  system appearance. By day the page is cream with plum ink; at night it's deep plum
+  (#150F1D) with milk ink, raised cards and a darker groove. Candy stays candy: fills are
+  the same, while tints, glows and the "ink" version of each hue (text and tint on the
+  page, pushed until it reaches 3.6:1 by day and 5:1 at night) are computed per
+  appearance. SwiftUI hosts get the matching `colorScheme`, and a `ThemeProvider` gives
+  the native stacks the page color.
+- **Motion.** Reduce Motion skips the hop (the jelly swaps into the dial), the
+  breathing, idle hops, blinking and glancing, the head pulse and the ignition. Reanimated
+  springs follow the system setting on their own.
+- **Sounds.** The squishy-sounds preference moved from `jelly-prefs.json` to the core
+  preference store (`usePref('jelly.sounds', …)`, `actions.setPref`).
+
+#### The candy dial
+
+`dial/CandyDial.tsx` is Orbit's ring (`dial/geometry.ts` is Orbit's math, copied) drawn
+in candy with Skia: midnight at the bottom, noon on top, morning up the left side.
+
+- **Groove.** The track is a candy ring shaded with a radial gradient (darker inside,
+  pale rim outside), a gloss streak on its upper left and sugar dots at every hour. The
+  rest of today is washed out, and a small pink pin marks now.
+- **Beans.** Each entry is a jelly bean pressed into the groove: a stroke with round caps,
+  shortened by the cap radius so its ends land exactly on its times, a 1.6 pt gap to its
+  neighbours, tube shading across its width, a white gloss line and a soft colored
+  shadow. Entries shorter than a bean's width become round candy beads.
+- **Running bean.** It grows with the clock and wears a glowing head that breathes. A
+  just-started entry shows at once as a bead, even before the day report's own clock
+  catches up (`dayBeans`).
+- **On Now** the dial is the stage (`now/Stage.tsx`): the running jelly sits in the ring's
+  middle at 104 pt with its path, name and the big timer below it. The corners hold the
+  greeting and date, today's total (opens Day), "since 09:12" (tap to correct the
+  start) and Stop. The hop now lands in the ring's centre; on landing the new bean lights
+  up: it pours along its arc, its head pops with an overshoot, a ripple runs out from it
+  and the whole groove blushes in the jelly's color.
+- **On Day** the dial sits above the bean timeline as the overview, with the day's total,
+  bean count and median inside. Tapping an arc selects its bean: the dial gives it a
+  halo and the timeline scrolls to it and haloes it too; tapping the same arc again opens
+  the entry. Tapping a dark stretch opens "What was this?"; for a long gap the sheet
+  preselects the hour around the tap, adjustable out to the whole gap.
+
+#### On-device suggestions
+
+A progressive enhancement Hauke asked for mid-round: with Apple's on-device model, naming
+a new jelly suggests an emoji and a look. The characters builder owns the model side
+(`character/suggest.ts`); the shell calls it.
+
+- **Onboarding and new jellies** (`suggestions.ts`, `useNameSuggestion`): 600 ms after
+  the last keystroke, with two or more characters, it asks with the parent path and the
+  siblings. Answers for a name that changed in the meantime are dropped. Until the user
+  touches the emoji, a suggested one fills in, marked with a small ✨ (a sparkle badge
+  on the onboarding well, "Emoji ✨" and "✨ suggested" in the editor), and the preview
+  jelly wears the suggested look (`Character`'s `look` prop). Creating the jelly saves
+  the suggestion with `saveSuggestedLook` when it was made for the final name.
+- **Existing jellies:** a "✨ Suggest" button next to the emoji asks again, fills the
+  emoji (still editable) and saves the look.
+- `useDressUp()` runs once in Jelly's layout. Without the model none of this shows, and
+  nothing waits on it: typing, the emoji and saving work at once.
+
+#### Verification
+
+Checked on the Jelly simulator (iPhone 18 Pro, iOS 27) with sample data and with an
+empty database, in light and dark: switching with the hop into the dial (recorded and
+checked frame by frame), undo from the toast, back and resume, backdated start and stop
+through the native menus, the stop sheet from a simulated nudge, knob drags with the
+domain trimming the neighbour, gap fill from the dial, selecting beans from the dial,
+entry detail, the jelly editor with the Look editor and a new jelly with a live model
+suggestion, swipe actions and context menus in Stuff, both report modes, settings and
+onboarding. Typecheck and lint are clean for Jelly. Screenshots: `.shots/j2s-*.png`; the
+switch in night candy: `.shots/j2s-switch.gif`.
+
+#### Known limitations (round two)
+
+- Native titles (large titles and sheet titles) are SF Pro, not Rounded; React Native's
+  header font path doesn't resolve `ui-rounded`.
+- A new jelly's preview is seeded by a placeholder id, so the traits that come from the
+  id (body, eyes, mouth) can differ once it's made with its real id; hinted and suggested
+  traits carry over. See Core requests.
+- The toast renders inside each tab (a tab's native stack covers anything layered over
+  the tab bar) and still sits under open sheets.
+- Beans on the Day timeline have no context menu; their detail is one tap away. Time
+  sheets (start, stop) and the picker stay React Native with candy chips rather than
+  SwiftUI forms, since the chips are the quickest way to backdate.
+- Search in Stuff filters the list in place; it doesn't search notes or entries.
+- The sample running entry from an old sample load can span days; the dial shows only
+  today's part.
+
+
 ## Core requests
 
-- **A small UI-preferences store.** Jelly keeps one preference (squishy sounds on/off).
-  Core has no way to store direction-specific settings, so Jelly writes
-  `jelly-prefs.json` in the document directory with expo-file-system (`feedback.ts`). A
-  `getMeta`/`setMeta` pair on `actions`, namespaced per direction, would remove that
-  file.
+- ~~A small UI-preferences store.~~ Done in round two (`usePref`, `actions.setPref`);
+  Jelly's sounds preference uses it and `jelly-prefs.json` is gone.
+- **Create a context with a known id.** `actions.createContext` picks the id itself, so
+  the editor's live preview of a new jelly is seeded by a placeholder and its id-seeded
+  traits can change on "Add". An optional `id` in the input (or an exported id
+  generator) would let the preview be exactly the jelly that gets made.
