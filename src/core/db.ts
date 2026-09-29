@@ -180,6 +180,14 @@ export function getMeta(key: string): string | null {
   return open().getFirstSync<{ value: string }>('SELECT value FROM meta WHERE key = ?', key)?.value ?? null;
 }
 
+/** Every meta row whose key starts with `prefix`. */
+export function metaWithPrefix(prefix: string): { key: string; value: string }[] {
+  return open().getAllSync<{ key: string; value: string }>(
+    'SELECT key, value FROM meta WHERE substr(key, 1, length(?1)) = ?1',
+    prefix,
+  );
+}
+
 export function setMeta(key: string, value: string | null): void {
   if (value === null) open().runSync('DELETE FROM meta WHERE key = ?', key);
   else open().runSync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', key, value);

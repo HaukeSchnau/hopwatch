@@ -6,7 +6,7 @@ import { AppState } from 'react-native';
 
 import type { ContextId, EntryId } from './model';
 import { dayReport, weekReport } from './reports';
-import { type LastAction, useStint } from './store';
+import { type Json, type LastAction, useStint } from './store';
 import { addDays } from './time';
 import { findOpen, gapAt, previousContextId } from './timeline';
 import { pickable, type ResolvedContext } from './tree';
@@ -127,24 +127,24 @@ export function useRecents(limit = 6): ResolvedContext[] {
 export function useDayReport(dayStart: number) {
   const entries = useEntries();
   const tree = useTree();
-  const isLive = Date.now() < addDays(dayStart, 1);
-  const now = useNow(isLive ? 15_000 : null);
-  return useMemo(() => dayReport(entries, tree, dayStart, now), [entries, tree, dayStart, now]);
+  // Past days stop at their end, so their report stays memoized while the clock ticks.
+  const at = Math.min(useNow(15_000), addDays(dayStart, 1));
+  return useMemo(() => dayReport(entries, tree, dayStart, at), [entries, tree, dayStart, at]);
 }
 
 /** Per-day reports, week totals and target lines for the week starting at `weekStart`. */
 export function useWeekReport(weekStart: number) {
   const entries = useEntries();
   const tree = useTree();
-  const isLive = Date.now() < addDays(weekStart, 7);
-  const now = useNow(isLive ? 30_000 : null);
-  return useMemo(() => weekReport(entries, tree, weekStart, now), [entries, tree, weekStart, now]);
+  const at = Math.min(useNow(30_000), addDays(weekStart, 7));
+  return useMemo(() => weekReport(entries, tree, weekStart, at), [entries, tree, weekStart, at]);
 }
 
 /** The gap around `at`, for "what was this?" sheets. Null inside an entry. */
 export function useGapAt(at: number | null) {
   const entries = useEntries();
-  return useMemo(() => (at === null ? null : gapAt(entries, at, Date.now())), [entries, at]);
+  const now = useNow(60_000);
+  return useMemo(() => (at === null ? null : gapAt(entries, at, now)), [entries, at, now]);
 }
 
 /**
@@ -153,19 +153,25 @@ export function useGapAt(at: number | null) {
  */
 export function useUndoToast(windowMs = 5000): { action: LastAction | null; visible: boolean } {
   const action = useStint((s) => s.lastAction);
-  const [visible, setVisible] = useState(false);
+  // The action whose window has run out. A screen mounting after the window starts hidden.
+  const [expired, setExpired] = useState<LastAction | null>(() =>
+    action && action.at + windowMs <= Date.now() ? action : null,
+  );
   useEffect(() => {
-    if (!action) {
-      setVisible(false);
-      return;
-    }
-    const remaining = action.at + windowMs - Date.now();
-    setVisible(remaining > 0);
-    if (remaining <= 0) return;
-    const timer = setTimeout(() => setVisible(false), remaining);
+    if (!action) return;
+    const timer = setTimeout(() => setExpired(action), Math.max(0, action.at + windowMs - Date.now()));
     return () => clearTimeout(timer);
   }, [action, windowMs]);
-  return { action, visible };
+  return { action, visible: action !== null && expired !== action };
+}
+
+/**
+ * A UI preference set with `actions.setPref`, or `fallback` when unset. `parse` checks the
+ * stored JSON and returns undefined when it doesn't fit, e.g. after a format change.
+ */
+export function usePref<T>(key: string, fallback: T, parse: (value: Json) => T | undefined): T {
+  const stored = useStint((s) => s.prefs[key]);
+  return stored === undefined ? fallback : (parse(stored) ?? fallback);
 }
 
 /** A pending request from outside the app, e.g. a tapped nudge asking for the stop sheet. */

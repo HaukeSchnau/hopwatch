@@ -11,6 +11,12 @@ export interface DirectionInfo {
 
 export const directions = [
   {
+    id: 'jelly',
+    name: 'Jelly',
+    tagline: 'Candy characters, each one its own someone, living on a 24-hour dial. Native, and Apple Intelligence helps dress them.',
+    swatch: { background: '#FFF4E8', ink: '#2B1B3D', accent: '#FF6FB5' },
+  },
+  {
     id: 'glass',
     name: 'Glass',
     tagline: 'Native iOS with Liquid Glass. The room takes on the color of what you are doing.',
@@ -33,12 +39,6 @@ export const directions = [
     name: 'Orbit',
     tagline: 'The day as a glowing 24-hour dial. Scrub the ring to change the past.',
     swatch: { background: '#07080C', ink: '#E8ECFF', accent: '#7CF6D4' },
-  },
-  {
-    id: 'jelly',
-    name: 'Jelly',
-    tagline: 'Squishy candy blobs that wake up when you pick them. Pure joy.',
-    swatch: { background: '#FFF4E8', ink: '#2B1B3D', accent: '#FF6FB5' },
   },
 ] as const satisfies readonly DirectionInfo[];
 

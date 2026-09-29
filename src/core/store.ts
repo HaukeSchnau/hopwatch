@@ -23,6 +23,11 @@ export interface LastAction {
   undoRows: Entry[];
 }
 
+/** JSON-serializable values, for preferences. */
+export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+const PREF_PREFIX = 'pref:';
+
 /** Something outside the app asked a screen to do something. */
 export type Intent = { kind: 'stop-sheet' };
 
@@ -37,6 +42,11 @@ export interface StintState {
   direction: DirectionId | null;
   lastAction: LastAction | null;
   intent: Intent | null;
+  /**
+   * Device-local UI preferences, keyed by `<direction>.<name>`, e.g. `jelly.sounds`.
+   * Not synced and not exported: data belongs in contexts and entries.
+   */
+  prefs: Readonly<Record<string, Json>>;
 }
 
 export const useStint = create<StintState>()(() => ({
@@ -47,6 +57,7 @@ export const useStint = create<StintState>()(() => ({
   direction: null,
   lastAction: null,
   intent: null,
+  prefs: {},
 }));
 
 const get = useStint.getState;
@@ -58,6 +69,9 @@ const clock = (): timeline.Clock => ({
   newId: () => randomUUID() as EntryId,
 });
 
+/** A fresh id for `actions.createContext`. */
+export const newContextId = () => randomUUID() as ContextId;
+
 let pendingLinks: LinkAction[] = [];
 
 /** Loads everything from SQLite. Synchronous, so the first frame has data. */
@@ -65,7 +79,16 @@ export function initStore() {
   if (get().ready) return;
   const { contexts, entries } = db.loadAll();
   const direction = db.getMeta('direction');
+  const prefs: Record<string, Json> = {};
+  for (const row of db.metaWithPrefix(PREF_PREFIX)) {
+    try {
+      prefs[row.key.slice(PREF_PREFIX.length)] = JSON.parse(row.value) as Json;
+    } catch {
+      // A corrupt preference falls back to its default.
+    }
+  }
   set({
+    prefs,
     ready: true,
     contexts,
     entries,
@@ -181,8 +204,12 @@ export const actions = {
     set({ lastAction: null });
   },
 
-  createContext(input: Omit<tree.NewContextInput, 'id'>): ContextId {
-    const id = randomUUID() as ContextId;
+  /**
+   * Creates a context. Pass an `id` from `newContextId()` when a preview needs to know it
+   * before the context exists; otherwise one is generated.
+   */
+  createContext(input: Omit<tree.NewContextInput, 'id'> & { id?: ContextId }): ContextId {
+    const id = input.id ?? newContextId();
     const first = get().contexts.length === 0;
     commitContexts(tree.createContext(get().contexts, { ...input, id }, Date.now()));
     // The end of onboarding is the calm moment to ask, before the first switch.
@@ -229,6 +256,15 @@ export const actions = {
     }
     updateContextRow(id, tree.archive);
     return 'archived';
+  },
+
+  /** Stores a UI preference; null removes it. See `usePref`. */
+  setPref(key: string, value: Json) {
+    db.setMeta(`${PREF_PREFIX}${key}`, value === null ? null : JSON.stringify(value));
+    const prefs = { ...get().prefs };
+    if (value === null) delete prefs[key];
+    else prefs[key] = value;
+    set({ prefs });
   },
 
   setDirection(direction: DirectionId) {
