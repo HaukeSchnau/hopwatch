@@ -63,25 +63,20 @@ installable on Hauke's iPhone, built natively on the M1 builder. No Expo Go.
 
 ## State
 
-- Round one done (five directions, committed, IPA published). Hauke's verdict: Jelly's vibe
-  wins; it should feel more native (like Glass), every jelly should be a unique character,
-  and he likes Orbit's dial. Brief: docs/directions/jelly-2.md.
-- Round two in progress (jj change "wip: Jelly 2 …"): two builder subagents.
-  - Characters: character/**, Gummy.tsx, Character.tsx, geometry.ts, Mould.tsx,
-    src/app/jelly/looks.tsx (dev gallery), docs/directions/jelly-characters.md. Simulator
-    5230DDD4 ("Stint Five Glass").
-  - Shell: the rest of Jelly (NativeTabs + mini player, SF Rounded, native menus/forms,
-    dark mode, candy dial on Now and Day), docs/directions/jelly.md. Simulator 9CD905EA.
-  - Shared contract: `Character` props and Gummy's face exports stay stable;
-    `LookEditor({ context })` in character/LookEditor.tsx.
-- Core gained a preference store: `actions.setPref(key, json)`, `usePref(key, fallback,
-  parse)`, persisted as `pref:<key>` in meta. Custom looks live at `jelly.look.<id>`.
-- Metro: `jelly-dev` on 3105 (STINT_DIRECTION=jelly); `metro-all` on 3100.
-- Open core requests from round one: undo for context edits, a trim-preview helper.
+- Round two done and committed: Jelly 2 (characters, native frame, candy dial) and the
+  on-device model bridge with Apple Intelligence suggestions. IPA published 2026-09-29
+  at https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/stint-five/ (FoundationModels
+  weak-linked, verified with otool).
+- Core has a preference store (`usePref`, `actions.setPref`) and `newContextId()`.
+- Metro: `jelly-dev` on 3105 (STINT_DIRECTION=jelly) and `metro-all` on 3100 are running.
+  All project simulators are shut down (Jelly is 9CD905EA).
+- Lint: core, shell, Jelly and modules are clean; the other four directions still have
+  React Compiler rule findings (moot if they're removed).
 
 ## Next
 
-1. Review both builders' work together, fix seams, final QA in light and dark.
-2. Rebuild and republish the IPA. Update the Lab screenshots for Jelly.
-3. Then (once Hauke confirms Jelly 2): make Jelly the app on `stint://`, remove the other
-   four directions and the Lab, consider the Live Activity (expo-widgets).
+1. Hauke tries Jelly 2 on the phone, including Apple Intelligence suggestions (only
+   verified on the simulator so far).
+2. Once confirmed: make Jelly the app (remove the other directions and the Lab, scheme
+   `stint://`, drop dev-only scripts like devScript.ts), then consider the Live
+   Activity (expo-widgets).

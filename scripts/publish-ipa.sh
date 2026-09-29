@@ -45,7 +45,7 @@ with open(f"{share}/manifest.plist", "wb") as f:
 # Optional overview of the directions, e.g. a contact sheet of the Lab screenshots.
 preview = ""
 if os.path.exists(f"{share}/preview.jpg"):
-    preview = '<a href="preview.jpg"><img class="preview" src="preview.jpg" alt="Glass, Deck, Almanac, Orbit and Jelly"></a>'
+    preview = '<a href="preview.jpg"><img class="preview" src="preview.jpg" alt="Preview of the app"></a>'
 
 install = f"itms-services://?action=download-manifest&url={base}/manifest.plist"
 built = time.strftime("%d %b %Y, %H:%M UTC", time.gmtime())
@@ -73,7 +73,7 @@ page = f"""<!doctype html>
   <a class="install" href="{html.escape(install)}">Install on this iPhone</a>
   <p>Open this page in Safari on the iPhone. After installing, iOS asks for Developer Mode once:
      Settings › Privacy &amp; Security › Developer Mode, then restart.</p>
-  <p>Five design directions, one app. Pick one in the Lab and switch any time from its settings.</p>
+  <p>Jelly 2 plus four other design directions in one app. Pick one in the Lab and switch any time from its settings.</p>
   {preview}
 </main></body></html>
 """
