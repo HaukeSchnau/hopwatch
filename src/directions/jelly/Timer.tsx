@@ -7,7 +7,7 @@ import Animated, { withSpring, withTiming } from 'react-native-reanimated';
 
 import { durationParts, useNow } from '@/core';
 
-import { colors, fonts, springs } from './theme';
+import { springs, useTheme } from './theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -20,18 +20,21 @@ interface TimerProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export function Timer({ since, size = 52, color = colors.ink, secondsColor = colors.muted, seconds = true, style }: TimerProps) {
+export function Timer({ since, size = 52, color, secondsColor, seconds = true, style }: TimerProps) {
+  const t = useTheme();
   const now = useNow(1000);
   const parts = durationParts(now - since);
   return (
     <View style={[styles.row, style]} accessible accessibilityRole="timer" accessibilityLabel={`${parts.hours} hours ${parts.minutes} minutes`}>
-      <Digits text={`${parts.hours}:${pad(parts.minutes)}`} size={size} color={color} />
-      {seconds && <Digits text={`:${pad(parts.seconds)}`} size={size * 0.42} color={secondsColor} style={{ marginBottom: size * 0.13 }} />}
+      <Digits text={`${parts.hours}:${pad(parts.minutes)}`} size={size} color={color ?? t.c.ink} weight="800" />
+      {seconds && (
+        <Digits text={`:${pad(parts.seconds)}`} size={size * 0.42} color={secondsColor ?? t.c.muted} weight="700" style={{ marginBottom: size * 0.14 }} />
+      )}
     </View>
   );
 }
 
-function Digits({ text, size, color, style }: { text: string; size: number; color: string; style?: StyleProp<ViewStyle> }) {
+function Digits({ text, size, color, weight, style }: { text: string; size: number; color: string; weight: '700' | '800'; style?: StyleProp<ViewStyle> }) {
   const chars = [...text];
   return (
     <View style={[styles.row, style]}>
@@ -43,7 +46,7 @@ function Digits({ text, size, color, style }: { text: string; size: number; colo
           allowFontScaling={false}
           style={[
             styles.digit,
-            { fontSize: size, lineHeight: size * 1.12, color, width: ch === ':' ? size * 0.28 : size * 0.6 },
+            { fontSize: size, lineHeight: size * 1.15, color, fontWeight: weight, width: ch === ':' ? size * 0.26 : size * 0.6 },
           ]}>
           {ch}
         </Animated.Text>
@@ -65,5 +68,5 @@ function digitIn() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end' },
-  digit: { fontFamily: fonts.display, textAlign: 'center', letterSpacing: -0.5 },
+  digit: { fontFamily: 'ui-rounded', textAlign: 'center', letterSpacing: -0.5, fontVariant: ['tabular-nums'] },
 });

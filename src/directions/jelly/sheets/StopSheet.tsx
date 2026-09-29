@@ -8,12 +8,15 @@ import { ScrollView, Text } from 'react-native';
 import { actions, formatClock, formatDuration, MINUTE, useNow, useRunning } from '@/core';
 
 import { play } from '../feedback';
-import { inkCandy, JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, SheetHeader, sheetStyles, TimeWheel } from './parts';
+import { useTheme } from '../theme';
+import { JellyButton } from '../ui';
+import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, TimeWheel, useSheetStyles } from './parts';
 
 export function StopSheet() {
   const running = useRunning();
   const now = useNow(15_000);
+  const t = useTheme();
+  const ss = useSheetStyles();
   // Ten minutes ago on the 5-minute grid, but never before the entry started.
   const [picked, setPicked] = useState(() => {
     const step = 5 * MINUTE;
@@ -24,9 +27,9 @@ export function StopSheet() {
 
   if (!running) {
     return (
-      <ScrollView contentContainerStyle={sheetStyles.body}>
+      <ScrollView contentContainerStyle={sheetBody}>
         <SheetHeader context={null} title="Nothing is running" subtitle="All the jellies are asleep." />
-        <JellyButton label="Close" palette={inkCandy} onPress={() => router.back()} style={{ marginTop: 24 }} />
+        <JellyButton label="Close" palette={t.inkCandy} onPress={() => router.back()} style={{ marginTop: 24 }} />
       </ScrollView>
     );
   }
@@ -43,18 +46,18 @@ export function StopSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={sheetStyles.body}>
+    <ScrollView contentContainerStyle={sheetBody}>
       <SheetHeader
         context={context}
         mood="asleep"
         title={overdue ? `Still on ${context.name}?` : `Stop ${context.name}`}
         subtitle={`Since ${formatClock(entry.startUtc)} · ${formatDuration(elapsed)} so far`}
       />
-      <Text style={sheetStyles.label}>Stopped</Text>
+      <Text style={ss.label}>Stopped</Text>
       <AgoChips hue={context.hue} now={now} options={AGO} earliest={entry.startUtc} onPick={stop} />
-      <Text style={sheetStyles.label}>Or at</Text>
+      <Text style={ss.label}>Or at</Text>
       <TimeWheel value={picked} onChange={setPicked} hue={context.hue} />
-      <Text style={sheetStyles.hint}>{tooEarly ? `That's before it started at ${formatClock(entry.startUtc)}` : ' '}</Text>
+      <Text style={ss.hint}>{tooEarly ? `That's before it started at ${formatClock(entry.startUtc)}` : ' '}</Text>
       <JellyButton
         label={`Stop at ${formatClock(at)}`}
         hue={context.hue}
@@ -63,7 +66,7 @@ export function StopSheet() {
         onPress={() => stop(at)}
         style={{ marginTop: 12 }}
       />
-      <JellyButton label="Stop now" icon="stop.fill" palette={inkCandy} onPress={() => stop()} style={{ marginTop: 12 }} />
+      <JellyButton label="Stop now" icon="stop.fill" palette={t.inkCandy} onPress={() => stop()} style={{ marginTop: 12 }} />
     </ScrollView>
   );
 }

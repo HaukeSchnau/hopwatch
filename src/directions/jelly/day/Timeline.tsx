@@ -1,6 +1,7 @@
 // The day as jelly beans on a vertical track. Beans are sized by duration; gaps are
 // dotted "untracked" beans with a "+". Each bean has little round knobs on its ends:
-// drag one to move that edge in 5-minute steps (the domain trims any neighbour).
+// drag one to move that edge in 5-minute steps (the domain trims any neighbour). The
+// bean picked on the dial wears a halo.
 
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,10 +18,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { actions, type DayReport, formatClock, formatDuration, MINUTE, type Segment } from '@/core';
+import { actions, type DayReport, type EntryId, formatClock, formatDuration, MINUTE, type Segment } from '@/core';
 
 import { buzz } from '../feedback';
-import { alpha, candy, colors, fonts } from '../theme';
+import { alpha, tabular, text, useTheme } from '../theme';
 
 export const PX_PER_MIN = 1.5;
 export const GUTTER = 52;
@@ -53,9 +54,13 @@ interface TimelineProps {
   axis: Axis;
   now: number;
   width: number;
+  /** The bean picked on the dial. */
+  selected: EntryId | null;
+  onSelect: (id: EntryId | null) => void;
 }
 
-export function Timeline({ report, axis, now, width }: TimelineProps) {
+export function Timeline({ report, axis, now, width, selected, onSelect }: TimelineProps) {
+  const t = useTheme();
   const height = yOf(axis.end, axis);
   const trackWidth = width - GUTTER - RIGHT;
   const hours: number[] = [];
@@ -65,13 +70,13 @@ export function Timeline({ report, axis, now, width }: TimelineProps) {
 
   return (
     <View style={{ height: height + 30, marginTop: 12 }}>
-      {hours.map((t) => (
-        <View key={t} style={[styles.hourRow, { top: yOf(t, axis) }]} pointerEvents="none">
-          <Text style={styles.hourLabel}>{formatClock(t).slice(0, 2)}</Text>
-          <View style={styles.hourLine} />
+      {hours.map((h) => (
+        <View key={h} style={[styles.hourRow, { top: yOf(h, axis) }]} pointerEvents="none">
+          <Text style={[text.footnote, tabular, styles.hourLabel, { color: t.c.faint }]}>{formatClock(h).slice(0, 2)}</Text>
+          <View style={[styles.hourLine, { backgroundColor: alpha(t.c.ink, 0.06) }]} />
         </View>
       ))}
-      <View style={[styles.track, { height }]} pointerEvents="none" />
+      <View style={[styles.track, { height, backgroundColor: alpha(t.c.ink, 0.05) }]} pointerEvents="none" />
       {report.gaps.map((g) => {
         const start = Math.max(g.start, axis.start);
         const end = Math.min(g.end, axis.end);
@@ -86,7 +91,11 @@ export function Timeline({ report, axis, now, width }: TimelineProps) {
           now={now}
           width={trackWidth}
           active={active === s.entry.id}
-          onActive={(on) => setActive(on ? s.entry.id : null)}
+          selected={selected === s.entry.id}
+          onActive={(on) => {
+            setActive(on ? s.entry.id : null);
+            if (on) onSelect(null);
+          }}
         />
       ))}
       {isToday && <NowLine y={yOf(now, axis)} />}
@@ -95,6 +104,7 @@ export function Timeline({ report, axis, now, width }: TimelineProps) {
 }
 
 function GapBean({ start, end, axis, width }: { start: number; end: number; axis: Axis; width: number }) {
+  const t = useTheme();
   const top = yOf(start, axis);
   const h = yOf(end, axis) - top;
   const pad = h > 14 ? 3 : 1;
@@ -109,11 +119,11 @@ function GapBean({ start, end, axis, width }: { start: number; end: number; axis
       accessibilityLabel={`Untracked ${formatClock(start)} to ${formatClock(end)}. What was this?`}
       style={({ pressed }) => [
         styles.gap,
-        { top: top + pad, height: Math.max(2, h - pad * 2), width, borderRadius: Math.min(18, h / 2) },
-        pressed && { backgroundColor: 'rgba(255,111,181,0.1)', borderColor: colors.pink },
+        { top: top + pad, height: Math.max(2, h - pad * 2), width, borderRadius: Math.min(18, h / 2), borderColor: alpha(t.c.ink, 0.18) },
+        pressed && { backgroundColor: alpha(t.c.pink, 0.12), borderColor: t.c.pink },
       ]}>
       {h >= 22 && (
-        <Text style={styles.gapText} numberOfLines={1}>
+        <Text style={[text.footnote, { color: t.c.faint }]} numberOfLines={1}>
           + untracked {formatDuration(end - start)}
         </Text>
       )}
@@ -127,11 +137,13 @@ interface BeanProps {
   now: number;
   width: number;
   active: boolean;
+  selected: boolean;
   onActive: (active: boolean) => void;
 }
 
-function Bean({ seg, axis, now, width, active, onActive }: BeanProps) {
-  const c = candy[seg.context.hue];
+function Bean({ seg, axis, now, width, active, selected, onActive }: BeanProps) {
+  const t = useTheme();
+  const c = t.candy[seg.context.hue];
   // While an edge is dragged, these hold the snapped time; NaN otherwise.
   const dragStart = useSharedValue(Number.NaN);
   const dragEnd = useSharedValue(Number.NaN);
@@ -162,6 +174,7 @@ function Bean({ seg, axis, now, width, active, onActive }: BeanProps) {
   return (
     <>
       <Animated.View style={[styles.bean, { width, zIndex: active ? 5 : 1 }, frame]}>
+        {selected && <View pointerEvents="none" style={[styles.halo, { borderColor: c.ink, borderRadius: radius + 5 }]} />}
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={() => router.push({ pathname: '/jelly/entry', params: { id: seg.entry.id } })}
@@ -178,6 +191,7 @@ function Bean({ seg, axis, now, width, active, onActive }: BeanProps) {
                 borderBottomLeftRadius: seg.clippedEnd ? 4 : radius,
                 borderBottomRightRadius: seg.clippedEnd ? 4 : radius,
                 shadowColor: c.deep,
+                shadowOpacity: t.dark ? 0.55 : 0.3,
               },
               active && { shadowOpacity: 0.5, shadowRadius: 12 },
             ]}>
@@ -193,13 +207,13 @@ function Bean({ seg, axis, now, width, active, onActive }: BeanProps) {
               <View style={styles.beanContent}>
                 <View style={styles.beanRow}>
                   {seg.context.glyph ? <Text style={styles.beanEmoji}>{seg.context.glyph}</Text> : null}
-                  <Text style={[styles.beanName, { color: c.on }]} numberOfLines={1}>
+                  <Text style={[text.callout, styles.beanName, { color: c.on }]} numberOfLines={1}>
                     {seg.context.name}
                   </Text>
-                  <Text style={[styles.beanTime, { color: c.on }]}>{formatDuration(seg.end - seg.start)}</Text>
+                  <Text style={[text.subhead, tabular, styles.beanTime, { color: c.on }]}>{formatDuration(seg.end - seg.start)}</Text>
                 </View>
                 {h >= 54 ? (
-                  <Text style={[styles.beanSub, { color: c.on }]} numberOfLines={Math.max(1, Math.floor((h - 36) / 17))}>
+                  <Text style={[text.footnote, styles.beanSub, { color: c.on }]} numberOfLines={Math.max(1, Math.floor((h - 36) / 17))}>
                     {formatClock(seg.start)}–{running ? 'now' : formatClock(seg.end)}
                     {seg.entry.note ? ` · ${seg.entry.note}` : ''}
                   </Text>
@@ -208,7 +222,7 @@ function Bean({ seg, axis, now, width, active, onActive }: BeanProps) {
             ) : compact ? (
               <View style={[styles.beanRow, styles.beanCompact]}>
                 {seg.context.glyph ? <Text style={styles.beanEmojiSmall}>{seg.context.glyph}</Text> : null}
-                <Text style={[styles.beanNameSmall, { color: c.on }]} numberOfLines={1}>
+                <Text style={[text.caption, styles.beanNameSmall, { color: c.on }]} numberOfLines={1}>
                   {seg.context.name} · {formatDuration(seg.end - seg.start)}
                 </Text>
               </View>
@@ -249,7 +263,8 @@ interface KnobProps {
 }
 
 function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
-  const c = candy[seg.context.hue];
+  const t = useTheme();
+  const c = t.candy[seg.context.hue];
   const origin = edge === 'start' ? seg.start : seg.end;
   const [label, setLabel] = useState<string | null>(null);
   const lift = useSharedValue(0);
@@ -319,10 +334,10 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
         style={[styles.knobHit, { left: x - KNOB / 2 }, style]}
         accessibilityRole="adjustable"
         accessibilityLabel={`${edge === 'start' ? 'Start' : 'End'} of ${seg.context.name}, ${formatClock(origin)}`}>
-        <View style={[styles.knob, { borderColor: c.deep }]} />
+        <View style={[styles.knob, { borderColor: c.deep, shadowColor: t.c.ink }]} />
         {label && (
-          <View style={[styles.bubble, { backgroundColor: colors.ink }]}>
-            <Text style={styles.bubbleText}>{label}</Text>
+          <View style={[styles.bubble, { backgroundColor: t.c.toast }]}>
+            <Text style={[text.subhead, tabular, { color: t.c.onToast }]}>{label}</Text>
           </View>
         )}
       </Animated.View>
@@ -331,36 +346,35 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
 }
 
 function NowLine({ y }: { y: number }) {
+  const t = useTheme();
   return (
     <View pointerEvents="none" style={[styles.nowRow, { top: y - 9 }]}>
-      <View style={styles.nowPill}>
-        <Text style={styles.nowText}>now</Text>
+      <View style={[styles.nowPill, { backgroundColor: t.c.pinkDeep }]}>
+        <Text style={[text.caption, styles.nowText]}>now</Text>
       </View>
-      <View style={styles.nowLine} />
+      <View style={[styles.nowLine, { backgroundColor: t.c.pinkDeep }]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   hourRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', alignItems: 'center', height: 16, marginTop: -8 },
-  hourLabel: { width: GUTTER - 10, textAlign: 'right', fontFamily: fonts.display, fontSize: 13, color: colors.faint, fontVariant: ['tabular-nums'] },
-  hourLine: { flex: 1, height: 1, marginLeft: 10, marginRight: RIGHT, backgroundColor: alpha(colors.ink, 0.06) },
-  track: { position: 'absolute', left: GUTTER - 1, width: 3, borderRadius: 2, backgroundColor: alpha(colors.ink, 0.05) },
+  hourLabel: { width: GUTTER - 10, textAlign: 'right' },
+  hourLine: { flex: 1, height: 1, marginLeft: 10, marginRight: RIGHT },
+  track: { position: 'absolute', left: GUTTER - 1, width: 3, borderRadius: 2 },
   gap: {
     position: 'absolute',
     left: GUTTER,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: alpha(colors.ink, 0.18),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  gapText: { fontFamily: fonts.display, fontSize: 13, color: colors.faint },
   bean: { position: 'absolute', left: GUTTER },
+  halo: { position: 'absolute', top: -5, bottom: -5, left: -5, right: -5, borderWidth: 2.5 },
   beanBody: {
     flex: 1,
     overflow: 'visible',
-    shadowOpacity: 0.3,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
   },
@@ -370,10 +384,10 @@ const styles = StyleSheet.create({
   beanCompact: { flex: 1, paddingLeft: 16, paddingRight: 12 },
   beanEmoji: { fontSize: 16 },
   beanEmojiSmall: { fontSize: 11 },
-  beanName: { flex: 1, fontFamily: fonts.display, fontSize: 16 },
-  beanNameSmall: { flex: 1, fontFamily: fonts.display, fontSize: 12 },
-  beanTime: { fontFamily: fonts.display, fontSize: 15, fontVariant: ['tabular-nums'], opacity: 0.95, marginRight: 60 },
-  beanSub: { fontFamily: fonts.textBold, fontSize: 13, lineHeight: 17, opacity: 0.85, marginTop: 1 },
+  beanName: { flex: 1 },
+  beanNameSmall: { flex: 1 },
+  beanTime: { opacity: 0.95, marginRight: 60 },
+  beanSub: { lineHeight: 17, opacity: 0.85, marginTop: 1 },
   drip: { position: 'absolute', left: 14, right: 14, bottom: 3, height: 4, borderRadius: 2 },
   knobHit: { position: 'absolute', width: KNOB, height: KNOB, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
   knob: {
@@ -381,16 +395,14 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 3,
-    backgroundColor: colors.white,
-    shadowColor: colors.ink,
+    backgroundColor: '#FFFFFF',
     shadowOpacity: 0.25,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 },
   },
   bubble: { position: 'absolute', right: KNOB - 4, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 },
-  bubbleText: { fontFamily: fonts.display, fontSize: 15, color: colors.white, fontVariant: ['tabular-nums'] },
   nowRow: { position: 'absolute', left: 4, right: 0, flexDirection: 'row', alignItems: 'center', height: 18, zIndex: 20 },
-  nowPill: { backgroundColor: colors.pink, borderRadius: 9, paddingHorizontal: 7, height: 18, justifyContent: 'center' },
-  nowText: { fontFamily: fonts.displayBold, fontSize: 11, color: colors.white },
-  nowLine: { flex: 1, height: 2.5, backgroundColor: colors.pink, marginRight: RIGHT, borderRadius: 2 },
+  nowPill: { borderRadius: 9, paddingHorizontal: 7, height: 18, justifyContent: 'center' },
+  nowText: { fontSize: 11, color: '#FFFFFF' },
+  nowLine: { flex: 1, height: 2.5, marginRight: RIGHT, borderRadius: 2 },
 });

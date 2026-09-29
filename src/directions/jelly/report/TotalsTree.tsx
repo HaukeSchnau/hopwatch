@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type ContextId, formatDuration, formatTargetLine, type TargetLine, type TotalsNode } from '@/core';
 
 import { buzz } from '../feedback';
-import { alpha, candy, colors, fonts } from '../theme';
+import { alpha, tabular, text, useTheme } from '../theme';
 import { say } from '../Toast';
 import { CandySurface } from '../ui';
 
@@ -22,6 +22,7 @@ interface TotalsTreeProps {
 }
 
 export function TotalsTree({ roots, expanded, onToggle, targets, textFor }: TotalsTreeProps) {
+  const t = useTheme();
   const max = Math.max(1, ...roots.map((r) => r.total));
   const rows: { node: TotalsNode; depth: number }[] = [];
   const walk = (nodes: TotalsNode[], depth: number) => {
@@ -33,7 +34,7 @@ export function TotalsTree({ roots, expanded, onToggle, targets, textFor }: Tota
   walk(roots, 0);
 
   return (
-    <View style={styles.list}>
+    <View style={[styles.list, { backgroundColor: t.c.card }]}>
       {rows.map(({ node, depth }) => (
         <Row
           key={node.context.id}
@@ -71,7 +72,8 @@ function Row({
   target?: TargetLine;
   onCopy: () => void;
 }) {
-  const c = candy[node.context.hue];
+  const t = useTheme();
+  const c = t.candy[node.context.hue];
   const expandable = node.children.length > 0;
   return (
     <View style={[styles.row, { paddingLeft: 12 + depth * 20 }]}>
@@ -83,22 +85,22 @@ function Row({
         accessibilityLabel={`${node.context.name}, ${formatDuration(node.total)}`}>
         <View style={styles.top}>
           <View style={styles.chevron}>
-            {expandable && <SymbolView name={open ? 'chevron.down' : 'chevron.right'} size={12} tintColor={colors.muted} weight="heavy" />}
+            {expandable && <SymbolView name={open ? 'chevron.down' : 'chevron.right'} size={12} tintColor={t.c.muted} weight="heavy" />}
           </View>
           <CandySurface hue={node.context.hue} radius={13} flat style={styles.dot}>
             <Text style={styles.dotEmoji}>{node.context.glyph ?? ''}</Text>
           </CandySurface>
-          <Text style={[styles.name, node.context.hidden && { color: colors.muted }]} numberOfLines={1}>
+          <Text style={[text.body, styles.name, { color: node.context.hidden ? t.c.muted : t.c.ink }]} numberOfLines={1}>
             {node.context.name}
             {node.context.hidden ? ' (archived)' : ''}
           </Text>
-          <Text style={styles.total}>{formatDuration(node.total)}</Text>
+          <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatDuration(node.total)}</Text>
         </View>
-        <View style={styles.barTrack}>
+        <View style={[styles.barTrack, { backgroundColor: alpha(t.c.ink, 0.06) }]}>
           <View style={[styles.bar, { width: `${Math.max(2, share * 100)}%`, backgroundColor: c.fill }]} />
         </View>
         {target && (
-          <Text style={[styles.target, { color: target.diff >= 0 ? candy.green.deep : colors.muted }]} numberOfLines={1}>
+          <Text style={[text.footnote, tabular, styles.target, { color: target.diff >= 0 ? t.candy.green.ink : t.c.muted }]} numberOfLines={1}>
             {formatTargetLine(target)}
           </Text>
         )}
@@ -109,24 +111,23 @@ function Row({
         accessibilityRole="button"
         accessibilityLabel={`Copy ${node.context.name} totals`}
         style={({ pressed }) => [styles.copy, pressed && { backgroundColor: c.tint }]}>
-        <SymbolView name="doc.on.doc" size={15} tintColor={colors.muted} weight="semibold" />
+        <SymbolView name="doc.on.doc" size={15} tintColor={t.c.muted} weight="semibold" />
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  list: { backgroundColor: colors.card, borderRadius: 26, paddingVertical: 6, marginHorizontal: 16 },
+  list: { borderRadius: 24, paddingVertical: 6, marginHorizontal: 16 },
   row: { flexDirection: 'row', alignItems: 'center', paddingRight: 6, paddingVertical: 7 },
   main: { flex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   chevron: { width: 12, alignItems: 'center' },
   dot: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
   dotEmoji: { fontSize: 13 },
-  name: { flex: 1, fontFamily: fonts.display, fontSize: 17, color: colors.ink },
-  total: { fontFamily: fonts.display, fontSize: 17, color: colors.ink, fontVariant: ['tabular-nums'] },
-  barTrack: { height: 6, borderRadius: 3, backgroundColor: alpha(colors.ink, 0.05), marginTop: 6, marginLeft: 54, overflow: 'hidden' },
+  name: { flex: 1 },
+  barTrack: { height: 6, borderRadius: 3, marginTop: 6, marginLeft: 54, overflow: 'hidden' },
   bar: { height: 6, borderRadius: 3 },
-  target: { fontFamily: fonts.textBold, fontSize: 13, marginTop: 4, marginLeft: 54, fontVariant: ['tabular-nums'] },
+  target: { marginTop: 4, marginLeft: 54 },
   copy: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
 });

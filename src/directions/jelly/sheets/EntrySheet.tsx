@@ -1,211 +1,179 @@
-// Entry detail: change the context, start, end and note, or delete it. Times and the
-// note are drafted locally and saved together, so spinning a picker never trims a
-// neighbour halfway.
+// Entry detail as a native form under a candy header: which jelly, start, end and note,
+// saved together on Done so a half-spun wheel never trims a neighbour. Delete is
+// undoable from the toast.
 
-import DateTimePicker from '@expo/ui/community/datetime-picker';
+import { Button, DatePicker, HStack, Picker, Section, Spacer, Text as SwiftText, TextField, useNativeState } from '@expo/ui/swift-ui';
+import { environment, lineLimit, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { type ReactNode, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import {
   actions,
-  addDays,
+  type ContextId,
   type Entry,
+  type EntryPatch,
+  formatClock,
+  formatDayMonth,
   formatDuration,
-  formatLongDay,
+  formatWeekday,
   pathLabel,
-  startOfDay,
+  type ResolvedContext,
   useEntries,
   useNow,
+  usePickableContexts,
   useTree,
 } from '@/core';
 
+import { Character } from '../Character';
 import { buzz } from '../feedback';
-import { candy, colors, fonts } from '../theme';
-import { inkCandy, JellyButton, Squishy } from '../ui';
-import { SheetHeader, sheetStyles } from './parts';
+import { HostedRow, JellyForm } from '../forms';
+import { useFace, useLively } from '../Gummy';
+import { tabular, text, useTheme } from '../theme';
+
+const clock24 = environment('locale', 'en_GB');
 
 export function EntrySheet() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const entry = useEntries().find((e) => e.id === id) ?? null;
   if (!entry) {
     return (
-      <ScrollView contentContainerStyle={sheetStyles.body}>
-        <SheetHeader context={null} title="This entry is gone" subtitle="It was deleted or merged away." />
-        <JellyButton label="Close" palette={inkCandy} onPress={() => router.back()} style={{ marginTop: 24 }} />
-      </ScrollView>
+      <JellyForm title="Entry">
+        <Section>
+          <SwiftText>This entry is gone. It was deleted or merged away.</SwiftText>
+        </Section>
+      </JellyForm>
     );
   }
   // Keyed so the draft resets when a different entry opens.
-  return <EntryEditor key={entry.id} entry={entry} />;
+  return <EntryForm key={entry.id} entry={entry} />;
 }
 
-function EntryEditor({ entry }: { entry: Entry }) {
+function EntryForm({ entry }: { entry: Entry }) {
+  const t = useTheme();
   const tree = useTree();
-  const context = tree.byId.get(entry.contextId) ?? null;
-  const now = useNow(entry.endUtc === null ? 1000 : null);
-  const [start, setStart] = useState(new Date(entry.startUtc));
-  const [end, setEnd] = useState(entry.endUtc === null ? null : new Date(entry.endUtc));
-  const [note, setNote] = useState(entry.note ?? '');
-
-  const running = entry.endUtc === null;
-  const startMs = start.getTime();
-  const endMs = end?.getTime() ?? now;
-  const invalid = end !== null && endMs <= startMs;
-  const dirty =
-    startMs !== entry.startUtc || (end?.getTime() ?? null) !== entry.endUtc || (note.trim() || null) !== entry.note;
+  const pickable = usePickableContexts();
+  const [contextId, setContextId] = useState<ContextId>(entry.contextId);
+  const [start, setStart] = useState(entry.startUtc);
+  const [end, setEnd] = useState(entry.endUtc);
+  const note = useNativeState(entry.note ?? '');
+  const now = useNow(60_000);
+  const context = tree.byId.get(contextId) ?? null;
+  const options = pickable.some((c) => c.id === contextId) || !context ? pickable : [context, ...pickable];
+  const running = end === null;
+  const invalid = end !== null && end <= start;
 
   const save = () => {
     if (invalid) return buzz.warn();
-    actions.updateEntry(entry.id, {
-      startUtc: startMs,
-      ...(end ? { endUtc: end.getTime() } : {}),
-      note: note.trim() || null,
-    });
-    buzz.success();
+    const patch: EntryPatch = {};
+    if (contextId !== entry.contextId) patch.contextId = contextId;
+    if (start !== entry.startUtc) patch.startUtc = start;
+    if (end !== entry.endUtc) patch.endUtc = end;
+    const typed = note.get().trim() || null;
+    if (typed !== entry.note) patch.note = typed;
+    if (Object.keys(patch).length) {
+      buzz.success();
+      actions.updateEntry(entry.id, patch);
+    }
     router.back();
   };
 
-  const hue = context?.hue ?? 'gray';
   return (
-    <ScrollView contentContainerStyle={[sheetStyles.body, { paddingBottom: 48 }]} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
-      <Squishy
-        amount={0.05}
-        onPress={() => router.push({ pathname: '/jelly/pick', params: { mode: 'entry', entry: entry.id } })}
-        accessibilityRole="button"
-        accessibilityHint="Change which jelly this entry belongs to">
-        <SheetHeader
-          context={context}
-          title={context?.name ?? 'Unknown'}
-          subtitle={
-            <Text>
-              {context && context.ancestors.length ? `${pathLabel(context)} · ` : ''}
-              <Text style={{ color: candy[hue].deep }}>change</Text>
-            </Text>
-          }
+    <JellyForm title={running ? 'Running' : 'Entry'} tint={context ? t.candy[context.hue].ink : undefined} confirm={{ label: 'Done', onPress: save, disabled: invalid }}>
+      {context ? (
+        <HostedRow color={t.candy[context.hue].tint} render={(width) => <Header width={width} context={context} start={start} end={end} />} />
+      ) : null}
+      <Section>
+        <Picker
+          label="Jelly"
+          selection={contextId}
+          onSelectionChange={(value: string) => {
+            const next = options.find((c) => c.id === value);
+            if (next) setContextId(next.id);
+          }}
+          modifiers={[pickerStyle('menu')]}>
+          {options.map((c) => (
+            <SwiftText key={c.id} modifiers={[tag(c.id)]}>
+              {`${c.glyph ? `${c.glyph} ` : ''}${pathLabel(c)}`}
+            </SwiftText>
+          ))}
+        </Picker>
+      </Section>
+      <Section title="Time" footer={<SwiftText>{invalid ? 'It ends before it starts.' : 'Changing the time trims any entry it overlaps.'}</SwiftText>}>
+        <DatePicker
+          title="Starts"
+          selection={new Date(start)}
+          range={{ end: new Date(end ?? now) }}
+          displayedComponents={['date', 'hourAndMinute']}
+          onDateChange={(date) => setStart(date.getTime())}
+          modifiers={[clock24]}
         />
-      </Squishy>
-
-      <Text style={[sheetStyles.label, { marginTop: 22 }]}>{formatLongDay(startMs)}</Text>
-      <View style={styles.card}>
-        <Row label="Start">
-          <DateTimePicker
-            value={start}
-            mode="time"
-            display="compact"
-            style={{ width: 92, height: 38 }}
-            locale="en_GB"
-            themeVariant="light"
-            accentColor={candy[hue].deep}
-            onValueChange={(_, d) => setStart(atTime(entry.startUtc, d))}
+        {running ? (
+          <HStack>
+            <SwiftText>Ends</SwiftText>
+            <Spacer />
+            <Button label="Stop Now" systemImage="stop.fill" onPress={() => setEnd(Math.max(start + 60_000, Date.now()))} />
+          </HStack>
+        ) : (
+          <DatePicker
+            title="Ends"
+            selection={new Date(end)}
+            range={{ start: new Date(start), end: new Date(now) }}
+            displayedComponents={['date', 'hourAndMinute']}
+            onDateChange={(date) => setEnd(date.getTime())}
+            modifiers={[clock24]}
           />
-        </Row>
-        <View style={styles.divider} />
-        <Row label={end && startOfDay(end.getTime()) > startOfDay(startMs) ? 'End (next day)' : 'End'}>
-          {end ? (
-            <DateTimePicker
-              value={end}
-              mode="time"
-              display="compact"
-              style={{ width: 92, height: 38 }}
-              locale="en_GB"
-              themeVariant="light"
-              accentColor={candy[hue].deep}
-              onValueChange={(_, d) => {
-                // An end before the start means the entry ran past midnight.
-                const t = atTime(startMs, d);
-                setEnd(t.getTime() <= startMs ? new Date(addDays(t.getTime(), 1)) : t);
-              }}
-            />
-          ) : (
-            <View style={styles.runningChip}>
-              <View style={[styles.dot, { backgroundColor: candy[hue].fill }]} />
-              <Text style={styles.runningText}>Running</Text>
-            </View>
-          )}
-        </Row>
-        <View style={styles.divider} />
-        <Row label="Length">
-          <Text style={[styles.length, invalid && { color: colors.danger }]}>{invalid ? 'Ends before it starts' : formatDuration(endMs - startMs)}</Text>
-        </Row>
-      </View>
-
-      <Text style={sheetStyles.label}>Note</Text>
-      <TextInput
-        value={note}
-        onChangeText={setNote}
-        placeholder="What happened? (optional)"
-        placeholderTextColor={colors.faint}
-        multiline
-        style={styles.note}
-        maxLength={500}
-      />
-
-      <JellyButton label={dirty ? 'Save' : 'Done'} hue={hue} size="large" onPress={dirty ? save : () => router.back()} disabled={invalid} style={{ marginTop: 22 }} />
-      {running && (
-        <JellyButton
-          label="Stop now"
-          icon="stop.fill"
-          palette={inkCandy}
+        )}
+      </Section>
+      <Section title="Note">
+        <TextField text={note} placeholder="What happened? (optional)" axis="vertical" modifiers={[lineLimit(6)]} />
+      </Section>
+      <Section>
+        <Button
+          role="destructive"
+          label="Delete Entry"
+          systemImage="trash"
           onPress={() => {
-            actions.stop();
+            buzz.thud();
+            actions.deleteEntry(entry.id);
             router.back();
           }}
-          style={{ marginTop: 12 }}
         />
-      )}
-      <Squishy
-        onPress={() => {
-          buzz.thud();
-          actions.deleteEntry(entry.id);
-          router.back();
-        }}
-        accessibilityRole="button"
-        style={styles.delete}>
-        <SymbolView name="trash" size={16} tintColor={colors.danger} weight="bold" />
-        <Text style={styles.deleteText}>Delete entry</Text>
-      </Squishy>
-    </ScrollView>
+      </Section>
+    </JellyForm>
   );
 }
 
-/** The day of `base` at the wall-clock time picked in `picked`. */
-function atTime(base: number, picked: Date): Date {
-  const d = new Date(base);
-  d.setHours(picked.getHours(), picked.getMinutes(), 0, 0);
-  return d;
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
+/** The candy header: the jelly, when it ran and for how long (ticking while it runs). */
+function Header({ width, context, start, end }: { width: number; context: ResolvedContext; start: number; end: number | null }) {
+  const t = useTheme();
+  const face = useFace(end === null ? 'awake' : 'asleep');
+  useLively(face, end === null);
+  const now = useNow(end === null ? 1000 : null);
   return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      {children}
+    <View style={[styles.header, { width }]}>
+      <Character context={context} size={76} face={face} />
+      <View style={styles.titles}>
+        {context.ancestors.length ? (
+          <Text style={[text.caption, styles.path, { color: t.candy[context.hue].ink }]} numberOfLines={1}>
+            {context.ancestors.map((a) => a.name).join(' › ')}
+          </Text>
+        ) : null}
+        <Text style={[text.title3, { color: t.c.ink }]} numberOfLines={1}>
+          {context.name}
+        </Text>
+        <Text style={[text.footnote, tabular, { color: t.c.muted }]} numberOfLines={1}>
+          {formatWeekday(start)} {formatDayMonth(start)} · {formatClock(start)}–{end === null ? 'now' : formatClock(end)}
+        </Text>
+      </View>
+      <Text style={[styles.length, tabular, { color: t.c.ink }]}>{formatDuration(Math.max(0, (end ?? now) - start))}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.card, borderRadius: 24, paddingHorizontal: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 },
-  rowLabel: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
-  divider: { height: 1.5, backgroundColor: colors.line, borderRadius: 1 },
-  runningChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  runningText: { fontFamily: fonts.textBold, fontSize: 16, color: colors.muted },
-  length: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, fontVariant: ['tabular-nums'] },
-  note: {
-    fontFamily: fonts.text,
-    fontSize: 17,
-    color: colors.ink,
-    backgroundColor: colors.card,
-    borderRadius: 20,
-    padding: 16,
-    paddingTop: 14,
-    minHeight: 90,
-    textAlignVertical: 'top',
-  },
-  delete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18, paddingVertical: 12 },
-  deleteText: { fontFamily: fonts.display, fontSize: 17, color: colors.danger },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingLeft: 8, paddingRight: 16 },
+  titles: { flex: 1 },
+  path: { textTransform: 'uppercase', letterSpacing: 0.5 },
+  length: { fontFamily: 'ui-rounded', fontWeight: '800', fontSize: 24 },
 });

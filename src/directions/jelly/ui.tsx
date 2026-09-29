@@ -1,9 +1,9 @@
 // Small building blocks shared by Jelly's screens: squishy pressables, candy-coated
-// surfaces, buttons, chips and text styles.
+// surfaces, buttons and section titles. Colors come from the current theme.
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { type ReactNode, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import {
   type GestureResponderEvent,
   Pressable,
@@ -14,19 +14,12 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
-import Animated, {
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import type { Hue } from '@/core';
 
 import { buzz } from './feedback';
-import { type Candy, candy, colors, fonts, springs } from './theme';
+import { type Candy, springs, text, useTheme } from './theme';
 
 type SymbolName = SymbolViewProps['name'];
 
@@ -103,12 +96,13 @@ interface CandySurfaceProps {
 
 /** A glossy candy-coated rounded surface: gradient body, top gloss and a colored shadow. */
 export function CandySurface({ hue = 'pink', palette, radius, style, children, flat = false }: CandySurfaceProps) {
-  const c = palette ?? candy[hue];
+  const t = useTheme();
+  const c = palette ?? t.candy[hue];
   return (
     <View
       style={[
         { borderRadius: radius, backgroundColor: c.fill },
-        !flat && { shadowColor: c.deep, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 6 } },
+        !flat && { shadowColor: c.deep, shadowOpacity: t.dark ? 0.5 : 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 6 } },
         style,
       ]}>
       <LinearGradient
@@ -133,25 +127,6 @@ export function CandySurface({ hue = 'pink', palette, radius, style, children, f
   );
 }
 
-/** Custom palettes for non-context buttons. */
-export const inkCandy: Candy = {
-  fill: '#3A2852',
-  light: '#5B4677',
-  deep: '#20122F',
-  on: '#FFFFFF',
-  tint: colors.sunken,
-  glow: 'rgba(32,18,47,0.3)',
-};
-
-export const creamCandy: Candy = {
-  fill: '#FFFBF6',
-  light: '#FFFFFF',
-  deep: '#F3E2D0',
-  on: colors.ink,
-  tint: colors.sunken,
-  glow: 'rgba(120,80,60,0.18)',
-};
-
 interface JellyButtonProps {
   label: string;
   onPress: () => void;
@@ -167,9 +142,10 @@ interface JellyButtonProps {
 
 /** A gummy pill button. */
 export function JellyButton({ label, onPress, onLongPress, hue, palette, icon, size = 'medium', style, disabled, accessibilityHint }: JellyButtonProps) {
-  const c = palette ?? candy[hue ?? 'pink'];
-  const height = size === 'large' ? 60 : size === 'medium' ? 50 : 40;
-  const fontSize = size === 'large' ? 21 : size === 'medium' ? 18 : 15;
+  const t = useTheme();
+  const c = palette ?? t.candy[hue ?? 'pink'];
+  const height = size === 'large' ? 58 : size === 'medium' ? 50 : 40;
+  const fontSize = size === 'large' ? 20 : size === 'medium' ? 17 : 15;
   return (
     <Squishy
       onPress={onPress}
@@ -200,7 +176,9 @@ interface RoundButtonProps {
 }
 
 /** A round gummy icon button. */
-export function RoundButton({ icon, onPress, onLongPress, size = 44, palette = creamCandy, accessibilityLabel, accessibilityHint }: RoundButtonProps) {
+export function RoundButton({ icon, onPress, onLongPress, size = 44, palette, accessibilityLabel, accessibilityHint }: RoundButtonProps) {
+  const t = useTheme();
+  const c = palette ?? t.plainCandy;
   return (
     <Squishy
       onPress={onPress}
@@ -210,69 +188,10 @@ export function RoundButton({ icon, onPress, onLongPress, size = 44, palette = c
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       hitSlop={Math.max(0, (44 - size) / 2)}>
-      <CandySurface palette={palette} radius={size / 2} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <SymbolView name={icon} size={size * 0.42} tintColor={palette.on} weight="bold" />
+      <CandySurface palette={c} radius={size / 2} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <SymbolView name={icon} size={size * 0.4} tintColor={c.on} weight="bold" />
       </CandySurface>
     </Squishy>
-  );
-}
-
-/** A gummy on/off switch: the knob slides with a jelly stretch and the track fills with candy. */
-export function JellySwitch({
-  value,
-  onValueChange,
-  color = colors.pink,
-  disabled,
-  accessibilityLabel,
-}: {
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-  color?: string;
-  disabled?: boolean;
-  accessibilityLabel?: string;
-}) {
-  const on = useSharedValue(value ? 1 : 0);
-  useEffect(() => {
-    on.set(withSpring(value ? 1 : 0, { damping: 12, stiffness: 220 }));
-  }, [on, value]);
-  const knob = useAnimatedStyle(() => {
-    const t = on.get();
-    const stretch = Math.sin(Math.PI * Math.min(1, Math.max(0, t))) * 0.35;
-    return { transform: [{ translateX: t * 22 }, { scaleX: 1 + stretch }, { scaleY: 1 - stretch * 0.4 }] };
-  });
-  const track = useAnimatedStyle(() => ({ backgroundColor: interpolateColor(on.get(), [0, 1], [colors.sunken, color]) }));
-  return (
-    <Pressable
-      onPress={() => {
-        buzz.tick();
-        onValueChange(!value);
-      }}
-      disabled={disabled}
-      hitSlop={8}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: value, disabled }}
-      accessibilityLabel={accessibilityLabel}
-      style={{ opacity: disabled ? 0.4 : 1 }}>
-      <Animated.View style={[styles.switchTrack, track]}>
-        <Animated.View style={[styles.switchKnob, knob]} />
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-/**
- * A cream fade over the top edge of a scroll area, so content melts away under a fixed
- * header instead of being sliced off. Place it after the scroll view, inside a
- * `flex: 1` wrapper.
- */
-export function EdgeFade({ height = 40 }: { height?: number }) {
-  return (
-    <LinearGradient
-      pointerEvents="none"
-      colors={[colors.cream, 'rgba(255,244,232,0.85)', 'rgba(255,244,232,0)']}
-      locations={[0, 0.35, 1]}
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, height }}
-    />
   );
 }
 
@@ -285,10 +204,12 @@ export function useWiggle() {
   return { style, wiggle };
 }
 
+/** A section heading in the page's own voice: bold rounded ink, with an optional control. */
 export function SectionTitle({ children, right, style }: { children: ReactNode; right?: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const t = useTheme();
   return (
     <View style={[styles.sectionRow, style]}>
-      <Text style={styles.sectionTitle}>{children}</Text>
+      <Text style={[text.title3, { color: t.c.ink }]}>{children}</Text>
       {right}
     </View>
   );
@@ -296,18 +217,6 @@ export function SectionTitle({ children, right, style }: { children: ReactNode; 
 
 const styles = StyleSheet.create({
   button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  buttonLabel: { fontFamily: fonts.display, letterSpacing: 0.1 },
-  switchTrack: { width: 54, height: 32, borderRadius: 16, padding: 3, justifyContent: 'center' },
-  switchKnob: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: colors.white,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.22,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 2 },
-  },
+  buttonLabel: { fontFamily: 'ui-rounded', fontWeight: '700', letterSpacing: 0.1 },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  sectionTitle: { fontFamily: fonts.displayMedium, fontSize: 15, color: colors.muted, letterSpacing: 0.4, textTransform: 'uppercase' },
 });

@@ -9,7 +9,7 @@ import { Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withSpr
 import { formatDuration, formatSignedDuration, type TargetLine } from '@/core';
 
 import { buzz, play } from '../feedback';
-import { alpha, candy, colors, fonts } from '../theme';
+import { alpha, tabular, text, useTheme } from '../theme';
 import { Squishy } from '../ui';
 import { Confetti } from './Confetti';
 
@@ -31,7 +31,8 @@ export function Jars({ lines, weekStart }: { lines: TargetLine[]; weekStart: num
 }
 
 function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; delay: number }) {
-  const c = candy[line.context.hue];
+  const t = useTheme();
+  const c = t.candy[line.context.hue];
   const ratio = line.target > 0 ? Math.min(1, line.actual / line.target) : 0;
   const full = line.actual >= line.target;
   const level = useSharedValue(0);
@@ -89,9 +90,9 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
           <RoundedRect x={16} y={4} width={W - 32} height={16} r={7}>
             <LinearGradient start={vec(0, 4)} end={vec(0, 20)} colors={[c.light, c.deep]} />
           </RoundedRect>
-          <RoundedRect x={20} y={18} width={W - 40} height={10} r={3} color={alpha(colors.ink, 0.1)} />
+          <RoundedRect x={20} y={18} width={W - 40} height={10} r={3} color={alpha(t.c.ink, 0.1)} />
           {/* Glass */}
-          <RoundedRect x={BODY.x} y={BODY.y} width={BODY.w} height={BODY.h} r={BODY.r} color="rgba(255,255,255,0.7)" />
+          <RoundedRect x={BODY.x} y={BODY.y} width={BODY.w} height={BODY.h} r={BODY.r} color={t.dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)'} />
           <Group clip={clip}>
             <Path path={jelly}>
               <LinearGradient start={vec(0, inner.y)} end={vec(0, inner.y + inner.h)} colors={[c.light, c.fill, c.deep]} />
@@ -99,20 +100,20 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
             <Circle cx={inner.x + inner.w * 0.3} cy={inner.y + inner.h * 0.8} r={4} color="rgba(255,255,255,0.35)" />
             <Circle cx={inner.x + inner.w * 0.65} cy={inner.y + inner.h * 0.68} r={2.5} color="rgba(255,255,255,0.35)" />
           </Group>
-          <RoundedRect x={BODY.x} y={BODY.y} width={BODY.w} height={BODY.h} r={BODY.r} style="stroke" strokeWidth={2.5} color={alpha(colors.ink, 0.14)} />
+          <RoundedRect x={BODY.x} y={BODY.y} width={BODY.w} height={BODY.h} r={BODY.r} style="stroke" strokeWidth={2.5} color={alpha(t.c.ink, t.dark ? 0.22 : 0.14)} />
           <RoundedRect x={BODY.x + 9} y={BODY.y + 14} width={6} height={BODY.h * 0.5} r={3} color="rgba(255,255,255,0.75)" />
         </Canvas>
         <Text style={styles.emoji}>{line.context.glyph ?? ''}</Text>
         <Confetti burst={burst} />
       </View>
-      <Text style={styles.name} numberOfLines={1}>
+      <Text style={[text.callout, styles.name, { color: t.c.ink }]} numberOfLines={1}>
         {line.context.name}
       </Text>
-      <Text style={styles.value}>
-        {formatDuration(line.actual)} <Text style={styles.of}>/ {formatDuration(line.target)}</Text>
+      <Text style={[text.subhead, tabular, { color: t.c.ink }]}>
+        {formatDuration(line.actual)} <Text style={{ color: t.c.muted }}>/ {formatDuration(line.target)}</Text>
       </Text>
-      <View style={[styles.diff, { backgroundColor: full ? candy.green.tint : colors.sunken }]}>
-        <Text style={[styles.diffText, { color: full ? candy.green.deep : colors.muted }]}>
+      <View style={[styles.diff, { backgroundColor: full ? t.candy.green.tint : t.c.sunken }]}>
+        <Text style={[text.footnote, tabular, { color: full ? t.candy.green.ink : t.c.muted }]}>
           {full ? '★ ' : ''}
           {formatSignedDuration(line.diff)}
         </Text>
@@ -125,9 +126,6 @@ const styles = StyleSheet.create({
   row: { paddingHorizontal: 16, gap: 14, paddingTop: 6, paddingBottom: 4 },
   jar: { alignItems: 'center', width: W + 12 },
   emoji: { position: 'absolute', top: 46, alignSelf: 'center', fontSize: 26 },
-  name: { fontFamily: fonts.display, fontSize: 16, color: colors.ink, marginTop: 6, maxWidth: W + 10 },
-  value: { fontFamily: fonts.display, fontSize: 15, color: colors.ink, fontVariant: ['tabular-nums'] },
-  of: { color: colors.muted },
+  name: { marginTop: 6, maxWidth: W + 10 },
   diff: { marginTop: 4, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  diffText: { fontFamily: fonts.displayBold, fontSize: 13, fontVariant: ['tabular-nums'] },
 });

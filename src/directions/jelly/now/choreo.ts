@@ -108,6 +108,12 @@ export async function choreograph(prev: ContextId | null, next: ContextId | null
   lastSource = null;
   // The stage and tiles keep their blobs until every flyer has drawn (see `warmed`).
   useChoreo.setState({ flights });
+  // A flyer that never draws (the app went to the background mid-switch, a hot reload)
+  // must not leave the stage empty: finish the switch without the hop.
+  setTimeout(() => {
+    const s = useChoreo.getState();
+    if (mine === generation && (s.shownId !== next || s.flights.length > 0)) swap();
+  }, FLIGHT_MS + 900);
 }
 
 /** All flyers have drawn their first frame, so the hop can start. */

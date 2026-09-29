@@ -7,7 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { type ContextId, formatDuration, type TotalsNode } from '@/core';
 
 import { buzz } from '../feedback';
-import { candy, fonts, springs } from '../theme';
+import { springs, tabular, text, useTheme } from '../theme';
 import { CandySurface, Squishy } from '../ui';
 import { pack } from './pack';
 
@@ -37,7 +37,8 @@ export function Bubbles({
 }
 
 function Bubble({ node, x, y, r, onPick }: { node: TotalsNode; x: number; y: number; r: number; onPick: (id: ContextId) => void }) {
-  const c = candy[node.context.hue];
+  const t = useTheme();
+  const c = t.candy[node.context.hue];
   const jiggle = useSharedValue(0);
   const style = useAnimatedStyle(() => ({
     transform: [{ scaleX: 1 + jiggle.get() }, { scaleY: 1 - jiggle.get() }],
@@ -59,11 +60,11 @@ function Bubble({ node, x, y, r, onPick }: { node: TotalsNode; x: number; y: num
         <CandySurface hue={node.context.hue} radius={r} style={[styles.body, { width: r * 2, height: r * 2 }]}>
           {node.context.glyph ? <Text style={{ fontSize: Math.max(12, Math.min(30, r * 0.42)) }}>{node.context.glyph}</Text> : null}
           {big && (
-            <Text style={[styles.name, { color: c.on }]} numberOfLines={1}>
+            <Text style={[text.footnote, styles.name, { color: c.on }]} numberOfLines={1}>
               {node.context.name}
             </Text>
           )}
-          {medium && <Text style={[styles.time, { color: c.on, fontSize: Math.min(20, r * 0.3) }]}>{formatDuration(node.total)}</Text>}
+          {medium && <Text style={[styles.time, tabular, { color: c.on, fontSize: Math.min(20, r * 0.3) }]}>{formatDuration(node.total)}</Text>}
         </CandySurface>
       </Squishy>
     </Animated.View>
@@ -73,6 +74,6 @@ function Bubble({ node, x, y, r, onPick }: { node: TotalsNode; x: number; y: num
 const styles = StyleSheet.create({
   bubble: { position: 'absolute' },
   body: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  name: { fontFamily: fonts.display, fontSize: 13, marginTop: -1, maxWidth: '86%' },
-  time: { fontFamily: fonts.displayBold, fontVariant: ['tabular-nums'] },
+  name: { marginTop: -1, maxWidth: '86%' },
+  time: { fontFamily: 'ui-rounded', fontWeight: '800' },
 });

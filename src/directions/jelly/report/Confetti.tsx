@@ -8,7 +8,7 @@ import Animated, { Easing, type SharedValue, useAnimatedStyle, useSharedValue, w
 import { hues } from '@/core';
 
 import { random } from '../geometry';
-import { candy } from '../theme';
+import { lightTheme } from '../theme';
 
 interface Piece {
   vx: number;
@@ -30,7 +30,7 @@ function pieces(seed: number, count: number): Piece[] {
       spin: (next() - 0.5) * 900,
       size: 6 + next() * 6,
       round: next() < 0.4,
-      color: candy[hues[Math.floor(next() * (hues.length - 1))]].fill,
+      color: lightTheme.candy[hues[Math.floor(next() * (hues.length - 1))]].fill,
     };
   });
 }
