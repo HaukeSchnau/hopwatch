@@ -18,7 +18,16 @@ export {
   totalsText,
   type WeekReport,
 } from './reports';
-export { actions, type ContextPatch, type Intent, type LastAction, type StintState, useStint } from './store';
+export {
+  actions,
+  type ContextPatch,
+  type Intent,
+  type Json,
+  type LastAction,
+  newContextId,
+  type StintState,
+  useStint,
+} from './store';
 export * from './time';
 export type { EntryPatch, Gap } from './timeline';
 export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';

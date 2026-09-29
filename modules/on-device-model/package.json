@@ -1,0 +1,7 @@
+{
+  "name": "on-device-model",
+  "version": "1.0.0",
+  "description": "Structured generation with Apple's on-device language model (Foundation Models)",
+  "main": "index.ts",
+  "private": true
+}

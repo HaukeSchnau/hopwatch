@@ -33,7 +33,7 @@ BUNDLE=dev.schnau.stint.five
 AD='~/.t3/device/tools/agent-device@0.21.7/node_modules/.bin/agent-device'
 
 # Each direction has its own Metro (agent-services metro-glass, stint-metro-deck,
-# metro-almanac, stint-metro-orbit, stint-metro-jelly) that ignores the
+# metro-almanac, stint-metro-orbit, jelly-dev) that ignores the
 # other directions' files, so one builder's edits never rebuild another's bundle.
 declare -A PORTS=([all]=3100 [glass]=3101 [deck]=3102 [almanac]=3103 [orbit]=3104 [jelly]=3105)
 declare -A HOSTS=(
@@ -42,20 +42,22 @@ declare -A HOSTS=(
   [deck]=px-b8ee4debfe-stint-metro-deck.schnau.dev
   [almanac]=px-b8ee4debfe-metro-almanac.schnau.dev
   [orbit]=px-b8ee4debfe-stint-metro-orbit.schnau.dev
-  [jelly]=px-b8ee4debfe-stint-metro-jelly.schnau.dev
+  [jelly]=px-b8ee4debfe-jelly-dev.schnau.dev
 )
 
 # The direction a route belongs to: its first segment, else $STINT_DIRECTION, else glass.
 direction_of() {
   if [ "${STINT_DIRECTION:-}" = all ]; then echo all; return; fi
   local first="${1#/}"
+  first="${first%%\?*}"
   first="${first%%/*}"
   if [ -n "${PORTS[$first]:-}" ]; then echo "$first"; else echo "${STINT_DIRECTION:-glass}"; fi
 }
 
 launch() {
   local route_args=""
-  [ -n "${2:-}" ] && route_args="-stintRoute '$2'"
+  # %q quotes the route for the remote shell, so spaces and ? survive.
+  [ -n "${2:-}" ] && route_args="-stintRoute $(printf '%q' "$2")"
   local dir port metro
   dir=$(direction_of "${2:-}")
   port=${PORTS[$dir]}
