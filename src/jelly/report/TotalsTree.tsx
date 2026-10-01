@@ -87,7 +87,7 @@ function Row({
           <View style={styles.chevron}>
             {expandable && <SymbolView name={open ? 'chevron.down' : 'chevron.right'} size={12} tintColor={t.c.muted} weight="heavy" />}
           </View>
-          <CandySurface hue={node.context.hue} radius={13} flat style={styles.dot}>
+          <CandySurface hue={node.context.hue} radius={15} flat style={styles.dot}>
             <Text style={styles.dotEmoji}>{node.context.glyph ?? ''}</Text>
           </CandySurface>
           <Text style={[text.body, styles.name, { color: node.context.hidden ? t.c.muted : t.c.ink }]} numberOfLines={1}>
@@ -123,11 +123,11 @@ const styles = StyleSheet.create({
   main: { flex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   chevron: { width: 12, alignItems: 'center' },
-  dot: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
-  dotEmoji: { fontSize: 13 },
+  dot: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+  dotEmoji: { fontSize: 17 },
   name: { flex: 1 },
-  barTrack: { height: 6, borderRadius: 3, marginTop: 6, marginLeft: 54, overflow: 'hidden' },
+  barTrack: { height: 6, borderRadius: 3, marginTop: 6, marginLeft: 58, overflow: 'hidden' },
   bar: { height: 6, borderRadius: 3 },
-  target: { marginTop: 4, marginLeft: 54 },
+  target: { marginTop: 4, marginLeft: 58 },
   copy: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
 });

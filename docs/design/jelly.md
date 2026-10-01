@@ -187,16 +187,22 @@ were a parallel job, documented in [jelly-characters.md](jelly-characters.md).
   one). For an existing jelly the characters' `LookEditor` is that row: its big live
   jelly, trait pickers, "Surprise me" and "Automatic". The time sheets (start, stop) and
   the picker keep their candy chips and use the native wheel and compact pickers.
-- **Controls.** Native context menus (`MenuView` long-press) on the pinned tiles, the
-  recents beans and the back pill ("Started earlier: 5 · 10 · 15 · 30 · 45 min ago", each
-  with its clock time, "At a time…", "Edit X"), on Stop and the mini player's Stop
-  ("Stopped earlier …", "At a time…"), and on every row in Stuff (the same starts plus
-  Add inside, Pin, Move…, Archive, Delete). For the running jelly the "started" choices
-  move its start. The menus live in `menus.ts`; a backdated start still hops out of the
-  tile that was held. Stuff rows swipe (pin on the left; edit and archive on the right,
+- **Controls.** Native context menus (long-press) on the pinned tiles, the recents beans
+  and the back pill ("Started earlier: 5 · 10 · 15 · 30 · 45 min ago", each with its
+  clock time, "At a time…", "Edit X"), on Stop and the mini player's Stop ("Stopped
+  earlier …", "At a time…"), and on every row in Stuff (the same starts plus Add inside,
+  Pin, Move…, Archive, Delete). For the running jelly the "started" choices move its
+  start. Each "N min ago" says under it what it does before it's picked ("Deep work stops
+  at 14:50", "Replaces Lunch" with a warning sign, "0:40 of Deep work"), from
+  `previewStart` in the timeline module; the start and stop sheets show the same line for
+  the wheel. `Menu.tsx` draws the menus with SwiftUI's context menu, since `MenuView` has
+  no item subtitles. The menus live in `menus.ts`; a backdated start still hops out of
+  the tile that was held. Stuff rows swipe (pin on the left; edit and archive on the right,
   `ReanimatedSwipeable`). Week's Day/Week switch is the native segmented control; "Show
   archived" and the sounds switch are native switches; the entry sheet uses SwiftUI date
-  pickers in 24-hour time; the editor uses native pickers, toggles and steppers.
+  pickers in 24-hour time; the editor uses native pickers, toggles and steppers, with
+  segmented quick choices for the weekly target (none, 5 to 40 h) and the nudge (default,
+  30 min to 3 h) over a stepper for anything else.
 - **Night candy.** `theme.ts` has a light and a dark palette and `useTheme()` picks by the
   system appearance. By day the page is cream with plum ink; at night it's deep plum
   (#150F1D) with milk ink, raised cards and a darker groove. Candy stays candy: fills are
@@ -235,7 +241,10 @@ in candy with Skia: midnight at the bottom, noon on top, morning up the left sid
   bean count and median inside. Tapping an arc selects its bean: the dial gives it a
   halo and the timeline scrolls to it and haloes it too; tapping the same arc again opens
   the entry. Tapping a dark stretch opens "What was this?"; for a long gap the sheet
-  preselects the hour around the tap, adjustable out to the whole gap.
+  preselects the hour around the tap, adjustable out to the whole gap. Each day opens
+  where the action is: today scrolled so now sits a little below the middle, a past day
+  at its first bean. When that already shows under the dial, the day stays at the top.
+  It happens once per day shown, so it never fights your own scrolling.
 
 #### On-device suggestions
 

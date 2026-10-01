@@ -2,7 +2,6 @@
 // Stuff: its face, name, live timer and Stop (hold Stop to stop earlier). Tap to go back
 // to Now. The bar renders it twice (regular and inline), so it keeps no state of its own.
 
-import { MenuView } from '@expo/ui/community/menu';
 import { router } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { SymbolView } from 'expo-symbols';
@@ -13,6 +12,7 @@ import { actions, durationParts, formatClock, type Running, useNow } from '@/cor
 import { Character } from './Character';
 import { buzz, play } from './feedback';
 import { useFace, useLively } from './Gummy';
+import { Menu } from './Menu';
 import { onStopMenu, stopMenu } from './menus';
 import { tabular, text, useTheme } from './theme';
 
@@ -30,7 +30,7 @@ export function MiniPlayer({ running }: { running: Running }) {
         accessibilityLabel={`${context.name} running. Opens Now`}
         onPress={() => router.navigate('/')}
         style={styles.main}>
-        <Character context={context} size={inline ? 30 : 38} face={face} shadow={false} />
+        <Character context={context} size={inline ? 30 : 38} face={face} shadow={false} sticker={false} />
         {inline ? null : (
           <View style={styles.titles}>
             <Text style={[text.subhead, { color: t.c.ink }]} numberOfLines={1}>
@@ -63,7 +63,7 @@ function LiveTime({ since, color }: { since: number; color: string }) {
 function StopButton({ since, name, color }: { since: number; name: string; color: string }) {
   const now = useNow(60_000);
   return (
-    <MenuView shouldOpenOnLongPress title={`Stop ${name}`} actions={stopMenu(since, now)} onPressAction={(e) => onStopMenu(e.nativeEvent.event)}>
+    <Menu title={`Stop ${name}`} items={stopMenu(name, since, now)} onPress={onStopMenu}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Stop ${name}`}
@@ -77,7 +77,7 @@ function StopButton({ since, name, color }: { since: number; name: string; color
         style={({ pressed }) => [styles.stop, { opacity: pressed ? 0.5 : 1 }]}>
         <SymbolView name="stop.fill" size={20} tintColor={color} />
       </Pressable>
-    </MenuView>
+    </Menu>
   );
 }
 

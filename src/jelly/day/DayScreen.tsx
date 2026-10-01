@@ -1,10 +1,21 @@
 // Day: the candy dial as the day's overview, with the jelly-bean timeline under it for
 // precise editing. Tap an arc to find its bean (tap it again for the entry), tap a dark
 // stretch to fill it. The header steps through days; its title jumps back to today.
+// Each day opens where the action is: today at now, a past day at its first bean.
 
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useRef, useState } from 'react';
-import { type GestureResponderEvent, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {
+  type GestureResponderEvent,
+  type LayoutChangeEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { addDays, type EntryId, formatDuration, startOfDay, useDayReport, useNow, useRunning } from '@/core';
 
@@ -18,7 +29,8 @@ import { axisFor, Timeline, yOf } from './Timeline';
 
 export function DayScreen() {
   const t = useTheme();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const header = useHeaderHeight();
   const params = useLocalSearchParams<{ day?: string }>();
   const now = useNow(30_000);
   const today = startOfDay(now);
@@ -30,13 +42,29 @@ export function DayScreen() {
   const dayEnd = addDays(day, 1);
   const live = now < dayEnd;
 
+  // The scroll view is keyed by day, so every day starts at the top and opens once.
   const scroll = useRef<ScrollView>(null);
   const timelineTop = useRef(0);
+  const opened = useRef<number | null>(null);
   const go = (next: number) => {
     buzz.tick();
     setSelected(null);
     setDay(next);
-    scroll.current?.scrollTo({ y: 0, animated: false });
+  };
+
+  /**
+   * Scrolls a freshly shown day to now (today) or its first bean (a past day), unless
+   * that already shows under the dial. Runs once per day, so it never fights the user.
+   */
+  const open = (e: LayoutChangeEvent) => {
+    timelineTop.current = e.nativeEvent.layout.y;
+    if (opened.current === day) return;
+    opened.current = day;
+    const focus = day === today ? now : report.segments[0]?.start;
+    if (focus === undefined) return;
+    const y = timelineTop.current + yOf(focus, axis);
+    if (header + y < height * 0.7) return;
+    scroll.current?.scrollTo({ y: y - height * (day === today ? 0.55 : 0.3), animated: false });
   };
 
   const frame = dialFrame(Math.min(width - 40, 330), 24, 20);
@@ -78,7 +106,7 @@ export function DayScreen() {
   const { blocks, median } = report.fragmentation;
   const titles = dayTitles(day, now);
   return (
-    <ScrollView ref={scroll} contentInsetAdjustmentBehavior="automatic" style={{ backgroundColor: t.c.bg }} contentContainerStyle={styles.content}>
+    <>
       <Stack.Title asChild>
         <HeaderTitle title={titles.title} subtitle={titles.subtitle} onPress={day === today ? undefined : () => go(today)} />
       </Stack.Title>
@@ -88,47 +116,52 @@ export function DayScreen() {
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel="Next day" onPress={() => go(addDays(day, 1))} />
       </Stack.Toolbar>
-
-      <Pressable
-        onPress={tapDial}
-        accessibilityLabel="The day's dial. Tap a bean to find it, a gap to fill it"
-        style={[styles.dial, { width: frame.size, height: frame.size }]}>
-        <CandyDial frame={frame} dayStart={day} dayEnd={dayEnd} beans={beans} now={live ? now : null} />
-        <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
-          <Text style={[text.footnote, { color: t.c.muted }]}>tracked</Text>
-          <Text style={[styles.total, tabular, { color: t.c.ink }]}>{formatDuration(report.totals.total)}</Text>
-          <Text style={[text.footnote, tabular, { color: t.c.muted }]}>
-            {blocks} {blocks === 1 ? 'bean' : 'beans'}
-            {blocks ? ` · median ${formatDuration(median)}` : ''}
-          </Text>
-          {day <= today && (
-            <Text style={[text.caption, styles.hint, { color: t.c.faint }]}>
-              {blocks ? 'Tap an arc to find it,\na gap to fill it' : 'Tap the ring to fill a gap'}
+      <ScrollView
+        key={day}
+        ref={scroll}
+        contentInsetAdjustmentBehavior="automatic"
+        style={{ backgroundColor: t.c.bg }}
+        contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={tapDial}
+          accessibilityLabel="The day's dial. Tap a bean to find it, a gap to fill it"
+          style={[styles.dial, { width: frame.size, height: frame.size }]}>
+          <CandyDial frame={frame} dayStart={day} dayEnd={dayEnd} beans={beans} now={live ? now : null} />
+          <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
+            <Text style={[text.footnote, { color: t.c.muted }]}>tracked</Text>
+            <Text style={[styles.total, tabular, { color: t.c.ink }]}>{formatDuration(report.totals.total)}</Text>
+            <Text style={[text.footnote, tabular, { color: t.c.muted }]}>
+              {blocks} {blocks === 1 ? 'bean' : 'beans'}
+              {blocks ? ` · median ${formatDuration(median)}` : ''}
             </Text>
-          )}
-        </View>
-      </Pressable>
+            {day <= today && (
+              <Text style={[text.caption, styles.hint, { color: t.c.faint }]}>
+                {blocks ? 'Tap an arc to find it,\na gap to fill it' : 'Tap the ring to fill a gap'}
+              </Text>
+            )}
+          </View>
+        </Pressable>
 
-      {report.segments.length === 0 && (
-        <View style={[styles.emptyCard, { backgroundColor: t.c.card }]}>
-          <Text style={styles.emptyEmoji}>{day > today ? '🔮' : '🫘'}</Text>
-          <Text style={[text.subhead, styles.empty, { color: t.c.muted }]}>
-            {day > today ? "This day hasn't happened yet." : 'No beans this day. Tap the dotted space to add what you did.'}
-          </Text>
+        {report.segments.length === 0 && (
+          <View style={[styles.emptyCard, { backgroundColor: t.c.card }]}>
+            <Text style={styles.emptyEmoji}>{day > today ? '🔮' : '🫘'}</Text>
+            <Text style={[text.subhead, styles.empty, { color: t.c.muted }]}>
+              {day > today ? "This day hasn't happened yet." : 'No beans this day. Tap the dotted space to add what you did.'}
+            </Text>
+          </View>
+        )}
+        <View onLayout={open}>
+          <Timeline report={report} axis={axis} now={now} width={width} selected={selected} onSelect={setSelected} />
         </View>
-      )}
-      <View
-        onLayout={(e) => {
-          timelineTop.current = e.nativeEvent.layout.y;
-        }}>
-        <Timeline report={report} axis={axis} now={now} width={width} selected={selected} onSelect={setSelected} />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 40 },
+  // Room under the last hour: scrollTo stops where the content ends behind the tab bar
+  // and mini player, and the opening scroll must still be able to lift a late "now" above them.
+  content: { paddingBottom: 160 },
   dial: { alignSelf: 'center', marginTop: 4 },
   center: { alignItems: 'center', justifyContent: 'center' },
   total: {

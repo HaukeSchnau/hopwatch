@@ -3,7 +3,6 @@
 // total, "since 09:12" and Stop. When the running context changes, the stage plans the
 // hop; when the new jelly lands in the ring, its bean lights up.
 
-import { MenuView } from '@expo/ui/community/menu';
 import { BlurMask, Canvas, Oval } from '@shopify/react-native-skia';
 import { router, useIsFocused } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -41,6 +40,7 @@ import { CandyDial, dayBeans } from '../dial/CandyDial';
 import { dialFrame } from '../dial/geometry';
 import { buzz, play } from '../feedback';
 import { useFace, useLively, wake } from '../Gummy';
+import { Menu } from '../Menu';
 import { onStopMenu, stopMenu } from '../menus';
 import { Mould } from '../Mould';
 import { springs, tabular, text, useTheme } from '../theme';
@@ -268,7 +268,7 @@ function Stop({ context, since }: { context: ResolvedContext; since: number }) {
   const now = useNow(60_000);
   return (
     <View style={[styles.corner, styles.bottomRight]}>
-      <MenuView shouldOpenOnLongPress title={`Stop ${context.name}`} actions={stopMenu(since, now)} onPressAction={(e) => onStopMenu(e.nativeEvent.event)}>
+      <Menu title={`Stop ${context.name}`} items={stopMenu(context.name, since, now)} onPress={onStopMenu}>
         <RoundButton
           icon="stop.fill"
           size={54}
@@ -280,7 +280,7 @@ function Stop({ context, since }: { context: ResolvedContext; since: number }) {
             play('boop');
           }}
         />
-      </MenuView>
+      </Menu>
     </View>
   );
 }

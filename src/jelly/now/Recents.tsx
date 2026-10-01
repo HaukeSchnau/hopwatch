@@ -2,14 +2,14 @@
 // an "All" bean that opens the whole tree for anything else. Hold a bean for the native
 // backdating menu.
 
-import { MenuView } from '@expo/ui/community/menu';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { actions, type ResolvedContext, useNow, useRecents } from '@/core';
 
-import { onStartMenu, startMenu } from '../menus';
+import { Menu } from '../Menu';
+import { onStartMenu, useStartMenu } from '../menus';
 import { useTheme } from '../theme';
 import { CandySurface, Squishy } from '../ui';
 import { beanKey, noteSource, useAnchor } from './choreo';
@@ -41,12 +41,9 @@ function Bean({ context, now }: { context: ResolvedContext; now: number }) {
   const t = useTheme();
   const anchor = useAnchor(beanKey(context.id));
   const c = t.candy[context.hue];
+  const menu = useStartMenu(context, now, false);
   return (
-    <MenuView
-      shouldOpenOnLongPress
-      title={context.name}
-      actions={startMenu(context, now, false)}
-      onPressAction={(e) => onStartMenu(context.id, e.nativeEvent.event, beanKey(context.id))}>
+    <Menu title={context.name} items={menu} onPress={(id) => onStartMenu(context.id, id, beanKey(context.id))}>
       <Squishy
         accessibilityRole="button"
         accessibilityLabel={`Switch to ${context.name}`}
@@ -64,7 +61,7 @@ function Bean({ context, now }: { context: ResolvedContext; now: number }) {
           </CandySurface>
         </View>
       </Squishy>
-    </MenuView>
+    </Menu>
   );
 }
 
