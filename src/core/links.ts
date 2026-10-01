@@ -1,13 +1,11 @@
 // Deep links for Shortcuts, the Action Button and Siri:
-//   stintfive://start?context=<id>   switch to that context
-//   stintfive://stop                 stop the running entry
-//   stintfive://resume               start the previous context again
+//   stint://start?context=<id>   switch to that context
+//   stint://stop                 stop the running entry
+//   stint://resume               start the previous context again
 
 import type { ContextId } from './model';
 
-// TODO: switch to 'stint' once one direction becomes the real app; 'stintfive' lets this
-// evaluation build live next to other Stint builds on the same phone.
-export const SCHEME = 'stintfive';
+export const SCHEME = 'stint';
 
 export type LinkAction = { kind: 'start'; contextId: ContextId } | { kind: 'stop' } | { kind: 'resume' };
 

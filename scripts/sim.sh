@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Drives the project's simulators on the M1 builder over SSH.
 #
-#   scripts/sim.sh connect UDID [ROUTE]        (re)launch the dev client against the stint-metro
-#                                              service, optionally opening ROUTE, e.g. /glass/day
+#   scripts/sim.sh connect UDID [ROUTE]        (re)launch the dev client against Metro,
+#                                              optionally opening ROUTE, e.g. /day
 #   scripts/sim.sh shot UDID OUT.png           save a screenshot locally (view it with Read)
 #   scripts/sim.sh view UDID ROUTE OUT.png [S] relaunch into ROUTE, wait S more seconds (default 8),
 #                                              screenshot; holds a per-simulator lock throughout
@@ -11,57 +11,31 @@
 #                                              agent-device command line like 'press 200 400', or
 #                                              'sleep 2'), then screenshot; all under the lock.
 #                                              Use this for interactions on a shared simulator.
-#   scripts/sim.sh bundle DIRECTION            build DIRECTION's bundle on its Metro; prints 200,
+#   scripts/sim.sh bundle                      build the app's bundle on Metro; prints 200,
 #                                              or the status and Metro's error
 #   scripts/sim.sh ad UDID ARGS...             run one agent-device command against UDID (session
 #                                              sf-UDID) under the lock, e.g. `ad UDID snapshot -i`;
-#                                              run `ad UDID open dev.schnau.stint.five` first
+#                                              run `ad UDID open dev.schnau.stint` first
 #
 # Launching takes ~15 s (it retries if the dev launcher times out on Metro). Set WAIT=seconds
 # to change how long run/view wait after that before the first step (default 8).
-#
-# The route's first segment picks the Metro (glass → port 3101, deck 3102, almanac 3103,
-# orbit 3104, jelly 3105); STINT_DIRECTION=all uses metro-all on 3100, which serves every
-# direction (for checking the Lab and switching between directions);
-# for routes like /lab set STINT_DIRECTION.
 #
 # Deep links opened from outside (simctl openurl) stop at iOS's "Open in …?" prompt, so
 # routes are passed as a -stintRoute launch argument that the app reads in development.
 set -euo pipefail
 
-BUNDLE=dev.schnau.stint.five
+BUNDLE=dev.schnau.stint
 AD='~/.t3/device/tools/agent-device@0.21.7/node_modules/.bin/agent-device'
 
-# Each direction has its own Metro (agent-services metro-glass, stint-metro-deck,
-# metro-almanac, stint-metro-orbit, jelly-dev) that ignores the
-# other directions' files, so one builder's edits never rebuild another's bundle.
-declare -A PORTS=([all]=3100 [glass]=3101 [deck]=3102 [almanac]=3103 [orbit]=3104 [jelly]=3105)
-declare -A HOSTS=(
-  [all]=px-b8ee4debfe-metro-all.schnau.dev
-  [glass]=px-b8ee4debfe-metro-glass.schnau.dev
-  [deck]=px-b8ee4debfe-stint-metro-deck.schnau.dev
-  [almanac]=px-b8ee4debfe-metro-almanac.schnau.dev
-  [orbit]=px-b8ee4debfe-stint-metro-orbit.schnau.dev
-  [jelly]=px-b8ee4debfe-jelly-dev.schnau.dev
-)
-
-# The direction a route belongs to: its first segment, else $STINT_DIRECTION, else glass.
-direction_of() {
-  if [ "${STINT_DIRECTION:-}" = all ]; then echo all; return; fi
-  local first="${1#/}"
-  first="${first%%\?*}"
-  first="${first%%/*}"
-  if [ -n "${PORTS[$first]:-}" ]; then echo "$first"; else echo "${STINT_DIRECTION:-glass}"; fi
-}
+# The development Metro (agent-service metro-all) and its Tailnet URL.
+METRO_PORT=3100
+METRO_HOST=px-b8ee4debfe-metro-all.schnau.dev
 
 launch() {
   local route_args=""
   # %q quotes the route for the remote shell, so spaces and ? survive.
   [ -n "${2:-}" ] && route_args="-stintRoute $(printf '%q' "$2")"
-  local dir port metro
-  dir=$(direction_of "${2:-}")
-  port=${PORTS[$dir]}
-  metro="https://${HOSTS[$dir]}"
+  local port=$METRO_PORT metro="https://$METRO_HOST"
   for attempt in 1 2 3; do
     # The dev launcher gives up on the manifest after 10 s, and a busy Metro sometimes
     # takes longer. Warm it up first, then retry when the launcher logs a timeout.
@@ -72,7 +46,7 @@ launch() {
       -EXDevMenuIsOnboardingFinished YES -EXDevMenuShowFloatingActionButton NO $route_args >/dev/null"
     sleep 14
     if ssh m1 "xcrun simctl spawn $1 log show --last 15s --style compact \
-      --predicate 'process == \"StintFive\" AND eventMessage CONTAINS \"request timed out\"' 2>/dev/null" |
+      --predicate 'process == \"Stint\" AND eventMessage CONTAINS \"request timed out\"' 2>/dev/null" |
       grep -q "timed out"; then
       echo "sim.sh: manifest request timed out, relaunching (attempt $attempt)" >&2
       continue
@@ -132,10 +106,9 @@ case "${1:-}" in
     shot "$udid" "$out"
     ;;
   bundle)
-    dir="${2:?DIRECTION}"
-    out="/tmp/stint-bundle-$dir.js"
+    out="/tmp/stint-bundle.js"
     code=$(curl -s -m 600 -o "$out" -w '%{http_code}' \
-      "http://127.0.0.1:${PORTS[$dir]}/node_modules/expo-router/entry.bundle?platform=ios&dev=true&minify=false")
+      "http://127.0.0.1:$METRO_PORT/node_modules/expo-router/entry.bundle?platform=ios&dev=true&minify=false")
     echo "$code"
     [ "$code" = 200 ] || head -c 3000 "$out"
     ;;
@@ -146,7 +119,7 @@ case "${1:-}" in
     ad_cmd "$udid" "$@"
     ;;
   *)
-    sed -n '2,27p' "$0"
+    sed -n '2,24p' "$0"
     exit 1
     ;;
 esac

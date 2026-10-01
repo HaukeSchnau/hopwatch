@@ -1,29 +1,33 @@
 {
   "expo": {
-    "name": "Stint Five",
-    "slug": "stint-five",
-    "version": "0.1.0",
+    "name": "Stint",
+    "slug": "stint",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "stintfive",
+    "scheme": "stint",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "dev.schnau.stint.five",
+      "bundleIdentifier": "dev.schnau.stint",
       "appleTeamId": "2243J9RD68",
       "supportsTablet": false,
       "icon": "./assets/stint.icon",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "1"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0B0B0F",
+          "backgroundColor": "#FFF4E8",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 76,
+          "dark": {
+            "backgroundColor": "#150F1D"
+          }
         }
       ],
       "expo-sqlite",

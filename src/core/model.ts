@@ -9,8 +9,9 @@ export type ContextId = Brand<string, 'ContextId'>;
 export type EntryId = Brand<string, 'EntryId'>;
 
 /**
- * Colors are stored as hue keys, not hex values, so every design direction can map
- * them onto its own tuned palette. `defaultHueHex` is the neutral fallback.
+ * Colors are stored as hue keys, not hex values, so the UI maps them onto its own tuned
+ * palette (light and dark) and can retune it without touching data. `defaultHueHex` is
+ * the neutral fallback, used in exports.
  */
 export const hues = [
   'red',
