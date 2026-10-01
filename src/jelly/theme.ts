@@ -197,8 +197,9 @@ export function useTheme(): Theme {
   return themes[useColorScheme() === 'dark' ? 'dark' : 'light'];
 }
 
-/** The light theme, for code outside React. */
+/** The themes, for code outside React. */
 export const lightTheme = themes.light;
+export const darkTheme = themes.dark;
 
 const rounded = 'ui-rounded';
 

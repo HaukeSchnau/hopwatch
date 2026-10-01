@@ -46,6 +46,13 @@
           "enableBackgroundPlayback": false
         }
       ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "dev.schnau.stint.widgets",
+          "groupIdentifier": "group.dev.schnau.stint"
+        }
+      ],
       "./plugins/with-scene-lifecycle"
     ],
     "experiments": {
