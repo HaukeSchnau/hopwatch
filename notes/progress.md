@@ -63,20 +63,22 @@ installable on Hauke's iPhone, built natively on the M1 builder. No Expo Go.
 
 ## State
 
-- Round two done and committed: Jelly 2 (characters, native frame, candy dial) and the
-  on-device model bridge with Apple Intelligence suggestions. IPA published 2026-09-29
-  at https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/stint-five/ (FoundationModels
-  weak-linked, verified with otool).
-- Core has a preference store (`usePref`, `actions.setPref`) and `newContextId()`.
-- Metro: `jelly-dev` on 3105 (STINT_DIRECTION=jelly) and `metro-all` on 3100 are running.
-  All project simulators are shut down (Jelly is 9CD905EA).
-- Lint: core, shell, Jelly and modules are clean; the other four directions still have
-  React Compiler rule findings (moot if they're removed).
+- Jelly 2 is Hauke's pick. Jelly 1 is back as its own direction (`jelly1`, restored from
+  ba54d991) for side-by-side comparison; the Lab lists both. Comparison page with
+  screenshots: https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/stint-five/compare/
+- What Jelly 2 lost (full review in the compare page): Now no longer fits all nine pins
+  and recents on one screen; Day doesn't open at now; tiny emoji in Stuff rows and small
+  characters; editor quick chips for target and nudge; the backdate consequence line in
+  the native menu path; Settings one level deeper; the gummy tab bar, switches and
+  Day/Week toggle; stage tint and the bigger stage text.
+- Apple Intelligence: works on the simulator; Hauke saw nothing on his iPhone. Jelly 2's
+  settings now show the model status and a "Try a Suggestion" test with the failure
+  reason (modules/on-device-model `lastFailure`). Waiting for what it says on his phone.
+- IPA published 2026-10-01 with all of the above.
 
 ## Next
 
-1. Hauke tries Jelly 2 on the phone, including Apple Intelligence suggestions (only
-   verified on the simulator so far).
-2. Once confirmed: make Jelly the app (remove the other directions and the Lab, scheme
-   `stint://`, drop dev-only scripts like devScript.ts), then consider the Live
-   Activity (expo-widgets).
+1. Hauke reports the Apple Intelligence status from settings, and which Jelly 1 qualities
+   to bring back into Jelly 2.
+2. Then make Jelly the app (remove the others and the Lab, `stint://`, drop dev scripts),
+   and consider the Live Activity (expo-widgets).
