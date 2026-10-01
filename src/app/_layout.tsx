@@ -12,6 +12,7 @@ import { sheet } from '@/jelly/nav';
 import { useTheme } from '@/jelly/theme';
 import { devLaunchRoute } from '@/shell/dev-route';
 import { useHideSplash } from '@/shell/splash';
+import { startUpdates } from '@/shell/updates';
 import { startLiveActivity } from '@/widgets/live-activity';
 
 // The last resort if the frame itself fails; each route also exports its own.
@@ -34,6 +35,7 @@ export default function RootLayout() {
   useHideSplash();
   useEffect(() => startNudges(), []);
   useEffect(() => startLiveActivity(), []);
+  useEffect(() => startUpdates(), []);
   useDressUp();
   useDevLaunchRoute();
   const nav = t.dark ? DarkTheme : DefaultTheme;

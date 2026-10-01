@@ -58,6 +58,21 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e6630e93-4e6f-4153-84ce-a10ec19815bc"
+      }
+    },
+    "owner": "haukeschnau",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e6630e93-4e6f-4153-84ce-a10ec19815bc",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
     }
   }
 }
