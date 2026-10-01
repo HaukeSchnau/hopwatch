@@ -5,7 +5,7 @@
 const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
-const directions = ['glass', 'deck', 'almanac', 'orbit', 'jelly'];
+const directions = ['glass', 'deck', 'almanac', 'orbit', 'jelly', 'jelly1'];
 const only = process.env.STINT_DIRECTION;
 
 if (only) {
