@@ -69,10 +69,18 @@ his phone until he moves his data over (export there, restore here).
   95ac0ffc-4d39-4722-87c0-b881b82d7387 typed via command substitution. The sign-in form
   is a cross-origin iframe: click by coordinates and use `keyboard type`. SMS codes for
   the number ending 08 land in m1's `~/Library/Messages/chat.db`.
-- In flight: Live Activity builder (simulator 5230DDD4, owns app.json widgets entry and
-  src/widgets/), Jelly 1 qualities builder (simulator 9CD905EA, owns src/jelly/** except
-  settings). Uncommitted: their work and mine are in the working copy; split into
-  commits when they finish.
+- Committed (2026-10-01): Jelly 1 qualities (Day at now, bigger emoji stickers, target and
+  nudge chips, consequence subtitles in menus via src/jelly/Menu.tsx) and the Live
+  Activity (src/widgets/, expo-widgets; pills are links to stint://stop and
+  stint://resume, background buttons would need our own App Intents). Final light/dark
+  pass on simulator 594D2BB8 looked right.
+- Live Activity needs widget App ID dev.schnau.stint.widgets (8MCD639JBT) and App Group
+  group.dev.schnau.stint on both App IDs. Registered by hand in the developer portal:
+  without it the Release archive failed with a misleading "Authentication failed: Make
+  sure a bearer token was provided…" plus "No profiles for …". The API can't register
+  App Groups. Simulator builds are signed to run locally for the same App Group.
+- Unconfirmed on device: cold launch from a Live Activity link in Release, the compact
+  island timer past one hour.
 
 ## Next
 
