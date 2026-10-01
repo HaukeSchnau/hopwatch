@@ -2,7 +2,6 @@
 // and color. Tapping one wakes it and it hops into the dial; its slot keeps a dimple
 // while it's up there. Holding one opens the native backdating menu.
 
-import { MenuView } from '@expo/ui/community/menu';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -23,7 +22,8 @@ import { actions, type ContextId, type ResolvedContext, useNow, usePinned } from
 import { Character } from '../Character';
 import { hashSeed } from '../geometry';
 import { sleep, useFace, wake } from '../Gummy';
-import { onStartMenu, startMenu } from '../menus';
+import { Menu } from '../Menu';
+import { onStartMenu, useStartMenu } from '../menus';
 import { Mould } from '../Mould';
 import { springs, text, useTheme } from '../theme';
 import { Squishy, useWiggle } from '../ui';
@@ -90,12 +90,9 @@ function Tile({ context, running, width, now }: { context: ResolvedContext; runn
   });
 
   const c = t.candy[context.hue];
+  const menu = useStartMenu(context, now, running);
   return (
-    <MenuView
-      shouldOpenOnLongPress
-      title={context.name}
-      actions={startMenu(context, now, running)}
-      onPressAction={(e) => onStartMenu(context.id, e.nativeEvent.event, tileKey(context.id))}>
+    <Menu title={context.name} items={menu} onPress={(id) => onStartMenu(context.id, id, tileKey(context.id))}>
       <Squishy
         grounded
         amount={0.15}
@@ -127,7 +124,7 @@ function Tile({ context, running, width, now }: { context: ResolvedContext; runn
           {context.name}
         </Text>
       </Squishy>
-    </MenuView>
+    </Menu>
   );
 }
 

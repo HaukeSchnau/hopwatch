@@ -8,6 +8,7 @@ import { ScrollView, Text } from 'react-native';
 import { actions, formatClock, formatDuration, MINUTE, useNow, useRunning } from '@/core';
 
 import { play } from '../feedback';
+import { stopConsequence } from '../menus';
 import { useTheme } from '../theme';
 import { JellyButton } from '../ui';
 import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, TimeWheel, useSheetStyles } from './parts';
@@ -57,7 +58,7 @@ export function StopSheet() {
       <AgoChips hue={context.hue} now={now} options={AGO} earliest={entry.startUtc} onPick={stop} />
       <Text style={ss.label}>Or at</Text>
       <TimeWheel value={picked} onChange={setPicked} hue={context.hue} />
-      <Text style={ss.hint}>{tooEarly ? `That's before it started at ${formatClock(entry.startUtc)}` : ' '}</Text>
+      <Text style={ss.hint}>{tooEarly ? `That's before it started at ${formatClock(entry.startUtc)}` : stopConsequence(context.name, entry.startUtc, at)}</Text>
       <JellyButton
         label={`Stop at ${formatClock(at)}`}
         hue={context.hue}

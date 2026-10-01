@@ -5,9 +5,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 
-import { actions, type Entry, formatClock, MINUTE, useEntries, useNow, useRunning, useTree } from '@/core';
+import { actions, formatClock, MINUTE, useEntries, useNow, useRunning, useTree } from '@/core';
 
 import { play } from '../feedback';
+import { startConsequence } from '../menus';
 import { noteSource } from '../now/choreo';
 import { JellyButton } from '../ui';
 import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, TimeWheel, useSheetStyles } from './parts';
@@ -57,7 +58,7 @@ export function StartSheet() {
       <AgoChips hue={context.hue} now={now} options={AGO} onPick={start} />
       <Text style={ss.label}>Or at</Text>
       <TimeWheel value={picked} onChange={setPicked} hue={context.hue} />
-      <Text style={ss.hint}>{consequence(entries, (e) => tree.byId.get(e.contextId)?.name ?? 'Something', context.id, at, now) ?? ' '}</Text>
+      <Text style={ss.hint}>{startConsequence(entries, tree, context.id, at, now)?.text ?? ' '}</Text>
       <JellyButton
         label={isRunning ? `Move start to ${formatClock(at)}` : `Start at ${formatClock(at)}`}
         hue={context.hue}
@@ -67,23 +68,4 @@ export function StartSheet() {
       />
     </ScrollView>
   );
-}
-
-/** What a backdated start at `at` does to existing entries, in words. */
-function consequence(
-  entries: readonly Entry[],
-  nameOf: (e: Entry) => string,
-  contextId: string,
-  at: number,
-  now: number,
-): string | null {
-  const endOf = (e: Entry) => e.endUtc ?? now;
-  const open = entries.find((e) => e.endUtc === null);
-  const sameRunning = open?.contextId === contextId;
-  const cut = entries.find((e) => e.startUtc < at && endOf(e) > at && !(sameRunning && e === open));
-  const replaced = entries.filter((e) => e.startUtc >= at && !(sameRunning && e === open)).length;
-  const parts: string[] = [];
-  if (cut) parts.push(`${nameOf(cut)} ${cut === open ? 'stops' : 'ends'} at ${formatClock(at)}`);
-  if (replaced) parts.push(`replaces ${replaced} ${replaced === 1 ? 'entry' : 'entries'}`);
-  return parts.length ? parts.join(' · ') : null;
 }

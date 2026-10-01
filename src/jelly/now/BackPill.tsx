@@ -2,34 +2,33 @@
 // the context it returns to. Reads "Resume Job" when nothing runs. Hold it for the
 // native backdating menu.
 
-import { MenuView } from '@expo/ui/community/menu';
 import { SymbolView } from 'expo-symbols';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { actions, useNow, useSwitchTarget } from '@/core';
+import { actions, type ResolvedContext, useNow, useSwitchTarget } from '@/core';
 
-import { onStartMenu, startMenu } from '../menus';
+import { Menu } from '../Menu';
+import { onStartMenu, useStartMenu } from '../menus';
 import { useTheme } from '../theme';
 import { CandySurface, Squishy } from '../ui';
 import { noteSource, useAnchor } from './choreo';
 
 export function BackPill() {
-  const t = useTheme();
   const target = useSwitchTarget();
+  return target ? <Pill kind={target.kind} context={target.context} /> : null;
+}
+
+function Pill({ kind, context }: { kind: 'back' | 'resume'; context: ResolvedContext }) {
+  const t = useTheme();
   const anchor = useAnchor('back');
   const now = useNow(60_000);
   const { width } = useWindowDimensions();
-  if (!target) return null;
-  const { kind, context } = target;
+  const menu = useStartMenu(context, now, false);
   const c = t.candy[context.hue];
   const verb = kind === 'back' ? 'Back to' : 'Resume';
   return (
     <View style={styles.wrap}>
-      <MenuView
-        shouldOpenOnLongPress
-        title={`${verb} ${context.name}`}
-        actions={startMenu(context, now, false)}
-        onPressAction={(e) => onStartMenu(context.id, e.nativeEvent.event, 'back')}>
+      <Menu title={`${verb} ${context.name}`} items={menu} onPress={(id) => onStartMenu(context.id, id, 'back')}>
         <Squishy
           amount={0.07}
           style={{ width: width - 32 }}
@@ -55,7 +54,7 @@ export function BackPill() {
             </View>
           </CandySurface>
         </Squishy>
-      </MenuView>
+      </Menu>
     </View>
   );
 }

@@ -28,11 +28,24 @@ export interface CharacterProps {
   style?: StyleProp<ViewStyle>;
   /** Traits for a live preview, over the resolved look. Never stored. */
   look?: Partial<Look>;
-  /** The emoji sticker. Shown from 40 pt unless set. */
+  /** The emoji sticker. Shown from 36 pt unless set. */
   sticker?: boolean;
 }
 
-export function Character({ context, size, face, mood = 'asleep', shadow, dim, style, look: preview, sticker = size >= 40 }: CharacterProps) {
+/** Stickers never shrink below this, so the emoji reads at a glance in list rows. */
+const STICKER_MIN = 23;
+
+/**
+ * The sticker's size and offset from the bottom right corner: about a third of the
+ * jelly, at least STICKER_MIN. Its left edge stays right of the face, so on small jellies
+ * it hangs out of the box like a badge (by up to 13 pt; rows leave room for it).
+ */
+function stickerFrame(size: number) {
+  const badge = Math.max(STICKER_MIN, size * 0.32);
+  return { badge, right: size * 0.28 - badge, bottom: size * 0.02 - (badge - size * 0.32) * 0.3 };
+}
+
+export function Character({ context, size, face, mood = 'asleep', shadow, dim, style, look: preview, sticker = size >= 36 }: CharacterProps) {
   const look = withTraits(useLook(context), preview);
   const own = useFace(mood);
   const f = face ?? own;
@@ -56,7 +69,7 @@ export function Character({ context, size, face, mood = 'asleep', shadow, dim, s
 
   // Each sticker leans its own way, like it was slapped on by hand.
   const tilt = (hashSeed(context.id) % 24) - 12;
-  const badge = size * 0.28;
+  const { badge, right, bottom } = stickerFrame(size);
   return (
     <View style={[{ width: size, height: size }, style]}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.origin, body]}>
@@ -69,13 +82,13 @@ export function Character({ context, size, face, mood = 'asleep', shadow, dim, s
                 width: badge,
                 height: badge,
                 borderRadius: badge / 2,
-                right: -size * 0.05,
-                bottom: size * 0.02,
+                right,
+                bottom,
                 transform: [{ rotate: `${tilt}deg` }],
               },
               dim && { opacity: 0.5 },
             ]}>
-            <Text allowFontScaling={false} style={{ fontSize: badge * 0.58, lineHeight: badge * 0.76 }}>
+            <Text allowFontScaling={false} style={{ fontSize: badge * 0.64, lineHeight: badge * 0.82 }}>
               {context.glyph}
             </Text>
           </View>

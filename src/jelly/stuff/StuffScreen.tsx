@@ -3,7 +3,6 @@
 // edit, hold for the native menu (backdated starts, add inside, move, delete). Archived
 // jellies hide behind a switch.
 
-import { MenuView } from '@expo/ui/community/menu';
 import { router, Stack } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useState } from 'react';
@@ -14,7 +13,8 @@ import { actions, formatDuration, MINUTE, pathLabel, type ResolvedContext, useNo
 
 import { Character } from '../Character';
 import { buzz, play } from '../feedback';
-import { onStartMenu, startMenu } from '../menus';
+import { Menu } from '../Menu';
+import { onStartMenu, useStartMenu } from '../menus';
 import { alpha, text, useTheme } from '../theme';
 
 const edit = (id: string) => router.push({ pathname: '/context', params: { id } });
@@ -97,6 +97,7 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
     archived && 'archived',
   ].filter(Boolean);
   const depth = flat ? 0 : context.depth;
+  const startItems = useStartMenu(context, now, running);
 
   const onMenu = (event: string) => {
     if (event === 'child') return router.push({ pathname: '/context', params: { parent: context.id } });
@@ -139,18 +140,16 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
           />
         </View>
       )}>
-      <MenuView
-        shouldOpenOnLongPress
+      <Menu
         title={pathLabel(context)}
-        onPressAction={(e) => onMenu(e.nativeEvent.event)}
-        actions={[
-          ...(context.hidden ? [] : startMenu(context, now, running)),
-          ...(context.hidden ? [{ id: 'edit', title: `Edit ${context.name}`, image: 'pencil' as const }] : []),
+        onPress={onMenu}
+        items={[
+          ...(context.hidden ? [{ id: 'edit', title: `Edit ${context.name}`, image: 'pencil' as const }] : startItems),
           { id: 'child', title: 'Add inside', image: 'plus' },
           ...(context.hidden ? [] : [{ id: 'pin', title: pinned ? 'Unpin from Now' : 'Pin to Now', image: pinned ? ('pin.slash' as const) : ('pin' as const) }]),
           { id: 'move', title: 'Move…', image: 'arrow.turn.down.right' },
           { id: 'archive', title: archived ? 'Unarchive' : 'Archive', image: archived ? 'tray.and.arrow.up' : 'archivebox' },
-          { id: 'delete', title: 'Delete', image: 'trash', attributes: { destructive: true } },
+          { id: 'delete', title: 'Delete', image: 'trash', destructive: true },
         ]}>
         <View style={[styles.row, { width }]}>
           {depth > 0 && <Guides depth={depth} color={alpha(t.c.ink, 0.08)} />}
@@ -160,7 +159,7 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
             accessibilityRole="button"
             accessibilityLabel={context.hidden ? `Edit ${context.name}` : `Start ${context.name}`}
             accessibilityHint="Hold for more options">
-            <Character context={context} size={40} mood={running ? 'awake' : 'asleep'} shadow={false} dim={context.hidden} />
+            <Character context={context} size={46} mood={running ? 'awake' : 'asleep'} shadow={false} dim={context.hidden} style={styles.jelly} />
             <View style={styles.titles}>
               <Text style={[text.body, { color: context.hidden ? t.c.muted : t.c.ink }]} numberOfLines={1}>
                 {flat ? pathLabel(context) : context.name}
@@ -175,9 +174,9 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
           <Pressable onPress={() => edit(context.id)} hitSlop={6} accessibilityRole="button" accessibilityLabel={`Edit ${context.name}`} style={styles.info}>
             <SymbolView name="info.circle" size={21} tintColor={t.c.pinkDeep} />
           </Pressable>
-          {!last && <View style={[styles.separator, { left: 16 + depth * 18 + 52, backgroundColor: t.c.line }]} />}
+          {!last && <View style={[styles.separator, { left: 16 + depth * 18 + 64, backgroundColor: t.c.line }]} />}
         </View>
-      </MenuView>
+      </Menu>
     </Swipeable>
   );
 }
@@ -246,6 +245,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 62, paddingLeft: 12, paddingRight: 4 },
   main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
   titles: { flex: 1 },
+  // Room for the emoji sticker, which hangs out of a small jelly's box.
+  jelly: { marginRight: 6 },
   info: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   separator: { position: 'absolute', right: 0, bottom: 0, height: StyleSheet.hairlineWidth },
   guides: { flexDirection: 'row', alignSelf: 'stretch' },

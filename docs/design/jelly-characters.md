@@ -142,7 +142,10 @@ Faces are always plum (`INK`), never the theme's text color.
 - `Character` props: `context` (`{ id, hue, glyph, name? }`, a `ResolvedContext` fits),
   `size`, `face`, `mood`, `shadow`, `dim`, `style`, plus two optional ones: `look` (a
   `Partial<Look>` preview over the resolved look, never stored) and `sticker` (the emoji
-  badge, shown from 40 pt by default; it now sits at the bottom right so hats have room).
+  badge, shown from 36 pt by default; it sits at the bottom right so hats have room). The
+  sticker is a third of the jelly but never under 23 pt, so the emoji reads in list rows;
+  on small jellies it hangs out of the box to keep clear of the face, so rows leave a few
+  points of room after the jelly.
   Pass `name` for look-alikes such as the onboarding preview, so name hints work.
 - `Gummy.tsx`: `useFace`, `wake`, `sleep`, `useLively`, `Face` as before. `Face` gained
   body-motion values (`hop`, `squash`, `tilt`, `puff`, `shiver`) and `motion`; callers

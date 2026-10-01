@@ -58,7 +58,7 @@ function Bubble({ node, x, y, r, onPick }: { node: TotalsNode; x: number; y: num
         accessibilityRole="button"
         accessibilityLabel={`${node.context.name}, ${formatDuration(node.total)}`}>
         <CandySurface hue={node.context.hue} radius={r} style={[styles.body, { width: r * 2, height: r * 2 }]}>
-          {node.context.glyph ? <Text style={{ fontSize: Math.max(12, Math.min(30, r * 0.42)) }}>{node.context.glyph}</Text> : null}
+          {node.context.glyph ? <Text style={{ fontSize: Math.max(14, Math.min(30, r * 0.5)) }}>{node.context.glyph}</Text> : null}
           {big && (
             <Text style={[text.footnote, styles.name, { color: c.on }]} numberOfLines={1}>
               {node.context.name}

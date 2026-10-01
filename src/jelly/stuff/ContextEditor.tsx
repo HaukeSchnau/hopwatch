@@ -72,6 +72,11 @@ import { confirmDelete } from './StuffScreen';
 
 const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
 const ROOT = 'root';
+/** One-tap weekly targets and nudges, in minutes; 0 is "none" and "default". */
+const TARGET_CHIPS = [0, 5, 10, 20, 30, 40].map((h) => h * 60);
+const NUDGE_CHIPS = [0, 30, 60, 120, 180];
+/** "5 h", "30 min" */
+const chipLabel = (minutes: number) => (minutes < 60 ? `${minutes} min` : `${minutes / 60} h`);
 
 export function ContextEditor() {
   const params = useLocalSearchParams<{
@@ -336,15 +341,12 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         )}
       </Section>
 
-      <Section
-        title="Goals"
-        footer={<SwiftText>The target counts this jelly and everything inside it. The nudge asks whether you forgot to stop.</SwiftText>}>
-        <Toggle
-          label="Weekly target"
-          systemImage="target"
-          isOn={target !== null}
-          onIsOnChange={(on) => {
-            const next = on ? (context?.weeklyTargetMinutes ?? 10 * 60) : null;
+      <Section title="Weekly target" footer={<SwiftText>Counts this jelly and everything inside it.</SwiftText>}>
+        <Chips
+          options={TARGET_CHIPS}
+          none="None"
+          value={target}
+          onChange={(next) => {
             setTarget(next);
             if (context) actions.updateContext(context.id, { weeklyTargetMinutes: next });
           }}
@@ -366,12 +368,14 @@ function Editor({ context, initialParent, pin }: EditorProps) {
             modifiers={[monospacedDigit()]}
           />
         ) : null}
-        <Toggle
-          label="Own nudge"
-          systemImage="bell.badge"
-          isOn={nudge !== null}
-          onIsOnChange={(on) => {
-            const next = on ? inheritedNudge : null;
+      </Section>
+
+      <Section title="Nudge" footer={<SwiftText>Asks whether you forgot to stop when it has run this long.</SwiftText>}>
+        <Chips
+          options={NUDGE_CHIPS}
+          none="Default"
+          value={nudge}
+          onChange={(next) => {
             setNudge(next);
             if (context) actions.updateContext(context.id, { nudgeAfterMinutes: next });
           }}
@@ -440,6 +444,28 @@ function Header({
         {suggested ? `✨ suggested · ${subtitle}` : subtitle}
       </Text>
     </View>
+  );
+}
+
+/**
+ * One-tap minutes as a native segmented control. Option 0 reads `none` and means null; a
+ * value set with the stepper that isn't an option leaves every segment unselected.
+ */
+function Chips({ options, none, value, onChange }: { options: number[]; none: string; value: number | null; onChange: (minutes: number | null) => void }) {
+  return (
+    <Picker
+      selection={value ?? 0}
+      onSelectionChange={(picked: number) => {
+        buzz.tick();
+        onChange(picked === 0 ? null : picked);
+      }}
+      modifiers={[pickerStyle('segmented')]}>
+      {options.map((m) => (
+        <SwiftText key={m} modifiers={[tag(m)]}>
+          {m === 0 ? none : chipLabel(m)}
+        </SwiftText>
+      ))}
+    </Picker>
   );
 }
 

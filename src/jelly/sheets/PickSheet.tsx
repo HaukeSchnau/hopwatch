@@ -180,7 +180,7 @@ function Row({
     <Squishy amount={0.06} onPress={onPress} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }}>
       <View style={[styles.row, { marginLeft: depth * 20 }, selected && { backgroundColor: c.tint }]}>
         {context ? (
-          <Character context={context} size={38} shadow={false} />
+          <Character context={context} size={44} shadow={false} style={styles.jelly} />
         ) : (
           <View style={[styles.home, { backgroundColor: t.c.sunken }]}>
             <SymbolView name="house.fill" size={16} tintColor={t.c.muted} />
@@ -202,7 +202,9 @@ const styles = StyleSheet.create({
   list: { marginTop: 14, gap: 2 },
   range: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 54, paddingHorizontal: 8, borderRadius: 18 },
-  home: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  // Room for the emoji sticker, which hangs out of a small jelly's box.
+  jelly: { marginRight: 6 },
+  home: { width: 44, height: 44, borderRadius: 22, marginRight: 6, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { flex: 1 },
   empty: { textAlign: 'center', marginTop: 20 },
 });

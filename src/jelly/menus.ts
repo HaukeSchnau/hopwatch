@@ -1,33 +1,84 @@
 // The native long-press menus for backdating. Anything that starts a jelly (tiles, beans,
 // the back pill, rows in Stuff) offers "Started N min ago", "At a time…" and "Edit";
-// Stop offers "Stopped N min ago" and "At a time…". The time sheets handle the rest.
+// Stop offers "Stopped N min ago" and "At a time…". Each "N min ago" says under it what
+// it would do ("Deep work stops at 14:50") before it's picked. The time sheets handle the rest.
 
-import type { MenuAction } from '@expo/ui/community/menu';
 import { router } from 'expo-router';
 
-import { actions, type ContextId, formatClock, MINUTE, type ResolvedContext, useStint } from '@/core';
+import {
+  actions,
+  type ContextId,
+  type ContextTree,
+  type Entry,
+  formatClock,
+  formatDuration,
+  MIN_ENTRY_MS,
+  MINUTE,
+  previewStart,
+  type ResolvedContext,
+  useEntries,
+  useStint,
+  useTree,
+} from '@/core';
 
 import { buzz, play } from './feedback';
+import type { MenuEntry, MenuItem } from './Menu';
 import { noteSource } from './now/choreo';
 
-const START_AGO = [5, 10, 15, 30, 45];
-const STOP_AGO = [5, 10, 15, 30];
+const AGO = [5, 10, 15, 30, 45];
 
 /** "5 min ago · 09:07" */
 const agoTitle = (minutes: number, now: number) => `${minutes} min ago · ${formatClock(now - minutes * MINUTE)}`;
+
+const capitalized = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/**
+ * What starting `contextId` at `at` does to the other entries, in words: "Deep work stops
+ * at 14:50 · replaces Lunch". Null when it leaves them alone. `replaces` is true when an
+ * entry would disappear, which deserves a warning.
+ */
+export function startConsequence(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  contextId: ContextId,
+  at: number,
+  now: number,
+): { text: string; replaces: boolean } | null {
+  const { cut, replaced } = previewStart(entries, contextId, at, now);
+  const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? 'Something';
+  const parts: string[] = [];
+  if (cut) parts.push(`${name(cut.entry)} ${cut.entry.endUtc === null ? 'stops' : 'ends'} at ${formatClock(cut.at)}`);
+  if (replaced.length === 1) parts.push(`replaces ${name(replaced[0])}`);
+  if (replaced.length > 1) parts.push(`replaces ${replaced.length} entries`);
+  return parts.length ? { text: capitalized(parts.join(' · ')), replaces: replaced.length > 0 } : null;
+}
+
+/** What stopping the entry that runs since `since` at `at` leaves: "0:40 of Deep work". */
+export function stopConsequence(name: string, since: number, at: number): string {
+  return at - since < MIN_ENTRY_MS ? `Too short, ${name} is dropped` : `${formatDuration(at - since)} of ${name}`;
+}
 
 /**
  * Menu for anything that starts `context`. For the running context the same choices move
  * its start instead.
  */
-export function startMenu(context: ResolvedContext, now: number, running: boolean): MenuAction[] {
+export function useStartMenu(context: ResolvedContext, now: number, running: boolean): MenuEntry[] {
+  const entries = useEntries();
+  const tree = useTree();
+  // Only entries that end after the earliest choice can be touched; Stuff renders a menu per row.
+  const earliest = now - Math.max(...AGO) * MINUTE;
+  const recent = entries.filter((e) => (e.endUtc ?? now) > earliest);
+  const ago = AGO.map((m): MenuItem => {
+    const consequence = startConsequence(recent, tree, context.id, now - m * MINUTE, now);
+    return {
+      id: `ago:${m}`,
+      title: agoTitle(m, now),
+      subtitle: consequence?.text,
+      image: consequence?.replaces ? 'exclamationmark.triangle' : 'clock.arrow.circlepath',
+    };
+  });
   return [
-    {
-      id: 'ago',
-      title: running ? 'Actually started' : 'Started earlier',
-      displayInline: true,
-      subactions: START_AGO.map((m) => ({ id: `ago:${m}`, title: agoTitle(m, now), image: 'clock.arrow.circlepath' })),
-    },
+    { title: running ? 'Actually started' : 'Started earlier', items: ago },
     { id: 'at', title: 'At a time…', image: 'clock' },
     { id: 'edit', title: `Edit ${context.name}`, image: 'pencil' },
   ];
@@ -57,22 +108,17 @@ export function onStartMenu(contextId: ContextId, event: string, source?: string
   }
 }
 
-/** Menu for Stop, limited to times after the entry started. */
-export function stopMenu(since: number, now: number): MenuAction[] {
-  const options = STOP_AGO.filter((m) => now - m * MINUTE > since);
-  return [
-    ...(options.length
-      ? [
-          {
-            id: 'ago',
-            title: 'Stopped earlier',
-            displayInline: true,
-            subactions: options.map((m) => ({ id: `ago:${m}`, title: agoTitle(m, now), image: 'clock.arrow.circlepath' as const })),
-          },
-        ]
-      : []),
-    { id: 'at', title: 'At a time…', image: 'clock' },
-  ];
+/** Menu for stopping `name`, which runs since `since`; limited to times after it started. */
+export function stopMenu(name: string, since: number, now: number): MenuEntry[] {
+  const ago = AGO.filter((m) => now - m * MINUTE > since).map(
+    (m): MenuItem => ({
+      id: `ago:${m}`,
+      title: agoTitle(m, now),
+      subtitle: stopConsequence(name, since, now - m * MINUTE),
+      image: 'clock.arrow.circlepath',
+    }),
+  );
+  return [...(ago.length ? [{ title: 'Stopped earlier', items: ago }] : []), { id: 'at', title: 'At a time…', image: 'clock' }];
 }
 
 export function onStopMenu(event: string) {
