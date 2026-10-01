@@ -222,7 +222,7 @@ export const text = {
 /** Digits that don't jiggle as they tick. */
 export const tabular: TextStyle = { fontVariant: ['tabular-nums'] };
 
-/** Springs used across the direction. Jelly overshoots; snappy settles fast. */
+/** Springs used across the app. Jelly overshoots; snappy settles fast. */
 export const springs = {
   jelly: { damping: 7, stiffness: 260, mass: 0.7 },
   wobble: { damping: 5, stiffness: 180, mass: 0.6 },

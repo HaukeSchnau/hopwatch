@@ -5,9 +5,12 @@ import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 
 import { type Context, type ContextId, type Entry, type EntryId, isHue } from './model';
 
-const SCHEMA_VERSION = 1;
-
-const schema = `
+/**
+ * Schema steps: step i brings a database from `user_version` i to i + 1, in one
+ * transaction. Append new steps; never edit a released one, since phones already ran it.
+ */
+const migrations: readonly string[] = [
+  `
 CREATE TABLE IF NOT EXISTS contexts (
   id TEXT PRIMARY KEY NOT NULL,
   parent_id TEXT,
@@ -40,7 +43,8 @@ CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY NOT NULL,
   value TEXT NOT NULL
 );
-`;
+`,
+];
 
 interface ContextRow {
   id: string;
@@ -106,12 +110,18 @@ function open(): SQLiteDatabase {
   if (db) return db;
   db = openDatabaseSync('stint.db');
   db.execSync('PRAGMA journal_mode = WAL;');
-  const { user_version } = db.getFirstSync<{ user_version: number }>('PRAGMA user_version') ?? { user_version: 0 };
-  if (user_version < SCHEMA_VERSION) {
-    db.execSync(schema);
-    db.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
-  }
+  migrate(db);
   return db;
+}
+
+function migrate(d: SQLiteDatabase) {
+  const { user_version } = d.getFirstSync<{ user_version: number }>('PRAGMA user_version') ?? { user_version: 0 };
+  for (let version = user_version; version < migrations.length; version++) {
+    d.withTransactionSync(() => {
+      d.execSync(migrations[version]);
+      d.execSync(`PRAGMA user_version = ${version + 1}`);
+    });
+  }
 }
 
 /** Every live context and entry, entries sorted by start. */

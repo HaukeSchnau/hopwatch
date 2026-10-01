@@ -28,8 +28,9 @@ export {
   useStint,
 } from './store';
 export * from './time';
-export type { EntryPatch, Gap } from './timeline';
+export { type EntryPatch, findOpen, type Gap, previousContextId, previewStart, type StartPreview } from './timeline';
 export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
-export { shareExport } from './export';
+export type { Backup, ParseResult } from './backup';
+export { pickBackup, shareExport } from './export';
 export { requestNudgePermission } from './permissions';
 export { eraseAllData, loadSampleData } from './sample-loader';
