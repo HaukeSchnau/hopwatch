@@ -1,16 +1,19 @@
 // Settings as a native form under a candy header: the idea next to a mascot, the Lab,
-// squishy sounds, Shortcuts links, export, sample data and erasing.
+// squishy sounds, the Apple Intelligence status, Shortcuts links, export, sample data and
+// erasing.
 
 import { Button, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
 import { foregroundStyle, tint } from '@expo/ui/swift-ui/modifiers';
 import * as Clipboard from 'expo-clipboard';
+import { type Availability, availability, lastFailure } from '@modules/on-device-model';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { eraseAllData, loadSampleData, resumeLink, shareExport, stopLink, useStint } from '@/core';
 
 import { Character } from '../Character';
+import { suggestForContext } from '../character/suggest';
 import { buzz, setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
 import { useFace, useLively } from '../Gummy';
@@ -62,6 +65,7 @@ export function SettingsSheet() {
         />
         <Toggle label="Squishy sounds" systemImage="speaker.wave.2" isOn={sounds} onIsOnChange={setSounds} />
       </Section>
+      <AppleIntelligence />
       <Section
         title="Shortcuts"
         footer={<SwiftText>Open these from the Shortcuts app, the Action Button or an automation. Each jelly has its own start link in its editor.</SwiftText>}>
@@ -84,6 +88,57 @@ export function SettingsSheet() {
         />
       </Section>
     </JellyForm>
+  );
+}
+
+const statusText: Record<Availability, string> = {
+  available: 'Ready',
+  appleIntelligenceNotEnabled: 'Off. Turn on Apple Intelligence in the Settings app.',
+  modelNotReady: 'The model is still downloading. Try again later.',
+  deviceNotEligible: 'Not supported on this iPhone.',
+  unsupported: 'Needs iOS 26 or later.',
+};
+
+/**
+ * The on-device model's status and a test request, so a silent fallback can be told apart
+ * from a failing model. Failures show the reason from the native side.
+ */
+function AppleIntelligence() {
+  const [state, setState] = useState<Availability | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    availability()
+      .catch((): Availability => 'unsupported')
+      .then((next) => live && setState(next));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const tryIt = async () => {
+    setBusy(true);
+    const started = Date.now();
+    const suggestion = await suggestForContext({ name: 'Espresso run', ancestors: [], siblings: [], wantEmoji: true });
+    const seconds = ((Date.now() - started) / 1000).toFixed(1);
+    setBusy(false);
+    setState(await availability().catch((): Availability => 'unsupported'));
+    if (suggestion) {
+      const wears = Object.values(suggestion.look).join(' and ') || 'nothing special';
+      Alert.alert('It works', `"Espresso run" got ${suggestion.emoji ?? 'no emoji'} and ${wears}, in ${seconds} s.`);
+    } else {
+      Alert.alert('No suggestion', `${lastFailure() ?? 'The model gave no answer.'} (${seconds} s)`);
+    }
+  };
+
+  return (
+    <Section
+      title="Apple Intelligence"
+      footer={<SwiftText>Suggests an emoji and a fitting hat while you name a new jelly, and dresses up existing jellies in the background. Everything works without it.</SwiftText>}>
+      <SwiftText>{state ? statusText[state] : 'Checking…'}</SwiftText>
+      <Button label={busy ? 'Asking…' : 'Try a Suggestion'} systemImage="sparkles" onPress={tryIt} />
+    </Section>
   );
 }
 

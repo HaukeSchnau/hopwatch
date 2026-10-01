@@ -26,6 +26,13 @@ interface Native {
 
 const native = requireOptionalNativeModule<Native>('OnDeviceModel');
 
+let failure: string | null = null;
+
+/** Why the last `generate` returned null, for diagnostics. Null after a success. */
+export function lastFailure(): string | null {
+  return failure;
+}
+
 export async function availability(): Promise<Availability> {
   return native ? native.availability() : 'unsupported';
 }
@@ -39,16 +46,25 @@ export async function generate<const F extends readonly Field[]>(request: {
   prompt: string;
   fields: F;
 }): Promise<{ [K in F[number]['name']]: string } | null> {
-  if (!native || (await native.availability()) !== 'available') return null;
+  const state = native ? await native.availability() : 'unsupported';
+  if (!native || state !== 'available') {
+    failure = `model unavailable: ${state}`;
+    return null;
+  }
   try {
     const answer = await native.generate({ ...request, fields: [...request.fields] });
     // Trust the native schema, but verify at the boundary: every field present, choices kept.
     for (const field of request.fields) {
       const value = answer[field.name];
-      if (typeof value !== 'string' || (field.choices && !field.choices.includes(value))) return null;
+      if (typeof value !== 'string' || (field.choices && !field.choices.includes(value))) {
+        failure = `answer didn't fit: ${field.name} = ${JSON.stringify(value)}`;
+        return null;
+      }
     }
+    failure = null;
     return answer as { [K in F[number]['name']]: string };
   } catch (error) {
+    failure = error instanceof Error ? error.message : String(error);
     if (__DEV__) console.warn('on-device model failed', error);
     return null;
   }

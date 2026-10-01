@@ -12,8 +12,14 @@ export interface DirectionInfo {
 export const directions = [
   {
     id: 'jelly',
-    name: 'Jelly',
+    name: 'Jelly 2',
     tagline: 'Candy characters, each one its own someone, living on a 24-hour dial. Native, and Apple Intelligence helps dress them.',
+    swatch: { background: '#FFF4E8', ink: '#2B1B3D', accent: '#FF6FB5' },
+  },
+  {
+    id: 'jelly1',
+    name: 'Jelly 1',
+    tagline: 'The first round of Jelly: lumpy gummies on a stage card, a bubbly tab bar and Fredoka. Here for comparison.',
     swatch: { background: '#FFF4E8', ink: '#2B1B3D', accent: '#FF6FB5' },
   },
   {

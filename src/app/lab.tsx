@@ -18,10 +18,11 @@ const shots: Record<DirectionId, [home: ImageSource, other: ImageSource]> = {
   almanac: [require('@/assets/lab/almanac-1.jpg'), require('@/assets/lab/almanac-2.jpg')],
   orbit: [require('@/assets/lab/orbit-1.jpg'), require('@/assets/lab/orbit-2.jpg')],
   jelly: [require('@/assets/lab/jelly-1.jpg'), require('@/assets/lab/jelly-2.jpg')],
+  jelly1: [require('@/assets/lab/jelly1-1.jpg'), require('@/assets/lab/jelly1-2.jpg')],
 };
 
 /**
- * The Lab: picks which of the five design directions the app shows. Opened on first
+ * The Lab: picks which design direction the app shows. Opened on first
  * launch and from every direction's settings.
  */
 export default function Lab() {
@@ -48,8 +49,8 @@ export default function Lab() {
             stint<Text style={{ color: '#FF6FB5' }}>.</Text> <Text style={styles.lab}>lab</Text>
           </Text>
           <Text style={styles.intro}>
-            Five takes on the same tracker. Same data, same features. Pick one and switch whenever you like from its
-            settings.
+            Different takes on the same tracker. Same data, same features. Pick one and switch whenever you like from
+            its settings.
           </Text>
         </View>
         {directions.map((d, i) => (
