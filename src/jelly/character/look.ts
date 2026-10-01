@@ -1,42 +1,29 @@
 // Resolving a context's look, trait by trait: a custom look someone picked in the editor,
-// then the traits Apple's on-device model picked for its current name (see suggest.ts),
-// then the look derived from its id, emoji and name (derive.ts). All of it is stored as
-// device-local preferences, so nothing here touches tracking data.
+// then the automatic look: the seeded base dressed for the topic and traits Apple's
+// on-device model picked for its current name and emoji (see suggest.ts), or for the topic
+// its emoji or name points at (derive.ts). All of it is stored as device-local
+// preferences, so nothing here touches tracking data.
 
 import { actions, type Json, usePref } from '@/core';
 
+import { freshPick, parseSuggestion, type StoredSuggestion } from './ask';
 import { type LookSource, lookFor } from './derive';
 import { type Look, parseLook, traitKeys, withTraits } from './traits';
 
 /** Preference key of the custom look: only the traits picked by hand. */
 export const customKey = (id: string) => `jelly.look.${id}`;
-/** Preference key of the model-picked traits, with the name they were picked for. */
+/** Preference key of the model's picks, with the name and emoji they were made for (ask.ts). */
 export const suggestedKey = (id: string) => `jelly.look.ai.${id}`;
-
-/** Model-picked traits as stored: `{ name, look }`. */
-export interface StoredSuggestion {
-  name: string;
-  look: Partial<Look>;
-}
-
-export function parseSuggestion(value: Json): StoredSuggestion | undefined {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined;
-  const { name, look } = value;
-  if (typeof name !== 'string') return undefined;
-  return { name, look: (look !== undefined && parseLook(look)) || {} };
-}
 
 /** The traits someone picked by hand for `id`, or null. */
 export const useCustomLook = (id: string) => usePref<Partial<Look> | null>(customKey(id), null, parseLook);
 
-/** The stored model suggestion for `id`, whatever name it was made for. */
+/** The model's stored picks for `id`, whatever name they were made for. */
 export const useStoredSuggestion = (id: string) => usePref<StoredSuggestion | null>(suggestedKey(id), null, parseSuggestion);
 
-/** The look "Automatic" stands for: model-picked traits for the current name over the derived look. */
+/** The look "Automatic" stands for: the derived look, dressed by the model's picks while they fit. */
 export function useAutoLook(source: LookSource): Look {
-  const suggestion = useStoredSuggestion(source.id);
-  const fresh = suggestion && suggestion.name === source.name ? suggestion.look : null;
-  return withTraits(lookFor(source), fresh);
+  return lookFor(source, freshPick(useStoredSuggestion(source.id), source));
 }
 
 /** The look a context wears: custom traits over the automatic look. */

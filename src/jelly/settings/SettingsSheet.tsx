@@ -134,13 +134,15 @@ function AppleIntelligence() {
   const tryIt = async () => {
     setBusy(true);
     const started = Date.now();
-    const suggestion = await suggestForContext({ name: 'Espresso run', ancestors: [], siblings: [], wantEmoji: true });
+    const suggestion = await suggestForContext({ name: 'Espresso run', ancestors: [], siblings: [], wantEmoji: true, wantHue: true });
     const seconds = ((Date.now() - started) / 1000).toFixed(1);
     setBusy(false);
     setState(await availability().catch((): Availability => 'unsupported'));
     if (suggestion) {
-      const wears = Object.values(suggestion.look).join(' and ') || 'nothing special';
-      Alert.alert('It works', `"Espresso run" got ${suggestion.emoji ?? 'no emoji'} and ${wears}, in ${seconds} s.`);
+      const { emoji, hue, topic, traits } = suggestion;
+      const look = topic ? `the ${topic} look` : 'the look its name points at';
+      const mood = traits.motion ? ` and a ${traits.motion} mood` : '';
+      Alert.alert('It works', `"Espresso run" got ${emoji ?? 'no emoji'}, ${hue ?? 'no color'}, ${look}${mood}, in ${seconds} s.`);
     } else {
       Alert.alert('No suggestion', `${lastFailure() ?? 'The model gave no answer.'} (${seconds} s)`);
     }
@@ -149,7 +151,13 @@ function AppleIntelligence() {
   return (
     <Section
       title="Apple Intelligence"
-      footer={<SwiftText>Suggests an emoji and a fitting hat while you name a new jelly, and dresses up existing jellies in the background. Everything works without it.</SwiftText>}>
+      footer={
+        <SwiftText>
+          {
+            'While you name a new jelly, it suggests an emoji, a look and a mood, and a color for jellies at the top level. Existing jellies get dressed up in the background. It also writes the summary on the Week tab and reads what you type when picking a jelly, like "2h deep work this morning". Everything works without it.'
+          }
+        </SwiftText>
+      }>
       <SwiftText>{state ? statusText[state] : 'Checking…'}</SwiftText>
       <Button label={busy ? 'Asking…' : 'Try a Suggestion'} systemImage="sparkles" onPress={tryIt} />
     </Section>

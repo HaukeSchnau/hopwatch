@@ -1,6 +1,6 @@
 // First launch: no contexts yet, so we go straight to making the first jelly. The
 // preview jelly wakes up, takes on the color you pick and wears the emoji you choose.
-// With Apple's on-device model, typing a name suggests a fitting emoji and look.
+// With Apple's on-device model, typing a name suggests a fitting emoji, color and look.
 
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { actions, type Hue, loadSampleData, newContextId } from '@/core';
 
 import { Character } from '../Character';
+import { lookFor } from '../character/derive';
 import { saveSuggestedLook } from '../character/suggest';
 import { buzz, play } from '../feedback';
 import { EmojiField, HuePicker } from '../fields';
@@ -25,16 +26,19 @@ export function Welcome() {
   // The preview is seeded by the same id the jelly is created with, so it looks the same.
   const [draftId] = useState(newContextId);
   const [name, setName] = useState('');
-  // 💼 until the user picks one, and open to suggestions until then.
+  // 💼 and pink until the user picks others, and open to suggestions until then.
   const [emoji, setEmoji] = useState('💼');
   const [emojiTouched, setEmojiTouched] = useState(false);
   const [hue, setHue] = useState<Hue>('pink');
+  const [hueTouched, setHueTouched] = useState(false);
   const face = useFace('awake');
   useLively(face, true);
 
-  const suggested = useNameSuggestion(name, null, !emojiTouched);
+  const suggested = useNameSuggestion(name, null, emojiTouched ? emoji : null, !hueTouched);
   const suggestedEmoji = !emojiTouched ? (suggested?.suggestion.emoji ?? null) : null;
   const shownEmoji = suggestedEmoji ?? emoji;
+  const suggestedHue = !hueTouched ? (suggested?.suggestion.hue ?? null) : null;
+  const shownHue = suggestedHue ?? hue;
 
   const jiggle = useSharedValue(0);
   const bounce = () => jiggle.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
@@ -51,15 +55,15 @@ export function Welcome() {
       id: draftId,
       name: trimmed,
       emoji: shownEmoji,
-      color: hue,
+      color: shownHue,
       pinned: true,
     });
-    if (suggested && suggested.forName === trimmed) saveSuggestedLook(id, suggested.suggestion, trimmed);
+    if (suggested && suggested.forName === trimmed) saveSuggestedLook(id, suggested.suggestion, trimmed, shownEmoji);
   };
 
   const preview: PreviewJelly = {
     id: draftId,
-    hue,
+    hue: shownHue,
     glyph: shownEmoji,
     name: name.trim(),
   };
@@ -76,7 +80,7 @@ export function Welcome() {
       </Text>
 
       <Animated.View style={[styles.preview, { transformOrigin: 'bottom' }, blob]}>
-        <Character context={preview} size={170} face={face} look={suggested?.suggestion.look} />
+        <Character context={preview} size={170} face={face} look={suggested ? lookFor(preview, suggested.suggestion) : undefined} />
       </Animated.View>
 
       <TextInput
@@ -102,16 +106,20 @@ export function Welcome() {
         }}
       />
 
-      <Text style={[text.headline, styles.label, { color: t.c.ink }]}>Color</Text>
+      <Text style={[text.headline, styles.label, { color: t.c.ink }]}>
+        Color
+        {suggestedHue ? <Text style={[text.subhead, { color: t.c.muted }]}>{'  ✨ suggested for the name'}</Text> : null}
+      </Text>
       <HuePicker
-        value={hue}
+        value={shownHue}
         onChange={(h) => {
+          setHueTouched(true);
           setHue(h);
           bounce();
         }}
       />
 
-      <JellyButton label="Make it!" hue={hue} size="large" icon="sparkles" onPress={create} disabled={!name.trim()} style={styles.cta} />
+      <JellyButton label="Make it!" hue={shownHue} size="large" icon="sparkles" onPress={create} disabled={!name.trim()} style={styles.cta} />
 
       <Pressable
         onPress={() =>
