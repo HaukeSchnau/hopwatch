@@ -53,10 +53,29 @@ his phone until he moves his data over (export there, restore here).
 - Consolidated (2026-10-01): Jelly lives in `src/jelly`, routes at the root of
   `src/app`, the other directions, Lab, per-direction Metro config, fonts and unused
   packages are gone. Docs: docs/architecture.md, docs/design/.
+- Done and checked on simulator 594D2BB8 (2026-10-01): restore from export (Settings ›
+  Data; `src/core/backup.ts` parses export format 1 and 2, tests in backup.test.ts),
+  export format 2 with prefs (jelly looks), `ErrorScreen` exported as `ErrorBoundary` from
+  every route, numbered migrations in db.ts, `expo install --fix` + expo-asset
+  (expo-doctor 21/21; expo-widgets had pulled a duplicate @expo/ui).
+- App Store Connect: `scripts/m1.sh asc METHOD PATH [JSON]` calls the API with the team
+  key (team 2243J9RD68 is Urbs UG). Bundle ID dev.schnau.stint (M75FD6ZZAM). App record
+  "Stint Schnau" (id 6818258577, SKU stint; "Stint" and "Stint Time Tracker" were taken)
+  created on the website, since the API can't create apps. Internal TestFlight group
+  "Hauke" (64e13ad7-a65e-468c-bbe3-59af1934c7c5, all builds) with
+  hauke@schnau-lilienthal.de, same as T3 Code.
+- Web sign-in, if needed again: `agent-browser-personal` (shared profile, now trusted
+  for info@urbs.one, leave it signed in), credentials from `bw-personal` item
+  95ac0ffc-4d39-4722-87c0-b881b82d7387 typed via command substitution. The sign-in form
+  is a cross-origin iframe: click by coordinates and use `keyboard type`. SMS codes for
+  the number ending 08 land in m1's `~/Library/Messages/chat.db`.
+- In flight: Live Activity builder (simulator 5230DDD4, owns app.json widgets entry and
+  src/widgets/), Jelly 1 qualities builder (simulator 9CD905EA, owns src/jelly/** except
+  settings). Uncommitted: their work and mine are in the working copy; split into
+  commits when they finish.
 
 ## Next
 
-1. Live Activity (expo-widgets) and the Jelly 1 qualities (parallel builders).
-2. Restore from export, error fallbacks, DB migrations.
-3. App Store Connect app record (needs Hauke's account in the browser), internal group,
-   first TestFlight upload. Then tell Hauke how to move data from Stint Five.
+1. Commit the builders' work, final QA (light/dark), `scripts/m1.sh testflight`.
+2. Tell Hauke how to move data: Stint Five › Settings › Export JSON, save to Files,
+   then Stint › Settings › Restore from Export.

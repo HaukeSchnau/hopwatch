@@ -9,6 +9,8 @@
 #                                    development-signed .ipa to ios/build/export on m1
 #   scripts/m1.sh testflight         sync, then archive a Release build with a fresh build
 #                                    number and upload it to App Store Connect for TestFlight
+#   scripts/m1.sh asc METHOD PATH [JSON]
+#                                    call the App Store Connect API (see scripts/asc.mjs)
 set -euo pipefail
 
 REMOTE_DIR=Developer/stint-v1
@@ -69,8 +71,13 @@ case "${1:-}" in
       xcodebuild -exportArchive -archivePath ios/build/$SCHEME.xcarchive -exportPath ios/build/upload \
         -exportOptionsPlist scripts/export-testflight.plist $auth | tail -20"
     ;;
+  asc)
+    shift
+    # The key is readable over plain SSH, so API calls don't queue behind builds.
+    ssh -o LogLevel=error m1 "node --input-type=module - $(printf '%q ' "$@")" <scripts/asc.mjs
+    ;;
   *)
-    sed -n '2,11p' "$0"
+    sed -n '2,13p' "$0"
     exit 1
     ;;
 esac

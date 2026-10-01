@@ -1,5 +1,5 @@
 // Settings as a native form under a candy header: the idea next to a mascot, squishy
-// sounds, the Apple Intelligence status, Shortcuts links, export and erasing.
+// sounds, the Apple Intelligence status, Shortcuts links, export, restore and erasing.
 
 import { Button, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
 import { foregroundStyle, tint } from '@expo/ui/swift-ui/modifiers';
@@ -9,7 +9,16 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { eraseAllData, resumeLink, shareExport, stopLink, useStint } from '@/core';
+import {
+  actions,
+  eraseAllData,
+  formatLongDay,
+  pickBackup,
+  resumeLink,
+  shareExport,
+  stopLink,
+  useStint,
+} from '@/core';
 
 import { Character } from '../Character';
 import { suggestForContext } from '../character/suggest';
@@ -44,11 +53,29 @@ export function SettingsSheet() {
         onPress: () => {
           run();
           buzz.thud();
-          router.back();
+          if (router.canGoBack()) router.back();
           router.navigate('/');
         },
       },
     ]);
+
+  /** Picks an export file, checks it, and replaces everything after a confirmation. */
+  const restore = async () => {
+    const result = await pickBackup().catch((e: unknown) => ({ ok: false as const, reason: String(e) }));
+    if (!result) return;
+    if (!result.ok) {
+      Alert.alert("Can't restore this file", result.reason);
+      return;
+    }
+    const { backup } = result;
+    const jellies = backup.contexts.filter((c) => c.deletedAt === null).length;
+    const logged = backup.entries.filter((e) => e.deletedAt === null).length;
+    const from = backup.exportedAt ? ` from ${formatLongDay(backup.exportedAt)}` : '';
+    const replacing = contexts > 0 ? ' Everything on this iPhone now gets replaced.' : '';
+    confirm('Restore this backup?', `The export${from} has ${jellies} jellies and ${logged} entries.${replacing}`, 'Restore', () =>
+      actions.restore(backup),
+    );
+  };
 
   return (
     <JellyForm title="Settings" cancel={null} confirm={{ label: 'Done', onPress: () => router.back() }}>
@@ -65,6 +92,7 @@ export function SettingsSheet() {
       </Section>
       <Section title="Data" footer={<SwiftText>{`${contexts} jellies and ${entries} entries, stored on this iPhone.`}</SwiftText>}>
         <Button label="Export JSON" systemImage="square.and.arrow.up" onPress={() => shareExport().catch((e: unknown) => Alert.alert('Export failed', String(e)))} />
+        <Button label="Restore from Export" systemImage="square.and.arrow.down" onPress={restore} />
         <Button
           role="destructive"
           modifiers={[tint(DANGER), foregroundStyle(DANGER)]}
@@ -139,7 +167,7 @@ function Idea({ width }: { width: number }) {
     <View style={[styles.idea, { width }]}>
       <Character context={mascot} size={84} face={face} />
       <View style={styles.ideaText}>
-        <Text style={[text.title3, { color: t.c.ink }]}>Jelly</Text>
+        <Text style={[text.title3, { color: t.c.ink }]}>Stint</Text>
         <Text style={[text.subhead, { color: t.c.ink, opacity: 0.75 }]}>
           {"Every context is a gummy with a face. The one you're on wakes up in the dial; the rest nap in their slots until you tap them."}
         </Text>

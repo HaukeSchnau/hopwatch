@@ -75,6 +75,27 @@ describe('switching', () => {
   });
 });
 
+describe('previewing a backdated start', () => {
+  // Job 06:00–06:30, then Client running since 06:30; now is 07:00.
+  const now = T0 + 60 * MIN;
+  let entries = timeline.applyRows([], timeline.start([], job, makeClock(T0)));
+  entries = timeline.applyRows(entries, timeline.start(entries, client, makeClock(T0 + 30 * MIN)));
+  const summary = (p: timeline.StartPreview) => ({
+    cut: p.cut && [p.cut.entry.contextId, p.cut.at],
+    replaced: p.replaced.map((e) => e.contextId),
+  });
+
+  it('names the entry it cuts short and the ones it swallows, like the start would', () => {
+    expect(summary(timeline.previewStart(entries, dog, T0 + 50 * MIN, now))).toEqual({ cut: [client, T0 + 50 * MIN], replaced: [] });
+    expect(summary(timeline.previewStart(entries, dog, T0 + 20 * MIN, now))).toEqual({ cut: [job, T0 + 20 * MIN], replaced: [client] });
+  });
+
+  it("leaves out the running entry when it's the one moving earlier", () => {
+    expect(summary(timeline.previewStart(entries, client, T0 + 20 * MIN, now))).toEqual({ cut: [job, T0 + 20 * MIN], replaced: [] });
+    expect(summary(timeline.previewStart(entries, client, T0 + 45 * MIN, now))).toEqual({ cut: null, replaced: [] });
+  });
+});
+
 describe('stopping', () => {
   it('clamps a backdated stop to the start of the entry', () => {
     let entries = timeline.applyRows([], timeline.start([], job, makeClock(T0)));

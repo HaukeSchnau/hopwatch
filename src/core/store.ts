@@ -4,6 +4,7 @@
 import { randomUUID } from 'expo-crypto';
 import { create } from 'zustand';
 
+import type { Backup } from './backup';
 import * as db from './db';
 import type { LinkAction } from './links';
 import { requestNudgePermission } from './permissions';
@@ -41,8 +42,8 @@ export interface StintState {
   lastAction: LastAction | null;
   intent: Intent | null;
   /**
-   * Device-local UI preferences, keyed by `<area>.<name>`, e.g. `jelly.sounds`.
-   * Not synced and not exported: data belongs in contexts and entries.
+   * Device-local UI preferences, keyed by `<area>.<name>`, e.g. `jelly.sounds`. Not
+   * synced, but part of the JSON backup since they hold each jelly's look.
    */
   prefs: Readonly<Record<string, Json>>;
 }
@@ -262,7 +263,6 @@ export const actions = {
     set({ prefs });
   },
 
-
   /** Runs a deep link action now, or once the store has loaded. */
   handleLink(link: LinkAction) {
     if (!get().ready) {
@@ -286,7 +286,14 @@ export const actions = {
     return intent;
   },
 
-  /** Replaces all data with the given rows. Used by sample data and erase. */
+  /** Replaces all data with a checked backup (see `pickBackup`) and merges its preferences. */
+  restore({ contexts, entries, prefs }: Backup) {
+    actions.replaceAll({ contexts, entries });
+    for (const [key, value] of Object.entries(prefs)) db.setMeta(`${PREF_PREFIX}${key}`, JSON.stringify(value));
+    set({ prefs: { ...get().prefs, ...prefs } });
+  },
+
+  /** Replaces all data with the given rows. Used by restore, sample data and erase. */
   replaceAll(data: { contexts: Context[]; entries: Entry[] }) {
     db.eraseAll();
     db.writeRows(data);

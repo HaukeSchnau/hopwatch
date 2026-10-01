@@ -132,6 +132,35 @@ export function start(entries: readonly Entry[], contextId: ContextId, clock: Cl
   return d.result();
 }
 
+/** What a backdated start would do to the entries already there. */
+export interface StartPreview {
+  /** The entry the start cuts short, and where. A running one stops there. */
+  cut: { entry: Entry; at: number } | null;
+  /** Entries the start swallows whole, or leaves too short to keep. */
+  replaced: Entry[];
+}
+
+/**
+ * What `start(entries, contextId, …, at)` would do to the other entries, without doing
+ * it, so the UI can say "Deep work stops at 14:50" first. Moving the running context's
+ * start earlier counts the same way; the started or moved entry itself isn't listed.
+ */
+export function previewStart(entries: readonly Entry[], contextId: ContextId, at: number, now: number): StartPreview {
+  // Only entries that end after the new start can be touched.
+  const reach = entries.filter((e) => isLive(e) && endOf(e) > Math.min(at, now));
+  const before = new Map(reach.map((e) => [e.id, e]));
+  const open = findOpen(reach);
+  const clock: Clock = { now, offsetAt: () => 0, newId: () => 'preview' as EntryId };
+  const preview: StartPreview = { cut: null, replaced: [] };
+  for (const row of start(reach, contextId, clock, at)) {
+    const was = before.get(row.id);
+    if (!was || (open?.contextId === contextId && was.id === open.id)) continue;
+    if (row.deletedAt !== null) preview.replaced.push(was);
+    else if (row.endUtc !== null) preview.cut = { entry: was, at: row.endUtc };
+  }
+  return preview;
+}
+
 /** Stops the running entry at `at` (default now), clamped to [start, now]. */
 export function stop(entries: readonly Entry[], clock: Clock, at?: number): Entry[] {
   const d = draft(entries, clock);

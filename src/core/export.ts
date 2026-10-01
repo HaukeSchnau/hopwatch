@@ -1,25 +1,38 @@
-// JSON export through the share sheet: the backup while there is no server, and the
-// raw material for ad-hoc analysis. Soft-deleted rows are included.
+// JSON export through the share sheet, and the restore that reads it back: the backup
+// while there is no server, the way to move data between installs, and raw material for
+// ad-hoc analysis. The format lives in backup.ts.
 
+import { getDocumentAsync } from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
+import { backupPayload, type ParseResult, parseBackup } from './backup';
 import * as db from './db';
-import { defaultHueHex } from './model';
+import { useStint } from './store';
 
 export async function shareExport(): Promise<void> {
-  const { contexts, entries } = db.dumpAll();
   const exportedAt = new Date();
-  const payload = {
-    app: 'stint',
-    schemaVersion: 1,
-    exportedAt: exportedAt.toISOString(),
-    contexts: contexts.map((c) => ({ ...c, colorHex: c.color ? defaultHueHex[c.color] : null })),
-    entries,
-  };
+  const payload = backupPayload({ ...db.dumpAll(), prefs: { ...useStint.getState().prefs } }, exportedAt);
   const file = new File(Paths.cache, `stint-export-${exportedAt.toISOString().slice(0, 10)}.json`);
   if (file.exists) file.delete();
   file.create();
   file.write(JSON.stringify(payload, null, 2));
   await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Export Stint data' });
+}
+
+/**
+ * Lets the user pick an export file and checks it. Resolves to null when they cancel.
+ * Nothing changes until the caller passes the backup to `actions.restore`.
+ */
+export async function pickBackup(): Promise<ParseResult | null> {
+  const picked = await getDocumentAsync({ type: 'application/json', copyToCacheDirectory: true });
+  if (picked.canceled) return null;
+  const file = new File(picked.assets[0].uri);
+  try {
+    return parseBackup(JSON.parse(await file.text()));
+  } catch {
+    return { ok: false, reason: 'This file is not a Stint export.' };
+  } finally {
+    if (file.exists) file.delete();
+  }
 }
