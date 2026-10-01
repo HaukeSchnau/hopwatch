@@ -7,10 +7,12 @@
 #   scripts/m1.sh install-sim UDID   install the last simulator build on a booted simulator
 #   scripts/m1.sh device             sync, then archive a signed Release build and export a
 #                                    development-signed .ipa to ios/build/export on m1
+#   scripts/m1.sh testflight         sync, then archive a Release build with a fresh build
+#                                    number and upload it to App Store Connect for TestFlight
 set -euo pipefail
 
-REMOTE_DIR=Developer/stint-five
-SCHEME=StintFive
+REMOTE_DIR=Developer/stint-v1
+SCHEME=Stint
 TEAM_ID=2243J9RD68
 # App Store Connect API key, deployed to m1 by ~/infra.
 ASC_KEY_PATH=/run/secrets/app-store-connect/api-key
@@ -21,7 +23,7 @@ cd "$(dirname "$0")/.."
 sync() {
   nix run nixpkgs#rsync -- -a --delete \
     --exclude node_modules --exclude /ios --exclude /android --exclude .git --exclude .jj \
-    --exclude .devenv --exclude "devenv.*" --exclude .expo --exclude dist \
+    --exclude .devenv --exclude "devenv.*" --exclude .expo --exclude dist --exclude .shots \
     ./ "m1:$REMOTE_DIR/"
 }
 
@@ -30,7 +32,16 @@ remote() {
   ssh m1 "cd ~/$REMOTE_DIR && builder-control run --timeout 3600 -- bash -lc $(printf '%q' "ulimit -n 65536; $1")"
 }
 
+# Like `remote`, but in Hauke's GUI session, where the login keychain is unlocked for signing.
+remote_gui() {
+  ssh m1 "cd ~/$REMOTE_DIR && builder-control run --gui --timeout 3600 -- bash -lc $(printf '%q' "ulimit -n 65536; $1")"
+}
+
 prepare='export LANG=en_US.UTF-8; npm ci --no-audit --no-fund && npx expo prebuild --platform ios --no-install && (cd ios && pod install)'
+auth="-allowProvisioningUpdates -authenticationKeyPath $ASC_KEY_PATH -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
+archive="xcodebuild -workspace ios/$SCHEME.xcworkspace -scheme $SCHEME -configuration Release \
+  -destination 'generic/platform=iOS' -archivePath ios/build/$SCHEME.xcarchive \
+  DEVELOPMENT_TEAM=$TEAM_ID CODE_SIGN_STYLE=Automatic $auth archive | tail -30"
 
 case "${1:-}" in
   sync) sync ;;
@@ -44,16 +55,19 @@ case "${1:-}" in
     ssh m1 "xcrun simctl install ${2:?simulator UDID} ~/$REMOTE_DIR/ios/build/sim/Build/Products/Debug-iphonesimulator/$SCHEME.app"
     ;;
   device)
-    # --gui runs in Hauke's GUI session, where the login keychain is unlocked for signing.
-    # The App Store Connect API key on m1 drives automatic provisioning.
-    auth="-allowProvisioningUpdates -authenticationKeyPath $ASC_KEY_PATH -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
     sync
-    ssh m1 "cd ~/$REMOTE_DIR && builder-control run --gui --timeout 3600 -- bash -lc $(printf '%q' "ulimit -n 65536; $prepare && \
-      xcodebuild -workspace ios/$SCHEME.xcworkspace -scheme $SCHEME -configuration Release \
-        -destination 'generic/platform=iOS' -archivePath ios/build/$SCHEME.xcarchive \
-        DEVELOPMENT_TEAM=$TEAM_ID CODE_SIGN_STYLE=Automatic $auth archive | tail -30 && \
-      rm -rf ios/build/export && xcodebuild -exportArchive -archivePath ios/build/$SCHEME.xcarchive \
-        -exportPath ios/build/export -exportOptionsPlist scripts/export-options.plist $auth | tail -15")"
+    remote_gui "$prepare && $archive && rm -rf ios/build/export && \
+      xcodebuild -exportArchive -archivePath ios/build/$SCHEME.xcarchive -exportPath ios/build/export \
+        -exportOptionsPlist scripts/export-options.plist $auth | tail -15"
+    ;;
+  testflight)
+    # Every upload needs a build number App Store Connect hasn't seen; a UTC timestamp works.
+    build=$(date -u +%Y%m%d%H%M)
+    echo "build $build"
+    sync
+    remote_gui "export STINT_BUILD_NUMBER=$build; $prepare && $archive && rm -rf ios/build/upload && \
+      xcodebuild -exportArchive -archivePath ios/build/$SCHEME.xcarchive -exportPath ios/build/upload \
+        -exportOptionsPlist scripts/export-testflight.plist $auth | tail -20"
     ;;
   *)
     sed -n '2,11p' "$0"

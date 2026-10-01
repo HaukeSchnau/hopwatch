@@ -5,7 +5,6 @@ import { randomUUID } from 'expo-crypto';
 import { create } from 'zustand';
 
 import * as db from './db';
-import { type DirectionId, isDirectionId } from './directions';
 import type { LinkAction } from './links';
 import { requestNudgePermission } from './permissions';
 import type { Context, ContextId, Entry, EntryId, Hue } from './model';
@@ -39,11 +38,10 @@ export interface StintState {
   entries: readonly Entry[];
   /** Derived from contexts on every change. */
   tree: tree.ContextTree;
-  direction: DirectionId | null;
   lastAction: LastAction | null;
   intent: Intent | null;
   /**
-   * Device-local UI preferences, keyed by `<direction>.<name>`, e.g. `jelly.sounds`.
+   * Device-local UI preferences, keyed by `<area>.<name>`, e.g. `jelly.sounds`.
    * Not synced and not exported: data belongs in contexts and entries.
    */
   prefs: Readonly<Record<string, Json>>;
@@ -54,7 +52,6 @@ export const useStint = create<StintState>()(() => ({
   contexts: [],
   entries: [],
   tree: tree.buildTree([]),
-  direction: null,
   lastAction: null,
   intent: null,
   prefs: {},
@@ -78,7 +75,6 @@ let pendingLinks: LinkAction[] = [];
 export function initStore() {
   if (get().ready) return;
   const { contexts, entries } = db.loadAll();
-  const direction = db.getMeta('direction');
   const prefs: Record<string, Json> = {};
   for (const row of db.metaWithPrefix(PREF_PREFIX)) {
     try {
@@ -93,7 +89,6 @@ export function initStore() {
     contexts,
     entries,
     tree: tree.buildTree(contexts),
-    direction: isDirectionId(direction) ? direction : null,
   });
   const links = pendingLinks;
   pendingLinks = [];
@@ -267,10 +262,6 @@ export const actions = {
     set({ prefs });
   },
 
-  setDirection(direction: DirectionId) {
-    db.setMeta('direction', direction);
-    set({ direction });
-  },
 
   /** Runs a deep link action now, or once the store has loaded. */
   handleLink(link: LinkAction) {

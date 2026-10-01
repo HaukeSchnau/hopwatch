@@ -1,84 +1,62 @@
-# Stint Five: working notes
+# Stint: working notes
 
 Durable context for this build. Newest state first; prune what's superseded.
 
 ## Goal
 
-Five fully working design directions of the Stint MVP (docs/spec.md) in one iOS app,
-installable on Hauke's iPhone, built natively on the M1 builder. No Expo Go.
+Stint v1: Jelly as the only design, production ready, installed through TestFlight on
+Hauke's iPhone 16 Pro. Before v1 this repo held "Stint Five", five design directions in
+one app (`dev.schnau.stint.five`); Hauke picked Jelly 2. The old app stays installed on
+his phone until he moves his data over (export there, restore here).
 
 ## Decisions
 
-- One app, five directions, shared data. The Lab (`/lab`) picks the active direction;
-  every direction links back to it from settings. Rejected: five separate apps (data
-  would not be shared, five installs).
-- Identity: "Stint Five", bundle `dev.schnau.stint.five`, scheme `stintfive://`.
-  A parallel thread builds "Stint Lab" (`dev.schnau.stint.lab`) on the same M1, and an
-  older project uses `dev.schnau.stint` + `stint://`; distinct ids avoid clobbering.
-  TODO in `src/core/links.ts`: switch to `stint://` once one direction becomes the app.
-- Core in `src/core`: pure timeline module with property tests (vitest + fast-check),
-  zustand store with synchronous expo-sqlite writes, hooks, nudges, deep links via
-  `+native-intent`, JSON export, sample data. Colors stored as hue keys so every
-  direction maps them to its own palette.
-- Directions: glass (native Liquid Glass), deck (Teenage Engineering hardware),
-  almanac (editorial riso print), orbit (24 h dial, dark), jelly (squishy blobs).
-  Briefs in docs/directions/, contract in docs/building-a-direction.md.
+- Identity: "Stint", bundle `dev.schnau.stint`, scheme `stint://`, version 1.0.0.
+  `app.config.ts` stamps `STINT_BUILD_NUMBER` into release builds.
+- Install: TestFlight, internal testing. `scripts/m1.sh testflight` archives and uploads
+  with the ASC API key. `scripts/publish-ipa.sh` (development-signed IPA over the Tailnet
+  share) stays as the fallback.
+- v1 scope (Hauke, 2026-10-01): bring back from Jelly 1 "Day opens at now", bigger
+  emoji, the target/nudge quick chips and backdate consequence warnings. Extras: a Live
+  Activity for the running entry and restore from a JSON export.
+- Also v1: per-screen error fallbacks, DB migration steps, no Lab, no sample data outside
+  onboarding, lint + typecheck + tests green.
+- Apple Intelligence (modules/on-device-model) is a progressive enhancement. It works on
+  Hauke's phone since the model finished downloading; Foundation Models has no download
+  progress API, only availability.
 
 ## Infrastructure
 
-- `ssh m1` = M1 builder (Xcode 27, 16 GB). Not Hauke's MacBook (that's `mbp`, M4, offline).
-- `scripts/m1.sh sim` syncs to `m1:~/Developer/stint-five` and builds the Debug dev
-  client for simulators. Don't touch `~/Developer/stint` or `~/Developer/stint-lab`.
-- Simulators created for this project (iPhone 18 Pro, iOS 27):
-  Glass 5230DDD4-EDF3-4C8A-BF26-9F9BE311FE6C, Deck 594D2BB8-93ED-4F85-BCB5-69A328873AD8,
-  Almanac 66FBBE5F-8716-495C-8FEC-CD3EE097B963, Orbit 2EB1D0E2-3250-46F5-B059-F0FFE9772DEA,
-  Jelly 9CD905EA-FFD6-4B75-B2C4-FBABF7327CFE. Delete them when the project wraps up.
-- Metro: one agent-service per direction, each with `STINT_DIRECTION` so metro.config.js
-  blocks the other four directions: metro-glass :3101, stint-metro-deck :3102,
-  metro-almanac :3103, stint-metro-orbit :3104, stint-metro-jelly :3105, published as
-  https://px-b8ee4debfe-<service>.schnau.dev. A single shared Metro stalled for minutes
-  under five builders' edits; async routes didn't help (each chunk carried the whole graph).
-  Services in this sandbox share one network namespace, so give each an explicit port.
-  Failed agent-service units can't be recreated under the same name from the sandbox.
-- Signing: team 2243J9RD68, automatic signing with the App Store Connect API key at
+- `ssh m1` = M1 builder (Xcode 27). `scripts/m1.sh` syncs to `m1:~/Developer/stint-v1`.
+  Don't touch `~/Developer/stint` or `~/Developer/stint-lab` (other threads);
+  `~/Developer/stint-five` is the old Stint Five checkout.
+- Signing: team 2243J9RD68, automatic signing with the ASC API key at
   /run/secrets/app-store-connect/api-key on m1. The keychain is only unlocked in Hauke's
-  GUI session: `builder-control run --gui`. Use the system `pod` on m1 (pinned nixpkgs
-  CocoaPods aborts on macOS 27). `scripts/m1.sh device` archives and exports a
-  development-signed IPA; verified working 2026-09-25.
-- iPhone 16 Pro UDID 00008140-000E345826BB001C is registered in the team but not paired
-  with m1. Install route: development-signed IPA + manifest under /srv/agent-share,
-  opened as itms-services link (needs Developer Mode on the phone).
+  GUI session (`builder-control run --gui`). Use the system `pod` on m1.
+- Metro: agent-service `metro-all` on port 3100,
+  https://px-b8ee4debfe-metro-all.schnau.dev. The old per-direction Metros are stopped.
+- Simulators (iPhone 18 Pro, iOS 27): Jelly 9CD905EA-FFD6-4B75-B2C4-FBABF7327CFE is the
+  main one. Spare: 5230DDD4-EDF3-4C8A-BF26-9F9BE311FE6C, 594D2BB8-93ED-4F85-BCB5-69A328873AD8,
+  66FBBE5F-8716-495C-8FEC-CD3EE097B963, 2EB1D0E2-3250-46F5-B059-F0FFE9772DEA.
+  Delete them when the project wraps up.
 
 ## Gotchas found
 
-- iOS 27 traps at launch without the UIScene life cycle. `plugins/with-scene-lifecycle.js`
-  applies Expo main's template (SceneDelegate on `ExpoAppSceneDelegate`).
-- `simctl openurl` with a custom scheme stops at "Open in …?". The dev client loads Metro
-  via `simctl launch … --initialUrl <metro>`, and routes are opened with the dev-only
-  `-stintRoute /path` launch argument (read through RN `Settings` in `_layout.tsx`).
-  `scripts/sim.sh view` wraps both and locks per simulator.
-- The M1 is shared with a parallel thread (3 simulators, an Android emulator, Release
-  builds), so the T3 device hub (`device_open`) timed out; agent-device runs directly on
-  m1 via `scripts/sim.sh ad`.
+- iOS 27 traps at launch without the UIScene life cycle; `plugins/with-scene-lifecycle.js`.
+- `simctl openurl` with a custom scheme stops at "Open in …?". `scripts/sim.sh` launches
+  with `--initialUrl <metro>` and the dev-only `-stintRoute /path` argument.
+- The M1 is shared with other threads, so the T3 device hub times out; agent-device runs
+  on m1 via `scripts/sim.sh ad`.
 
 ## State
 
-- Jelly 2 is Hauke's pick. Jelly 1 is back as its own direction (`jelly1`, restored from
-  ba54d991) for side-by-side comparison; the Lab lists both. Comparison page with
-  screenshots: https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/stint-five/compare/
-- What Jelly 2 lost (full review in the compare page): Now no longer fits all nine pins
-  and recents on one screen; Day doesn't open at now; tiny emoji in Stuff rows and small
-  characters; editor quick chips for target and nudge; the backdate consequence line in
-  the native menu path; Settings one level deeper; the gummy tab bar, switches and
-  Day/Week toggle; stage tint and the bigger stage text.
-- Apple Intelligence: works on the simulator; Hauke saw nothing on his iPhone. Jelly 2's
-  settings now show the model status and a "Try a Suggestion" test with the failure
-  reason (modules/on-device-model `lastFailure`). Waiting for what it says on his phone.
-- IPA published 2026-10-01 with all of the above.
+- Consolidated (2026-10-01): Jelly lives in `src/jelly`, routes at the root of
+  `src/app`, the other directions, Lab, per-direction Metro config, fonts and unused
+  packages are gone. Docs: docs/architecture.md, docs/design/.
 
 ## Next
 
-1. Hauke reports the Apple Intelligence status from settings, and which Jelly 1 qualities
-   to bring back into Jelly 2.
-2. Then make Jelly the app (remove the others and the Lab, `stint://`, drop dev scripts),
-   and consider the Live Activity (expo-widgets).
+1. Live Activity (expo-widgets) and the Jelly 1 qualities (parallel builders).
+2. Restore from export, error fallbacks, DB migrations.
+3. App Store Connect app record (needs Hauke's account in the browser), internal group,
+   first TestFlight upload. Then tell Hauke how to move data from Stint Five.

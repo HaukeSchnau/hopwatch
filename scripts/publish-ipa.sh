@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Publishes the last `scripts/m1.sh device` build for over-the-air installation on
-# Hauke's iPhone: copies the .ipa from the builder into the Tailnet file share and writes an
+# Hauke's iPhone, a fallback for when TestFlight is too slow or unavailable: copies the .ipa from the builder into the Tailnet file share and writes an
 # itms-services manifest plus an install page next to it.
 #
 #   scripts/publish-ipa.sh     → prints the install page URL
@@ -9,18 +9,18 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-SHARE_DIR=/srv/agent-share/stint-five
-BASE_URL="${AGENT_SHARE_URL:?}/stint-five"
+SHARE_DIR=/srv/agent-share/stint
+BASE_URL="${AGENT_SHARE_URL:?}/stint"
 
 mkdir -p "$SHARE_DIR"
-scp -q m1:Developer/stint-five/ios/build/export/StintFive.ipa "$SHARE_DIR/StintFive.ipa"
+scp -q m1:Developer/stint-v1/ios/build/export/Stint.ipa "$SHARE_DIR/Stint.ipa"
 cp assets/images/icon.png "$SHARE_DIR/icon-512.png"
 
 python3 - "$SHARE_DIR" "$BASE_URL" <<'EOF'
 import html, os, plistlib, sys, time, zipfile
 
 share, base = sys.argv[1], sys.argv[2]
-with zipfile.ZipFile(f"{share}/StintFive.ipa") as ipa:
+with zipfile.ZipFile(f"{share}/Stint.ipa") as ipa:
     name = next(n for n in ipa.namelist() if n.count("/") == 2 and n.endswith(".app/Info.plist"))
     info = plistlib.loads(ipa.read(name))
 
@@ -32,7 +32,7 @@ title = info.get("CFBundleDisplayName") or info["CFBundleName"]
 manifest = {
     "items": [{
         "assets": [
-            {"kind": "software-package", "url": f"{base}/StintFive.ipa"},
+            {"kind": "software-package", "url": f"{base}/Stint.ipa"},
             {"kind": "display-image", "url": f"{base}/icon-512.png"},
             {"kind": "full-size-image", "url": f"{base}/icon-512.png"},
         ],
@@ -42,7 +42,7 @@ manifest = {
 with open(f"{share}/manifest.plist", "wb") as f:
     plistlib.dump(manifest, f)
 
-# Optional overview of the directions, e.g. a contact sheet of the Lab screenshots.
+# Optional screenshot shown under the install button.
 preview = ""
 if os.path.exists(f"{share}/preview.jpg"):
     preview = '<a href="preview.jpg"><img class="preview" src="preview.jpg" alt="Preview of the app"></a>'
@@ -73,7 +73,6 @@ page = f"""<!doctype html>
   <a class="install" href="{html.escape(install)}">Install on this iPhone</a>
   <p>Open this page in Safari on the iPhone. After installing, iOS asks for Developer Mode once:
      Settings › Privacy &amp; Security › Developer Mode, then restart.</p>
-  <p>Jelly 2 plus four other design directions in one app. Pick one in the Lab and switch any time from its settings.</p>
   {preview}
 </main></body></html>
 """

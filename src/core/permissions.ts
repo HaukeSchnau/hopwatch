@@ -1,6 +1,6 @@
 // Notification permission for the forgotten-timer nudge. Asked once, at a calm moment:
 // right after the first context exists (or sample data is loaded), not in the middle of
-// the first switch. Directions may also call it themselves.
+// the first switch. Screens may also call it themselves.
 
 import * as Notifications from 'expo-notifications';
 

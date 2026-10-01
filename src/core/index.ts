@@ -1,8 +1,7 @@
-// The public API every design direction builds on. Read with the hooks, write with
-// `actions`, format with the time helpers. Nothing in src/directions talks to SQLite,
-// notifications or the timeline module directly.
+// The public API the UI builds on. Read with the hooks, write with `actions`, format
+// with the time helpers. Nothing in src/jelly talks to SQLite, notifications or the
+// timeline module directly.
 
-export * from './directions';
 export * from './hooks';
 export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from './links';
 export * from './model';

@@ -1,14 +1,13 @@
-# Stint Five
+# Stint
 
-A personal iOS time tracker (spec: `docs/spec.md`) built as five design directions that
-share one core. Start with `notes/progress.md` for the current state, then
-`docs/building-a-direction.md` for the architecture and rules.
+A personal iOS time tracker (spec: `docs/spec.md`) with one design, Jelly. Start with
+`notes/progress.md` for the current state, then `docs/architecture.md`.
 
 - `src/core`: data model, timeline domain module (the only writer of entries), store,
-  hooks, reports, nudges, deep links, export. Tests: `npm test`.
-- `src/app`: expo-router routes; `src/app/<direction>/` per direction, `lab.tsx` picks one.
-- `src/directions/<direction>/`: each direction's components.
-- `scripts/m1.sh`: native builds on the M1 builder (`ssh m1`).
+  hooks, reports, nudges, deep links, export and import. Tests: `npm test`.
+- `src/jelly`: the UI. `src/app`: expo-router routes.
+- `modules/on-device-model`: Apple Foundation Models bridge.
+- `scripts/m1.sh`: native builds and TestFlight uploads on the M1 builder (`ssh m1`).
 - Node comes from `devenv.nix`.
 
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
