@@ -1,13 +1,14 @@
 // Progressive enhancement: while a new jelly is being named, Apple's on-device model
-// suggests an emoji and a look (see character/suggest.ts). Nothing waits on it: answers
-// arrive about a second after typing stops, stale ones are dropped, and without the
-// model this does nothing at all.
+// suggests a look, an emoji and, at the top level, a color (see character/suggest.ts).
+// Nothing waits on it: answers arrive a second or two after typing stops, stale ones are
+// dropped, and without the model this does nothing at all.
 
 import { useEffect, useRef, useState } from 'react';
 
 import { type ContextId, useStint } from '@/core';
 
-import { type SuggestInput, type Suggestion, suggestForContext, useModelAvailable } from './character/suggest';
+import type { SuggestInput, Suggestion } from './character/ask';
+import { suggestForContext, useModelAvailable } from './character/suggest';
 
 /** A suggestion and the name it was made for. */
 export interface NameSuggestion {
@@ -25,38 +26,40 @@ export function suggestInput(name: string, parentId: ContextId | null, self: Con
     ancestors: parent ? [...parent.ancestors.map((a) => a.name), parent.name] : [],
     siblings: siblingIds.flatMap((id) => {
       const c = tree.byId.get(id);
-      return c && c.id !== self && !c.hidden ? [{ name: c.name, emoji: c.emoji }] : [];
+      return c && c.id !== self && !c.hidden ? [{ name: c.name, emoji: c.emoji, hue: c.hue }] : [];
     }),
     wantEmoji,
   };
 }
 
 /**
- * Asks the model about `name` 600 ms after the last keystroke (two characters or more).
- * Keeps the last answer that still matched the name when it arrived.
+ * Asks the model about `name` 600 ms after the last keystroke (two characters or more),
+ * and again when the user picks an emoji. `emoji` is the user's pick, or null to get one
+ * suggested; `wantHue` asks for a color too. Keeps the last answer that still matched the
+ * name when it arrived.
  */
-export function useNameSuggestion(name: string, parentId: ContextId | null, wantEmoji: boolean): NameSuggestion | null {
+export function useNameSuggestion(name: string, parentId: ContextId | null, emoji: string | null, wantHue: boolean): NameSuggestion | null {
   const available = useModelAvailable();
   const [result, setResult] = useState<NameSuggestion | null>(null);
   const trimmed = name.trim();
   const latest = useRef(trimmed);
-  const wants = useRef(wantEmoji);
+  const hue = useRef(wantHue);
   useEffect(() => {
     latest.current = trimmed;
-    wants.current = wantEmoji;
-  }, [trimmed, wantEmoji]);
+    hue.current = wantHue;
+  }, [trimmed, wantHue]);
 
   useEffect(() => {
     if (!available || trimmed.length < 2) return;
     const timer = setTimeout(() => {
-      suggestForContext(suggestInput(trimmed, parentId, null, wants.current))
+      suggestForContext({ ...suggestInput(trimmed, parentId, null, emoji === null), emoji, wantHue: hue.current })
         .then((suggestion) => {
           if (suggestion && latest.current === trimmed) setResult({ forName: trimmed, suggestion });
         })
         .catch(() => {});
     }, 600);
     return () => clearTimeout(timer);
-  }, [available, parentId, trimmed]);
+  }, [available, parentId, trimmed, emoji]);
 
   return available ? result : null;
 }

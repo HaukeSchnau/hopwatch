@@ -32,17 +32,21 @@ Every mouth gives way to the same yawn.
 
 ## How a look is picked
 
-`lookFor(context)` in `derive.ts` is stable for a context's id, emoji and name.
+`lookFor(context, picked?)` in `derive.ts` is stable for a context's id, emoji and name,
+and for the model's picks when there are any.
 
 1. The id seeds every trait from weighted lists of generic options. Picks always happen
-   in the same order, so a new emoji only changes the traits it hints at.
-2. A topic hint overrides some traits. The emoji picks the topic; without a known emoji,
-   words in the name do (English and a few German words, whole words or prefixes like
-   `cook*`). For example 🐕 or "Gassi" gives dog ears, a collar, a blep and bounce. 🍳
+   in the same order, so a new emoji or topic only changes the traits it brings.
+2. One topic (`topics.ts`) overrides some traits. With Apple's on-device model, the topic
+   it picked for the current name and emoji wins (see below). Otherwise the emoji picks
+   the topic; without a known emoji, words in the name do (English and a few German
+   words, whole words or prefixes like `cook*`). Only one topic ever applies, so a jelly
+   never mixes two. For example 🐕 or "Gassi" gives dog ears, a collar, a blep and bounce. 🍳
    gives a chef hat, 🥪 buck teeth and a bib, 🎧 headphones and sleepy eyes, 💼 glasses
    and a tie, 🏃 a sweatband, 🎓 a grad cap, ⏱️ an antenna and one big eye. A few emoji
    pick a body: ⭐ star, 👻 ghost, 🍙 onigiri, 🍡 mochi, 💊 capsule, 💧 drop, 🫘 bean.
-3. Meaningful options (chef hat, dog ears, headphones, sweatband, grad cap, tie, collar,
+3. The mood the model picked, if any, goes on top.
+4. Meaningful options (chef hat, dog ears, headphones, sweatband, grad cap, tie, collar,
    bib, medal) never come from the random pick, so a jelly never wears a misleading hat.
 
 Each id also stretches its body a little (±5 %) and may mirror a drop. Coat patterns are
@@ -54,53 +58,93 @@ Per trait, the first that has it wins:
 
 1. A preview look passed to `Character` (`look` prop). Never stored.
 2. The custom look: traits picked by hand in the editor.
-3. The model-picked traits, if they were made for the context's current name.
-4. The derived look.
+3. The automatic look (`lookFor`): the seeded base, dressed by the model's picks if they
+   were made for the context's current name and emoji, else by the heuristic topic.
 
-"Automatic" in the editor means 3 over 4.
+"Automatic" in the editor means 3.
 
 Both stored looks are device-local preferences (`actions.setPref`, `usePref`):
 
 - `jelly.look.<contextId>`: the custom traits, e.g. `{ "topper": "crown" }`. Saving a
   trait that equals the automatic one drops it, so it keeps following the automatic
   look. An empty result stores `null`, which is "Automatic".
-- `jelly.look.ai.<contextId>`: `{ "name": "Dog", "look": { "topper": "dogEars" } }`.
-  Only used while `name` matches the context's name.
+- `jelly.look.ai.<contextId>`: the model's picks,
+  `{ "v": 2, "name": "Dog", "glyph": "🐕", "topic": "dog", "look": { "motion": "bouncy" } }`.
+  Only used while `name` and `glyph` match the context. `topic` is null when the model
+  found none or failed; the heuristic topic applies then. Version 1, `{ name, look }` with
+  the topic's topper and neckwear, still applies while the name matches, and dress-up
+  replaces it once (`SUGGESTION_VERSION` in `ask.ts`; bump it when the picks change).
 
-Unknown values (say, after a trait is renamed) are dropped when reading, so that trait
-falls back to the next source.
+Unknown values (say, after a trait or topic is renamed) are dropped when reading, so that
+trait falls back to the next source.
 
 ## Apple's on-device model
 
 A progressive enhancement through `@modules/on-device-model`. Without the model, none of
 this shows up and the heuristics do all the work.
 
-The model is good at sorting an activity into a concrete topic and bad at abstract picks
-(asked for a body or a vibe, it said "blob" and "focused" almost every time). So it only
-picks a topic from the list in `derive.ts` (dog, focus, office, meetings, clients,
-cooking, eating, sport, study, code, …, or other), and the topic's hat and neckwear
-become the model-picked traits. Body, eyes, mouth, coat and mood stay seeded.
+One request per jelly (`requestFor` in `ask.ts`). The model picks:
 
-What I learned tuning the prompt with `scripts/model.sh`:
+- a topic from `topics.ts` (dog, focus, office, meetings, clients, cooking, eating,
+  sport, study, code, …, or other). The topic dresses the whole jelly: eyes, mouth, mood,
+  coat, body, hat and neckwear, whatever the topic has. It replaces the heuristic topic
+  instead of mixing with it. "other" leaves the heuristic topic in place.
+- a mood (`motion`), on top of the topic's.
+- for a jelly being named: an emoji, shown with ✨ until the emoji is touched.
+- for a new top-level jelly: a color, shown with ✨ until the color is touched. Only
+  candy colors the other top-level jellies don't wear are offered (gray never), so groups
+  stay apart. Jellies inside a group keep inheriting their parent's color.
+
+Body, coat, eyes and mouth are never asked for directly. Eval with `scripts/model.sh`
+(46 English and German names: jobs, clients and project code names under groups, chores,
+hobbies, family, health, vague ones; same request as the app):
+
+- Topic: right for about 42 of 46 in the last run. Misses: "Nickerchen" became family,
+  "Steam Deck" code, "Doomscrolling" urgent. Some names flip between runs:
+  "Steuererklärung" money or clients, "Date night" love or family, the sample data's
+  "Stint ⏱️" science, code, tinkering and once garden (its sibling is Garden planner 🌱).
+- Mood: sensible for about 42 of 46 ("Deadline crunch" jittery, "Commute" dozy,
+  "Daydreaming" dreamy, "Bug bash" jittery). Described as adjectives ("energetic",
+  "calm"), it said "curious" for nearly everything; describing each mood by the
+  activities it fits fixed that.
+- Eyes and mouth: dropped. It said "sparkly" or "googly" eyes for 30 names and "open
+  mouth" for 28.
+- Color: plausible (red for deadlines and sport, green for the garden, blue for
+  meditation), with a lean toward orange, lime and teal. Gray was its pick for dull names
+  until it was taken off the list. Color words ("yellow", "purple") work better than the
+  palette's keys.
+- Latency, median model time per request on the shared M1: 2.5 s for a jelly being named
+  (emoji, topic, mood, color) against 1.8 s for the old emoji and topic (p90 4.1 s
+  against 3.4 s). Under heavy load (load average 40 to 65): 2.8 s against 2.3 s, and
+  dress-up (topic and mood) 2.6 s against 2.3 s. A cold "Try a Suggestion" in the
+  simulator took 9 s. Still one request per jelly; the suggestion shows up a moment later
+  than before.
+
+What else I learned tuning the prompt:
 
 - Asking for hats directly made it either say "none" for everything or hand out crowns
   and ties to every work context. Topics fixed both.
-- Listing the group first and saying "judge by the activity's own name" stopped the
-  group from winning (Website under Clients › Acme became "code", not "clients").
+- The group wins too easily: everything under Clients became "clients", even Website 🌐
+  and App 📱. Listing the group first, saying "judge by the activity's own name" and
+  "work done for a client gets the topic of the work" fixed that; client names like Acme
+  stay "clients".
+- "Names can be English or German" and putting the emoji first helped. Asked after the
+  mood, the emoji drifted to 😴 for anything dozy.
 - "Cooking" next to "Dog" once tripped a safety guardrail. `suggestForContext` asks
   again without the group when a request fails.
 - It sometimes repeats a sibling's emoji even when told not to, and once answered
   "aurora" in letters. Emoji answers must be exactly one emoji grapheme (`singleEmoji`);
   a taken or invalid one falls back to the topic's first free emoji.
-- About 1 s per request warm on the M1, up to 9 s cold in the simulator.
 
 `useDressUp()` (mounted once in Jelly's layout) walks the tree when the model is
-available and asks about every context that has no model-picked traits for its current
-name, one request at a time. Each context and name is tried once per launch; a failed
-answer is stored without traits so it isn't asked again. A rename asks again. Archived
-contexts and contexts whose hat and neckwear were both picked by hand are skipped. It
-never touches emojis. When a jelly's topper changes, the new one drops in with four
-sparkles (`useDress` in Gummy), which also plays for picks in the editor.
+available and asks about every context without current picks (latest version, made for
+its name and emoji), one request at a time. Each context, name and emoji is tried once
+per launch. A failed answer isn't stored, so the next launch asks again: while the M1's
+model was stuck mid-update, the simulator still reported it available and every request
+failed. A rename or a new emoji asks again; until the answer comes, the heuristic topic
+applies. Archived contexts and contexts with every trait picked by hand are skipped. It
+never touches emojis or colors. When a jelly's topper changes, the new one drops in with
+four sparkles (`useDress` in Gummy), which also plays for picks in the editor.
 
 ## Motion
 
@@ -156,12 +200,18 @@ Faces are always plum (`INK`), never the theme's text color.
 - `LookEditor` (`character/LookEditor.tsx`): `{ context, preview? }`. `preview={false}`
   hides its own 184 pt preview for sheets that already show the jelly at the top.
 - `character/suggest.ts`: `useModelAvailable()`, `suggestForContext(input)`,
-  `saveSuggestedLook(contextId, suggestion, forName)`, `useDressUp()`, plus
-  `suggestInputFor(tree, context)` for existing contexts and `singleEmoji(text)`.
-  `SuggestInput` gained an optional `emoji` (the context's own). `Suggestion.look` is a
-  `Partial<Look>`.
+  `saveSuggestedLook(contextId, picked, forName, forGlyph)`, `useDressUp()`, plus
+  `suggestInputFor(tree, context)` for existing contexts.
+- `character/ask.ts` (pure, tested): `SuggestInput` (`wantEmoji`, `wantHue`, siblings
+  with their hues), `Suggestion` (`topic`, `traits`, `emoji`, `hue`), `requestFor(input)`,
+  `readAnswer(input, answer)`, `hueChoices(siblings)`, `singleEmoji(text)`, and the stored
+  form: `parseSuggestion`, `suggestionJson`, `freshPick`, `isCurrent`.
+- `character/topics.ts` (pure, tested): `topics`, `topicFor(glyph, name)`, `Picked` and
+  `dress(base, source, picked)`.
 - `character/look.ts`: `useLook(context)`, `useAutoLook(context)`, `useCustomLook(id)`,
   `saveCustomLook(id, picked, auto)`, and the preference keys.
+- `suggestions.ts`: `useNameSuggestion(name, parentId, emoji, wantHue)` for jellies being
+  named. To preview a suggestion, pass `lookFor(draft, suggestion)` as the `look`.
 - `character/idle.ts`: `hop`, `yawn`, `shiver`, `puff`, `tilt`, `sway`, `wiggle` and
   `perform(face, motion)` to play a move on demand.
 
@@ -192,7 +242,11 @@ In `.shots/`: `j2c-grid-asleep.png`, `j2c-grid-awake.png`, `j2c-grid-dark.png` a
 - The ✦ in the editor marks the automatic option of each trait; it isn't explained in
   the UI.
 - Dress-up retries within a launch only if the model became unavailable mid-way; a
-  context whose request failed waits for a rename.
+  context whose request failed waits for the next launch. A name that always trips a
+  guardrail costs one background request per launch.
+- The model's topic beats the emoji, so "Halloween party 👻" gets a party look rather
+  than a ghost body. Topics the model isn't offered (alien, time, magic, star, ghost and the other
+  body shapes) only come from the heuristic, so they apply when the model says "other".
 - Derivation looks at one context at a time, so neighbours can share traits by chance
   (in the sample data, Stint and Garden planner are both one-eyed onigiri, told apart by
   antenna, sprout and color).

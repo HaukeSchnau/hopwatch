@@ -13,7 +13,8 @@ import { actions, type Hue, loadSampleData, useStint, useTree } from '@/core';
 import { Character } from '../Character';
 import { useFace, useLively, wake } from '../Gummy';
 import type { LookSource } from './derive';
-import { parseSuggestion, suggestedKey } from './look';
+import { parseSuggestion, SUGGESTION_VERSION } from './ask';
+import { suggestedKey } from './look';
 import { LookEditor } from './LookEditor';
 import { suggestForContext, useDressUp } from './suggest';
 import { useTheme } from '../theme';
@@ -99,7 +100,7 @@ function DressUp({ contexts }: { contexts: Sample[] }) {
       {contexts.slice(0, 9).map((c) => {
         const stored = prefs[suggestedKey(c.id)];
         const picked = stored === undefined ? undefined : parseSuggestion(stored);
-        const label = picked ? Object.values(picked.look).join(' ') || '–' : '…';
+        const label = picked ? [picked.version < SUGGESTION_VERSION ? 'old' : (picked.topic ?? '–'), ...Object.values(picked.traits)].join(' ') : '…';
         return <Cell key={c.id} source={c} size={84} mood="asleep" label={`${c.name}: ${label}`} />;
       })}
       <Pressable
@@ -125,7 +126,7 @@ function ModelCheck() {
       const started = Date.now();
       const results = [];
       for (const input of [
-        { name: 'Piano practice', ancestors: [], siblings: [], wantEmoji: true },
+        { name: 'Piano practice', ancestors: [], siblings: [], wantEmoji: true, wantHue: true },
         { name: 'Standup', ancestors: ['Job'], siblings: [{ name: 'Meetings', emoji: '🗣️' }], wantEmoji: true },
         { name: 'Cooking', ancestors: ['Household'], siblings: [{ name: 'Dog', emoji: '🐕' }], wantEmoji: false },
       ]) {

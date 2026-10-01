@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 
-// Domain tests only: pure TypeScript under src/core, no React Native runtime.
+// Pure TypeScript only, no React Native runtime: the domain under src/core and the jelly
+// characters' model logic (src/jelly/character/ask.ts, topics.ts).
 export default defineConfig({
-  test: { include: ['src/core/**/*.test.ts'] },
+  resolve: { tsconfigPaths: true },
+  test: { include: ['src/core/**/*.test.ts', 'src/jelly/character/**/*.test.ts'] },
 });

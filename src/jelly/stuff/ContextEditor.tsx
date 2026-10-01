@@ -59,8 +59,10 @@ import {
 } from '@/core';
 
 import { Character } from '../Character';
+import { lookFor } from '../character/derive';
 import { LookEditor } from '../character/LookEditor';
-import { saveSuggestedLook, type Suggestion, suggestForContext, useModelAvailable } from '../character/suggest';
+import { saveSuggestedLook, suggestForContext, useModelAvailable } from '../character/suggest';
+import type { Look } from '../character/traits';
 import { buzz, play } from '../feedback';
 import { EMOJI_SUGGESTIONS, firstGrapheme } from '../fields';
 import { HostedRow, JellyForm } from '../forms';
@@ -122,23 +124,27 @@ function Editor({ context, initialParent, pin }: EditorProps) {
   const [draftId] = useState(newContextId);
   const [name, setName] = useState(context?.name ?? '');
   const [emoji, setEmoji] = useState<string | null>(context?.emoji ?? null);
-  // A new jelly's emoji stays open to suggestions until it's touched.
+  // A new jelly's emoji and color stay open to suggestions until they're touched.
   const [emojiTouched, setEmojiTouched] = useState(context !== null);
+  const [colorTouched, setColorTouched] = useState(context !== null);
   const [color, setColor] = useState<Hue | null>(context ? context.color : initialParent ? null : 'pink');
   const [parentId, setParentId] = useState<ContextId | null>(initialParent);
   const [pinned, setPinned] = useState(context ? context.pinPosition !== null : pin);
   const [target, setTarget] = useState<number | null>(context?.weeklyTargetMinutes ?? null);
   const [nudge, setNudge] = useState<number | null>(context?.nudgeAfterMinutes ?? null);
 
-  const suggested = useNameSuggestion(context ? '' : name, parentId, !emojiTouched);
+  // Only top-level jellies get a suggested color; inside a group they share the parent's.
+  const suggested = useNameSuggestion(context ? '' : name, parentId, emojiTouched ? emoji : null, !colorTouched && parentId === null);
   const suggestedEmoji = !emojiTouched ? (suggested?.suggestion.emoji ?? null) : null;
   const shownEmoji = suggestedEmoji ?? emoji;
+  const suggestedHue = !colorTouched && parentId === null ? (suggested?.suggestion.hue ?? null) : null;
+  const shownColor = suggestedHue ?? color;
   useEffect(() => {
     if (suggestedEmoji) emojiState.set(suggestedEmoji);
   }, [emojiState, suggestedEmoji]);
 
   const parent = parentId ? (tree.byId.get(parentId) ?? null) : null;
-  const hue: Hue = color ?? parent?.hue ?? DEFAULT_HUE;
+  const hue: Hue = shownColor ?? parent?.hue ?? DEFAULT_HUE;
   const c = t.candy[hue];
   const glyph = shownEmoji ?? parent?.glyph ?? null;
   const inheritedNudge = parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES;
@@ -181,6 +187,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
 
   const pickColor = (value: Hue | null) => {
     buzz.tick();
+    setColorTouched(true);
     setColor(value);
     jiggle();
     if (context) actions.updateContext(context.id, { color: value });
@@ -193,7 +200,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
       id: draftId,
       name: typed,
       parentId,
-      color,
+      color: shownColor,
       emoji: shownEmoji,
       pinned,
     });
@@ -202,7 +209,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         weeklyTargetMinutes: target,
         nudgeAfterMinutes: nudge,
       });
-    if (suggested && suggested.forName === typed) saveSuggestedLook(id, suggested.suggestion, typed);
+    if (suggested && suggested.forName === typed) saveSuggestedLook(id, suggested.suggestion, typed, glyph);
     buzz.success();
     play('pop');
     router.back();
@@ -234,11 +241,11 @@ function Editor({ context, initialParent, pin }: EditorProps) {
             <Header
               width={width}
               jelly={draft}
-              look={suggested?.suggestion.look}
+              look={suggested ? lookFor(draft, suggested.suggestion) : undefined}
               title={name.trim() || 'New jelly'}
               bump={bump}
               subtitle={parent ? `in ${pathLabel(parent)}` : 'Top level'}
-              suggested={suggestedEmoji !== null}
+              suggested={suggestedEmoji !== null || suggestedHue !== null}
             />
           )}
         />
@@ -300,7 +307,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         </ScrollView>
       </Section>
 
-      <Section title="Color">
+      <Section title={suggestedHue ? 'Color ✨' : 'Color'} footer={suggestedHue ? <SwiftText>Suggested for the name. Pick another any time.</SwiftText> : undefined}>
         {parentId ? (
           <Toggle
             label={`Same as ${parent?.name ?? 'parent'}`}
@@ -308,7 +315,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
             onIsOnChange={(on) => pickColor(on ? null : (parent?.hue ?? 'pink'))}
           />
         ) : null}
-        {color !== null || !parentId ? <Swatches value={color} onChange={pickColor} /> : null}
+        {shownColor !== null || !parentId ? <Swatches value={shownColor} onChange={pickColor} /> : null}
       </Section>
 
       <Section title="Place">
@@ -419,8 +426,8 @@ function Header({
 }: {
   width: number;
   jelly: PreviewJelly;
-  /** Suggested traits shown on the preview before they're saved. */
-  look?: Suggestion['look'];
+  /** The suggested look, shown on the preview before it's saved. */
+  look?: Look;
   title: string;
   bump: SharedValue<number>;
   subtitle: string;
@@ -498,7 +505,7 @@ function SuggestButton({
           .then((suggestion) => {
             if (!suggestion) return;
             if (suggestion.emoji) onEmoji(suggestion.emoji);
-            saveSuggestedLook(context.id, suggestion, typed);
+            saveSuggestedLook(context.id, suggestion, typed, suggestion.emoji ?? context.glyph);
           })
           .catch(() => {})
           .finally(() => setBusy(false));
