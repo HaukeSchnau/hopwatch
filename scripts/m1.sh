@@ -49,9 +49,11 @@ case "${1:-}" in
   sync) sync ;;
   sim)
     sync
+    # Signed to run locally (no keychain needed): the App Group that hands the Live
+    # Activity layout to the widget extension only works in a signed build.
     remote "$prepare && xcodebuild -workspace ios/$SCHEME.xcworkspace -scheme $SCHEME -configuration Debug \
       -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath ios/build/sim \
-      CODE_SIGNING_ALLOWED=NO build | tail -40"
+      CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO build | tail -40"
     ;;
   install-sim)
     ssh m1 "xcrun simctl install ${2:?simulator UDID} ~/$REMOTE_DIR/ios/build/sim/Build/Products/Debug-iphonesimulator/$SCHEME.app"
