@@ -15,6 +15,12 @@ export const sheetsText = localized({
     from: 'From',
     to: 'to',
     orAt: 'Or at',
+    /** Android: the buttons that open the time and date dialogs, for screen readers. */
+    changeTime: (clock: string) => `${clock}, change time`,
+    changeDate: (day: string) => `${day}, change date`,
+    /** Android's stepper buttons, for screen readers. */
+    less: 'Less',
+    more: 'More',
     nothingRunning: 'Nothing is running',
     /** A running entry's new start, also the undo toast: "Dog since 09:12". */
     nameSince: (name: string, clock: string, yesterday?: boolean) => `${name} since ${yesterdayEn(clock, yesterday)}`,
@@ -106,6 +112,10 @@ export const sheetsText = localized({
     from: 'Von',
     to: 'bis',
     orAt: 'Oder um',
+    changeTime: (clock) => `${clock}, Uhrzeit ändern`,
+    changeDate: (day) => `${day}, Datum ändern`,
+    less: 'Weniger',
+    more: 'Mehr',
     nothingRunning: 'Es läuft nichts',
     nameSince: (name, clock, yesterday) => `${name} seit ${yesterdayDe(clock, yesterday)}`,
     runningSince: (clock, yesterday) => `Läuft seit ${yesterdayDe(clock, yesterday)}`,

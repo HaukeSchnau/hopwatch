@@ -1,7 +1,6 @@
-// Pieces shared by Jelly's time sheets: the header with a character, the chunky
-// "N min ago" chips and the native 24-hour time wheel.
+// Pieces shared by Jelly's time sheets: the header with a character and the chunky
+// "N min ago" chips. The time pickers are in time.tsx.
 
-import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -101,24 +100,6 @@ export function pastAt(picked: Date, now: number): number {
   return at > now ? at - 24 * 60 * MINUTE : at;
 }
 
-export function TimeWheel({ value, onChange, hue }: { value: Date; onChange: (d: Date) => void; hue: Hue }) {
-  const t = useTheme();
-  return (
-    <View style={[styles.wheel, { backgroundColor: t.c.card }]}>
-      <DateTimePicker
-        value={value}
-        mode="time"
-        display="spinner"
-        locale={pickerLocale}
-        themeVariant={t.scheme}
-        accentColor={t.candy[hue].ink}
-        onValueChange={(_, d) => onChange(d)}
-        style={{ height: 132 }}
-      />
-    </View>
-  );
-}
-
 /** Styles shared by the RN sheets. */
 export function useSheetStyles() {
   const t = useTheme();
@@ -140,5 +121,4 @@ const styles = StyleSheet.create({
   chip: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
   chipNumber: { fontFamily: 'ui-rounded', fontWeight: '800', fontSize: 24, lineHeight: 26 },
   chipUnit: { fontSize: 10, marginTop: -2, opacity: 0.9 },
-  wheel: { borderRadius: 24, overflow: 'hidden', alignItems: 'center' },
 });

@@ -57,7 +57,7 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
       <View style={styles.actions}>
         <JellyButton
           label={characterText.surprise}
-          icon="dice.fill"
+          icon={{ ios: 'dice.fill', android: 'casino' }}
           size="small"
           hue={context.hue}
           style={styles.action}
@@ -70,7 +70,7 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
         />
         <JellyButton
           label={characterText.automatic}
-          icon="wand.and.stars"
+          icon={{ ios: 'wand.and.stars', android: 'auto_fix_high' }}
           size="small"
           palette={theme.plainCandy}
           disabled={!custom}

@@ -8,7 +8,6 @@
 // In start mode, with Apple's on-device model, the search field also takes a sentence
 // like "2h deep work this morning" and offers to log it (see TypedLog).
 
-import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
@@ -35,7 +34,8 @@ import { Character } from '../Character';
 import { useModelAvailable } from '../character/suggest';
 import { tabular, text, useTheme } from '../theme';
 import { Squishy } from '../ui';
-import { pickerLocale, sheetBody } from './parts';
+import { sheetBody } from './parts';
+import { TimeChip } from './time';
 import { LogConfirm, LogRow, looksLikeSentence, useTypedLog } from './TypedLog';
 
 type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string };
@@ -108,32 +108,14 @@ export function PickSheet() {
       {mode === 'fill' && Number.isFinite(gapFrom) && Number.isFinite(gapTo) && (
         <View style={styles.range}>
           <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.from}</Text>
-          <DateTimePicker
-            value={new Date(from)}
-            mode="time"
-            display="compact"
-            style={{ width: 92, height: 38 }}
-            locale={pickerLocale}
-            themeVariant={t.scheme}
-            accentColor={t.c.pinkDeep}
-            onValueChange={(_, d) => setFrom(clamp(onDay(gapFrom, d), gapFrom, to - MINUTE))}
-          />
+          <TimeChip value={new Date(from)} color={t.c.pinkDeep} onChange={(d) => setFrom(clamp(onDay(gapFrom, d), gapFrom, to - MINUTE))} />
           <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.to}</Text>
-          <DateTimePicker
-            value={new Date(to)}
-            mode="time"
-            display="compact"
-            style={{ width: 92, height: 38 }}
-            locale={pickerLocale}
-            themeVariant={t.scheme}
-            accentColor={t.c.pinkDeep}
-            onValueChange={(_, d) => setTo(clamp(onDay(gapTo, d), from + MINUTE, gapTo))}
-          />
+          <TimeChip value={new Date(to)} color={t.c.pinkDeep} onChange={(d) => setTo(clamp(onDay(gapTo, d), from + MINUTE, gapTo))} />
         </View>
       )}
       {(pickable.length > 8 || canType) && (
         <View style={[styles.search, { backgroundColor: t.c.sunken }]}>
-          <SymbolView name="magnifyingglass" size={16} tintColor={t.c.muted} weight="bold" />
+          <SymbolView name={{ ios: 'magnifyingglass', android: 'search' }} size={16} tintColor={t.c.muted} weight="bold" />
           <TextInput
             value={query}
             onChangeText={(value) => {
@@ -211,13 +193,13 @@ function Row({
           <Character context={context} size={44} shadow={false} style={styles.jelly} />
         ) : (
           <View style={[styles.home, { backgroundColor: t.c.sunken }]}>
-            <SymbolView name="house.fill" size={16} tintColor={t.c.muted} />
+            <SymbolView name={{ ios: 'house.fill', android: 'home' }} size={16} tintColor={t.c.muted} />
           </View>
         )}
         <Text style={[text.body, styles.rowLabel, { color: t.c.ink }]} numberOfLines={1}>
           {label}
         </Text>
-        {selected && <SymbolView name="checkmark" size={16} tintColor={c.ink} weight="heavy" />}
+        {selected && <SymbolView name={{ ios: 'checkmark', android: 'check' }} size={16} tintColor={c.ink} weight="heavy" />}
       </View>
     </Squishy>
   );

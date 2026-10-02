@@ -1,17 +1,19 @@
-// Jelly's native long-press menus, on SwiftUI's context menu. Like @expo/ui's community
-// MenuView (iOS), plus a subtitle under an item, which iOS shows as smaller gray text:
-// "15 min ago · 14:50" over "Deep work stops at 14:50".
+// Jelly's native long-press menus, on SwiftUI's context menu (Android: Menu.android.tsx).
+// Like @expo/ui's community MenuView (iOS), plus a subtitle under an item, which iOS shows
+// as smaller gray text: "15 min ago · 14:50" over "Deep work stops at 14:50".
 // TODO: go back to MenuView from @expo/ui/community/menu once its actions take a subtitle.
 
-import { Button, type ButtonProps, ContextMenu, Host, Image, RNHostView, Section, Text } from '@expo/ui/swift-ui';
+import { Button, ContextMenu, Host, Image, RNHostView, Section, Text } from '@expo/ui/swift-ui';
 import type { ReactNode } from 'react';
+
+import type { MenuSymbol } from './menuSymbols';
 
 export interface MenuItem {
   id: string;
   title: string;
   subtitle?: string;
-  /** An SF Symbol. */
-  image?: ButtonProps['systemImage'];
+  /** An SF Symbol; Android shows its Material counterpart from menuSymbols. */
+  image?: MenuSymbol;
   destructive?: boolean;
 }
 
@@ -23,7 +25,7 @@ export interface MenuSection {
 
 export type MenuEntry = MenuItem | MenuSection;
 
-interface MenuProps {
+export interface MenuProps {
   /** The small header over all items, e.g. the jelly's name. */
   title?: string;
   items: MenuEntry[];

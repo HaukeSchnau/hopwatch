@@ -12,7 +12,8 @@ import { play } from '../feedback';
 import { stopConsequence } from '../menus';
 import { useTheme } from '../theme';
 import { JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, TimeWheel, useSheetStyles } from './parts';
+import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, useSheetStyles } from './parts';
+import { TimeWheel } from './time';
 
 export function StopSheet() {
   const running = useRunning();
@@ -68,7 +69,7 @@ export function StopSheet() {
         onPress={() => stop(at)}
         style={{ marginTop: 12 }}
       />
-      <JellyButton label={sheetsText.stopNow} icon="stop.fill" palette={t.inkCandy} onPress={() => stop()} style={{ marginTop: 12 }} />
+      <JellyButton label={sheetsText.stopNow} icon={{ ios: 'stop.fill', android: 'stop' }} palette={t.inkCandy} onPress={() => stop()} style={{ marginTop: 12 }} />
     </ScrollView>
   );
 }

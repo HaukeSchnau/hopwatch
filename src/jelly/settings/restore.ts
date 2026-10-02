@@ -24,10 +24,16 @@ export async function chooseBackup(replacing: boolean): Promise<Backup | null> {
   const entries = backup.entries.filter((e) => e.deletedAt === null).length;
   const day = backup.exportedAt ? formatLongDay(backup.exportedAt) : null;
   const confirmed = await new Promise<boolean>((resolve) =>
-    Alert.alert(data.restoreTitle, data.restoreMessage(day, jellies, entries, replacing), [
-      { text: settingsText.cancel, style: 'cancel', onPress: () => resolve(false) },
-      { text: data.restoreConfirm, style: replacing ? 'destructive' : 'default', onPress: () => resolve(true) },
-    ]),
+    Alert.alert(
+      data.restoreTitle,
+      data.restoreMessage(day, jellies, entries, replacing),
+      [
+        { text: settingsText.cancel, style: 'cancel', onPress: () => resolve(false) },
+        { text: data.restoreConfirm, style: replacing ? 'destructive' : 'default', onPress: () => resolve(true) },
+      ],
+      // Android: Back and tapping outside cancel, like any dialog there.
+      { cancelable: true, onDismiss: () => resolve(false) },
+    ),
   );
   return confirmed ? backup : null;
 }
