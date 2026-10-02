@@ -28,18 +28,20 @@ import {
   usePickableContexts,
   useTree,
 } from '@/core';
+import { sheetsText } from '@/i18n/sheets';
 
 import { buzz, play } from '../feedback';
 import { Character } from '../Character';
 import { useModelAvailable } from '../character/suggest';
 import { tabular, text, useTheme } from '../theme';
 import { Squishy } from '../ui';
-import { sheetBody } from './parts';
+import { pickerLocale, sheetBody } from './parts';
 import { LogConfirm, LogRow, looksLikeSentence, useTypedLog } from './TypedLog';
 
 type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string };
 
 const FIVE = 5 * MINUTE;
+const s = sheetsText.pick;
 
 export function PickSheet() {
   const t = useTheme();
@@ -63,7 +65,7 @@ export function PickSheet() {
   const moving = tree.ordered.find((c) => c.id === params.id) ?? null;
   const excluded = moving ? subtreeIds(tree, moving.id) : new Set<ContextId>();
 
-  let title = 'Pick a jelly';
+  let title = s.title;
   let subtitle: string | null = null;
   let onPick: (c: ResolvedContext | null) => void = (c) => {
     if (!c) return;
@@ -71,16 +73,16 @@ export function PickSheet() {
     play('pop');
   };
   if (mode === 'fill' && Number.isFinite(from) && Number.isFinite(to)) {
-    title = 'What was this?';
+    title = s.fill;
     subtitle = `${formatClock(from)} – ${formatClock(to)} · ${formatDuration(to - from)}`;
     onPick = (c) => c && actions.fillGap(c.id, from, to);
   } else if (mode === 'entry' && entry) {
     const current = tree.byId.get(entry.contextId);
-    title = 'Change to…';
-    subtitle = `${current?.name ?? 'Entry'} · ${formatClock(entry.startUtc)} – ${entry.endUtc ? formatClock(entry.endUtc) : 'now'}`;
+    title = s.change;
+    subtitle = `${current?.name ?? s.entry} · ${formatClock(entry.startUtc)} – ${entry.endUtc ? formatClock(entry.endUtc) : sheetsText.now}`;
     onPick = (c) => c && actions.updateEntry(entry.id, { contextId: c.id });
   } else if (mode === 'parent' && moving) {
-    title = `Move ${moving.name} into…`;
+    title = s.move(moving.name);
     onPick = (c) => actions.moveContext(moving.id, c?.id ?? null);
   }
 
@@ -105,24 +107,24 @@ export function PickSheet() {
       {subtitle ? <Text style={[text.subhead, tabular, styles.subtitle, { color: t.c.muted }]}>{subtitle}</Text> : null}
       {mode === 'fill' && Number.isFinite(gapFrom) && Number.isFinite(gapTo) && (
         <View style={styles.range}>
-          <Text style={[text.headline, { color: t.c.ink }]}>From</Text>
+          <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.from}</Text>
           <DateTimePicker
             value={new Date(from)}
             mode="time"
             display="compact"
             style={{ width: 92, height: 38 }}
-            locale="en_GB"
+            locale={pickerLocale}
             themeVariant={t.scheme}
             accentColor={t.c.pinkDeep}
             onValueChange={(_, d) => setFrom(clamp(onDay(gapFrom, d), gapFrom, to - MINUTE))}
           />
-          <Text style={[text.headline, { color: t.c.ink }]}>to</Text>
+          <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.to}</Text>
           <DateTimePicker
             value={new Date(to)}
             mode="time"
             display="compact"
             style={{ width: 92, height: 38 }}
-            locale="en_GB"
+            locale={pickerLocale}
             themeVariant={t.scheme}
             accentColor={t.c.pinkDeep}
             onValueChange={(_, d) => setTo(clamp(onDay(gapTo, d), from + MINUTE, gapTo))}
@@ -139,7 +141,7 @@ export function PickSheet() {
               setConfirming(null);
             }}
             onSubmitEditing={() => confirm(log.plan)}
-            placeholder={canType ? 'Find a jelly or type what you did' : 'Find a jelly'}
+            placeholder={canType ? s.findOrType : s.find}
             placeholderTextColor={t.c.faint}
             style={[text.body, styles.searchInput, { color: t.c.ink }]}
             autoCorrect={false}
@@ -152,7 +154,7 @@ export function PickSheet() {
       ) : (
         <View style={styles.list}>
           <LogRow log={log} onPress={confirm} />
-          {mode === 'parent' && moving && !q && <Row label="Top level" context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
+          {mode === 'parent' && moving && !q && <Row label={s.topLevel} context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
           {list.map((c) => (
             <Row
               key={c.id}
@@ -163,7 +165,7 @@ export function PickSheet() {
               onPress={() => pick(c)}
             />
           ))}
-          {list.length === 0 && !log.shown && <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{`No jelly matches “${query}”.`}</Text>}
+          {list.length === 0 && !log.shown && <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{s.noMatch(query)}</Text>}
         </View>
       )}
     </ScrollView>

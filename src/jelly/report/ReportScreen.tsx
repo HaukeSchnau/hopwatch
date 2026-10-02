@@ -24,6 +24,8 @@ import {
   useTree,
   useWeekReport,
 } from '@/core';
+import { shellText } from '@/i18n/shell';
+import { weekText } from '@/i18n/week';
 
 import { buzz } from '../feedback';
 import { HeaderTitle } from '../HeaderTitle';
@@ -62,15 +64,15 @@ export function ReportScreen() {
         <HeaderTitle title={title} subtitle={subtitle} onPress={current ? undefined : jump} />
       </Stack.Title>
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="chevron.left" accessibilityLabel={`Previous ${mode}`} onPress={() => step(-1)} />
+        <Stack.Toolbar.Button icon="chevron.left" accessibilityLabel={shellText.header.previous(mode)} onPress={() => step(-1)} />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel={`Next ${mode}`} onPress={() => step(1)} />
+        <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel={shellText.header.next(mode)} onPress={() => step(1)} />
       </Stack.Toolbar>
 
       <View style={styles.segment}>
         <SegmentedControl
-          values={['Day', 'Week']}
+          values={modes.map((m) => weekText.ranges[m])}
           selectedIndex={modes.indexOf(mode)}
           onChange={(e) => {
             buzz.tick();
@@ -92,22 +94,22 @@ function WeekBody({ week, now }: { week: number; now: number }) {
     <>
       <Overview
         totals={report.totals}
-        label="tracked this week"
+        label={weekText.trackedWeek}
         range={{ start: report.start, end: report.end }}
         targets={targets}
         now={now}
         summary={<WeekSummary weekStart={week} />}>
         {report.targets.length > 0 && (
           <>
-            <SectionTitle style={styles.section}>Target jars</SectionTitle>
+            <SectionTitle style={styles.section}>{weekText.jars}</SectionTitle>
             <Jars lines={report.targets} weekStart={report.start} />
           </>
         )}
       </Overview>
-      <SectionTitle style={styles.section}>Beads per day</SectionTitle>
+      <SectionTitle style={styles.section}>{weekText.beadsPerDay}</SectionTitle>
       <View style={[styles.card, { backgroundColor: t.c.card }]}>
         <WeekBeads days={report.days} width={width - 64} now={now} />
-        <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>One bead per block, sized by its length · blocks · median</Text>
+        <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>{weekText.beadsLegend}</Text>
       </View>
     </>
   );
@@ -118,8 +120,8 @@ function DayBody({ day, now }: { day: number; now: number }) {
   const { width } = useWindowDimensions();
   return (
     <>
-      <Overview totals={report.totals} label="tracked this day" range={{ start: report.start, end: report.end }} targets={new Map()} now={now} />
-      <SectionTitle style={styles.section}>Beads</SectionTitle>
+      <Overview totals={report.totals} label={weekText.trackedDay} range={{ start: report.start, end: report.end }} targets={new Map()} now={now} />
+      <SectionTitle style={styles.section}>{weekText.beads}</SectionTitle>
       <DayBeads report={report} width={width - 64} />
     </>
   );
@@ -130,9 +132,9 @@ function DayBeads({ report, width }: { report: DayReport; width: number }) {
   const { blocks, median } = report.fragmentation;
   return (
     <View style={[styles.card, { backgroundColor: t.c.card }]}>
-      {blocks ? <BeadString day={report} width={width} /> : <Text style={[text.footnote, { color: t.c.muted }]}>No blocks this day.</Text>}
+      {blocks ? <BeadString day={report} width={width} /> : <Text style={[text.footnote, { color: t.c.muted }]}>{weekText.noBlocks}</Text>}
       <Text style={[text.callout, tabular, styles.fragment, { color: t.c.ink }]}>
-        {blocks} {blocks === 1 ? 'block' : 'blocks'} · median {formatDuration(median)}
+        {weekText.blocks(blocks, formatDuration(median))}
       </Text>
     </View>
   );
@@ -176,8 +178,8 @@ function Overview({
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyEmoji}>🫙</Text>
-        <Text style={[text.title3, styles.emptyTitle, { color: t.c.ink }]}>Nothing tracked here</Text>
-        <Text style={[text.subhead, styles.emptyText, { color: t.c.muted }]}>Time you track shows up as bubbles, jars and beads.</Text>
+        <Text style={[text.title3, styles.emptyTitle, { color: t.c.ink }]}>{weekText.emptyTitle}</Text>
+        <Text style={[text.subhead, styles.emptyText, { color: t.c.muted }]}>{weekText.emptyText}</Text>
       </View>
     );
   }
@@ -193,7 +195,7 @@ function Overview({
         <Bubbles nodes={totals.roots} width={width - 32} height={Math.min(250, 90 + totals.roots.length * 26)} onPick={(id) => toggle(id)} />
       </View>
       {children}
-      <SectionTitle style={styles.section}>Totals</SectionTitle>
+      <SectionTitle style={styles.section}>{weekText.totals}</SectionTitle>
       <TotalsTree
         roots={totals.roots}
         expanded={expanded}

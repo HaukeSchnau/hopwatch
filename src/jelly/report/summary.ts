@@ -2,41 +2,21 @@
 // Apple's on-device model only words them, and an answer with numbers or days the facts
 // don't have is turned down. Each week's summary stays in device prefs with a hash of its
 // facts, so it shows at once next time and is only written again when the facts change.
-// Without the model nothing new is written and nothing waits on it.
+// Without the model nothing new is written and nothing waits on it. The summary is in the
+// app's language; after a language change the prompt differs, so a new one is written.
 
 import { generate } from '@modules/on-device-model';
 import { useEffect, useMemo, useState } from 'react';
 
-import { actions, checkSummary, type Json, MINUTE, useEntries, useNow, usePref, useTree, weekFacts, type WeekFacts } from '@/core';
+import { actions, checkSummary, type Json, MINUTE, summaryRequest, useEntries, useNow, usePref, useTree, weekFacts, type WeekFacts } from '@/core';
 
 import { useModelAvailable } from '../character/suggest';
 
-const INSTRUCTIONS = [
-  'You write the short summary at the top of the Week screen in Stint, a personal time tracker.',
-  'Write 2 or 3 short sentences, under 45 words in all, talking to the user as "you". Sound warm and a little playful, like a friend glancing at their week.',
-  'Weave the facts into flowing sentences with lively, friendly verbs instead of listing them.',
-  'Use only the facts you are given. Keep each number with the thing it belongs to, copy numbers as written and keep names as written.',
-  'Never calculate, round or invent numbers, days, reasons or advice. No closing remark.',
-  'Write in English. No greeting, no questions, no emoji.',
-].join('\n');
-
-const field = { name: 'summary', description: 'The summary: 2 or 3 short sentences, under 45 words, using only the facts.' } as const;
-
-/** The request text: the tense to use, then the facts. */
-const promptFor = (week: WeekFacts) =>
-  [
-    week.over
-      ? 'The week is over, so write in the past tense. Don\'t call it "last week" or "this week".'
-      : `The week is still going (${week.span} so far), so say "so far".`,
-    'Facts, most important first:',
-    ...week.facts.map((fact) => `- ${fact}`),
-  ].join('\n');
-
 /** Asks the model to word `week`, once more when the first answer doesn't check out. */
 async function write(week: WeekFacts): Promise<string | null> {
-  const prompt = promptFor(week);
+  const request = summaryRequest(week);
   for (let attempt = 0; attempt < 2; attempt++) {
-    const answer = await generate({ instructions: INSTRUCTIONS, prompt, fields: [field] });
+    const answer = await generate(request);
     if (!answer) return null;
     // Stint's text uses plain punctuation; the model likes em dashes.
     const text = answer.summary.trim().replace(/\s*—\s*/g, ', ');
@@ -60,7 +40,7 @@ const parseStored = (value: Json): Stored | undefined =>
 /** A short, stable fingerprint of what the model is asked (32-bit FNV-1a). */
 function hashOf(week: WeekFacts): string {
   let hash = 0x811c9dc5;
-  for (const char of promptFor(week)) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 0x01000193);
+  for (const char of summaryRequest(week).prompt) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 0x01000193);
   return (hash >>> 0).toString(36);
 }
 

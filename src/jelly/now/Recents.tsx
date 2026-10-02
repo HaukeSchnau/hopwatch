@@ -7,6 +7,8 @@ import { SymbolView } from 'expo-symbols';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { actions, type ResolvedContext, useNow, useRecents } from '@/core';
+import { menuText } from '@/i18n/menus';
+import { nowText } from '@/i18n/now';
 
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
@@ -22,12 +24,12 @@ export function Recents() {
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.scroll}>
       <Squishy
         accessibilityRole="button"
-        accessibilityLabel="All jellies"
-        accessibilityHint="Pick any context from the whole tree"
+        accessibilityLabel={nowText.allLabel}
+        accessibilityHint={nowText.allHint}
         onPress={() => router.push({ pathname: '/pick', params: { mode: 'start' } })}>
         <CandySurface palette={t.plainCandy} radius={22} style={styles.bean}>
           <SymbolView name="square.grid.2x2.fill" size={15} tintColor={t.plainCandy.on} />
-          <Text style={[styles.name, { color: t.plainCandy.on }]}>All</Text>
+          <Text style={[styles.name, { color: t.plainCandy.on }]}>{nowText.all}</Text>
         </CandySurface>
       </Squishy>
       {recents.map((c) => (
@@ -46,8 +48,8 @@ function Bean({ context, now }: { context: ResolvedContext; now: number }) {
     <Menu title={context.name} items={menu} onPress={(id) => onStartMenu(context.id, id, beanKey(context.id))}>
       <Squishy
         accessibilityRole="button"
-        accessibilityLabel={`Switch to ${context.name}`}
-        accessibilityHint="Hold to start it at an earlier time"
+        accessibilityLabel={nowText.switchTo(context.name)}
+        accessibilityHint={menuText.startHint}
         onPress={() => {
           noteSource(context.id, beanKey(context.id));
           actions.start(context.id);

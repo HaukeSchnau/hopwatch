@@ -20,6 +20,7 @@ import {
   useStint,
   useTree,
 } from '@/core';
+import { menuText } from '@/i18n/menus';
 
 import { buzz, play } from './feedback';
 import type { MenuEntry, MenuItem } from './Menu';
@@ -27,8 +28,7 @@ import { noteSource } from './now/choreo';
 
 const AGO = [5, 10, 15, 30, 45];
 
-/** "5 min ago · 09:07" */
-const agoTitle = (minutes: number, now: number) => `${minutes} min ago · ${formatClock(now - minutes * MINUTE)}`;
+const agoTitle = (minutes: number, now: number) => menuText.ago(minutes, formatClock(now - minutes * MINUTE));
 
 const capitalized = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -45,17 +45,17 @@ export function startConsequence(
   now: number,
 ): { text: string; replaces: boolean } | null {
   const { cut, replaced } = previewStart(entries, contextId, at, now);
-  const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? 'Something';
+  const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? menuText.something;
   const parts: string[] = [];
-  if (cut) parts.push(`${name(cut.entry)} ${cut.entry.endUtc === null ? 'stops' : 'ends'} at ${formatClock(cut.at)}`);
-  if (replaced.length === 1) parts.push(`replaces ${name(replaced[0])}`);
-  if (replaced.length > 1) parts.push(`replaces ${replaced.length} entries`);
+  if (cut) parts.push(menuText.cut(name(cut.entry), cut.entry.endUtc === null, formatClock(cut.at)));
+  if (replaced.length === 1) parts.push(menuText.replaces(name(replaced[0])));
+  if (replaced.length > 1) parts.push(menuText.replacesMany(replaced.length));
   return parts.length ? { text: capitalized(parts.join(' · ')), replaces: replaced.length > 0 } : null;
 }
 
 /** What stopping the entry that runs since `since` at `at` leaves: "0:40 of Deep work". */
 export function stopConsequence(name: string, since: number, at: number): string {
-  return at - since < MIN_ENTRY_MS ? `Too short, ${name} is dropped` : `${formatDuration(at - since)} of ${name}`;
+  return at - since < MIN_ENTRY_MS ? menuText.tooShort(name) : menuText.stopLeaves(formatDuration(at - since), name);
 }
 
 /**
@@ -78,9 +78,9 @@ export function useStartMenu(context: ResolvedContext, now: number, running: boo
     };
   });
   return [
-    { title: running ? 'Actually started' : 'Started earlier', items: ago },
-    { id: 'at', title: 'At a time…', image: 'clock' },
-    { id: 'edit', title: `Edit ${context.name}`, image: 'pencil' },
+    { title: running ? menuText.actuallyStarted : menuText.startedEarlier, items: ago },
+    { id: 'at', title: menuText.atTime, image: 'clock' },
+    { id: 'edit', title: menuText.edit(context.name), image: 'pencil' },
   ];
 }
 
@@ -95,7 +95,7 @@ export function onStartMenu(contextId: ContextId, event: string, source?: string
     const context = useStint.getState().tree.byId.get(contextId);
     buzz.success();
     if (open && open.contextId === contextId) {
-      actions.updateEntry(open.id, { startUtc: at }, `${context?.name ?? 'It'} since ${formatClock(at)}`);
+      actions.updateEntry(open.id, { startUtc: at }, menuText.movedStart(context?.name, formatClock(at)));
       return;
     }
     if (source) noteSource(contextId, source);
@@ -118,7 +118,7 @@ export function stopMenu(name: string, since: number, now: number): MenuEntry[] 
       image: 'clock.arrow.circlepath',
     }),
   );
-  return [...(ago.length ? [{ title: 'Stopped earlier', items: ago }] : []), { id: 'at', title: 'At a time…', image: 'clock' }];
+  return [...(ago.length ? [{ title: menuText.stoppedEarlier, items: ago }] : []), { id: 'at', title: menuText.atTime, image: 'clock' }];
 }
 
 export function onStopMenu(event: string) {

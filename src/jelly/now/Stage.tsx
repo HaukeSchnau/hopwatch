@@ -34,6 +34,8 @@ import {
   useNow,
   useTree,
 } from '@/core';
+import { menuText } from '@/i18n/menus';
+import { nowText } from '@/i18n/now';
 
 import { Character } from '../Character';
 import { CandyDial, dayBeans } from '../dial/CandyDial';
@@ -102,7 +104,7 @@ export function Stage({ running }: { running: Running | null }) {
         {running ? <Readout context={running.context} since={running.entry.startUtc} /> : <Idle />}
       </View>
       <View style={[styles.corner, styles.topLeft]} pointerEvents="none">
-        <Text style={[text.headline, { color: t.c.ink }]}>{greeting(now)}</Text>
+        <Text style={[text.headline, { color: t.c.ink }]}>{nowText.greeting(new Date(now).getHours())}</Text>
         <Text style={[text.footnote, { color: t.c.muted }]}>
           {formatWeekday(now)} {formatDayMonth(now)}
         </Text>
@@ -110,25 +112,16 @@ export function Stage({ running }: { running: Running | null }) {
       <Pressable
         onPress={() => router.navigate('/day')}
         accessibilityRole="button"
-        accessibilityLabel={`${formatDuration(report.totals.total)} tracked today. Open the day`}
+        accessibilityLabel={nowText.todayLabel(formatDuration(report.totals.total))}
         hitSlop={8}
         style={({ pressed }) => [styles.corner, styles.topRight, pressed && { opacity: 0.5 }]}>
         <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatDuration(report.totals.total)}</Text>
-        <Text style={[text.footnote, { color: t.c.muted }]}>today</Text>
+        <Text style={[text.footnote, { color: t.c.muted }]}>{nowText.today}</Text>
       </Pressable>
       {running && <Since context={running.context} since={running.entry.startUtc} />}
       {running && <Stop context={running.context} since={running.entry.startUtc} />}
     </View>
   );
-}
-
-function greeting(now: number) {
-  const h = new Date(now).getHours();
-  if (h < 5) return 'Night owl';
-  if (h < 12) return 'Morning!';
-  if (h < 17) return 'Afternoon!';
-  if (h < 22) return 'Evening!';
-  return 'Late one';
 }
 
 /** The jelly in the middle of the ring: breathing, hopping now and then, squashing when it lands. */
@@ -218,7 +211,7 @@ function Readout({ context, since }: { context: ResolvedContext; since: number }
     <Pressable
       onPress={() => router.push({ pathname: '/start', params: { context: context.id } })}
       accessibilityRole="button"
-      accessibilityLabel={`${context.name}, running since ${formatClock(since)}. Change the start`}
+      accessibilityLabel={nowText.runningLabel(context.name, formatClock(since))}
       style={styles.readout}>
       {path ? (
         <Text style={[text.caption, styles.path, { color: t.candy[context.hue].ink }]} numberOfLines={1} ellipsizeMode="head">
@@ -237,8 +230,8 @@ function Idle() {
   const t = useTheme();
   return (
     <View style={styles.readout}>
-      <Text style={[text.title3, { color: t.c.ink }]}>Nothing running</Text>
-      <Text style={[text.subhead, styles.idleHint, { color: t.c.muted }]}>Tap a jelly to wake it up</Text>
+      <Text style={[text.title3, { color: t.c.ink }]}>{nowText.nothingRunning}</Text>
+      <Text style={[text.subhead, styles.idleHint, { color: t.c.muted }]}>{nowText.idleHint}</Text>
     </View>
   );
 }
@@ -250,10 +243,10 @@ function Since({ context, since }: { context: ResolvedContext; since: number }) 
     <Pressable
       onPress={() => router.push({ pathname: '/start', params: { context: context.id } })}
       accessibilityRole="button"
-      accessibilityLabel={`Started at ${formatClock(since)}. Change the start`}
+      accessibilityLabel={nowText.startedLabel(formatClock(since))}
       hitSlop={10}
       style={({ pressed }) => [styles.corner, styles.bottomLeft, pressed && { opacity: 0.5 }]}>
-      <Text style={[text.footnote, { color: t.c.muted }]}>since</Text>
+      <Text style={[text.footnote, { color: t.c.muted }]}>{nowText.since}</Text>
       <View style={styles.sinceRow}>
         <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatClock(since)}</Text>
         <SymbolView name="pencil" size={12} tintColor={t.c.muted} weight="bold" />
@@ -268,13 +261,13 @@ function Stop({ context, since }: { context: ResolvedContext; since: number }) {
   const now = useNow(60_000);
   return (
     <View style={[styles.corner, styles.bottomRight]}>
-      <Menu title={`Stop ${context.name}`} items={stopMenu(context.name, since, now)} onPress={onStopMenu}>
+      <Menu title={menuText.stop(context.name)} items={stopMenu(context.name, since, now)} onPress={onStopMenu}>
         <RoundButton
           icon="stop.fill"
           size={54}
           palette={t.inkCandy}
-          accessibilityLabel={`Stop ${context.name}`}
-          accessibilityHint="Hold to stop at an earlier time"
+          accessibilityLabel={menuText.stop(context.name)}
+          accessibilityHint={menuText.stopHint}
           onPress={() => {
             actions.stop();
             play('boop');
@@ -295,7 +288,7 @@ const styles = StyleSheet.create({
   readout: { alignItems: 'center', maxWidth: 230, marginTop: 2 },
   path: { textTransform: 'uppercase', letterSpacing: 0.6, maxWidth: 200 },
   name: { maxWidth: 220, marginTop: -1 },
-  idleHint: { marginTop: 2 },
+  idleHint: { marginTop: 2, textAlign: 'center' },
   corner: { position: 'absolute' },
   topLeft: { left: 4, top: 0 },
   topRight: { right: 4, top: 0, alignItems: 'flex-end' },

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { ResolvedContext } from '@/core';
+import { characterText, optionNames } from '@/i18n/character';
 
 import { Character } from '../Character';
 import { buzz } from '../feedback';
@@ -15,7 +16,9 @@ import { JellyButton, Squishy } from '../ui';
 import { surpriseLook } from './derive';
 import { hop, perform } from './idle';
 import { saveCustomLook, useAutoLook, useCustomLook } from './look';
-import { type Look, motionBlurbs, optionNames, type Trait, traitKeys, traitNames, traitOptions, withTraits } from './traits';
+import { type Look, type Trait, traitKeys, traitOptions, withTraits } from './traits';
+
+const { traits: traitNames, moods } = characterText;
 
 export interface LookEditorProps {
   context: ResolvedContext;
@@ -53,7 +56,7 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
       )}
       <View style={styles.actions}>
         <JellyButton
-          label="Surprise me"
+          label={characterText.surprise}
           icon="dice.fill"
           size="small"
           hue={context.hue}
@@ -66,13 +69,13 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
           }}
         />
         <JellyButton
-          label="Automatic"
+          label={characterText.automatic}
           icon="wand.and.stars"
           size="small"
           palette={theme.plainCandy}
           disabled={!custom}
           style={styles.action}
-          accessibilityHint="Goes back to the look that fits its name and emoji"
+          accessibilityHint={characterText.automaticHint}
           onPress={() => {
             saveCustomLook(context.id, null, auto);
             buzz.tap();
@@ -156,7 +159,8 @@ function OptionStrip<K extends Trait>({ trait, context, look, auto, onPick }: St
             <View style={[styles.thumb, { backgroundColor: on ? tint.tint : theme.c.sunken, borderColor: on ? tint.fill : 'transparent' }]}>
               <Character context={context} size={THUMB} look={variant} mood="awake" sticker={false} shadow={false} />
             </View>
-            <Text style={[styles.label, { color: on ? tint.ink : theme.c.muted }]} numberOfLines={1}>
+            {/* German compounds like "Heiligenschein" shrink a little rather than get cut. */}
+            <Text style={[styles.label, { color: on ? tint.ink : theme.c.muted }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
               {optionNames[trait][option]}
               {option === auto[trait] ? ' ✦' : ''}
             </Text>
@@ -185,7 +189,7 @@ function MotionChips({ look, auto, onPick }: { look: Look; auto: Look; onPick: (
               {optionNames.motion[motion]}
               {motion === auto.motion ? ' ✦' : ''}
             </Text>
-            <Text style={[text.caption, { color: on ? theme.c.faint : theme.c.muted, fontWeight: '600' }]}>{motionBlurbs[motion]}</Text>
+            <Text style={[text.caption, { color: on ? theme.c.faint : theme.c.muted, fontWeight: '600' }]}>{moods[motion]}</Text>
           </Squishy>
         );
       })}

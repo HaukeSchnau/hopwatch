@@ -21,6 +21,7 @@ import {
   formatDuration,
   formatRelativeDay,
   isSameDay,
+  MIN_ENTRY_MS,
   MINUTE,
   type Plan,
   previewPlace,
@@ -33,12 +34,15 @@ import {
   useStint,
   useTree,
 } from '@/core';
+import { sheetsText } from '@/i18n/sheets';
 
 import { buzz, play } from '../feedback';
 import { stopConsequence } from '../menus';
 import { tabular, text, useTheme } from '../theme';
 import { JellyButton, Squishy } from '../ui';
-import { pastAt, SheetHeader } from './parts';
+import { pastAt, pickerLocale, SheetHeader } from './parts';
+
+const s = sheetsText.typed;
 
 /** Whether a search might be a sentence to log rather than a jelly to find. */
 export function looksLikeSentence(query: string, matches: number): boolean {
@@ -81,39 +85,40 @@ interface Scene {
 
 /** A plan in Stint's words: the headline, a detail line and the button. */
 function words(plan: Plan, { tree, entries, now }: Scene) {
-  const name = (id: ContextId) => tree.byId.get(id)?.name ?? 'Something';
-  // "21:00", or "yesterday 21:00" for a start or stop before today.
-  const when = (at: number) => `${isSameDay(at, now) ? '' : 'yesterday '}${formatClock(at)}`;
+  const name = (id: ContextId) => tree.byId.get(id)?.name ?? s.something;
+  // A start or stop before today reads "yesterday 21:00".
+  const yesterday = (at: number) => !isSameDay(at, now);
   if (plan.kind === 'place') {
     const span = `${formatClock(plan.from)}–${formatClock(plan.to)}`;
     return {
       title: `${name(plan.contextId)} ${span}`,
       detail: `${formatRelativeDay(plan.from, now)} · ${formatDuration(plan.to - plan.from)}`,
-      button: `Log ${span}`,
+      button: s.log(span),
     };
   }
   const open = findOpen(entries);
   if (plan.kind === 'stop') {
-    const running = open ? name(open.contextId) : 'it';
+    const running = open ? name(open.contextId) : s.it;
     const atNow = now - plan.at < MINUTE;
     return {
-      title: atNow ? `Stop ${running}` : `Stop ${running} at ${when(plan.at)}`,
-      detail: open ? `Running since ${when(open.startUtc)}` : 'Nothing is running',
-      button: atNow ? 'Stop now' : `Stop at ${formatClock(plan.at)}`,
+      title: atNow ? sheetsText.stopName(running) : s.stopAt(running, formatClock(plan.at), yesterday(plan.at)),
+      detail: open ? sheetsText.runningSince(formatClock(open.startUtc), yesterday(open.startUtc)) : sheetsText.nothingRunning,
+      button: atNow ? sheetsText.stopNow : sheetsText.stopAt(formatClock(plan.at)),
     };
   }
   const atNow = now - plan.at < MINUTE;
+  const since = sheetsText.nameSince(name(plan.contextId), formatClock(plan.at), yesterday(plan.at));
   if (open?.contextId === plan.contextId) {
     return {
-      title: `${name(plan.contextId)} since ${when(plan.at)}`,
-      detail: `Running since ${when(open.startUtc)}`,
-      button: `Move start to ${formatClock(plan.at)}`,
+      title: since,
+      detail: sheetsText.runningSince(formatClock(open.startUtc), yesterday(open.startUtc)),
+      button: sheetsText.moveStartTo(formatClock(plan.at)),
     };
   }
   return {
-    title: atNow ? `Start ${name(plan.contextId)}` : `${name(plan.contextId)} since ${when(plan.at)}`,
-    detail: atNow ? 'Now' : `Started ${formatAgo(now - plan.at)}`,
-    button: atNow ? `Start ${name(plan.contextId)}` : `Start at ${formatClock(plan.at)}`,
+    title: atNow ? sheetsText.startName(name(plan.contextId)) : since,
+    detail: atNow ? s.atNow : s.startedAgo(formatAgo(now - plan.at)),
+    button: atNow ? sheetsText.startName(name(plan.contextId)) : sheetsText.startAt(formatClock(plan.at)),
   };
 }
 
@@ -127,19 +132,19 @@ const toneIcon = { cut: 'scissors', gone: 'exclamationmark.triangle', note: 'che
 
 /** What a plan does to the entries already there: "Replaces Cooking 12:10–12:40". */
 function changesOf(plan: Plan, { tree, entries, now }: Scene): Change[] {
-  const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? 'Something';
-  const span = (e: Entry) => `${formatClock(e.startUtc)}–${e.endUtc === null ? 'now' : formatClock(e.endUtc)}`;
-  const cut = (e: Entry, at: number): Change => ({ text: `${name(e)} ${e.endUtc === null ? 'stops' : 'ends'} at ${formatClock(at)}`, tone: 'cut' });
+  const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? s.something;
+  const span = (e: Entry) => `${formatClock(e.startUtc)}–${e.endUtc === null ? sheetsText.now : formatClock(e.endUtc)}`;
+  const cut = (e: Entry, at: number): Change => ({ text: s.ends(name(e), e.endUtc === null, formatClock(at)), tone: 'cut' });
   const replaced = (list: Entry[]): Change[] =>
-    list.length > 3 ? [{ text: `Replaces ${list.length} entries`, tone: 'gone' }] : list.map((e) => ({ text: `Replaces ${name(e)} ${span(e)}`, tone: 'gone' }));
+    list.length > 3 ? [{ text: s.replacesCount(list.length), tone: 'gone' }] : list.map((e) => ({ text: s.replaces(name(e), span(e)), tone: 'gone' }));
 
   if (plan.kind === 'place') {
     const p = previewPlace(entries, plan.contextId, plan.from, plan.to, now);
     return [
       ...(p.ended ? [cut(p.ended.entry, p.ended.at)] : []),
-      ...(p.split ? [{ text: `Takes ${formatClock(plan.from)}–${formatClock(plan.to)} out of ${name(p.split)}`, tone: 'cut' as const }] : []),
+      ...(p.split ? [{ text: s.takesOut(`${formatClock(plan.from)}–${formatClock(plan.to)}`, name(p.split)), tone: 'cut' as const }] : []),
       ...replaced(p.replaced),
-      ...(p.started ? [{ text: `${name(p.started.entry)} starts at ${formatClock(p.started.at)}`, tone: 'cut' as const }] : []),
+      ...(p.started ? [{ text: s.startsAt(name(p.started.entry), formatClock(p.started.at)), tone: 'cut' as const }] : []),
     ];
   }
   if (plan.kind === 'start') {
@@ -148,24 +153,24 @@ function changesOf(plan: Plan, { tree, entries, now }: Scene): Change[] {
   }
   const open = findOpen(entries);
   if (!open) return [];
-  const result = stopConsequence(name(open), open.startUtc, plan.at);
-  return [{ text: result, tone: result.startsWith('Too short') ? 'gone' : 'note' }];
+  // Too short an entry is dropped, the same rule stopConsequence words.
+  return [{ text: stopConsequence(name(open), open.startUtc, plan.at), tone: plan.at - open.startUtc < MIN_ENTRY_MS ? 'gone' : 'note' }];
 }
 
 /** Why a plan, maybe with edited times, can't be done right now. */
 function problemWith(plan: Plan, { tree, entries, now }: Scene): string | null {
   if (plan.kind === 'place') {
-    if (plan.to <= plan.from) return 'It ends before it starts';
-    if (plan.from >= now) return "That's still to come";
-    if (Math.min(plan.to, now) - plan.from < MINUTE) return "That's too short";
+    if (plan.to <= plan.from) return s.endsBeforeStart;
+    if (plan.from >= now) return s.stillToCome;
+    if (Math.min(plan.to, now) - plan.from < MINUTE) return s.tooShort;
     return null;
   }
-  if (plan.at > now) return "That's still to come";
+  if (plan.at > now) return s.stillToCome;
   if (plan.kind === 'start') return null;
   const open = findOpen(entries);
-  if (!open) return 'Nothing is running';
-  const name = tree.byId.get(open.contextId)?.name ?? 'It';
-  return plan.at < open.startUtc ? `That's before ${name} started at ${formatClock(open.startUtc)}` : null;
+  if (!open) return sheetsText.nothingRunning;
+  const name = tree.byId.get(open.contextId)?.name ?? s.It;
+  return plan.at < open.startUtc ? s.beforeStart(name, formatClock(open.startUtc)) : null;
 }
 
 function useScene(): Scene {
@@ -200,8 +205,8 @@ export function LogRow({ log: { sentence, answer, reading, plan, shown }, onPres
   const scene = useScene();
   if (!shown) return null;
   const said = plan ? words(plan, scene) : null;
-  const title = said?.title ?? (answer === undefined ? `Log “${sentence.trim()}”` : "Can't log that");
-  const detail = said?.detail ?? (reading && 'problem' in reading ? reading.problem : 'Reading…');
+  const title = said?.title ?? (answer === undefined ? s.logSentence(sentence.trim()) : s.cantLog);
+  const detail = said?.detail ?? (reading && 'problem' in reading ? reading.problem : s.reading);
   return (
     <Squishy
       amount={0.06}
@@ -209,7 +214,7 @@ export function LogRow({ log: { sentence, answer, reading, plan, shown }, onPres
       onPress={() => plan && onPress(plan)}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${detail}`}
-      accessibilityHint={plan ? 'Shows what changes before logging' : undefined}>
+      accessibilityHint={plan ? s.hint : undefined}>
       <View style={styles.row}>
         <View style={[styles.icon, { backgroundColor: t.candy.pink.tint }]}>
           {answer === undefined ? <ActivityIndicator color={t.c.pinkDeep} /> : <SymbolView name="sparkles" size={20} tintColor={t.c.pinkDeep} weight="bold" />}
@@ -261,7 +266,7 @@ export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Plan; o
       actions.stop({ at: plan.at });
       play('boop');
     } else if (open?.contextId === plan.contextId) {
-      actions.updateEntry(open.id, { startUtc: plan.at }, `${context?.name ?? 'It'} since ${formatClock(plan.at)}`);
+      actions.updateEntry(open.id, { startUtc: plan.at }, sheetsText.nameSince(context?.name ?? s.It, formatClock(plan.at)));
     } else {
       actions.start(plan.contextId, { at: plan.at });
       play('pop');
@@ -275,7 +280,7 @@ export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Plan; o
       mode="time"
       display="compact"
       style={styles.picker}
-      locale="en_GB"
+      locale={pickerLocale}
       themeVariant={t.scheme}
       accentColor={t.candy[hue].ink}
       onValueChange={(_, d) => onChange(d)}
@@ -288,14 +293,14 @@ export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Plan; o
       <View style={styles.times}>
         {plan.kind === 'place' ? (
           <>
-            <Text style={[text.headline, { color: t.c.ink }]}>From</Text>
+            <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.from}</Text>
             {picker(plan.from, (d) => setPlan({ ...plan, from: onDay(plan.from, d) }))}
-            <Text style={[text.headline, { color: t.c.ink }]}>to</Text>
+            <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.to}</Text>
             {picker(plan.to, (d) => setPlan({ ...plan, to: Math.min(onDay(plan.to, d), scene.now) }))}
           </>
         ) : (
           <>
-            <Text style={[text.headline, { color: t.c.ink }]}>{plan.kind === 'stop' ? 'Stopped at' : 'Started at'}</Text>
+            <Text style={[text.headline, { color: t.c.ink }]}>{plan.kind === 'stop' ? s.stoppedAt : s.startedAt}</Text>
             {picker(plan.at, (d) => setPlan({ ...plan, at: pastAt(d, scene.now) }))}
           </>
         )}
@@ -306,11 +311,11 @@ export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Plan; o
         ) : changes.length ? (
           changes.map((c) => <ChangeLine key={c.text} {...c} />)
         ) : (
-          <ChangeLine text="Nothing else changes" tone="note" />
+          <ChangeLine text={s.nothingElse} tone="note" />
         )}
       </View>
       <JellyButton label={said.button} hue={hue} size="large" disabled={problem !== null} onPress={apply} style={styles.button} />
-      <JellyButton label="Cancel" palette={t.plainCandy} onPress={onCancel} style={styles.cancel} />
+      <JellyButton label={sheetsText.cancel} palette={t.plainCandy} onPress={onCancel} style={styles.cancel} />
     </View>
   );
 }

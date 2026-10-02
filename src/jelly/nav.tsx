@@ -31,6 +31,8 @@ export function TabStack() {
     <View style={{ flex: 1 }}>
       <Stack
         screenOptions={{
+          // Each screen sets its own title; this keeps the route name out of the error screen's header.
+          title: '',
           contentStyle: { backgroundColor: t.c.bg },
           headerTransparent: true,
           headerShadowVisible: false,

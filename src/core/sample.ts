@@ -1,13 +1,17 @@
 // Three weeks of plausible sample data, so the timeline and reports can be judged
-// before real data exists. Deterministic for a given `now`.
+// before real data exists. Deterministic for a given `now`. Jelly names and notes are in
+// the app's language.
+
+import { coreText } from '@/i18n/core';
 
 import type { Context, ContextId, Entry, EntryId, Hue } from './model';
 import { addDays, HOUR, MINUTE, startOfDay } from './time';
 
+const { names, notes } = coreText.sample;
+
 interface Seed {
-  key: string;
-  name: string;
-  parent?: string;
+  key: keyof typeof names;
+  parent?: keyof typeof names;
   color?: Hue;
   emoji?: string;
   pin?: number;
@@ -17,24 +21,24 @@ interface Seed {
 }
 
 const seeds: Seed[] = [
-  { key: 'job', name: 'Job', color: 'blue', emoji: '💼', pin: 0, target: 40 * 60 },
-  { key: 'deep', name: 'Deep work', parent: 'job', emoji: '🎧', pin: 1 },
-  { key: 'meetings', name: 'Meetings', parent: 'job', color: 'indigo', emoji: '🗣️', pin: 2 },
-  { key: 'clients', name: 'Clients', color: 'violet', emoji: '🤝' },
-  { key: 'acme', name: 'Acme', parent: 'clients', color: 'orange', emoji: '🚀' },
-  { key: 'website', name: 'Website', parent: 'acme', emoji: '🌐', pin: 5 },
-  { key: 'app', name: 'App', parent: 'acme', color: 'red', emoji: '📱' },
-  { key: 'nordlicht', name: 'Nordlicht', parent: 'clients', color: 'teal', emoji: '🌌' },
-  { key: 'side', name: 'Side projects', color: 'green', emoji: '🧪', target: 6 * 60 },
-  { key: 'stint', name: 'Stint', parent: 'side', color: 'lime', emoji: '⏱️', pin: 6 },
-  { key: 'garden', name: 'Garden planner', parent: 'side', emoji: '🌱' },
-  { key: 'home', name: 'Household', color: 'amber', emoji: '🏠' },
-  { key: 'dog', name: 'Dog', parent: 'home', emoji: '🐕', pin: 3, nudge: 60 },
-  { key: 'cooking', name: 'Cooking', parent: 'home', color: 'orange', emoji: '🍳', pin: 7 },
-  { key: 'groceries', name: 'Groceries', parent: 'home', emoji: '🛒' },
-  { key: 'lunch', name: 'Lunch', color: 'pink', emoji: '🥪', pin: 4, nudge: 60 },
-  { key: 'sport', name: 'Sport', color: 'red', emoji: '🏃', pin: 8 },
-  { key: 'thesis', name: 'Thesis', color: 'gray', emoji: '🎓', archived: true },
+  { key: 'job', color: 'blue', emoji: '💼', pin: 0, target: 40 * 60 },
+  { key: 'deep', parent: 'job', emoji: '🎧', pin: 1 },
+  { key: 'meetings', parent: 'job', color: 'indigo', emoji: '🗣️', pin: 2 },
+  { key: 'clients', color: 'violet', emoji: '🤝' },
+  { key: 'acme', parent: 'clients', color: 'orange', emoji: '🚀' },
+  { key: 'website', parent: 'acme', emoji: '🌐', pin: 5 },
+  { key: 'app', parent: 'acme', color: 'red', emoji: '📱' },
+  { key: 'nordlicht', parent: 'clients', color: 'teal', emoji: '🌌' },
+  { key: 'side', color: 'green', emoji: '🧪', target: 6 * 60 },
+  { key: 'stint', parent: 'side', color: 'lime', emoji: '⏱️', pin: 6 },
+  { key: 'garden', parent: 'side', emoji: '🌱' },
+  { key: 'home', color: 'amber', emoji: '🏠' },
+  { key: 'dog', parent: 'home', emoji: '🐕', pin: 3, nudge: 60 },
+  { key: 'cooking', parent: 'home', color: 'orange', emoji: '🍳', pin: 7 },
+  { key: 'groceries', parent: 'home', emoji: '🛒' },
+  { key: 'lunch', color: 'pink', emoji: '🥪', pin: 4, nudge: 60 },
+  { key: 'sport', color: 'red', emoji: '🏃', pin: 8 },
+  { key: 'thesis', color: 'gray', emoji: '🎓', archived: true },
 ];
 
 /** Small deterministic PRNG (mulberry32). */
@@ -49,7 +53,7 @@ function rng(seed: number) {
   };
 }
 
-type Plan = [key: string, minutes: number, gapAfter?: number][];
+type Plan = [key: Seed['key'], minutes: number, gapAfter?: number][];
 
 export function sampleData(
   now: number,
@@ -61,15 +65,15 @@ export function sampleData(
   const pick = <T,>(items: T[]) => items[Math.floor(random() * items.length)];
 
   const ids = new Map(seeds.map((s) => [s.key, newId() as ContextId]));
-  const sortOrders = new Map<string, number>();
+  const sortOrders = new Map<Seed['key'] | null, number>();
   const contexts: Context[] = seeds.map((s) => {
-    const parentKey = s.parent ?? '';
+    const parentKey = s.parent ?? null;
     const sortOrder = sortOrders.get(parentKey) ?? 0;
     sortOrders.set(parentKey, sortOrder + 1);
     return {
       id: ids.get(s.key)!,
       parentId: s.parent ? ids.get(s.parent)! : null,
-      name: s.name,
+      name: names[s.key],
       color: s.color ?? null,
       emoji: s.emoji ?? null,
       pinPosition: s.pin ?? null,
@@ -132,7 +136,7 @@ export function sampleData(
         startOffsetMinutes: offsetAt(start),
         endUtc: running ? null : end,
         endOffsetMinutes: running ? null : offsetAt(end),
-        note: key === 'website' || key === 'app' ? pick(['Navigation polish', 'Checkout bug', 'Call with Jana', null]) : null,
+        note: key === 'website' || key === 'app' ? pick([...notes, null]) : null,
         createdAt: start,
         updatedAt: end,
         deletedAt: null,

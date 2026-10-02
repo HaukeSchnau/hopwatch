@@ -4,6 +4,8 @@
 
 import * as Notifications from 'expo-notifications';
 
+import { coreText } from '@/i18n/core';
+
 import * as db from './db';
 import { requestNudgePermission } from './permissions';
 import { actions, type StintState, useStint } from './store';
@@ -24,7 +26,11 @@ function desiredNudge(state: StintState) {
   const context = state.tree.byId.get(open.contextId);
   if (!context) return null;
   const fireAt = open.startUtc + context.nudgeMinutes * MINUTE;
-  return { key: `${open.id}@${fireAt}`, fireAt, context, entryId: open.id };
+  const emoji = context.glyph ? `${context.glyph} ` : '';
+  const title = `${emoji}${coreText.nudge.title(context.name)}`;
+  const body = coreText.nudge.body(formatDuration(context.nudgeMinutes * MINUTE));
+  // The text is part of the key, so a rename or a new app language reschedules it.
+  return { key: `${open.id}@${fireAt}@${title}@${body}`, fireAt, title, body, entryId: open.id };
 }
 
 async function sync(state: StintState) {
@@ -40,11 +46,10 @@ async function sync(state: StintState) {
 
   if (!(await requestNudgePermission())) return;
 
-  const emoji = want.context.glyph ? `${want.context.glyph} ` : '';
   const notificationId = await Notifications.scheduleNotificationAsync({
     content: {
-      title: `${emoji}Still on ${want.context.name}?`,
-      body: `It's been running for ${formatDuration(want.context.nudgeMinutes * MINUTE)}. Tap to stop it at the right time.`,
+      title: want.title,
+      body: want.body,
       data: { kind: 'nudge', entryId: want.entryId },
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(want.fireAt) },

@@ -3,6 +3,8 @@
 
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { shellText } from '@/i18n/shell';
+
 import { text, useTheme } from './theme';
 
 export function HeaderTitle({ title, subtitle, onPress }: { title: string; subtitle: string; onPress?: () => void }) {
@@ -12,7 +14,7 @@ export function HeaderTitle({ title, subtitle, onPress }: { title: string; subti
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : 'header'}
-      accessibilityHint={onPress ? 'Jumps back to now' : undefined}
+      accessibilityHint={onPress ? shellText.header.jumpHint : undefined}
       style={({ pressed }) => [styles.wrap, pressed && { opacity: 0.5 }]}>
       <Text style={[text.headline, { color: t.c.ink }]} numberOfLines={1}>
         {title}

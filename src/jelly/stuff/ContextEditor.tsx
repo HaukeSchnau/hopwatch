@@ -57,6 +57,7 @@ import {
   subtreeIds,
   useTree,
 } from '@/core';
+import { stuffText } from '@/i18n/stuff';
 
 import { Character } from '../Character';
 import { lookFor } from '../character/derive';
@@ -72,13 +73,12 @@ import { suggestInput, useNameSuggestion } from '../suggestions';
 import { springs, text, useTheme } from '../theme';
 import { confirmDelete } from './StuffScreen';
 
+const s = stuffText.editor;
 const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
 const ROOT = 'root';
 /** One-tap weekly targets and nudges, in minutes; 0 is "none" and "default". */
 const TARGET_CHIPS = [0, 5, 10, 20, 30, 40].map((h) => h * 60);
 const NUDGE_CHIPS = [0, 30, 60, 120, 180];
-/** "5 h", "30 min" */
-const chipLabel = (minutes: number) => (minutes < 60 ? `${minutes} min` : `${minutes / 60} h`);
 
 export function ContextEditor() {
   const params = useLocalSearchParams<{
@@ -90,9 +90,9 @@ export function ContextEditor() {
   const existing = params.id ? (tree.ordered.find((c) => c.id === params.id) ?? null) : null;
   if (params.id && !existing) {
     return (
-      <JellyForm title="Jelly">
+      <JellyForm title={s.title}>
         <Section>
-          <SwiftText modifiers={[secondary]}>This jelly no longer exists.</SwiftText>
+          <SwiftText modifiers={[secondary]}>{s.gone}</SwiftText>
         </Section>
       </JellyForm>
     );
@@ -218,14 +218,14 @@ function Editor({ context, initialParent, pin }: EditorProps) {
   // A new jelly is a draft previewed in the header; an existing one shows its Look editor,
   // whose live jelly follows every edit since they apply at once.
   const draft: PreviewJelly = { id: draftId, hue, glyph, name: name.trim() };
-  const title = context ? context.name : parent ? `New in ${parent.name}` : 'New Jelly';
+  const title = context ? context.name : parent ? s.newIn(parent.name) : s.newJelly;
 
   return (
     <JellyForm
       title={title}
       tint={c.ink}
-      cancel={context ? null : { label: 'Cancel', onPress: () => router.back() }}
-      confirm={context ? { label: 'Done', onPress: () => router.back() } : { label: 'Add', onPress: create, disabled: !name.trim() }}>
+      cancel={context ? null : { label: stuffText.cancel, onPress: () => router.back() }}
+      confirm={context ? { label: s.done, onPress: () => router.back() } : { label: s.add, onPress: create, disabled: !name.trim() }}>
       {context ? (
         <HostedRow
           render={(width) => (
@@ -242,19 +242,19 @@ function Editor({ context, initialParent, pin }: EditorProps) {
               width={width}
               jelly={draft}
               look={suggested ? lookFor(draft, suggested.suggestion) : undefined}
-              title={name.trim() || 'New jelly'}
+              title={name.trim() || s.unnamed}
               bump={bump}
-              subtitle={parent ? `in ${pathLabel(parent)}` : 'Top level'}
+              subtitle={parent ? s.inside(pathLabel(parent)) : s.topLevel}
               suggested={suggestedEmoji !== null || suggestedHue !== null}
             />
           )}
         />
       )}
 
-      <Section title="Name">
+      <Section title={s.name}>
         <TextField
           text={nameState}
-          placeholder="e.g. Deep work"
+          placeholder={s.namePlaceholder}
           autoFocus={!context}
           maxLength={40}
           onTextChange={setName}
@@ -263,22 +263,14 @@ function Editor({ context, initialParent, pin }: EditorProps) {
       </Section>
 
       <Section
-        title="Emoji"
-        footer={
-          <SwiftText>
-            {suggestedEmoji
-              ? 'Suggested for the name. Pick another any time.'
-              : parent && !emoji
-                ? `Uses ${parent.name}'s emoji when empty.`
-                : 'Type any emoji, or pick one.'}
-          </SwiftText>
-        }>
-        <LabeledContent label={suggestedEmoji ? 'Emoji ✨' : 'Emoji'}>
+        title={s.emoji}
+        footer={<SwiftText>{suggestedEmoji ? s.emojiSuggestedFooter : parent && !emoji ? s.emojiInherited(parent.name) : s.emojiFooter}</SwiftText>}>
+        <LabeledContent label={suggestedEmoji ? s.emojiSuggested : s.emoji}>
           <HStack spacing={12}>
             {context ? <SuggestButton context={context} name={name} parentId={parentId} onEmoji={pickEmoji} /> : null}
             <TextField
               text={emojiState}
-              placeholder={parent?.glyph ?? 'None'}
+              placeholder={parent?.glyph ?? s.emojiNone}
               onTextChange={(typed) => {
                 setEmojiTouched(true);
                 const next = firstGrapheme(typed) || null;
@@ -307,10 +299,10 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         </ScrollView>
       </Section>
 
-      <Section title={suggestedHue ? 'Color ✨' : 'Color'} footer={suggestedHue ? <SwiftText>Suggested for the name. Pick another any time.</SwiftText> : undefined}>
+      <Section title={suggestedHue ? s.colorSuggested : s.color} footer={suggestedHue ? <SwiftText>{s.colorSuggestedFooter}</SwiftText> : undefined}>
         {parentId ? (
           <Toggle
-            label={`Same as ${parent?.name ?? 'parent'}`}
+            label={s.sameAs(parent?.name ?? null)}
             isOn={color === null}
             onIsOnChange={(on) => pickColor(on ? null : (parent?.hue ?? 'pink'))}
           />
@@ -318,9 +310,9 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         {shownColor !== null || !parentId ? <Swatches value={shownColor} onChange={pickColor} /> : null}
       </Section>
 
-      <Section title="Place">
+      <Section title={s.place}>
         <Picker
-          label="Inside"
+          label={s.insidePicker}
           selection={parentId ?? ROOT}
           onSelectionChange={(value: string) => {
             const next = value === ROOT ? null : (parents.find((p) => p.id === value)?.id ?? null);
@@ -328,7 +320,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
             if (context) actions.moveContext(context.id, next);
           }}
           modifiers={[pickerStyle('menu')]}>
-          <SwiftText modifiers={[tag(ROOT)]}>Top level</SwiftText>
+          <SwiftText modifiers={[tag(ROOT)]}>{s.topLevel}</SwiftText>
           {parents.map((p) => (
             <SwiftText key={p.id} modifiers={[tag(p.id)]}>
               {`${p.glyph ? `${p.glyph} ` : ''}${pathLabel(p)}`}
@@ -337,7 +329,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         </Picker>
         {context?.hidden ? null : (
           <Toggle
-            label="Pinned to Now"
+            label={s.pinned}
             systemImage="pin"
             isOn={pinned}
             onIsOnChange={(on) => {
@@ -348,10 +340,10 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         )}
       </Section>
 
-      <Section title="Weekly target" footer={<SwiftText>Counts this jelly and everything inside it.</SwiftText>}>
+      <Section title={s.target} footer={<SwiftText>{s.targetFooter}</SwiftText>}>
         <Chips
           options={TARGET_CHIPS}
-          none="None"
+          none={s.targetNone}
           value={target}
           onChange={(next) => {
             setTarget(next);
@@ -360,7 +352,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         />
         {target !== null ? (
           <Stepper
-            label={`${formatDuration(target * MINUTE)} a week`}
+            label={s.perWeek(formatDuration(target * MINUTE))}
             value={target}
             step={60}
             min={60}
@@ -377,10 +369,10 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         ) : null}
       </Section>
 
-      <Section title="Nudge" footer={<SwiftText>Asks whether you forgot to stop when it has run this long.</SwiftText>}>
+      <Section title={s.nudge} footer={<SwiftText>{s.nudgeFooter}</SwiftText>}>
         <Chips
           options={NUDGE_CHIPS}
-          none="Default"
+          none={s.nudgeDefault}
           value={nudge}
           onChange={(next) => {
             setNudge(next);
@@ -389,7 +381,7 @@ function Editor({ context, initialParent, pin }: EditorProps) {
         />
         {nudge !== null ? (
           <Stepper
-            label={`Nudge after ${formatDuration(nudge * MINUTE)}`}
+            label={s.nudgeAfter(formatDuration(nudge * MINUTE))}
             value={nudge}
             step={15}
             min={15}
@@ -401,10 +393,8 @@ function Editor({ context, initialParent, pin }: EditorProps) {
             modifiers={[monospacedDigit()]}
           />
         ) : (
-          <LabeledContent label="Nudges after">
-            <SwiftText modifiers={[secondary, monospacedDigit()]}>
-              {`${formatDuration(inheritedNudge * MINUTE)}${parent ? `, from ${parent.name}` : ''}`}
-            </SwiftText>
+          <LabeledContent label={s.nudgesAfter}>
+            <SwiftText modifiers={[secondary, monospacedDigit()]}>{s.inheritedFrom(formatDuration(inheritedNudge * MINUTE), parent?.name ?? null)}</SwiftText>
           </LabeledContent>
         )}
       </Section>
@@ -448,7 +438,7 @@ function Header({
         {title}
       </Text>
       <Text style={[text.footnote, { color: t.c.muted }]} numberOfLines={1}>
-        {suggested ? `✨ suggested · ${subtitle}` : subtitle}
+        {suggested ? s.suggested(subtitle) : subtitle}
       </Text>
     </View>
   );
@@ -469,7 +459,7 @@ function Chips({ options, none, value, onChange }: { options: number[]; none: st
       modifiers={[pickerStyle('segmented')]}>
       {options.map((m) => (
         <SwiftText key={m} modifiers={[tag(m)]}>
-          {m === 0 ? none : chipLabel(m)}
+          {m === 0 ? none : s.chip(m)}
         </SwiftText>
       ))}
     </Picker>
@@ -493,7 +483,7 @@ function SuggestButton({
   if (!available) return null;
   return (
     <Button
-      label={busy ? 'Thinking…' : 'Suggest'}
+      label={busy ? s.thinking : s.suggest}
       systemImage="sparkles"
       onPress={() => {
         const typed = name.trim() || context.name;
@@ -555,10 +545,10 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
   const link = startLink(context.id);
   return (
     <>
-      <Section title="Start link" footer={<SwiftText>Open it from Shortcuts, the Action Button or Siri to switch to this jelly.</SwiftText>}>
+      <Section title={s.startLink} footer={<SwiftText>{s.startLinkFooter}</SwiftText>}>
         <SwiftText modifiers={[font({ textStyle: 'footnote', design: 'monospaced' }), secondary, textSelection(true)]}>{link}</SwiftText>
         <Button
-          label={copied ? 'Copied' : 'Copy Link'}
+          label={copied ? s.copied : s.copyLink}
           systemImage={copied ? 'checkmark' : 'link'}
           onPress={() => {
             Clipboard.setStringAsync(link);
@@ -569,15 +559,11 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
       </Section>
       <Section
         footer={
-          <SwiftText>
-            {context.archivedAt
-              ? 'Archived jellies stay in history and reports.'
-              : 'Archiving hides it from Now and the pickers. Its time stays in reports.'}
-          </SwiftText>
+          <SwiftText>{context.archivedAt ? s.archivedFooter : s.archiveFooter}</SwiftText>
         }>
         {context.hidden ? null : (
           <Button
-            label="Add Jelly Inside"
+            label={s.addInside}
             systemImage="plus"
             onPress={() =>
               router.push({
@@ -588,7 +574,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
           />
         )}
         <Button
-          label={context.archivedAt ? 'Unarchive' : 'Archive'}
+          label={context.archivedAt ? stuffText.unarchive : stuffText.archive}
           systemImage={context.archivedAt ? 'tray.and.arrow.up' : 'archivebox'}
           onPress={() => {
             buzz.thud();
@@ -599,7 +585,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
             }
           }}
         />
-        <Button role="destructive" label="Delete Jelly" systemImage="trash" onPress={() => confirmDelete(context, () => router.back())} />
+        <Button role="destructive" label={s.delete} systemImage="trash" onPress={() => confirmDelete(context, () => router.back())} />
       </Section>
     </>
   );

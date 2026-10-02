@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 
 import { actions, formatClock, MINUTE, useEntries, useNow, useRunning, useTree } from '@/core';
+import { sheetsText } from '@/i18n/sheets';
 
 import { play } from '../feedback';
 import { startConsequence } from '../menus';
@@ -27,8 +28,8 @@ export function StartSheet() {
 
   if (!context) {
     return (
- <ScrollView contentContainerStyle={sheetBody}>
-        <SheetHeader context={null} title="That jelly is gone" subtitle="It may have been deleted." />
+      <ScrollView contentContainerStyle={sheetBody}>
+        <SheetHeader context={null} title={sheetsText.start.gone} subtitle={sheetsText.start.goneDetail} />
       </ScrollView>
     );
   }
@@ -38,7 +39,7 @@ export function StartSheet() {
   const start = (t: number) => {
     if (isRunning && running) {
       // Correcting the running entry's start, earlier or later.
-      actions.updateEntry(running.entry.id, { startUtc: t }, `${context.name} since ${formatClock(t)}`);
+      actions.updateEntry(running.entry.id, { startUtc: t }, sheetsText.nameSince(context.name, formatClock(t)));
     } else {
       noteSource(context.id, 'start-sheet');
       actions.start(context.id, { at: t });
@@ -51,16 +52,16 @@ export function StartSheet() {
     <ScrollView contentContainerStyle={sheetBody}>
       <SheetHeader
         context={context}
-        title={isRunning ? `${context.name} started earlier` : `Start ${context.name} earlier`}
-        subtitle={isRunning && running ? `Running since ${formatClock(running.entry.startUtc)}` : 'When did it really start?'}
+        title={isRunning ? sheetsText.start.correcting(context.name) : sheetsText.start.backdating(context.name)}
+        subtitle={isRunning && running ? sheetsText.runningSince(formatClock(running.entry.startUtc)) : sheetsText.start.when}
       />
-      <Text style={ss.label}>Started</Text>
+      <Text style={ss.label}>{sheetsText.start.started}</Text>
       <AgoChips hue={context.hue} now={now} options={AGO} onPick={start} />
-      <Text style={ss.label}>Or at</Text>
+      <Text style={ss.label}>{sheetsText.orAt}</Text>
       <TimeWheel value={picked} onChange={setPicked} hue={context.hue} />
       <Text style={ss.hint}>{startConsequence(entries, tree, context.id, at, now)?.text ?? ' '}</Text>
       <JellyButton
-        label={isRunning ? `Move start to ${formatClock(at)}` : `Start at ${formatClock(at)}`}
+        label={isRunning ? sheetsText.moveStartTo(formatClock(at)) : sheetsText.startAt(formatClock(at))}
         hue={context.hue}
         size="large"
         onPress={() => start(at)}

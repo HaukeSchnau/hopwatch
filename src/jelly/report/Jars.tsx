@@ -7,6 +7,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { formatDuration, formatSignedDuration, type TargetLine } from '@/core';
+import { weekText } from '@/i18n/week';
 
 import { buzz, play } from '../feedback';
 import { alpha, tabular, text, useTheme } from '../theme';
@@ -82,7 +83,7 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
           play('plink');
         }
       }}
-      accessibilityLabel={`${line.context.name}: ${formatDuration(line.actual)} of ${formatDuration(line.target)}`}
+      accessibilityLabel={weekText.jarLabel(line.context.name, formatDuration(line.actual), formatDuration(line.target))}
       style={styles.jar}>
       <View style={{ width: W, height: H }}>
         <Canvas style={{ width: W, height: H }}>

@@ -19,6 +19,8 @@ import {
   stopLink,
   useStint,
 } from '@/core';
+import { locale } from '@/i18n';
+import { settingsText } from '@/i18n/settings';
 
 import { Character } from '../Character';
 import { suggestForContext } from '../character/suggest';
@@ -30,6 +32,7 @@ import { text, useTheme } from '../theme';
 
 /** System red, so erasing never reads like the pink actions around it. */
 const DANGER = '#FF3B30';
+const { intelligence, shortcuts, data } = settingsText;
 
 export function SettingsSheet() {
   const t = useTheme();
@@ -46,7 +49,7 @@ export function SettingsSheet() {
 
   const confirm = (title: string, message: string, label: string, run: () => void) =>
     Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
+      { text: settingsText.cancel, style: 'cancel' },
       {
         text: label,
         style: 'destructive',
@@ -64,54 +67,44 @@ export function SettingsSheet() {
     const result = await pickBackup().catch((e: unknown) => ({ ok: false as const, reason: String(e) }));
     if (!result) return;
     if (!result.ok) {
-      Alert.alert("Can't restore this file", result.reason);
+      Alert.alert(data.cantRestore, result.reason);
       return;
     }
     const { backup } = result;
     const jellies = backup.contexts.filter((c) => c.deletedAt === null).length;
     const logged = backup.entries.filter((e) => e.deletedAt === null).length;
-    const from = backup.exportedAt ? ` from ${formatLongDay(backup.exportedAt)}` : '';
-    const replacing = contexts > 0 ? ' Everything on this iPhone now gets replaced.' : '';
-    confirm('Restore this backup?', `The export${from} has ${jellies} jellies and ${logged} entries.${replacing}`, 'Restore', () =>
-      actions.restore(backup),
-    );
+    const day = backup.exportedAt ? formatLongDay(backup.exportedAt) : null;
+    confirm(data.restoreTitle, data.restoreMessage(day, jellies, logged, contexts > 0), data.restoreConfirm, () => actions.restore(backup));
   };
 
   return (
-    <JellyForm title="Settings" cancel={null} confirm={{ label: 'Done', onPress: () => router.back() }}>
+    <JellyForm title={settingsText.title} cancel={null} confirm={{ label: settingsText.done, onPress: () => router.back() }}>
       <HostedRow color={t.candy.pink.tint} render={(width) => <Idea width={width} />} />
-      <Section title="Jelly">
-        <Toggle label="Squishy sounds" systemImage="speaker.wave.2" isOn={sounds} onIsOnChange={setSounds} />
+      <Section title={settingsText.jelly}>
+        <Toggle label={settingsText.sounds} systemImage="speaker.wave.2" isOn={sounds} onIsOnChange={setSounds} />
       </Section>
       <AppleIntelligence />
-      <Section
-        title="Shortcuts"
-        footer={<SwiftText>Open these from the Shortcuts app, the Action Button or an automation. Each jelly has its own start link in its editor.</SwiftText>}>
-        <Button label={copied === stopLink ? 'Copied Stop Link' : 'Copy Stop Link'} systemImage="stop.circle" onPress={() => copy(stopLink)} />
-        <Button label={copied === resumeLink ? 'Copied Resume Link' : 'Copy Resume Link'} systemImage="play.circle" onPress={() => copy(resumeLink)} />
+      <Section title={shortcuts.title} footer={<SwiftText>{shortcuts.footer}</SwiftText>}>
+        <Button label={copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop} systemImage="stop.circle" onPress={() => copy(stopLink)} />
+        <Button label={copied === resumeLink ? shortcuts.copiedResume : shortcuts.copyResume} systemImage="play.circle" onPress={() => copy(resumeLink)} />
       </Section>
-      <Section title="Data" footer={<SwiftText>{`${contexts} jellies and ${entries} entries, stored on this iPhone.`}</SwiftText>}>
-        <Button label="Export JSON" systemImage="square.and.arrow.up" onPress={() => shareExport().catch((e: unknown) => Alert.alert('Export failed', String(e)))} />
-        <Button label="Restore from Export" systemImage="square.and.arrow.down" onPress={restore} />
+      <Section title={data.title} footer={<SwiftText>{data.footer(contexts, entries)}</SwiftText>}>
+        <Button label={data.export} systemImage="square.and.arrow.up" onPress={() => shareExport().catch((e: unknown) => Alert.alert(data.exportFailed, String(e)))} />
+        <Button label={data.restore} systemImage="square.and.arrow.down" onPress={restore} />
         <Button
           role="destructive"
           modifiers={[tint(DANGER), foregroundStyle(DANGER)]}
-          label="Erase All Data"
+          label={data.erase}
           systemImage="trash"
-          onPress={() => confirm('Erase all data?', 'Every jelly and every entry goes. Export first if you want a backup.', 'Erase', eraseAllData)}
+          onPress={() => confirm(data.eraseTitle, data.eraseMessage, data.eraseConfirm, eraseAllData)}
         />
       </Section>
     </JellyForm>
   );
 }
 
-const statusText: Record<Availability, string> = {
-  available: 'Ready',
-  appleIntelligenceNotEnabled: 'Off. Turn on Apple Intelligence in the Settings app.',
-  modelNotReady: 'The model is still downloading. Try again later.',
-  deviceNotEligible: 'Not supported on this iPhone.',
-  unsupported: 'Needs iOS 26 or later.',
-};
+/** "1.2" or "1,2" seconds. */
+const tenths = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
  * The on-device model's status and a test request, so a silent fallback can be told apart
@@ -134,32 +127,25 @@ function AppleIntelligence() {
   const tryIt = async () => {
     setBusy(true);
     const started = Date.now();
-    const suggestion = await suggestForContext({ name: 'Espresso run', ancestors: [], siblings: [], wantEmoji: true, wantHue: true });
-    const seconds = ((Date.now() - started) / 1000).toFixed(1);
+    const name = intelligence.sample;
+    const suggestion = await suggestForContext({ name, ancestors: [], siblings: [], wantEmoji: true, wantHue: true });
+    const seconds = tenths.format((Date.now() - started) / 1000);
     setBusy(false);
     setState(await availability().catch((): Availability => 'unsupported'));
     if (suggestion) {
       const { emoji, hue, topic, traits } = suggestion;
-      const look = topic ? `the ${topic} look` : 'the look its name points at';
-      const mood = traits.motion ? ` and a ${traits.motion} mood` : '';
-      Alert.alert('It works', `"Espresso run" got ${emoji ?? 'no emoji'}, ${hue ?? 'no color'}, ${look}${mood}, in ${seconds} s.`);
+      Alert.alert(intelligence.worked, intelligence.got({ name, emoji, hue, topic, motion: traits.motion, seconds }));
     } else {
-      Alert.alert('No suggestion', `${lastFailure() ?? 'The model gave no answer.'} (${seconds} s)`);
+      Alert.alert(intelligence.none, `${lastFailure() ?? intelligence.noAnswer} (${seconds} s)`);
     }
   };
 
   return (
     <Section
       title="Apple Intelligence"
-      footer={
-        <SwiftText>
-          {
-            'While you name a new jelly, it suggests an emoji, a look and a mood, and a color for jellies at the top level. Existing jellies get dressed up in the background. It also writes the summary on the Week tab and reads what you type when picking a jelly, like "2h deep work this morning". Everything works without it.'
-          }
-        </SwiftText>
-      }>
-      <SwiftText>{state ? statusText[state] : 'Checking…'}</SwiftText>
-      <Button label={busy ? 'Asking…' : 'Try a Suggestion'} systemImage="sparkles" onPress={tryIt} />
+      footer={<SwiftText>{intelligence.footer}</SwiftText>}>
+      <SwiftText>{state ? intelligence.status[state] : intelligence.checking}</SwiftText>
+      <Button label={busy ? intelligence.asking : intelligence.try} systemImage="sparkles" onPress={tryIt} />
     </Section>
   );
 }
@@ -176,9 +162,7 @@ function Idea({ width }: { width: number }) {
       <Character context={mascot} size={84} face={face} />
       <View style={styles.ideaText}>
         <Text style={[text.title3, { color: t.c.ink }]}>Stint</Text>
-        <Text style={[text.subhead, { color: t.c.ink, opacity: 0.75 }]}>
-          {"Every context is a gummy with a face. The one you're on wakes up in the dial; the rest nap in their slots until you tap them."}
-        </Text>
+        <Text style={[text.subhead, { color: t.c.ink, opacity: 0.75 }]}>{settingsText.idea}</Text>
       </View>
     </View>
   );

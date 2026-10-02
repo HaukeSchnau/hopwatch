@@ -18,6 +18,8 @@ import {
 } from 'react-native';
 
 import { addDays, type EntryId, formatDuration, startOfDay, useDayReport, useNow, useRunning } from '@/core';
+import { dayText } from '@/i18n/day';
+import { shellText } from '@/i18n/shell';
 
 import { CandyDial, dayBeans } from '../dial/CandyDial';
 import { dialFrame, pointDeg, pointRadius, timeAtDeg } from '../dial/geometry';
@@ -40,7 +42,9 @@ export function DayScreen() {
   const running = useRunning();
   const axis = axisFor(report, now);
   const dayEnd = addDays(day, 1);
+  // Today and future days: gaps can only be filled up to now. Only today shows the now pin.
   const live = now < dayEnd;
+  const isToday = live && now >= day;
 
   // The scroll view is keyed by day, so every day starts at the top and opens once.
   const scroll = useRef<ScrollView>(null);
@@ -111,10 +115,10 @@ export function DayScreen() {
         <HeaderTitle title={titles.title} subtitle={titles.subtitle} onPress={day === today ? undefined : () => go(today)} />
       </Stack.Title>
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="chevron.left" accessibilityLabel="Previous day" onPress={() => go(addDays(day, -1))} />
+        <Stack.Toolbar.Button icon="chevron.left" accessibilityLabel={shellText.header.previous('day')} onPress={() => go(addDays(day, -1))} />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel="Next day" onPress={() => go(addDays(day, 1))} />
+        <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel={shellText.header.next('day')} onPress={() => go(addDays(day, 1))} />
       </Stack.Toolbar>
       <ScrollView
         key={day}
@@ -124,19 +128,19 @@ export function DayScreen() {
         contentContainerStyle={styles.content}>
         <Pressable
           onPress={tapDial}
-          accessibilityLabel="The day's dial. Tap a bean to find it, a gap to fill it"
+          accessibilityLabel={dayText.dialLabel}
           style={[styles.dial, { width: frame.size, height: frame.size }]}>
-          <CandyDial frame={frame} dayStart={day} dayEnd={dayEnd} beans={beans} now={live ? now : null} />
+          <CandyDial frame={frame} dayStart={day} dayEnd={dayEnd} beans={beans} now={isToday ? now : null} />
           <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
-            <Text style={[text.footnote, { color: t.c.muted }]}>tracked</Text>
+            <Text style={[text.footnote, { color: t.c.muted }]}>{dayText.tracked}</Text>
             <Text style={[styles.total, tabular, { color: t.c.ink }]}>{formatDuration(report.totals.total)}</Text>
             <Text style={[text.footnote, tabular, { color: t.c.muted }]}>
-              {blocks} {blocks === 1 ? 'bean' : 'beans'}
-              {blocks ? ` · median ${formatDuration(median)}` : ''}
+              {dayText.beans(blocks)}
+              {blocks ? dayText.median(formatDuration(median)) : ''}
             </Text>
             {day <= today && (
               <Text style={[text.caption, styles.hint, { color: t.c.faint }]}>
-                {blocks ? 'Tap an arc to find it,\na gap to fill it' : 'Tap the ring to fill a gap'}
+                {blocks ? dayText.hint : dayText.emptyHint}
               </Text>
             )}
           </View>
@@ -146,7 +150,7 @@ export function DayScreen() {
           <View style={[styles.emptyCard, { backgroundColor: t.c.card }]}>
             <Text style={styles.emptyEmoji}>{day > today ? '🔮' : '🫘'}</Text>
             <Text style={[text.subhead, styles.empty, { color: t.c.muted }]}>
-              {day > today ? "This day hasn't happened yet." : 'No beans this day. Tap the dotted space to add what you did.'}
+              {day > today ? dayText.future : dayText.empty}
             </Text>
           </View>
         )}

@@ -4,6 +4,8 @@
 import { randomUUID } from 'expo-crypto';
 import { create } from 'zustand';
 
+import { coreText } from '@/i18n/core';
+
 import type { Backup } from './backup';
 import * as db from './db';
 import type { LinkAction } from './links';
@@ -119,7 +121,8 @@ function commitContexts(rows: Context[]) {
   set({ contexts, tree: tree.buildTree(contexts) });
 }
 
-const nameOf = (id: ContextId | null) => (id && get().tree.byId.get(id)?.name) ?? 'context';
+const toast = coreText.toast;
+const nameOf = (id: ContextId | null) => (id && get().tree.byId.get(id)?.name) ?? toast.unknown;
 const findContext = (id: ContextId) => get().contexts.find((c) => c.id === id);
 
 function updateContextRow(id: ContextId, change: (c: Context, now: number) => Context) {
@@ -139,14 +142,14 @@ export const actions = {
   /** Switches to a context. `at` backdates the start. */
   start(contextId: ContextId, opts: { at?: number } = {}) {
     const rows = timeline.start(get().entries, contextId, clock(), opts.at);
-    commitEntries(rows, { kind: 'start', label: `Switched to ${nameOf(contextId)}`, contextId });
+    commitEntries(rows, { kind: 'start', label: toast.switched(nameOf(contextId)), contextId });
   },
 
   /** Stops the running entry. `at` backdates the stop. */
   stop(opts: { at?: number } = {}) {
     const open = timeline.findOpen(get().entries);
     const rows = timeline.stop(get().entries, clock(), opts.at);
-    commitEntries(rows, { kind: 'stop', label: `Stopped ${nameOf(open?.contextId ?? null)}`, contextId: open?.contextId ?? null });
+    commitEntries(rows, { kind: 'stop', label: toast.stopped(nameOf(open?.contextId ?? null)), contextId: open?.contextId ?? null });
   },
 
   /**
@@ -160,7 +163,7 @@ export const actions = {
     const rows = timeline.start(get().entries, id, clock(), opts.at);
     commitEntries(rows, {
       kind: running ? 'back' : 'resume',
-      label: `${running ? 'Back to' : 'Resumed'} ${nameOf(id)}`,
+      label: (running ? toast.back : toast.resumed)(nameOf(id)),
       contextId: id,
     });
   },
@@ -177,7 +180,7 @@ export const actions = {
   },
 
   /** Edits an entry. `label` replaces the toast's generic "Entry updated". */
-  updateEntry(id: EntryId, patch: timeline.EntryPatch, label = 'Entry updated') {
+  updateEntry(id: EntryId, patch: timeline.EntryPatch, label = toast.updated) {
     const rows = timeline.update(get().entries, id, patch, clock());
     const entry = rows.find((r) => r.id === id);
     commitEntries(rows, { kind: 'edit', label, contextId: entry?.contextId ?? null });
@@ -186,13 +189,13 @@ export const actions = {
   deleteEntry(id: EntryId) {
     const entry = get().entries.find((e) => e.id === id);
     const rows = timeline.remove(get().entries, id, clock());
-    commitEntries(rows, { kind: 'delete', label: `Deleted ${nameOf(entry?.contextId ?? null)}`, contextId: entry?.contextId ?? null });
+    commitEntries(rows, { kind: 'delete', label: toast.deleted(nameOf(entry?.contextId ?? null)), contextId: entry?.contextId ?? null });
   },
 
   /** Creates an entry for [from, to], clamped to the gap it falls into. */
   fillGap(contextId: ContextId, from: number, to: number) {
     const rows = timeline.fillGap(get().entries, contextId, from, to, clock());
-    commitEntries(rows, { kind: 'fill', label: `Added ${nameOf(contextId)}`, contextId });
+    commitEntries(rows, { kind: 'fill', label: toast.added(nameOf(contextId)), contextId });
   },
 
   /**
@@ -201,7 +204,7 @@ export const actions = {
    */
   place(contextId: ContextId, from: number, to: number) {
     const rows = timeline.place(get().entries, contextId, from, to, clock());
-    commitEntries(rows, { kind: 'place', label: `Added ${nameOf(contextId)}`, contextId });
+    commitEntries(rows, { kind: 'place', label: toast.added(nameOf(contextId)), contextId });
   },
 
   /** Hides the undo toast without undoing. */

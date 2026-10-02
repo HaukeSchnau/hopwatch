@@ -6,6 +6,8 @@ import { getDocumentAsync } from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
+import { coreText } from '@/i18n/core';
+
 import { backupPayload, type ParseResult, parseBackup } from './backup';
 import * as db from './db';
 import { useStint } from './store';
@@ -17,7 +19,7 @@ export async function shareExport(): Promise<void> {
   if (file.exists) file.delete();
   file.create();
   file.write(JSON.stringify(payload, null, 2));
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Export Stint data' });
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: coreText.exportTitle });
 }
 
 /**
@@ -31,7 +33,7 @@ export async function pickBackup(): Promise<ParseResult | null> {
   try {
     return parseBackup(JSON.parse(await file.text()));
   } catch {
-    return { ok: false, reason: 'This file is not a Stint export.' };
+    return { ok: false, reason: coreText.backup.notAnExport };
   } finally {
     if (file.exists) file.delete();
   }

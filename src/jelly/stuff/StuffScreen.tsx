@@ -10,6 +10,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimens
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { actions, formatDuration, MINUTE, pathLabel, type ResolvedContext, useNow, useRunning, useTree } from '@/core';
+import { stuffText } from '@/i18n/stuff';
 
 import { Character } from '../Character';
 import { buzz, play } from '../feedback';
@@ -35,18 +36,18 @@ export function StuffScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ backgroundColor: t.c.bg }} contentContainerStyle={styles.content} keyboardDismissMode="on-drag">
       <Stack.Title large largeStyle={{ color: t.c.ink }} style={{ color: t.c.ink }}>
-        Stuff
+        {stuffText.title}
       </Stack.Title>
-      <Stack.SearchBar placement="stacked" hideWhenScrolling={false} placeholder="Find a jelly" onChangeText={(e) => setQuery(e.nativeEvent.text)} onCancelButtonPress={() => setQuery('')} />
+      <Stack.SearchBar placement="stacked" hideWhenScrolling={false} placeholder={stuffText.find} onChangeText={(e) => setQuery(e.nativeEvent.text)} onCancelButtonPress={() => setQuery('')} />
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="gearshape" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
+        <Stack.Toolbar.Button icon="gearshape" accessibilityLabel={stuffText.settings} onPress={() => router.push('/settings')} />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="plus" accessibilityLabel="New jelly" onPress={() => router.push('/context')} />
+        <Stack.Toolbar.Button icon="plus" accessibilityLabel={stuffText.newJelly} onPress={() => router.push('/context')} />
       </Stack.Toolbar>
 
       <Text style={[text.footnote, styles.caption, { color: t.c.muted }]}>
-        {q ? `${visible.length} ${visible.length === 1 ? 'match' : 'matches'}` : `${live} ${live === 1 ? 'jelly' : 'jellies'} · tap to start, hold or swipe for more`}
+        {q ? stuffText.matches(visible.length) : stuffText.caption(live)}
       </Text>
       <View style={[styles.card, { backgroundColor: t.c.card }]}>
         {visible.map((c, i) => (
@@ -60,13 +61,13 @@ export function StuffScreen() {
             flat={q.length > 0}
           />
         ))}
-        {visible.length === 0 && <Text style={[text.body, styles.none, { color: t.c.muted }]}>{`No jelly matches “${query}”.`}</Text>}
+        {visible.length === 0 && <Text style={[text.body, styles.none, { color: t.c.muted }]}>{stuffText.noMatch(query)}</Text>}
       </View>
 
       {archivedCount > 0 && !q && (
         <View style={[styles.card, styles.archived, { backgroundColor: t.c.card }]}>
-          <Text style={[text.body, { color: t.c.ink }]}>Show archived ({archivedCount})</Text>
-          <Switch value={showArchived} onValueChange={setShowArchived} trackColor={{ true: t.c.pink }} accessibilityLabel="Show archived" />
+          <Text style={[text.body, { color: t.c.ink }]}>{stuffText.showArchivedCount(archivedCount)}</Text>
+          <Switch value={showArchived} onValueChange={setShowArchived} trackColor={{ true: t.c.pink }} accessibilityLabel={stuffText.showArchived} />
         </View>
       )}
     </ScrollView>
@@ -90,11 +91,11 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
   const pinned = context.pinPosition !== null;
   const archived = context.archivedAt !== null;
   const meta = [
-    running && 'running',
-    pinned && 'pinned',
-    context.weeklyTargetMinutes !== null && `${formatDuration(context.weeklyTargetMinutes * MINUTE)} a week`,
-    context.nudgeAfterMinutes !== null && `nudge after ${formatDuration(context.nudgeAfterMinutes * MINUTE)}`,
-    archived && 'archived',
+    running && stuffText.meta.running,
+    pinned && stuffText.meta.pinned,
+    context.weeklyTargetMinutes !== null && stuffText.meta.perWeek(formatDuration(context.weeklyTargetMinutes * MINUTE)),
+    context.nudgeAfterMinutes !== null && stuffText.meta.nudgeAfter(formatDuration(context.nudgeAfterMinutes * MINUTE)),
+    archived && stuffText.meta.archived,
   ].filter(Boolean);
   const depth = flat ? 0 : context.depth;
   const startItems = useStartMenu(context, now, running);
@@ -125,15 +126,15 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
       containerStyle={styles.swipe}
       renderLeftActions={(_p, _x, swipe) =>
         context.hidden ? null : (
-          <SwipeAction icon={pinned ? 'pin.slash.fill' : 'pin.fill'} label={pinned ? 'Unpin' : 'Pin'} color={t.candy.orange.fill} swipe={swipe} onPress={() => onMenu('pin')} />
+          <SwipeAction icon={pinned ? 'pin.slash.fill' : 'pin.fill'} label={pinned ? stuffText.unpin : stuffText.pin} color={t.candy.orange.fill} swipe={swipe} onPress={() => onMenu('pin')} />
         )
       }
       renderRightActions={(_p, _x, swipe) => (
         <View style={styles.actions}>
-          <SwipeAction icon="pencil" label="Edit" color={t.candy.gray.fill} swipe={swipe} onPress={() => edit(context.id)} />
+          <SwipeAction icon="pencil" label={stuffText.edit} color={t.candy.gray.fill} swipe={swipe} onPress={() => edit(context.id)} />
           <SwipeAction
             icon={archived ? 'tray.and.arrow.up.fill' : 'archivebox.fill'}
-            label={archived ? 'Unarchive' : 'Archive'}
+            label={archived ? stuffText.unarchive : stuffText.archive}
             color={t.candy.indigo.fill}
             swipe={swipe}
             onPress={() => onMenu('archive')}
@@ -144,12 +145,12 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
         title={pathLabel(context)}
         onPress={onMenu}
         items={[
-          ...(context.hidden ? [{ id: 'edit', title: `Edit ${context.name}`, image: 'pencil' as const }] : startItems),
-          { id: 'child', title: 'Add inside', image: 'plus' },
-          ...(context.hidden ? [] : [{ id: 'pin', title: pinned ? 'Unpin from Now' : 'Pin to Now', image: pinned ? ('pin.slash' as const) : ('pin' as const) }]),
-          { id: 'move', title: 'Move…', image: 'arrow.turn.down.right' },
-          { id: 'archive', title: archived ? 'Unarchive' : 'Archive', image: archived ? 'tray.and.arrow.up' : 'archivebox' },
-          { id: 'delete', title: 'Delete', image: 'trash', destructive: true },
+          ...(context.hidden ? [{ id: 'edit', title: stuffText.editName(context.name), image: 'pencil' as const }] : startItems),
+          { id: 'child', title: stuffText.addInside, image: 'plus' },
+          ...(context.hidden ? [] : [{ id: 'pin', title: pinned ? stuffText.unpinFromNow : stuffText.pinToNow, image: pinned ? ('pin.slash' as const) : ('pin' as const) }]),
+          { id: 'move', title: stuffText.move, image: 'arrow.turn.down.right' },
+          { id: 'archive', title: archived ? stuffText.unarchive : stuffText.archive, image: archived ? 'tray.and.arrow.up' : 'archivebox' },
+          { id: 'delete', title: stuffText.delete, image: 'trash', destructive: true },
         ]}>
         <View style={[styles.row, { width }]}>
           {depth > 0 && <Guides depth={depth} color={alpha(t.c.ink, 0.08)} />}
@@ -157,8 +158,8 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
             style={({ pressed }) => [styles.main, pressed && { opacity: 0.6 }]}
             onPress={start}
             accessibilityRole="button"
-            accessibilityLabel={context.hidden ? `Edit ${context.name}` : `Start ${context.name}`}
-            accessibilityHint="Hold for more options">
+            accessibilityLabel={context.hidden ? stuffText.editName(context.name) : stuffText.startName(context.name)}
+            accessibilityHint={stuffText.holdHint}>
             <Character context={context} size={46} mood={running ? 'awake' : 'asleep'} shadow={false} dim={context.hidden} style={styles.jelly} />
             <View style={styles.titles}>
               <Text style={[text.body, { color: context.hidden ? t.c.muted : t.c.ink }]} numberOfLines={1}>
@@ -171,7 +172,7 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
               )}
             </View>
           </Pressable>
-          <Pressable onPress={() => edit(context.id)} hitSlop={6} accessibilityRole="button" accessibilityLabel={`Edit ${context.name}`} style={styles.info}>
+          <Pressable onPress={() => edit(context.id)} hitSlop={6} accessibilityRole="button" accessibilityLabel={stuffText.editName(context.name)} style={styles.info}>
             <SymbolView name="info.circle" size={21} tintColor={t.c.pinkDeep} />
           </Pressable>
           {!last && <View style={[styles.separator, { left: 16 + depth * 18 + 64, backgroundColor: t.c.line }]} />}
@@ -222,15 +223,15 @@ function Guides({ depth, color }: { depth: number; color: string }) {
 }
 
 export function confirmDelete(context: ResolvedContext, after?: () => void) {
-  Alert.alert(`Delete ${context.name}?`, 'Jellies with history or children are archived instead, so reports keep their time.', [
-    { text: 'Cancel', style: 'cancel' },
+  Alert.alert(stuffText.deleteTitle(context.name), stuffText.deleteMessage, [
+    { text: stuffText.cancel, style: 'cancel' },
     {
-      text: 'Delete',
+      text: stuffText.delete,
       style: 'destructive',
       onPress: () => {
         const result = actions.deleteContext(context.id);
         buzz.thud();
-        if (result === 'archived') Alert.alert('Archived instead', `${context.name} has history, so it was archived. Find it under "Show archived".`);
+        if (result === 'archived') Alert.alert(stuffText.archivedInstead, stuffText.archivedInsteadMessage(context.name));
         after?.();
       },
     },

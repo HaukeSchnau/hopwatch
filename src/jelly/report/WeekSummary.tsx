@@ -15,6 +15,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { summaryText } from '@/i18n/summary';
+
 import { Character } from '../Character';
 import { useFace, useLively } from '../Gummy';
 import type { PreviewJelly } from '../preview';
@@ -47,7 +49,7 @@ function Bubble({ summary }: { summary: SummaryState }) {
       entering={popIn}
       style={styles.row}
       accessible
-      accessibilityLabel={summary === 'writing' ? 'Writing a summary of the week' : `Summary by Apple Intelligence. ${summary.text}`}>
+      accessibilityLabel={summary === 'writing' ? summaryText.writing : summaryText.label(summary.text)}>
       <Character context={mascot} size={46} face={face} sticker={false} />
       <View style={[styles.bubble, { backgroundColor: c.tint }]}>
         <View style={[styles.tail, { backgroundColor: c.tint }]} />
