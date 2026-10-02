@@ -112,7 +112,7 @@ case "${1:-}" in
     bw-personal get password cafe27d5-dc69-4924-8ad9-0ec6da104004 | ssh m1 'umask 077; cat > ~/.hopwatch-expo-token'
     # EAS_NO_VCS: the checkout is an rsync copy, not a git repository.
     remote "export EXPO_TOKEN=\$(cat ~/.hopwatch-expo-token) EAS_NO_VCS=1 EAS_PROJECT_ROOT=\$PWD; rm -f ~/.hopwatch-expo-token; npm ci --no-audit --no-fund >/dev/null && \
-      npx --yes eas-cli@latest update --channel production --environment production --platform ios --message $(printf '%q' "$message") --non-interactive"
+      npx --yes eas-cli@latest update --channel production --environment production --platform all --message $(printf '%q' "$message") --non-interactive"
     ;;
   android-dev)
     REMOTE_DIR=$ANDROID_DIR
