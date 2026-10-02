@@ -18,7 +18,8 @@
 #                                              run `ad UDID open dev.schnau.stint` first
 #
 # Launching takes ~15 s (it retries if the dev launcher times out on Metro). Set WAIT=seconds
-# to change how long run/view wait after that before the first step (default 8).
+# to change how long run/view wait after that before the first step (default 8), and
+# SIM_LANG=de to launch in German.
 #
 # Deep links opened from outside (simctl openurl) stop at iOS's "Open in …?" prompt, so
 # routes are passed as a -stintRoute launch argument that the app reads in development.
@@ -35,6 +36,8 @@ launch() {
   local route_args=""
   # %q quotes the route for the remote shell, so spaces and ? survive.
   [ -n "${2:-}" ] && route_args="-stintRoute $(printf '%q' "$2")"
+  # SIM_LANG=de launches the app in German (src/i18n reads AppleLanguages).
+  [ -n "${SIM_LANG:-}" ] && route_args="$route_args -AppleLanguages '($SIM_LANG)' -AppleLocale ${SIM_LANG}_DE"
   local port=$METRO_PORT metro="https://$METRO_HOST"
   for attempt in 1 2 3; do
     # The dev launcher gives up on the manifest after 10 s, and a busy Metro sometimes
