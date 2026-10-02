@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- App Store Connect upload for TestFlight; internal testing only, so builds skip beta review. -->
+<!-- App Store Connect upload: internal TestFlight testers get every build without beta review, and the same build can be submitted to the App Store (an internal-only build could not). -->
 <plist version="1.0">
 <dict>
   <key>method</key>
@@ -11,8 +11,6 @@
   <string>2243J9RD68</string>
   <key>signingStyle</key>
   <string>automatic</string>
-  <key>testFlightInternalTestingOnly</key>
-  <true/>
   <key>uploadSymbols</key>
   <true/>
   <key>manageAppVersionAndBuildNumber</key>
