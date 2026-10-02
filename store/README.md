@@ -48,6 +48,20 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   required and encrypted in transit; no accounts; the optional deletion question is left
   blank. Revisit it when the app gains a network call or an SDK that sends data, and keep it
   in line with the privacy policy.
+- Signing: Play App Signing with a Google-generated app signing key (the console's default;
+  Play signs what it delivers). Our Bitwarden key ("Hopwatch Play upload key", CN=Hopwatch,
+  O=Urbs UG, SHA-256 92:A8:D2:2E:…:B6:DC) is the upload key, registered by the first upload.
+  Fingerprints of both are under Protected with Play › App signing.
+- Releases: `scripts/m1.sh android-release` builds the signed AAB into `dist/`. Upload it in
+  the console (Test and release › Internal testing › Create new release), since an API edit
+  would also commit the queued listing. Release notes go in one `<en-US>…</en-US><de-DE>…</de-DE>`
+  block; check that both languages survive "Save as draft" before publishing (the German one got
+  dropped once). The bundle is too big for the console's browser bridge in one piece; it went
+  in through chunked `eval` calls and a `DataTransfer` on the upload input.
+- Internal testing: first release 1.1.0 (versionCode 29849538) rolled out 2026-10-02, no
+  review needed. Testers: the email list "Hauke" (haukeschnau@gmail.com). Opt-in link:
+  https://play.google.com/apps/internaltest/4701468743687124341. Until the app has passed a
+  first review, testers see it as "dev.schnau.hopwatch (unreviewed)".
 
 ## Screenshots
 
@@ -63,3 +77,19 @@ onboarding, a status bar override (`xcrun simctl status_bar … override --time 
 --batteryState discharging --batteryLevel 100`) and, for German, the app launched with
 `-AppleLanguages "(de)" -AppleLocale de_DE` before loading the sample data. The week shots show
 last week, whose summary reads better than the running week's.
+
+`screenshots/play/<locale>/{phone,tablet-7,tablet-10}/` holds the Google Play screenshots,
+rendered by `screenshots/render.sh play` from `screenshots/raw/android/<set>/<locale>/`: the
+same captions without the two Apple Intelligence shots (`only: 'app-store'` in `shots.js`), so
+four per set. Phone and 7-inch frames are 1080 x 1920, 10-inch ones 1440 x 2560 (Play wants at
+least 1080 px a side there), all 9:16. Both languages are on the listing: en-US as the default,
+de-DE replacing the inherited English images in the translation.
+
+The captures come from the release AAB, turned into a universal APK with bundletool from the
+M1's Gradle cache and installed on three emulators from the android-36 Google APIs image:
+`hopwatch-pixel` (Pixel 9, 1080 x 2424) for phones, `hopwatch-tablet-7` (Nexus 7 2013 profile,
+1200 x 1920) and `hopwatch-tablet-10` (Pixel Tablet profile, rotated to portrait, 1600 x 2560).
+Before capturing: clock set to Friday 15:08 (`adb root`, `date`), SystemUI demo mode for a
+15:09 clock, full Wi-Fi and battery and no notification icons, app data cleared, per-app locale
+set (`cmd locale set-app-locales dev.schnau.hopwatch --locales de` for German), sample data
+loaded in onboarding. Light mode, except the Stuff shot (`cmd uimode night yes`).

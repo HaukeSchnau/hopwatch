@@ -1,7 +1,8 @@
-// The App Store screenshots, in store order: which raw simulator capture each frame shows
-// (raw/<locale>/<raw>), its caption per locale (the second line is the candy-colored one)
-// and whether the frame uses the plum night background. frame.html renders one of them,
-// render.sh renders them all. No em dashes in captions.
+// The store screenshots, in store order: which raw capture each frame shows (raw/<locale>/<raw>
+// from the iOS simulator, raw/android/<set>/<locale>/<raw> from the Android emulator), its
+// caption per locale (the second line is the candy-colored one), whether the frame uses the
+// plum night background, and `only` for a shot one store leaves out. frame.html renders one
+// of them, render.sh renders them all. No em dashes in captions.
 window.SHOTS = [
   {
     id: 'now',
@@ -29,6 +30,8 @@ window.SHOTS = [
   },
   {
     id: 'typed',
+    // Apple Intelligence, which the Android app doesn't have.
+    only: 'app-store',
     raw: 'typed-log.png',
     caption: {
       'en-US': ['Forgot one?', 'Just type it.'],
@@ -37,6 +40,8 @@ window.SHOTS = [
   },
   {
     id: 'new-jelly',
+    // Apple Intelligence, which the Android app doesn't have.
+    only: 'app-store',
     raw: 'new-jelly.png',
     caption: {
       'en-US': ['Name it.', 'It dresses the part.'],
