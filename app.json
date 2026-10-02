@@ -2,7 +2,7 @@
   "expo": {
     "name": "Stint",
     "slug": "stint",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "stint",
@@ -13,7 +13,11 @@
       "supportsTablet": false,
       "icon": "./assets/stint.icon",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": [
+          "en",
+          "de"
+        ]
       },
       "buildNumber": "1"
     },
