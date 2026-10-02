@@ -8,7 +8,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { actions, type Hue, loadSampleData, useStint, useTree } from '@/core';
+import { actions, type Hue, loadSampleData, useHopwatch, useTree } from '@/core';
 import { optionNames } from '@/i18n/character';
 
 import { Character } from '../Character';
@@ -95,7 +95,7 @@ function LiveCell({ source, size }: { source: Sample; size: number }) {
 /** Runs the background dress-up and lists what the model picked per context. */
 function DressUp({ contexts }: { contexts: Sample[] }) {
   useDressUp();
-  const prefs = useStint((state) => state.prefs);
+  const prefs = useHopwatch((state) => state.prefs);
   return (
     <Section title="Dress-up">
       {contexts.slice(0, 9).map((c) => {

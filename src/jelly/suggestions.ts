@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { type ContextId, useStint } from '@/core';
+import { type ContextId, useHopwatch } from '@/core';
 
 import type { SuggestInput, Suggestion } from './character/ask';
 import { suggestForContext, useModelAvailable } from './character/suggest';
@@ -18,7 +18,7 @@ export interface NameSuggestion {
 
 /** The parent path and siblings of a jelly under `parentId`, as the model wants them. */
 export function suggestInput(name: string, parentId: ContextId | null, self: ContextId | null, wantEmoji: boolean): SuggestInput {
-  const tree = useStint.getState().tree;
+  const tree = useHopwatch.getState().tree;
   const parent = parentId ? tree.byId.get(parentId) : undefined;
   const siblingIds = parent ? parent.childIds : tree.roots;
   return {

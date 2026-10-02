@@ -15,17 +15,18 @@
 #                                              or the status and Metro's error
 #   scripts/sim.sh ad UDID ARGS...             run one agent-device command against UDID (session
 #                                              sf-UDID) under the lock, e.g. `ad UDID snapshot -i`;
-#                                              run `ad UDID open dev.schnau.stint` first
+#                                              run `ad UDID open dev.schnau.hopwatch` first
 #
 # Launching takes ~15 s (it retries if the dev launcher times out on Metro). Set WAIT=seconds
 # to change how long run/view wait after that before the first step (default 8), and
 # SIM_LANG=de to launch in German.
 #
 # Deep links opened from outside (simctl openurl) stop at iOS's "Open in …?" prompt, so
-# routes are passed as a -stintRoute launch argument that the app reads in development.
+# routes are passed as a -hopwatchRoute launch argument that the app reads in development.
 set -euo pipefail
 
-BUNDLE=dev.schnau.stint
+# Dev clients built before the rename carry dev.schnau.stint; SIM_BUNDLE overrides.
+BUNDLE=${SIM_BUNDLE:-dev.schnau.hopwatch}
 AD='~/.t3/device/tools/agent-device@0.21.7/node_modules/.bin/agent-device'
 
 # The development Metro (agent-service metro-all) and its Tailnet URL.
@@ -35,7 +36,7 @@ METRO_HOST=px-b8ee4debfe-metro-all.schnau.dev
 launch() {
   local route_args=""
   # %q quotes the route for the remote shell, so spaces and ? survive.
-  [ -n "${2:-}" ] && route_args="-stintRoute $(printf '%q' "$2")"
+  [ -n "${2:-}" ] && route_args="-hopwatchRoute $(printf '%q' "$2")"
   # SIM_LANG=de launches the app in German (src/i18n reads AppleLanguages).
   [ -n "${SIM_LANG:-}" ] && route_args="$route_args -AppleLanguages '($SIM_LANG)' -AppleLocale ${SIM_LANG}_DE"
   local port=$METRO_PORT metro="https://$METRO_HOST"

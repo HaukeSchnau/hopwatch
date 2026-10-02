@@ -1,8 +1,9 @@
 # Hopwatch
 
 A personal time tracker for iOS (Android in progress), formerly called Stint (spec:
-`docs/spec.md`), with one design, Jelly. Code names and IDs still say stint
-(dev.schnau.stint, stint://, useStint); the user-facing name is Hopwatch. Start with
+`docs/spec.md`), with one design, Jelly. IDs: dev.schnau.hopwatch (iOS and Android),
+hopwatch://, Expo project @haukeschnau/hopwatch. The repo folder is still called stint, and
+exports from before the rename (app: 'stint') still restore. Start with
 `notes/progress.md` for the current state, then `docs/architecture.md`.
 
 - `src/core`: data model, timeline domain module (the only writer of entries), store,

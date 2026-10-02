@@ -49,6 +49,10 @@ describe('parseBackup', () => {
     expect(result).toEqual({ ok: true, backup: { exportedAt: T0, contexts: work, entries, prefs } });
   });
 
+  it('restores exports from before the rename to Hopwatch', () => {
+    expect(parseBackup({ ...file(work, []), app: 'stint' }).ok).toBe(true);
+  });
+
   it('accepts the Stint Five format without prefs', () => {
     const { prefs: _, ...v1 } = { ...file(work, []), schemaVersion: 1 };
     const result = parseBackup(v1);

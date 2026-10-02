@@ -17,7 +17,7 @@ import {
   previewStart,
   type ResolvedContext,
   useEntries,
-  useStint,
+  useHopwatch,
   useTree,
 } from '@/core';
 import { menuText } from '@/i18n/menus';
@@ -91,8 +91,8 @@ export function useStartMenu(context: ResolvedContext, now: number, running: boo
 export function onStartMenu(contextId: ContextId, event: string, source?: string) {
   if (event.startsWith('ago:')) {
     const at = Date.now() - Number(event.slice(4)) * MINUTE;
-    const open = useStint.getState().entries.find((e) => e.endUtc === null);
-    const context = useStint.getState().tree.byId.get(contextId);
+    const open = useHopwatch.getState().entries.find((e) => e.endUtc === null);
+    const context = useHopwatch.getState().tree.byId.get(contextId);
     buzz.success();
     if (open && open.contextId === contextId) {
       actions.updateEntry(open.id, { startUtc: at }, menuText.movedStart(context?.name, formatClock(at)));

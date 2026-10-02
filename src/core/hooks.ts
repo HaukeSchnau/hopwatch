@@ -6,20 +6,20 @@ import { AppState } from 'react-native';
 
 import type { ContextId, EntryId } from './model';
 import { dayReport, weekReport } from './reports';
-import { type Json, type LastAction, useStint } from './store';
+import { type Json, type LastAction, useHopwatch } from './store';
 import { addDays } from './time';
 import { findOpen, gapAt, previousContextId } from './timeline';
 import { pickable, type ResolvedContext } from './tree';
 
-export const useTree = () => useStint((s) => s.tree);
-export const useEntries = () => useStint((s) => s.entries);
+export const useTree = () => useHopwatch((s) => s.tree);
+export const useEntries = () => useHopwatch((s) => s.entries);
 
 export function useContextById(id: ContextId | null | undefined): ResolvedContext | null {
-  return useStint((s) => (id ? (s.tree.byId.get(id) ?? null) : null));
+  return useHopwatch((s) => (id ? (s.tree.byId.get(id) ?? null) : null));
 }
 
 export function useEntry(id: EntryId | null | undefined) {
-  return useStint((s) => (id ? (s.entries.find((e) => e.id === id) ?? null) : null));
+  return useHopwatch((s) => (id ? (s.entries.find((e) => e.id === id) ?? null) : null));
 }
 
 /** Contexts that can be started: not archived, not under an archived parent. */
@@ -152,7 +152,7 @@ export function useGapAt(at: number | null) {
  * last timeline change; render it while `visible`.
  */
 export function useUndoToast(windowMs = 5000): { action: LastAction | null; visible: boolean } {
-  const action = useStint((s) => s.lastAction);
+  const action = useHopwatch((s) => s.lastAction);
   // The action whose window has run out. A screen mounting after the window starts hidden.
   const [expired, setExpired] = useState<LastAction | null>(() =>
     action && action.at + windowMs <= Date.now() ? action : null,
@@ -170,9 +170,9 @@ export function useUndoToast(windowMs = 5000): { action: LastAction | null; visi
  * stored JSON and returns undefined when it doesn't fit, e.g. after a format change.
  */
 export function usePref<T>(key: string, fallback: T, parse: (value: Json) => T | undefined): T {
-  const stored = useStint((s) => s.prefs[key]);
+  const stored = useHopwatch((s) => s.prefs[key]);
   return stored === undefined ? fallback : (parse(stored) ?? fallback);
 }
 
 /** A pending request from outside the app, e.g. a tapped nudge asking for the stop sheet. */
-export const useIntent = () => useStint((s) => s.intent);
+export const useIntent = () => useHopwatch((s) => s.intent);

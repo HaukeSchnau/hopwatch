@@ -7,7 +7,7 @@ import { type Availability, availability, generate } from '@modules/on-device-mo
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { actions, type ContextId, type ContextTree, type Json, type ResolvedContext, useStint } from '@/core';
+import { actions, type ContextId, type ContextTree, type Json, type ResolvedContext, useHopwatch } from '@/core';
 
 import { isCurrent, parseSuggestion, readAnswer, requestFor, type SuggestInput, type Suggestion, suggestionJson } from './ask';
 import { customKey, suggestedKey } from './look';
@@ -81,7 +81,7 @@ const tried = new Set<string>();
 let queue: Promise<void> = Promise.resolve();
 
 async function dressUp(id: ContextId, name: string, glyph: string | null, key: string) {
-  const state = useStint.getState();
+  const state = useHopwatch.getState();
   const context = state.tree.byId.get(id);
   // Renamed, re-emojied or gone meanwhile: the new name or emoji gets its own turn.
   if (!context || context.name !== name || context.glyph !== glyph || !wantsDressUp(context, state.prefs)) return;
@@ -105,7 +105,7 @@ export function useDressUp(): void {
   useEffect(() => {
     if (!ready) return;
     const visit = (tree: ContextTree) => {
-      const { prefs } = useStint.getState();
+      const { prefs } = useHopwatch.getState();
       for (const context of tree.ordered) {
         const key = `${context.id}\n${context.name}\n${context.glyph ?? ''}`;
         if (context.hidden || tried.has(key) || !wantsDressUp(context, prefs)) continue;
@@ -113,9 +113,9 @@ export function useDressUp(): void {
         queue = queue.then(() => dressUp(context.id, context.name, context.glyph, key)).catch(() => undefined);
       }
     };
-    visit(useStint.getState().tree);
+    visit(useHopwatch.getState().tree);
     // Subscribing here, not with a hook, so the layout hosting this never re-renders for it.
-    return useStint.subscribe((state, previous) => {
+    return useHopwatch.subscribe((state, previous) => {
       if (state.tree !== previous.tree) visit(state.tree);
     });
   }, [ready]);

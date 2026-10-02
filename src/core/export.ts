@@ -10,11 +10,11 @@ import { coreText } from '@/i18n/core';
 
 import { backupPayload, type ParseResult, parseBackup } from './backup';
 import * as db from './db';
-import { useStint } from './store';
+import { useHopwatch } from './store';
 
 export async function shareExport(): Promise<void> {
   const exportedAt = new Date();
-  const payload = backupPayload({ ...db.dumpAll(), prefs: { ...useStint.getState().prefs } }, exportedAt);
+  const payload = backupPayload({ ...db.dumpAll(), prefs: { ...useHopwatch.getState().prefs } }, exportedAt);
   const file = new File(Paths.cache, `hopwatch-export-${exportedAt.toISOString().slice(0, 10)}.json`);
   if (file.exists) file.delete();
   file.create();

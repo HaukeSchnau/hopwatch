@@ -1,15 +1,15 @@
 // Deep links for Shortcuts, the Action Button and Siri:
-//   stint://start?context=<id>   switch to that context
-//   stint://stop                 stop the running entry
-//   stint://resume               start the previous context again
+//   hopwatch://start?context=<id>   switch to that context
+//   hopwatch://stop                 stop the running entry
+//   hopwatch://resume               start the previous context again
 
 import type { ContextId } from './model';
 
-export const SCHEME = 'stint';
+export const SCHEME = 'hopwatch';
 
 export type LinkAction = { kind: 'start'; contextId: ContextId } | { kind: 'stop' } | { kind: 'resume' };
 
-/** Parses a URL or router path such as "stint://start?context=…" or "/stop". */
+/** Parses a URL or router path such as "hopwatch://start?context=…" or "/stop". */
 export function parseLink(pathOrUrl: string): LinkAction | null {
   const withoutScheme = pathOrUrl.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/^\/+/, '');
   const [route, query = ''] = withoutScheme.split('?');

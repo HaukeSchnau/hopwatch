@@ -7,7 +7,7 @@
 import type { LiveActivity } from 'expo-widgets';
 import { AppState, DynamicColorIOS } from 'react-native';
 
-import { findOpen, type Hue, previousContextId, type StintState, useStint } from '@/core';
+import { findOpen, type Hue, previousContextId, type HopwatchState, useHopwatch } from '@/core';
 import { widgetText } from '@/i18n/widgets';
 import { darkTheme, lightTheme, mix } from '@/jelly/theme';
 
@@ -35,7 +35,7 @@ function paint(hue: Hue): Pick<RunningActivityProps, 'candy' | 'paint'> {
 }
 
 /** The activity's content for the running entry, or null when nothing runs. */
-function describe(state: StintState): RunningActivityProps | null {
+function describe(state: HopwatchState): RunningActivityProps | null {
   const open = findOpen(state.entries);
   const context = open && state.tree.byId.get(open.contextId);
   if (!open || !context) return null;
@@ -84,7 +84,7 @@ const isUnavailable = (error: unknown) =>
  */
 export function startLiveActivity(): () => void {
   const enqueue = () => {
-    const want = describe(useStint.getState());
+    const want = describe(useHopwatch.getState());
     queue = queue
       .then(() => sync(want))
       .catch((error: unknown) => {
@@ -92,7 +92,7 @@ export function startLiveActivity(): () => void {
       });
   };
   enqueue();
-  const unsubscribe = useStint.subscribe((state, prev) => {
+  const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries !== prev.entries || state.tree !== prev.tree) enqueue();
   });
   const foreground = AppState.addEventListener('change', (status) => status === 'active' && enqueue());

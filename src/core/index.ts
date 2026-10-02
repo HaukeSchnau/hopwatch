@@ -24,8 +24,8 @@ export {
   type Json,
   type LastAction,
   newContextId,
-  type StintState,
-  useStint,
+  type HopwatchState,
+  useHopwatch,
 } from './store';
 export * from './time';
 export { type EntryPatch, findOpen, type Gap, type PlacePreview, previewPlace, previousContextId, previewStart, type StartPreview } from './timeline';
