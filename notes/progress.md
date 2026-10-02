@@ -86,6 +86,26 @@ his phone until he moves his data over (export there, restore here).
 - Unconfirmed on device: cold launch from a Live Activity link in Release, the compact
   island timer past one hour.
 
+- Apple Intelligence beyond the emoji (2026-10-02, all four of Hauke's picks):
+  - Characters: one request per jelly asks topic + mood (+ emoji and color while naming a
+    new top-level jelly). The topic dresses the whole look (topics.ts `dress`), picks are
+    keyed to name and emoji (`{ v: 2, … }`), failures aren't stored. Eyes and mouth picks
+    were tested and dropped (30/46 "sparkly"). Eval: ~42/46 topics, ~42/46 moods.
+  - Week summary: `src/core/week-facts.ts` builds at most 3 facts, the model phrases them,
+    `checkSummary` rejects numbers/weekdays not in the facts; cached per week in prefs
+    `jelly.summary.<date>`. Text is accurate but plain; tune by OTA.
+  - Typed logging: pick sheet search ("Find a jelly or type what you did"), model fills 7
+    strings, `src/core/sentence.ts` resolves and validates, a confirmation card shows
+    consequences, `timeline.place` applies. Eval 33/33 (`scripts/sentence-eval.ts`), 9 of
+    them thanks to code overrides.
+  - Latency on the loaded M1: ~2.5–4 s per request; unmeasured on the phone.
+- M1 gotcha: Apple Intelligence needs Siri's language to match the system language. Siri
+  drifted to de-DE through iCloud sync and the model went `modelNotReady` for hours (the
+  simulator then fails with "Simulator is not supported"). Infra set it back to en-US and
+  turned off Siri iCloud sync on m1; don't change those settings.
+- OTA: EAS project @haukeschnau/stint, channel production, runtime = app version. First
+  OTA-capable build is the next TestFlight upload; `scripts/ota.sh "message"` after that.
+
 ## Next
 
 1. Commit the builders' work, final QA (light/dark), `scripts/m1.sh testflight`.

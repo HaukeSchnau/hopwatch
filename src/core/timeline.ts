@@ -257,6 +257,66 @@ export function fillGap(
 }
 
 /**
+ * Logs `contextId` for [from, to] over whatever is already there: entries inside are
+ * removed, entries hanging over an edge are trimmed, and one spanning the block is split
+ * around it. Both times are clamped to now. The running entry goes on after a block that
+ * ends before now, and stops at `from` when the block reaches now. Blocks under 30
+ * seconds change nothing.
+ */
+export function place(
+  entries: readonly Entry[],
+  contextId: ContextId,
+  from: number,
+  to: number,
+  clock: Clock,
+): Entry[] {
+  const end = Math.min(to, clock.now);
+  const start = Math.min(from, end);
+  if (end - start < MIN_ENTRY_MS) return [];
+  const d = draft(entries, clock);
+  carve(d, clock, start, end >= clock.now ? null : end);
+  d.put(newEntry(clock, contextId, start, end));
+  return d.result();
+}
+
+/** What placing a block does to the entries already there. */
+export interface PlacePreview {
+  /** The entry cut short at the block's start, and where. A running one stops there. */
+  ended: { entry: Entry; at: number } | null;
+  /** The entry that now starts at the block's end instead. */
+  started: { entry: Entry; at: number } | null;
+  /** The entry the block lands inside: it keeps its start and its end. */
+  split: Entry | null;
+  /** Entries the block covers whole, or leaves too short to keep. */
+  replaced: Entry[];
+}
+
+/**
+ * What `place(entries, contextId, from, to, …)` would do to the other entries, without
+ * doing it, so the UI can say "Replaces Cooking 12:10–12:40" first.
+ */
+export function previewPlace(entries: readonly Entry[], contextId: ContextId, from: number, to: number, now: number): PlacePreview {
+  const before = new Map(entries.filter(isLive).map((e) => [e.id, e]));
+  let ids = 0;
+  const clock: Clock = { now, offsetAt: () => 0, newId: () => `preview-${ids++}` as EntryId };
+  const rows = place(entries, contextId, from, to, clock);
+  const end = Math.min(to, now);
+  const start = Math.min(from, end);
+  // Only a block ending before now can land inside an entry; one reaching now cuts it.
+  const inside = rows.length > 0 && end < now;
+  const split = inside ? [...before.values()].find((e) => e.startUtc < start && endOf(e) > end) : undefined;
+  const preview: PlacePreview = { ended: null, started: null, split: split ?? null, replaced: [] };
+  for (const row of rows) {
+    const was = before.get(row.id);
+    if (!was || was === split) continue;
+    if (row.deletedAt !== null) preview.replaced.push(was);
+    else if (row.startUtc !== was.startUtc) preview.started = { entry: was, at: row.startUtc };
+    else if (row.endUtc !== null) preview.ended = { entry: was, at: row.endUtc };
+  }
+  return preview;
+}
+
+/**
  * The context "Back to previous" should return to. While an entry runs, that is the
  * latest earlier entry with a different context. When nothing runs, it is the context
  * of the most recent entry, which the UI offers as "Resume".
