@@ -105,7 +105,9 @@ his phone until he moves his data over (export there, restore here).
   simulator then fails with "Simulator is not supported"). Infra set it back to en-US and
   turned off Siri iCloud sync on m1; don't change those settings.
 - OTA: EAS project @haukeschnau/stint, channel production, runtime = app version. First
-  OTA-capable build is the next TestFlight upload; `scripts/m1.sh ota "message"` after that
+  OTA-capable build: TestFlight 202610020056 (also has the AI round). First update
+  published 2026-10-02 (same code, 01a0fa2f…), served for runtime 1.0.0; not yet seen
+  applying on the phone; `scripts/m1.sh ota "message"` after that
     (published from the M1: hermesc has no Linux arm64 build, srv-2 is aarch64).
 
 ## Next

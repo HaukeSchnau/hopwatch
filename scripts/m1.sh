@@ -87,8 +87,9 @@ case "${1:-}" in
     # build. The developer-role Expo robot from Hauke's Bitwarden goes over in a private
     # file rather than on a command line.
     bw-personal get password cafe27d5-dc69-4924-8ad9-0ec6da104004 | ssh m1 'umask 077; cat > ~/.stint-expo-token'
-    remote "export EXPO_TOKEN=\$(cat ~/.stint-expo-token); rm -f ~/.stint-expo-token; npm ci --no-audit --no-fund >/dev/null && \
-      npx --yes eas-cli@latest update --channel production --platform ios --message $(printf '%q' "$message") --non-interactive"
+    # EAS_NO_VCS: the checkout is an rsync copy, not a git repository.
+    remote "export EXPO_TOKEN=\$(cat ~/.stint-expo-token) EAS_NO_VCS=1 EAS_PROJECT_ROOT=\$PWD; rm -f ~/.stint-expo-token; npm ci --no-audit --no-fund >/dev/null && \
+      npx --yes eas-cli@latest update --channel production --environment production --platform ios --message $(printf '%q' "$message") --non-interactive"
     ;;
   asc)
     shift
