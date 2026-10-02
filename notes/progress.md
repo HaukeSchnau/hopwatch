@@ -174,6 +174,20 @@ his phone until he moves his data over (export there, restore here).
 - Store screenshots exceed jj's 1 MiB snapshot limit; decide at commit (ignore raw/,
   compress finals or raise snapshot.max-new-file-size for the repo).
 
+- App Store listing done on 6818526671 (store/app-store + scripts/app-store.mjs; 12 framed
+  screenshots). Open: App Privacy is saved as "Data Not Collected" but unpublished; the
+  accurate label would be Identifiers › Device ID (+ Diagnostics for the update error),
+  not linked, no tracking. Asked Hauke; Play already declares it that way.
+- Google Play draft app 4975816330263293130 (Urbs), package dev.schnau.hopwatch: all App
+  content declarations (18+, IARC Everyone/USK 0, data safety: device IDs + crash logs via
+  Expo, nothing shared), listing en/de with icon and feature graphic (console only: an API
+  commit would send everything for review), internal testing list "Hauke" with
+  haukeschnau@gmail.com. Missing: a working AAB (first upload in the console sets up Play
+  App Signing with the Bitwarden upload key), phone + 7"/10" tablet screenshots,
+  production countries, the Play button on the website.
+- Fixed: generate() 20 s timeout; week summary "behind pace" instead of hours to go;
+  AD_ID permission blocked. In-app privacy/help links requested from the forms porter.
+
 ## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
 
 Rename everything that still says stint, once no agents are working:
