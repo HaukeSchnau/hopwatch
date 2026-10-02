@@ -1,7 +1,7 @@
 // Week (and Day): where the time went. A native segmented control switches the range;
-// the header steps through weeks or days. Bubbles sized by time, candy jars for weekly
-// targets, the expandable tree of totals with copy buttons, and bead strings showing how
-// fragmented each day was.
+// the header steps through weeks or days. A few sentences about the week from the
+// on-device model, bubbles sized by time, candy jars for weekly targets, the expandable
+// tree of totals with copy buttons, and bead strings showing how fragmented each day was.
 
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -34,6 +34,7 @@ import { BeadString, WeekBeads } from './Beads';
 import { Bubbles } from './Bubbles';
 import { Jars } from './Jars';
 import { TotalsTree } from './TotalsTree';
+import { WeekSummary } from './WeekSummary';
 
 type Mode = 'day' | 'week';
 const modes: Mode[] = ['day', 'week'];
@@ -89,7 +90,13 @@ function WeekBody({ week, now }: { week: number; now: number }) {
   const targets = new Map(report.targets.map((line) => [line.context.id, line]));
   return (
     <>
-      <Overview totals={report.totals} label="tracked this week" range={{ start: report.start, end: report.end }} targets={targets} now={now}>
+      <Overview
+        totals={report.totals}
+        label="tracked this week"
+        range={{ start: report.start, end: report.end }}
+        targets={targets}
+        now={now}
+        summary={<WeekSummary weekStart={week} />}>
         {report.targets.length > 0 && (
           <>
             <SectionTitle style={styles.section}>Target jars</SectionTitle>
@@ -131,13 +138,17 @@ function DayBeads({ report, width }: { report: DayReport; width: number }) {
   );
 }
 
-/** Big total, the bubbles, then `children` (the jars), then the totals tree for a range. */
+/**
+ * Big total, the `summary` in words, the bubbles, then `children` (the jars), then the
+ * totals tree for a range.
+ */
 function Overview({
   totals,
   label,
   range,
   targets,
   now,
+  summary,
   children,
 }: {
   totals: Totals;
@@ -145,6 +156,7 @@ function Overview({
   range: { start: number; end: number };
   targets: ReadonlyMap<ContextId, TargetLine>;
   now: number;
+  summary?: ReactNode;
   children?: ReactNode;
 }) {
   const t = useTheme();
@@ -176,6 +188,7 @@ function Overview({
         <Text style={[styles.total, tabular, { color: t.c.ink }]}>{formatDuration(totals.total)}</Text>
         <Text style={[text.footnote, { color: t.c.muted }]}>{label}</Text>
       </View>
+      {summary}
       <View style={styles.bubbles}>
         <Bubbles nodes={totals.roots} width={width - 32} height={Math.min(250, 90 + totals.roots.length * 26)} onPick={(id) => toggle(id)} />
       </View>
