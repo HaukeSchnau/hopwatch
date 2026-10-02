@@ -48,7 +48,7 @@ the migration steps in `db.ts`.
 - Native changes (a new native package, a config plugin, native settings in app.json):
   bump `version` in app.json, then `scripts/m1.sh testflight`. The build reaches Hauke's
   internal TestFlight group on its own.
-- JavaScript and asset changes: `scripts/ota.sh "What changed"` publishes an EAS Update to
+- JavaScript and asset changes: `scripts/m1.sh ota "What changed"` publishes an EAS Update to
   the `production` channel. Release builds download it when they come to the foreground
   and switch to it the next time they go to the background (`src/shell/updates.ts`).
   Updates only reach builds whose runtime version (the app `version`) matches. That's

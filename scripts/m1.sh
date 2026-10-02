@@ -9,6 +9,9 @@
 #                                    development-signed .ipa to ios/build/export on m1
 #   scripts/m1.sh testflight         sync, then archive a Release build with a fresh build
 #                                    number and upload it to App Store Connect for TestFlight
+#   scripts/m1.sh ota "What changed" sync, then publish the JS to installed release builds over the
+#                                    air (EAS Update, channel production). JS and assets only;
+#                                    native changes need a version bump and a TestFlight build
 #   scripts/m1.sh asc METHOD PATH [JSON]
 #                                    call the App Store Connect API (see scripts/asc.mjs)
 set -euo pipefail
@@ -73,13 +76,27 @@ case "${1:-}" in
       xcodebuild -exportArchive -archivePath ios/build/$SCHEME.xcarchive -exportPath ios/build/upload \
         -exportOptionsPlist scripts/export-testflight.plist $auth | tail -20"
     ;;
+  ota)
+    message="${2:?usage: scripts/m1.sh ota \"What changed\"}"
+    # Its own checkout, since builder-control runs two jobs at once and an npm ci here
+    # must not pull node_modules out from under a running archive.
+    REMOTE_DIR=Developer/stint-ota
+    ssh m1 "mkdir -p ~/$REMOTE_DIR"
+    sync
+    # Published from the M1 because hermesc, which compiles the bundle, has no Linux arm64
+    # build. The developer-role Expo robot from Hauke's Bitwarden goes over in a private
+    # file rather than on a command line.
+    bw-personal get password cafe27d5-dc69-4924-8ad9-0ec6da104004 | ssh m1 'umask 077; cat > ~/.stint-expo-token'
+    remote "export EXPO_TOKEN=\$(cat ~/.stint-expo-token); rm -f ~/.stint-expo-token; npm ci --no-audit --no-fund >/dev/null && \
+      npx --yes eas-cli@latest update --channel production --platform ios --message $(printf '%q' "$message") --non-interactive"
+    ;;
   asc)
     shift
     # The key is readable over plain SSH, so API calls don't queue behind builds.
     ssh -o LogLevel=error m1 "node --input-type=module - $(printf '%q ' "$@")" <scripts/asc.mjs
     ;;
   *)
-    sed -n '2,13p' "$0"
+    sed -n '2,16p' "$0"
     exit 1
     ;;
 esac

@@ -29,7 +29,8 @@ his phone until he moves his data over (export there, restore here).
 
 - `ssh m1` = M1 builder (Xcode 27). `scripts/m1.sh` syncs to `m1:~/Developer/stint-v1`.
   Don't touch `~/Developer/stint` or `~/Developer/stint-lab` (other threads);
-  `~/Developer/stint-five` is the old Stint Five checkout.
+  `~/Developer/stint-five` is the old Stint Five checkout; `~/Developer/stint-ota` is
+  `scripts/m1.sh ota`'s own checkout.
 - Signing: team 2243J9RD68, automatic signing with the ASC API key at
   /run/secrets/app-store-connect/api-key on m1. The keychain is only unlocked in Hauke's
   GUI session (`builder-control run --gui`). Use the system `pod` on m1.
@@ -104,7 +105,8 @@ his phone until he moves his data over (export there, restore here).
   simulator then fails with "Simulator is not supported"). Infra set it back to en-US and
   turned off Siri iCloud sync on m1; don't change those settings.
 - OTA: EAS project @haukeschnau/stint, channel production, runtime = app version. First
-  OTA-capable build is the next TestFlight upload; `scripts/ota.sh "message"` after that.
+  OTA-capable build is the next TestFlight upload; `scripts/m1.sh ota "message"` after that
+    (published from the M1: hermesc has no Linux arm64 build, srv-2 is aarch64).
 
 ## Next
 

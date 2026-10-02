@@ -1,7 +1,7 @@
 import { AppState } from 'react-native';
 
 /**
- * Keeps release builds current with EAS Update (see scripts/ota.sh). expo-updates on its
+ * Keeps release builds current with EAS Update (see `scripts/m1.sh ota`). expo-updates on its
  * own applies a downloaded update at the next cold start, and iOS keeps a time tracker
  * alive for days. So: every return to the foreground checks and downloads, and once an
  * update is waiting, the app reloads into it when it goes to the background, where nobody
