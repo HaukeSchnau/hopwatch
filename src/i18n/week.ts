@@ -6,7 +6,8 @@ import { localized } from '.';
 export const weekText = localized({
   en: {
     ranges: { day: 'Day', week: 'Week' },
-    trackedWeek: 'tracked this week',
+    /** Under the week's total; `other` for any week but the current one. */
+    trackedWeek: (other?: boolean): string => (other ? 'tracked that week' : 'tracked this week'),
     trackedDay: 'tracked this day',
     jars: 'Target jars',
     beadsPerDay: 'Beads per day',
@@ -25,7 +26,7 @@ export const weekText = localized({
   },
   de: {
     ranges: { day: 'Tag', week: 'Woche' },
-    trackedWeek: 'diese Woche erfasst',
+    trackedWeek: (other) => (other ? 'in dieser Woche erfasst' : 'diese Woche erfasst'),
     trackedDay: 'an diesem Tag erfasst',
     jars: 'Zielgläser',
     beadsPerDay: 'Perlen pro Tag',

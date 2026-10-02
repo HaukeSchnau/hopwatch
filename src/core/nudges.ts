@@ -1,8 +1,10 @@
 // The forgotten-timer nudge: one local notification per running entry, due when the
 // entry exceeds its context's nudge threshold. Rescheduled whenever the running entry
-// or the tree changes; nothing runs in the background.
+// or the tree changes; nothing runs in the background. On Android, nudges have their own
+// notification channel, so they can be turned off or tuned on their own.
 
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
 import { coreText } from '@/i18n/core';
 
@@ -19,6 +21,24 @@ interface Scheduled {
 
 let scheduled: Scheduled | null = null;
 let queue = Promise.resolve();
+
+/** The Android notification channel for nudges. */
+const CHANNEL = 'nudges';
+
+/**
+ * Creates the nudge channel, or renames it after a language change. Android 13 and later
+ * only show the permission prompt once a channel exists.
+ */
+async function setUpChannel() {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(CHANNEL, {
+    name: coreText.nudge.channel,
+    description: coreText.nudge.channelDescription,
+    // A heads-up banner, silent like the nudge on iOS.
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: null,
+  });
+}
 
 function desiredNudge(state: HopwatchState) {
   const open = findOpen(state.entries);
@@ -52,7 +72,7 @@ async function sync(state: HopwatchState) {
       body: want.body,
       data: { kind: 'nudge', entryId: want.entryId },
     },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(want.fireAt) },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(want.fireAt), channelId: CHANNEL },
   });
   scheduled = { key: want.key, notificationId };
   db.setMeta('nudge', JSON.stringify(scheduled));
@@ -79,6 +99,8 @@ export function startNudges(): () => void {
   const saved = db.getMeta('nudge');
   scheduled = saved ? (JSON.parse(saved) as Scheduled) : null;
 
+  // Nudges wait for their channel.
+  queue = setUpChannel().catch((error) => console.warn('nudge channel failed', error));
   const enqueue = (state: HopwatchState) => {
     queue = queue.then(() => sync(state)).catch((error) => console.warn('nudge sync failed', error));
   };

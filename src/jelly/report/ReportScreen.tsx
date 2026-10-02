@@ -6,7 +6,7 @@
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useState } from 'react';
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import {
   addDays,
@@ -21,6 +21,7 @@ import {
   useDayReport,
   useEntries,
   useNow,
+  useRunning,
   useTree,
   useWeekReport,
 } from '@/core';
@@ -29,7 +30,8 @@ import { weekText } from '@/i18n/week';
 
 import { buzz } from '../feedback';
 import { HeaderTitle } from '../HeaderTitle';
-import { tabular, text, useTheme } from '../theme';
+import { useHeaderIcon } from '../nav';
+import { rounded, tabular, text, useTheme } from '../theme';
 import { dayTitles, weekTitles } from '../titles';
 import { SectionTitle } from '../ui';
 import { BeadString, WeekBeads } from './Beads';
@@ -46,8 +48,11 @@ export function ReportScreen() {
   const params = useLocalSearchParams<{ mode?: string }>();
   const [mode, setMode] = useState<Mode>(params.mode === 'day' ? 'day' : 'week');
   const now = useNow(60_000);
+  const running = useRunning();
   const [day, setDay] = useState(() => startOfDay(Date.now()));
   const [week, setWeek] = useState(() => startOfWeek(Date.now()));
+  const previousIcon = useHeaderIcon('chevron.left', 'chevron_left');
+  const nextIcon = useHeaderIcon('chevron.right', 'chevron_right');
 
   const step = (dir: 1 | -1) => {
     buzz.tick();
@@ -64,16 +69,18 @@ export function ReportScreen() {
         <HeaderTitle title={title} subtitle={subtitle} onPress={current ? undefined : jump} />
       </Stack.Title>
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="chevron.left" accessibilityLabel={shellText.header.previous(mode)} onPress={() => step(-1)} />
+        {previousIcon && <Stack.Toolbar.Button icon={previousIcon} accessibilityLabel={shellText.header.previous(mode)} onPress={() => step(-1)} />}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel={shellText.header.next(mode)} onPress={() => step(1)} />
+        {nextIcon && <Stack.Toolbar.Button icon={nextIcon} accessibilityLabel={shellText.header.next(mode)} onPress={() => step(1)} />}
       </Stack.Toolbar>
 
       <View style={styles.segment}>
         <SegmentedControl
           values={modes.map((m) => weekText.ranges[m])}
           selectedIndex={modes.indexOf(mode)}
+          // Android's Material segments, in the same wash as the tab bar's selected pill.
+          tintColor={Platform.OS === 'android' ? t.candy[running?.context.hue ?? 'pink'].tint : undefined}
           onChange={(e) => {
             buzz.tick();
             setMode(modes[e.nativeEvent.selectedSegmentIndex] ?? 'week');
@@ -94,7 +101,7 @@ function WeekBody({ week, now }: { week: number; now: number }) {
     <>
       <Overview
         totals={report.totals}
-        label={weekText.trackedWeek}
+        label={weekText.trackedWeek(week !== startOfWeek(now))}
         range={{ start: report.start, end: report.end }}
         targets={targets}
         now={now}
@@ -219,7 +226,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 40 },
   segment: { paddingHorizontal: 16, paddingTop: 8 },
   totalRow: { alignItems: 'center', marginTop: 14 },
-  total: { fontFamily: 'ui-rounded', fontWeight: '800', fontSize: 52, letterSpacing: -1 },
+  total: { ...rounded('800'), fontSize: 52, letterSpacing: -1 },
   bubbles: { alignItems: 'center', marginTop: 12, paddingHorizontal: 16 },
   section: { marginHorizontal: 20, marginTop: 28 },
   card: { borderRadius: 24, padding: 16, marginHorizontal: 16 },

@@ -1,9 +1,10 @@
 // Jelly's look: a sunny cream day and a deep plum "night candy", both following the
 // system appearance, with saturated candy hues on top. Every context hue maps to a small
 // candy palette so gummies, beans, arcs and jars can shade themselves. Type is SF Pro
-// Rounded through the system font, with tabular digits for anything that ticks.
+// Rounded through the system font on iOS and the bundled Nunito on Android, with tabular
+// digits for anything that ticks.
 
-import { type TextStyle, useColorScheme } from 'react-native';
+import { Platform, type TextStyle, useColorScheme } from 'react-native';
 
 import { type Hue, hues } from '@/core';
 
@@ -201,23 +202,47 @@ export function useTheme(): Theme {
 export const lightTheme = themes.light;
 export const darkTheme = themes.dark;
 
-const rounded = 'ui-rounded';
+/** The weights of the rounded face Hopwatch uses. */
+export type Weight = '500' | '600' | '700' | '800';
 
 /**
- * Text styles on SF Pro Rounded, sized like the iOS text styles. Colors come from the
+ * Nunito, Android's stand-in for SF Pro Rounded, as one family per weight: Android can't
+ * pick a weight from a font loaded at runtime and falls back to Roboto for bold. Loaded
+ * by src/shell/fonts.android.ts before the first screen shows.
+ */
+export const nunito = {
+  '500': 'Nunito-Medium',
+  '600': 'Nunito-SemiBold',
+  '700': 'Nunito-Bold',
+  '800': 'Nunito-ExtraBold',
+} as const satisfies Record<Weight, string>;
+
+/**
+ * The rounded face at `weight`: SF Pro Rounded on iOS, Nunito on Android. Use it instead of
+ * setting `fontFamily` and `fontWeight` yourself; on Android a `fontWeight` of 700 or more
+ * on top of it would bring Roboto back.
+ */
+export const rounded = (weight: Weight): TextStyle =>
+  Platform.OS === 'android' ? { fontFamily: nunito[weight], fontWeight: 'normal' } : { fontFamily: 'ui-rounded', fontWeight: weight };
+
+/** Header titles in the rounded face on Android; iOS keeps its system header font. */
+export const headerFont: { fontFamily?: string } = Platform.OS === 'android' ? { fontFamily: nunito['800'] } : {};
+
+/**
+ * Text styles in the rounded face, sized like the iOS text styles. Colors come from the
  * theme at the call site.
  */
 export const text = {
-  largeTitle: { fontFamily: rounded, fontSize: 34, fontWeight: '800', letterSpacing: -0.4 },
-  title: { fontFamily: rounded, fontSize: 28, fontWeight: '800', letterSpacing: -0.3 },
-  title2: { fontFamily: rounded, fontSize: 22, fontWeight: '700', letterSpacing: -0.2 },
-  title3: { fontFamily: rounded, fontSize: 20, fontWeight: '700', letterSpacing: -0.1 },
-  headline: { fontFamily: rounded, fontSize: 17, fontWeight: '700' },
-  body: { fontFamily: rounded, fontSize: 17, fontWeight: '500' },
-  callout: { fontFamily: rounded, fontSize: 16, fontWeight: '600' },
-  subhead: { fontFamily: rounded, fontSize: 15, fontWeight: '600' },
-  footnote: { fontFamily: rounded, fontSize: 13, fontWeight: '600' },
-  caption: { fontFamily: rounded, fontSize: 12, fontWeight: '700' },
+  largeTitle: { ...rounded('800'), fontSize: 34, letterSpacing: -0.4 },
+  title: { ...rounded('800'), fontSize: 28, letterSpacing: -0.3 },
+  title2: { ...rounded('700'), fontSize: 22, letterSpacing: -0.2 },
+  title3: { ...rounded('700'), fontSize: 20, letterSpacing: -0.1 },
+  headline: { ...rounded('700'), fontSize: 17 },
+  body: { ...rounded('500'), fontSize: 17 },
+  callout: { ...rounded('600'), fontSize: 16 },
+  subhead: { ...rounded('600'), fontSize: 15 },
+  footnote: { ...rounded('600'), fontSize: 13 },
+  caption: { ...rounded('700'), fontSize: 12 },
 } as const satisfies Record<string, TextStyle>;
 
 /** Digits that don't jiggle as they tick. */

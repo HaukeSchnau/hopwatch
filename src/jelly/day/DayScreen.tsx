@@ -25,7 +25,8 @@ import { CandyDial, dayBeans } from '../dial/CandyDial';
 import { dialFrame, pointDeg, pointRadius, timeAtDeg } from '../dial/geometry';
 import { buzz } from '../feedback';
 import { HeaderTitle } from '../HeaderTitle';
-import { tabular, text, useTheme } from '../theme';
+import { useHeaderIcon } from '../nav';
+import { rounded, tabular, text, useTheme } from '../theme';
 import { dayTitles } from '../titles';
 import { axisFor, Timeline, yOf } from './Timeline';
 
@@ -34,6 +35,8 @@ export function DayScreen() {
   const { width, height } = useWindowDimensions();
   const header = useHeaderHeight();
   const params = useLocalSearchParams<{ day?: string }>();
+  const previousIcon = useHeaderIcon('chevron.left', 'chevron_left');
+  const nextIcon = useHeaderIcon('chevron.right', 'chevron_right');
   const now = useNow(30_000);
   const today = startOfDay(now);
   const [day, setDay] = useState(() => (params.day ? startOfDay(Number(params.day)) : startOfDay(Date.now())));
@@ -115,10 +118,12 @@ export function DayScreen() {
         <HeaderTitle title={titles.title} subtitle={titles.subtitle} onPress={day === today ? undefined : () => go(today)} />
       </Stack.Title>
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="chevron.left" accessibilityLabel={shellText.header.previous('day')} onPress={() => go(addDays(day, -1))} />
+        {previousIcon && (
+          <Stack.Toolbar.Button icon={previousIcon} accessibilityLabel={shellText.header.previous('day')} onPress={() => go(addDays(day, -1))} />
+        )}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="chevron.right" accessibilityLabel={shellText.header.next('day')} onPress={() => go(addDays(day, 1))} />
+        {nextIcon && <Stack.Toolbar.Button icon={nextIcon} accessibilityLabel={shellText.header.next('day')} onPress={() => go(addDays(day, 1))} />}
       </Stack.Toolbar>
       <ScrollView
         key={day}
@@ -169,8 +174,7 @@ const styles = StyleSheet.create({
   dial: { alignSelf: 'center', marginTop: 4 },
   center: { alignItems: 'center', justifyContent: 'center' },
   total: {
-    fontFamily: 'ui-rounded',
-    fontWeight: '800',
+    ...rounded('800'),
     fontSize: 40,
     letterSpacing: -0.8,
     marginVertical: -1,

@@ -1,8 +1,7 @@
 // The toast above the tab bar: "Switched to Dog · Undo" after any timeline change, and
 // short notes like "Copied" from Jelly itself. Pops in like a gummy, never blocks taps.
 
-import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { withSpring, withTiming, ZoomOut } from 'react-native-reanimated';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 import { create } from 'zustand';
@@ -12,6 +11,7 @@ import { shellText } from '@/i18n/shell';
 
 import { buzz } from './feedback';
 import { springs, text, useTheme } from './theme';
+import { Icon } from './ui';
 
 const useNote = create<{ text: string; at: number; visible: boolean } | null>(() => null);
 
@@ -25,10 +25,13 @@ export function say(message: string) {
 /** The window's home-indicator inset. Insets measured inside a tab include the tab bar. */
 const HOME = initialWindowMetrics?.insets.bottom ?? 34;
 
-/** Floats just above the tab bar; `lift` raises it above the mini player. */
+/**
+ * Floats just above the tab bar; `lift` raises it above the mini player. On Android the
+ * page already ends at the tab bar (and the mini player), so it only keeps a small gap.
+ */
 export function Toast({ lift = 0 }: { lift?: number }) {
   const t = useTheme();
-  const bottom = HOME + 64 + lift;
+  const bottom = (Platform.OS === 'android' ? 16 : HOME + 64) + lift;
   const { action, visible } = useUndoToast(5000);
   const note = useNote();
 
@@ -62,7 +65,7 @@ export function Toast({ lift = 0 }: { lift?: number }) {
             accessibilityRole="button"
             accessibilityLabel={shellText.undo}
             style={({ pressed }) => [styles.undo, { backgroundColor: t.c.pink }, pressed && { transform: [{ scale: 0.92 }] }]}>
-            <SymbolView name="arrow.uturn.backward" size={13} tintColor="#FFFFFF" weight="heavy" />
+            <Icon name={{ ios: 'arrow.uturn.backward', android: 'undo' }} size={13} color="#FFFFFF" weight="heavy" />
             <Text style={[text.headline, styles.undoText]}>{shellText.undo}</Text>
           </Pressable>
         </Animated.View>
@@ -101,6 +104,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
+    // Android's shadow; iOS ignores it.
+    elevation: 8,
   },
   label: { flexShrink: 1, alignSelf: 'stretch', justifyContent: 'center' },
   // Long labels (German, long names) wrap to a second line inside the pill.

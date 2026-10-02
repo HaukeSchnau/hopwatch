@@ -19,11 +19,11 @@ export const welcomeText = localized({
     cancel: 'Cancel',
     load: 'Load',
     restore: 'or restore from an export',
-    /** Shown once, right before iOS asks to allow notifications. */
+    /** Shown once, right before iOS or Android asks to allow notifications. */
     nudge: {
       title: 'One more thing',
-      message: (hours: number) =>
-        `When a jelly has been running for ${hours} hours, Hopwatch can nudge you in case you forgot to stop it. That's the only notification it sends. iOS asks you next.`,
+      message: (hours: number, android?: boolean) =>
+        `When a jelly has been running for ${hours} hours, Hopwatch can nudge you in case you forgot to stop it. That's the only notification it sends. ${android ? 'Android' : 'iOS'} asks you next.`,
       ok: 'Continue',
     },
     /** The emoji well's accessibility label. */
@@ -47,8 +47,11 @@ export const welcomeText = localized({
     restore: 'oder aus einem Export wiederherstellen',
     nudge: {
       title: 'Noch eine Sache',
-      message: (hours) =>
-        `Läuft ein Jelly schon ${hours} Stunden, kann Hopwatch dich erinnern, falls du das Stoppen vergessen hast. Andere Mitteilungen schickt es nicht. Gleich fragt iOS nach.`,
+      // Android calls them Benachrichtigungen, iOS Mitteilungen.
+      message: (hours, android) =>
+        android
+          ? `Läuft ein Jelly schon ${hours} Stunden, kann Hopwatch dich erinnern, falls du das Stoppen vergessen hast. Andere Benachrichtigungen schickt es nicht. Gleich fragt Android nach.`
+          : `Läuft ein Jelly schon ${hours} Stunden, kann Hopwatch dich erinnern, falls du das Stoppen vergessen hast. Andere Mitteilungen schickt es nicht. Gleich fragt iOS nach.`,
       ok: 'Weiter',
     },
     typeEmoji: 'Emoji eintippen',

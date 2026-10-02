@@ -8,7 +8,7 @@ import Animated, { withSpring, withTiming } from 'react-native-reanimated';
 import { durationParts, useNow } from '@/core';
 import { shellText } from '@/i18n/shell';
 
-import { springs, useTheme } from './theme';
+import { rounded, springs, useTheme } from './theme';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -47,7 +47,7 @@ function Digits({ text, size, color, weight, style }: { text: string; size: numb
           allowFontScaling={false}
           style={[
             styles.digit,
-            { fontSize: size, lineHeight: size * 1.15, color, fontWeight: weight, width: ch === ':' ? size * 0.26 : size * 0.6 },
+            { ...rounded(weight), fontSize: size, lineHeight: size * 1.15, color, width: ch === ':' ? size * 0.26 : size * 0.6 },
           ]}>
           {ch}
         </Animated.Text>
@@ -69,5 +69,5 @@ function digitIn() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end' },
-  digit: { fontFamily: 'ui-rounded', textAlign: 'center', letterSpacing: -0.5, fontVariant: ['tabular-nums'] },
+  digit: { textAlign: 'center', letterSpacing: -0.5, fontVariant: ['tabular-nums'] },
 });

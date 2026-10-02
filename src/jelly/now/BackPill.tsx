@@ -2,7 +2,6 @@
 // the context it returns to. Reads "Resume Job" when nothing runs. Hold it for the
 // native backdating menu.
 
-import { SymbolView } from 'expo-symbols';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { actions, type ResolvedContext, useNow, useSwitchTarget } from '@/core';
@@ -11,8 +10,8 @@ import { nowText } from '@/i18n/now';
 
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
-import { useTheme } from '../theme';
-import { CandySurface, Squishy } from '../ui';
+import { rounded, useTheme } from '../theme';
+import { CandySurface, Icon, Squishy } from '../ui';
 import { noteSource, useAnchor } from './choreo';
 
 export function BackPill() {
@@ -54,7 +53,12 @@ function Pill({ kind, context }: { kind: 'back' | 'resume'; context: ResolvedCon
               {after ? <Text style={styles.verb}>{after}</Text> : null}
             </Text>
             <View style={styles.icon}>
-              <SymbolView name={kind === 'back' ? 'arrow.uturn.backward' : 'play.fill'} size={17} tintColor={c.on} weight="heavy" />
+              <Icon
+                name={kind === 'back' ? { ios: 'arrow.uturn.backward', android: 'undo' } : { ios: 'play.fill', android: 'play_arrow' }}
+                size={17}
+                color={c.on}
+                weight="heavy"
+              />
             </View>
           </CandySurface>
         </Squishy>
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emoji: { fontSize: 24 },
-  label: { flex: 1, fontFamily: 'ui-rounded', fontWeight: '800', fontSize: 22, letterSpacing: -0.2 },
-  verb: { fontWeight: '600' },
+  label: { flex: 1, ...rounded('800'), fontSize: 22, letterSpacing: -0.2 },
+  verb: rounded('600'),
   icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.28)' },
 });
