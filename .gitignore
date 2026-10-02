@@ -48,3 +48,6 @@ example
 
 # screenshots from simulator checks
 .shots/
+
+# Raw store captures; the framed finals in store/screenshots/<store>/ are kept.
+store/screenshots/raw/
