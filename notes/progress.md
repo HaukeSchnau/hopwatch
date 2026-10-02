@@ -110,6 +110,12 @@ his phone until he moves his data over (export there, restore here).
   applying on the phone; `scripts/m1.sh ota "message"` after that
     (published from the M1: hermesc has no Linux arm64 build, srv-2 is aarch64).
 
+- German (2026-10-02): src/i18n (`localized({ en, de })`, language from AppleLanguages via
+  RN Settings, no native module), docs/german.md (tone + glossary), CFBundleLocalizations
+  en/de in app.json, version 1.1.0 (TestFlight 202610020536). Test in German with `SIM_LANG=de scripts/sim.sh …`.
+  Unchecked on screen: the German Live Activity (needs a dev client with
+  NSSupportsLiveActivities, i.e. a new `scripts/m1.sh sim`), a German nudge.
+
 ## Next
 
 1. Commit the builders' work, final QA (light/dark), `scripts/m1.sh testflight`.
