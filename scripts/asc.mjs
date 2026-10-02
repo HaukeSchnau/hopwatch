@@ -33,11 +33,23 @@ function token() {
   return `${unsigned}.${signature.toString('base64url')}`;
 }
 
-const response = await fetch(`https://api.appstoreconnect.apple.com${path}`, {
-  method,
-  headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
-  body,
-});
+/** Retries connection failures (the M1's route to Apple times out now and then), not HTTP errors. */
+async function request(attempt = 1) {
+  try {
+    return await fetch(`https://api.appstoreconnect.apple.com${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      body,
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch (error) {
+    if (attempt >= 5) throw error;
+    await new Promise((resolve) => setTimeout(resolve, attempt * 3000));
+    return request(attempt + 1);
+  }
+}
+
+const response = await request();
 const text = await response.text();
 console.log(text ? JSON.stringify(JSON.parse(text), null, 2) : `${response.status} ${response.statusText}`);
 if (!response.ok) process.exit(1);
