@@ -1,17 +1,17 @@
 {
   "expo": {
     "name": "Hopwatch",
-    "slug": "stint",
+    "slug": "hopwatch",
     "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "stint",
+    "scheme": "hopwatch",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "dev.schnau.stint",
+      "bundleIdentifier": "dev.schnau.hopwatch",
       "appleTeamId": "2243J9RD68",
       "supportsTablet": false,
-      "icon": "./assets/stint.icon",
+      "icon": "./assets/hopwatch.icon",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleLocalizations": [
@@ -21,6 +21,39 @@
       },
       "buildNumber": "1",
       "deploymentTarget": "26.0"
+    },
+    "android": {
+      "package": "dev.schnau.hopwatch",
+      "versionCode": 1,
+      "icon": "./assets/images/android-icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "com.google.android.c2dm.permission.RECEIVE",
+        "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
+        "com.sec.android.provider.badge.permission.READ",
+        "com.sec.android.provider.badge.permission.WRITE",
+        "com.htc.launcher.permission.READ_SETTINGS",
+        "com.htc.launcher.permission.UPDATE_SHORTCUT",
+        "com.sonyericsson.home.permission.BROADCAST_BADGE",
+        "com.sonymobile.home.permission.PROVIDER_INSERT_BADGE",
+        "com.anddoes.launcher.permission.UPDATE_COUNT",
+        "com.majeur.launcher.permission.UPDATE_BADGE",
+        "com.huawei.android.launcher.permission.CHANGE_BADGE",
+        "com.huawei.android.launcher.permission.READ_SETTINGS",
+        "com.huawei.android.launcher.permission.WRITE_SETTINGS",
+        "android.permission.READ_APP_BADGE",
+        "com.oppo.launcher.permission.READ_SETTINGS",
+        "com.oppo.launcher.permission.WRITE_SETTINGS",
+        "me.everything.badger.permission.BADGE_COUNT_READ",
+        "me.everything.badger.permission.BADGE_COUNT_WRITE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -40,7 +73,9 @@
       [
         "expo-notifications",
         {
-          "enableBackgroundRemoteNotifications": false
+          "enableBackgroundRemoteNotifications": false,
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#FF6FB5"
         }
       ],
       [
@@ -54,8 +89,19 @@
       [
         "expo-widgets",
         {
-          "bundleIdentifier": "dev.schnau.stint.widgets",
-          "groupIdentifier": "group.dev.schnau.stint"
+          "bundleIdentifier": "dev.schnau.hopwatch.widgets",
+          "groupIdentifier": "group.dev.schnau.hopwatch",
+          "enableAndroid": false
+        }
+      ],
+      [
+        "expo-dev-client",
+        {
+          "android": {
+            "toolsButton": false,
+            "skipOnboarding": true,
+            "showMenuAtLaunch": false
+          }
         }
       ],
       "./plugins/with-scene-lifecycle"
@@ -66,7 +112,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "e6630e93-4e6f-4153-84ce-a10ec19815bc"
+        "projectId": "7e0183d8-3743-41ea-a29a-7188f5dd5cf5"
       }
     },
     "owner": "haukeschnau",
@@ -74,7 +120,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/e6630e93-4e6f-4153-84ce-a10ec19815bc",
+      "url": "https://u.expo.dev/7e0183d8-3743-41ea-a29a-7188f5dd5cf5",
       "requestHeaders": {
         "expo-channel-name": "production"
       }
