@@ -1,7 +1,11 @@
 // Strings for the Stuff tab (every jelly in a list) and the jelly editor. Durations
 // arrive formatted ("1:30").
 
+import { Platform } from 'react-native';
+
 import { localized } from '.';
+
+const android = Platform.OS === 'android';
 
 export const stuffText = localized({
   en: {
@@ -84,7 +88,9 @@ export const stuffText = localized({
       /** The one-tap chips: "30 min", "5 h". */
       chip: (minutes: number) => (minutes < 60 ? `${minutes} min` : `${minutes / 60} h`),
       startLink: 'Start link',
-      startLinkFooter: 'Open it from Shortcuts, the Action Button or Siri to switch to this jelly.',
+      startLinkFooter: android
+        ? 'Open it from an automation app or a home screen shortcut to switch to this jelly.'
+        : 'Open it from Shortcuts, the Action Button or Siri to switch to this jelly.',
       copyLink: 'Copy Link',
       copied: 'Copied',
       archivedFooter: 'Archived jellies stay in history and reports.',
@@ -169,7 +175,9 @@ export const stuffText = localized({
       inheritedFrom: (duration, parent) => (parent ? `${duration}, wie ${parent}` : duration),
       chip: (minutes) => (minutes < 60 ? `${minutes} Min.` : `${minutes / 60} Std.`),
       startLink: 'Start-Link',
-      startLinkFooter: 'Öffne ihn aus Kurzbefehlen, mit der Aktionstaste oder über Siri, um zu diesem Jelly zu wechseln.',
+      startLinkFooter: android
+        ? 'Öffne ihn aus einer Automations-App oder über eine Verknüpfung auf dem Startbildschirm, um zu diesem Jelly zu wechseln.'
+        : 'Öffne ihn aus Kurzbefehlen, mit der Aktionstaste oder über Siri, um zu diesem Jelly zu wechseln.',
       copyLink: 'Link kopieren',
       copied: 'Kopiert',
       archivedFooter: 'Archivierte Jellys bleiben im Verlauf und in den Berichten.',

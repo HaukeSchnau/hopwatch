@@ -4,7 +4,6 @@
 // understood, and a card shows what will change before anything does, in the same words
 // as the backdating menus. Without the model none of this shows up.
 
-import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { generate, lastFailure } from '@modules/on-device-model';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
@@ -40,7 +39,8 @@ import { buzz, play } from '../feedback';
 import { stopConsequence } from '../menus';
 import { tabular, text, useTheme } from '../theme';
 import { JellyButton, Squishy } from '../ui';
-import { pastAt, pickerLocale, SheetHeader } from './parts';
+import { pastAt, SheetHeader } from './parts';
+import { TimeChip } from './time';
 
 const s = sheetsText.typed;
 
@@ -128,7 +128,11 @@ interface Change {
   tone: 'cut' | 'gone' | 'note';
 }
 
-const toneIcon = { cut: 'scissors', gone: 'exclamationmark.triangle', note: 'checkmark' } as const;
+const toneIcon = {
+  cut: { ios: 'scissors', android: 'content_cut' },
+  gone: { ios: 'exclamationmark.triangle', android: 'warning' },
+  note: { ios: 'checkmark', android: 'check' },
+} as const;
 
 /** What a plan does to the entries already there: "Replaces Cooking 12:10–12:40". */
 function changesOf(plan: Plan, { tree, entries, now }: Scene): Change[] {
@@ -217,7 +221,7 @@ export function LogRow({ log: { sentence, answer, reading, plan, shown }, onPres
       accessibilityHint={plan ? s.hint : undefined}>
       <View style={styles.row}>
         <View style={[styles.icon, { backgroundColor: t.candy.pink.tint }]}>
-          {answer === undefined ? <ActivityIndicator color={t.c.pinkDeep} /> : <SymbolView name="sparkles" size={20} tintColor={t.c.pinkDeep} weight="bold" />}
+          {answer === undefined ? <ActivityIndicator color={t.c.pinkDeep} /> : <SymbolView name={{ ios: 'sparkles', android: 'auto_awesome' }} size={20} tintColor={t.c.pinkDeep} weight="bold" />}
         </View>
         <View style={styles.rowText}>
           <Text style={[text.body, tabular, { color: plan ? t.c.ink : t.c.muted }]} numberOfLines={1}>
@@ -227,7 +231,7 @@ export function LogRow({ log: { sentence, answer, reading, plan, shown }, onPres
             {detail}
           </Text>
         </View>
-        {plan && <SymbolView name="chevron.right" size={14} tintColor={t.c.faint} weight="bold" />}
+        {plan && <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right' }} size={14} tintColor={t.c.faint} weight="bold" />}
       </View>
     </Squishy>
   );
@@ -274,18 +278,7 @@ export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Plan; o
     onDone();
   };
 
-  const picker = (value: number, onChange: (d: Date) => void) => (
-    <DateTimePicker
-      value={new Date(value)}
-      mode="time"
-      display="compact"
-      style={styles.picker}
-      locale={pickerLocale}
-      themeVariant={t.scheme}
-      accentColor={t.candy[hue].ink}
-      onValueChange={(_, d) => onChange(d)}
-    />
-  );
+  const picker = (value: number, onChange: (d: Date) => void) => <TimeChip value={new Date(value)} color={t.candy[hue].ink} onChange={onChange} />;
 
   return (
     <View style={[styles.card, { backgroundColor: t.c.card }]}>
@@ -336,7 +329,6 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, gap: 1 },
   card: { marginTop: 14, borderRadius: 26, padding: 16 },
   times: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, flexWrap: 'wrap' },
-  picker: { width: 92, height: 38 },
   changes: { marginTop: 14, gap: 8 },
   change: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   changeText: { flex: 1 },

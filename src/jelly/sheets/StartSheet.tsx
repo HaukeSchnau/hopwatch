@@ -12,7 +12,8 @@ import { play } from '../feedback';
 import { startConsequence } from '../menus';
 import { noteSource } from '../now/choreo';
 import { JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, TimeWheel, useSheetStyles } from './parts';
+import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, useSheetStyles } from './parts';
+import { TimeWheel } from './time';
 
 const roundDown = (t: number, step: number) => Math.floor(t / step) * step;
 

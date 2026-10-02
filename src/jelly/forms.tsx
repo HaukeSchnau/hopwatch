@@ -1,6 +1,7 @@
 // Scaffolding for Jelly's SwiftUI forms (settings, the jelly editor, entry detail): a
 // native navigation bar with toolbar buttons over an inset grouped form on the page's
 // cream or night background, and a candy header row that hosts React Native content.
+// Android: forms.android.tsx.
 
 import {
   Button,
@@ -23,7 +24,7 @@ import { useTheme } from './theme';
 /** Horizontal margin of an inset grouped section on iPhone. */
 const SECTION_MARGIN = 16;
 
-interface JellyFormProps {
+export interface JellyFormProps {
   title: string;
   /** Tint for native controls: the jelly's candy color. */
   tint?: string;

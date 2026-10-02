@@ -1,5 +1,6 @@
-// Pieces for making a jelly in React Native (onboarding): the gummy hue picker and the
-// emoji well with quick picks. The editor sheet uses the same emoji list in SwiftUI.
+// Pieces for making a jelly in React Native (onboarding, and the editor on Android): the
+// gummy hue picker and the emoji well with quick picks. The iOS editor uses the same emoji
+// list in SwiftUI.
 
 import { SymbolView } from 'expo-symbols';
 import { useRef } from 'react';
@@ -47,7 +48,7 @@ export function HuePicker({ value, onChange }: { value: Hue; onChange: (hue: Hue
             accessibilityLabel={characterText.hues[hue]}>
             <View style={[styles.ring, selected && { borderColor: t.candy[hue].fill }]}>
               <CandySurface hue={hue} radius={20} flat style={[styles.drop, selected && { transform: [{ scale: 1.08 }] }]}>
-                {selected && <SymbolView name="checkmark" size={14} tintColor={t.candy[hue].on} weight="heavy" />}
+                {selected && <SymbolView name={{ ios: 'checkmark', android: 'check' }} size={14} tintColor={t.candy[hue].on} weight="heavy" />}
               </CandySurface>
             </View>
           </Squishy>
@@ -59,19 +60,32 @@ export function HuePicker({ value, onChange }: { value: Hue; onChange: (hue: Hue
 
 /**
  * A big emoji well you can type into, with quick picks beside it. `suggested` marks an
- * emoji the on-device model picked, until it's touched.
+ * emoji the on-device model picked, until it's touched. With `onClear`, tapping the picked
+ * quick pick again clears it; `placeholder` shows faded while it's empty.
  */
-export function EmojiField({ value, onChange, suggested }: { value: string | null; onChange: (emoji: string) => void; suggested?: boolean }) {
+export function EmojiField({
+  value,
+  onChange,
+  onClear,
+  suggested,
+  placeholder,
+}: {
+  value: string | null;
+  onChange: (emoji: string) => void;
+  onClear?: () => void;
+  suggested?: boolean;
+  placeholder?: string | null;
+}) {
   const t = useTheme();
   const input = useRef<TextInput>(null);
   return (
     <View style={styles.emojiRow}>
       <Squishy amount={0.12} onPress={() => input.current?.focus()} accessibilityRole="button" accessibilityLabel={suggested ? welcomeText.suggestedEmoji : welcomeText.typeEmoji}>
         <View style={[styles.emojiWell, { backgroundColor: t.c.card, borderColor: suggested ? t.c.pink : t.c.line }]}>
-          <Text style={[styles.emojiBig, !value && { opacity: 0.35 }]}>{value ?? '🙂'}</Text>
+          <Text style={[styles.emojiBig, !value && { opacity: 0.35 }]}>{value ?? placeholder ?? '🙂'}</Text>
           {suggested && (
             <View style={[styles.sparkle, { backgroundColor: t.c.pink }]}>
-              <SymbolView name="sparkles" size={11} tintColor="#FFFFFF" weight="bold" />
+              <SymbolView name={{ ios: 'sparkles', android: 'auto_awesome' }} size={11} tintColor="#FFFFFF" weight="bold" />
             </View>
           )}
           <TextInput
@@ -97,9 +111,11 @@ export function EmojiField({ value, onChange, suggested }: { value: string | nul
             amount={0.16}
             onPress={() => {
               buzz.tick();
-              onChange(e);
+              if (onClear && value === e && !suggested) onClear();
+              else onChange(e);
             }}
-            accessibilityLabel={e}>
+            accessibilityLabel={e}
+            accessibilityState={{ selected: value === e }}>
             <View style={[styles.suggestion, { backgroundColor: t.c.sunken }, value === e && { backgroundColor: t.candy.pink.tint, borderColor: t.c.pink, borderWidth: 2 }]}>
               <Text style={styles.emojiSmall}>{e}</Text>
             </View>
