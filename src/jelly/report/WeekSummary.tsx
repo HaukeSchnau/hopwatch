@@ -5,6 +5,7 @@
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   FadeIn,
   useAnimatedStyle,
   useReducedMotion,
@@ -20,6 +21,7 @@ import { summaryText } from '@/i18n/summary';
 import { Character } from '../Character';
 import { useFace, useLively } from '../Gummy';
 import type { PreviewJelly } from '../preview';
+import { useShowing } from '../showing';
 import { alpha, rounded, springs, text, useTheme } from '../theme';
 import { type SummaryState, useWeekSummary } from './summary';
 
@@ -69,9 +71,15 @@ function Bubble({ summary }: { summary: SummaryState }) {
 /** Three soft lines breathing while the first summary is written. */
 function Writing({ color }: { color: string }) {
   const pulse = useSharedValue(0.45);
+  const showing = useShowing();
   useEffect(() => {
+    if (!showing) return;
     pulse.set(withRepeat(withTiming(1, { duration: 750 }), -1, true));
-  }, [pulse]);
+    return () => {
+      cancelAnimation(pulse);
+      pulse.set(0.45);
+    };
+  }, [pulse, showing]);
   const style = useAnimatedStyle(() => ({ opacity: pulse.get() }));
   return (
     <Animated.View style={[styles.lines, style]}>

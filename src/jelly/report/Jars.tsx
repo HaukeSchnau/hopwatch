@@ -4,12 +4,13 @@
 import { Canvas, Circle, Group, LinearGradient, Path, RoundedRect, rect, rrect, Skia, vec } from '@shopify/react-native-skia';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import { cancelAnimation, Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
 import { formatDuration, formatSignedDuration, type TargetLine } from '@/core';
 import { weekText } from '@/i18n/week';
 
 import { buzz, play } from '../feedback';
+import { useShowing } from '../showing';
 import { alpha, tabular, text, useTheme } from '../theme';
 import { Squishy } from '../ui';
 import { Confetti } from './Confetti';
@@ -38,14 +39,21 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
   const full = line.actual >= line.target;
   const level = useSharedValue(0);
   const phase = useSharedValue(0);
+  const showing = useShowing();
   const [burst, setBurst] = useState(0);
 
   useEffect(() => {
     level.set(withDelay(delay, withSpring(full ? 1.04 : ratio, { damping: 9, stiffness: 70 })));
   }, [delay, full, level, ratio]);
+  // The jelly sloshes while Week shows.
   useEffect(() => {
+    if (!showing) return;
     phase.set(withRepeat(withTiming(Math.PI * 2, { duration: 2600, easing: Easing.linear }), -1, false));
-  }, [phase]);
+    return () => {
+      cancelAnimation(phase);
+      phase.set(0);
+    };
+  }, [phase, showing]);
 
   const key = `${line.context.id}:${weekStart}`;
   useEffect(() => {

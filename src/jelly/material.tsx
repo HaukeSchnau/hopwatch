@@ -22,10 +22,9 @@ import {
 } from '@expo/ui/jetpack-compose';
 import { fillMaxSize, fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
 import { router } from 'expo-router';
-import { type AndroidSymbol, SymbolView, unstable_getMaterialSymbolSourceAsync } from 'expo-symbols';
-import { createContext, type ReactElement, type ReactNode, use, useEffect, useState } from 'react';
+import { type AndroidSymbol, SymbolView } from 'expo-symbols';
+import { createContext, type ReactElement, type ReactNode, use, useState } from 'react';
 import {
-  type ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -38,10 +37,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatClock, formatDayMonth, formatWeekday } from '@/core';
+import { language } from '@/i18n';
 import { sheetsText } from '@/i18n/sheets';
 
 import type { JellyFormProps } from './forms';
-import { alpha, tabular, text, type Theme, useTheme } from './theme';
+import { alpha, rounded, tabular, text, type Theme, useTheme } from './theme';
+import { preloadSymbolImages, useSymbolImage } from './ui';
 
 /** The form's accent: the jelly's candy ink, or Jelly pink. Section titles and controls use it. */
 const Accent = createContext<string | null>(null);
@@ -59,6 +60,13 @@ const raised = (t: Theme) => (t.dark ? t.plainCandy.fill : t.c.card);
 
 const MARGIN = 16;
 
+/**
+ * Material writes buttons and rows in sentence case where iOS uses title case, so Android's
+ * screens pass their fixed English labels through this: "Copy Stop Link" becomes "Copy stop
+ * link". Not for labels with names in them. German keeps its capitals.
+ */
+export const sentence = (label: string) => (language === 'en' ? label.charAt(0) + label.slice(1).toLowerCase() : label);
+
 // Icons
 
 /** A Material Symbol in React Native views. */
@@ -66,44 +74,8 @@ export function MaterialIcon({ name, size = 24, color }: { name: AndroidSymbol; 
   return <SymbolView name={{ android: name }} size={size} tintColor={color} />;
 }
 
-const images = new Map<AndroidSymbol, ImageSourcePropType | null>();
-const loading = new Map<AndroidSymbol, Promise<void>>();
-
-function loadImage(symbol: AndroidSymbol): Promise<void> {
-  let pending = loading.get(symbol);
-  if (!pending) {
-    // Drawn black; Compose's Icon tints it with the surrounding content color.
-    pending = unstable_getMaterialSymbolSourceAsync(symbol, 24, '#000000')
-      .catch(() => null)
-      .then((source) => {
-        images.set(symbol, source);
-      });
-    loading.set(symbol, pending);
-  }
-  return pending;
-}
-
-/** Renders symbols ahead, so a menu's icons are there the first time it opens. */
-export function preloadImages(symbols: readonly AndroidSymbol[]) {
-  for (const symbol of symbols) loadImage(symbol);
-}
-
 // Compose only picks up an icon slot that's there on the first render, so the picker's check is drawn ahead.
-preloadImages(['check']);
-
-/** A Material Symbol as an image for Compose's Icon; null until it's drawn. */
-export function useSymbolImage(symbol: AndroidSymbol | undefined): ImageSourcePropType | null {
-  const [, setLoaded] = useState(0);
-  useEffect(() => {
-    if (!symbol || images.has(symbol)) return;
-    let live = true;
-    loadImage(symbol).then(() => live && setLoaded((n) => n + 1));
-    return () => {
-      live = false;
-    };
-  }, [symbol]);
-  return symbol ? (images.get(symbol) ?? null) : null;
-}
+preloadSymbolImages(['check']);
 
 // Menus
 
@@ -613,7 +585,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   grow: { flexGrow: 1 },
   shrink: { flexShrink: 1 },
-  regular: { fontWeight: '400' },
+  regular: rounded('500'),
   bar: { flexDirection: 'row', alignItems: 'center', height: 64, paddingHorizontal: 8, gap: 8 },
   barIcon: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   barTitle: { flex: 1 },
@@ -622,7 +594,7 @@ const styles = StyleSheet.create({
   sectionTitle: { marginHorizontal: MARGIN * 2, marginBottom: 8 },
   card: { marginHorizontal: MARGIN, borderRadius: 24, overflow: 'hidden' },
   hosted: { marginTop: 8 },
-  footer: { fontWeight: '400', marginHorizontal: MARGIN * 2, marginTop: 8 },
+  footer: { ...rounded('500'), marginHorizontal: MARGIN * 2, marginTop: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 56, paddingHorizontal: MARGIN, paddingVertical: 8 },
   rowText: { flex: 1, gap: 2 },
   pickerValue: { flexDirection: 'row', alignItems: 'center', gap: 2, maxWidth: '60%' },

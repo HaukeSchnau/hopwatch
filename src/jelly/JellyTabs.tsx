@@ -8,21 +8,22 @@
 
 import { router } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { actions, useIntent, useRunning, useHopwatch, useTree } from '@/core';
 import { shellText } from '@/i18n/shell';
 
 import { MiniPlayer } from './MiniPlayer';
-import { alpha, nunito, type Theme, useTheme } from './theme';
+import { showTab, useShownTab } from './showing';
+import { alpha, rounded, type Theme, useTheme } from './theme';
 import { Welcome } from './welcome/Welcome';
 
 export function JellyTabs() {
   const t = useTheme();
   const running = useRunning();
   const empty = useTree().ordered.length === 0;
-  const [tab, setTab] = useState('index');
+  const tab = useShownTab();
   useStopSheetIntent();
 
   if (empty) return <Welcome />;
@@ -35,7 +36,7 @@ export function JellyTabs() {
         minimizeBehavior="onScrollDown"
         tintColor={tint}
         {...(Platform.OS === 'android' ? materialBar(t, tint, running ? t.candy[running.context.hue].tint : null) : {})}
-        screenListeners={({ route }) => ({ focus: () => setTab(route.name) })}>
+        screenListeners={({ route }) => ({ focus: () => showTab(route.name) })}>
         {accessory ? (
           <NativeTabs.BottomAccessory>
             <MiniPlayer running={running} />
@@ -67,7 +68,7 @@ export function JellyTabs() {
  * selected one in `tint` on a pill in the running jelly's wash (pink when nothing runs).
  */
 function materialBar(t: Theme, tint: string, wash: string | null) {
-  const label = { fontFamily: nunito['700'], fontSize: 12 };
+  const label = { ...rounded('700'), fontSize: 12 };
   return {
     backgroundColor: t.c.card,
     iconColor: { default: t.c.muted, selected: tint },

@@ -5,7 +5,7 @@
 import { availability, lastFailure } from '@modules/on-device-model';
 import { useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { actions, type Hue, loadSampleData, useHopwatch, useTree } from '@/core';
@@ -18,7 +18,7 @@ import { parseSuggestion, SUGGESTION_VERSION } from './ask';
 import { suggestedKey } from './look';
 import { LookEditor } from './LookEditor';
 import { suggestForContext, useDressUp } from './suggest';
-import { useTheme } from '../theme';
+import { rounded, useTheme } from '../theme';
 import { bodies, type Look, member, traitOptions } from './traits';
 
 type Sample = LookSource & { hue: Hue; name: string };
@@ -227,11 +227,11 @@ export function Gallery() {
 const styles = StyleSheet.create({
   section: { paddingHorizontal: 10, paddingVertical: 12 },
   dark: { backgroundColor: '#150F1D' },
-  title: { fontFamily: 'ui-rounded', fontSize: 15, fontWeight: '800', marginLeft: 6, marginBottom: 6, textTransform: 'uppercase' },
+  title: { ...rounded('800'), fontSize: 15, marginLeft: 6, marginBottom: 6, textTransform: 'uppercase' },
   row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end' },
   cell: { alignItems: 'center', marginVertical: 4 },
-  label: { fontFamily: 'ui-rounded', fontSize: 13, fontWeight: '700', marginTop: -2 },
-  mono: { fontFamily: 'ui-monospace', fontSize: 13, color: '#2B1B3D', width: '100%', marginBottom: 4 },
+  label: { ...rounded('700'), fontSize: 13, marginTop: -2 },
+  mono: { fontFamily: Platform.OS === 'ios' ? 'ui-monospace' : 'monospace', fontSize: 13, color: '#2B1B3D', width: '100%', marginBottom: 4 },
   button: { margin: 16, padding: 14, borderRadius: 20, backgroundColor: '#2B1B3D', alignItems: 'center' },
-  buttonText: { color: 'white', fontFamily: 'ui-rounded', fontWeight: '700', fontSize: 16 },
+  buttonText: { color: 'white', ...rounded('700'), fontSize: 16 },
 });

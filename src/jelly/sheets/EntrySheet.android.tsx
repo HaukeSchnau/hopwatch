@@ -8,7 +8,7 @@ import { type Entry, pathLabel, useEntries } from '@/core';
 import { sheetsText } from '@/i18n/sheets';
 
 import { HostedRow, JellyForm } from '../forms';
-import { DateTimeRow, FieldRow, PickerRow, Row, Section, TonalButton } from '../material';
+import { DateTimeRow, FieldRow, PickerRow, Row, Section, sentence, TonalButton } from '../material';
 import { useTheme } from '../theme';
 import { EntryHeader, useEntryDraft } from './entry';
 
@@ -55,7 +55,7 @@ function EntryForm({ entry }: { entry: Entry }) {
         {/* Clamped like the iOS pickers' ranges: start before the end, the end between start and now. */}
         <DateTimeRow label={s.starts} value={start} latest={end ?? now} onChange={(at) => setStart(Math.min(at, end ?? now))} />
         {end === null ? (
-          <Row label={s.ends} trailing={<TonalButton label={s.stopNow} icon="stop" onPress={() => setEnd(Math.max(start + 60_000, Date.now()))} />} />
+          <Row label={s.ends} trailing={<TonalButton label={sentence(s.stopNow)} icon="stop" onPress={() => setEnd(Math.max(start + 60_000, Date.now()))} />} />
         ) : (
           <DateTimeRow label={s.ends} value={end} earliest={start} latest={now} onChange={(at) => setEnd(Math.min(Math.max(at, start), now))} />
         )}
@@ -64,7 +64,7 @@ function EntryForm({ entry }: { entry: Entry }) {
         <FieldRow value={note} onChangeText={setNote} placeholder={s.notePlaceholder} multiline style={{ maxHeight: 160 }} />
       </Section>
       <Section>
-        <Row label={s.delete} icon="delete" destructive onPress={remove} />
+        <Row label={sentence(s.delete)} icon="delete" destructive onPress={remove} />
       </Section>
     </JellyForm>
   );

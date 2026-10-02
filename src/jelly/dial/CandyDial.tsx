@@ -2,11 +2,15 @@
 // the day; each entry is a jelly bean pressed into it (rounded caps, a gloss line, a
 // colored shadow), short ones are round candy beads, and the running bean grows live
 // with a soft glowing head. Midnight sits at the bottom, noon on top.
+//
+// The head breathes all the time, so it has a small canvas of its own on top of the dial:
+// the dial itself only redraws when its beans change.
 
 import { BlurMask, Canvas, Circle, Group, Path, RadialGradient, vec } from '@shopify/react-native-skia';
 import { type ReactNode, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
+  cancelAnimation,
   Easing,
   type SharedValue,
   useDerivedValue,
@@ -18,6 +22,7 @@ import {
 
 import type { DayReport, EntryId, Hue, Running } from '@/core';
 
+import { useShowing } from '../showing';
 import { type Candy, mix, text, useTheme } from '../theme';
 import { arcPath, type DialFrame, polar, pxToDeg, timeToDeg } from './geometry';
 
@@ -133,10 +138,15 @@ export function CandyDial({ frame, dayStart, dayEnd, beans, now, ignite, labels 
           <Bean key={b.key} frame={frame} shape={b.shape} width={width} candy={b.candy} selected={b.selected} haloColor={b.candy.ink} grow={b.running ? ignite : undefined} />
         ))}
 
-        {running && <Head frame={frame} shape={running.shape} width={width} candy={running.candy} ignite={ignite} />}
-        {nowDeg !== null && <NowPin frame={frame} deg={nowDeg} color={t.c.pinkDeep} ring={t.c.bg} />}
+        {/* With a running head, the pin sits right next to it, so it moves to the head's canvas to stay on top. */}
+        {nowDeg !== null && !running && <NowPin frame={frame} deg={nowDeg} color={t.c.pinkDeep} ring={t.c.bg} />}
         {children}
       </Canvas>
+      {running && (
+        <Head frame={frame} shape={running.shape} width={width} candy={running.candy} ignite={ignite}>
+          {nowDeg !== null && <NowPin frame={frame} deg={nowDeg} color={t.c.pinkDeep} ring={t.c.bg} />}
+        </Head>
+      )}
       {labels && <HourLabels frame={frame} color={t.c.faint} />}
     </View>
   );
@@ -205,15 +215,35 @@ function Bean({ frame, shape, width, candy, selected, haloColor, grow }: BeanPro
   );
 }
 
-/** The running bean's head: a soft glow that breathes, and a bright candy highlight. */
-function Head({ frame, shape, width, candy, ignite }: { frame: DialFrame; shape: Shape; width: number; candy: Candy; ignite?: SharedValue<number> }) {
+interface HeadProps {
+  frame: DialFrame;
+  shape: Shape;
+  width: number;
+  candy: Candy;
+  ignite?: SharedValue<number>;
+  /** Drawn on top of the head, in the dial's coordinates. */
+  children?: ReactNode;
+}
+
+/**
+ * The running bean's head: a soft glow that breathes while the dial can be seen, and a
+ * bright candy highlight. A square canvas around the head, big enough for the ripple.
+ */
+function Head({ frame, shape, width, candy, ignite, children }: HeadProps) {
   const reduced = useReducedMotion();
+  const showing = useShowing();
   const p = polar(frame, shape.kind === 'bean' ? shape.head : shape.mid);
+  // The ripple reaches 3.2 widths out, the glow's blur about as far.
+  const reach = Math.ceil(width * 3.6);
   const pulse = useSharedValue(0);
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || !showing) return;
     pulse.set(withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.sin) }), -1, true));
-  }, [pulse, reduced]);
+    return () => {
+      cancelAnimation(pulse);
+      pulse.set(0);
+    };
+  }, [pulse, reduced, showing]);
   const pop = useDerivedValue(() => {
     const g = ignite ? ignite.get() : 1;
     // Pops in late in the pour, overshoots, settles.
@@ -230,15 +260,18 @@ function Head({ frame, shape, width, candy, ignite }: { frame: DialFrame; shape:
     return g >= 1 ? 0 : (1 - g) * 0.8;
   });
   return (
-    <Group>
-      <Circle cx={p.x} cy={p.y} r={rippleR} color={candy.fill} opacity={rippleOpacity} style="stroke" strokeWidth={3} />
-      <Circle cx={p.x} cy={p.y} r={glowR} color={candy.light} opacity={glowOpacity}>
-        <BlurMask blur={width * 0.6} style="normal" />
-      </Circle>
-      <Circle cx={p.x} cy={p.y} r={coreR} color="rgba(255,255,255,0.92)">
-        <BlurMask blur={1.2} style="normal" />
-      </Circle>
-    </Group>
+    <Canvas style={{ position: 'absolute', left: p.x - reach, top: p.y - reach, width: reach * 2, height: reach * 2 }}>
+      <Group transform={[{ translateX: reach - p.x }, { translateY: reach - p.y }]}>
+        <Circle cx={p.x} cy={p.y} r={rippleR} color={candy.fill} opacity={rippleOpacity} style="stroke" strokeWidth={3} />
+        <Circle cx={p.x} cy={p.y} r={glowR} color={candy.light} opacity={glowOpacity}>
+          <BlurMask blur={width * 0.6} style="normal" />
+        </Circle>
+        <Circle cx={p.x} cy={p.y} r={coreR} color="rgba(255,255,255,0.92)">
+          <BlurMask blur={1.2} style="normal" />
+        </Circle>
+        {children}
+      </Group>
+    </Canvas>
   );
 }
 

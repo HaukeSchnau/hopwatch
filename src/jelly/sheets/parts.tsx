@@ -10,7 +10,7 @@ import { sheetsText } from '@/i18n/sheets';
 
 import { Character } from '../Character';
 import { useFace, useLively } from '../Gummy';
-import { tabular, text, useTheme } from '../theme';
+import { rounded, tabular, text, useTheme } from '../theme';
 import { CandySurface, Squishy } from '../ui';
 
 export function SheetHeader({
@@ -119,6 +119,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', justifyContent: 'space-between' },
   chipWrap: { alignItems: 'center', gap: 5 },
   chip: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
-  chipNumber: { fontFamily: 'ui-rounded', fontWeight: '800', fontSize: 24, lineHeight: 26 },
+  chipNumber: { ...rounded('800'), fontSize: 24, lineHeight: 26 },
   chipUnit: { fontSize: 10, marginTop: -2, opacity: 0.9 },
 });

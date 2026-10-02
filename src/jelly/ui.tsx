@@ -2,10 +2,11 @@
 // surfaces, buttons and section titles. Colors come from the current theme.
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { SymbolView, type SymbolViewProps, type SymbolWeight } from 'expo-symbols';
-import type { ReactNode } from 'react';
+import { type AndroidSymbol, type SFSymbol, SymbolView, type SymbolWeight, unstable_getMaterialSymbolSourceAsync } from 'expo-symbols';
+import { type ReactNode, useEffect, useState } from 'react';
 import {
   type GestureResponderEvent,
+  type ImageSourcePropType,
   Platform,
   Pressable,
   type PressableProps,
@@ -23,11 +24,11 @@ import { buzz } from './feedback';
 import { symbolWeight } from './symbolWeight';
 import { alpha, type Candy, rounded, springs, text, useTheme } from './theme';
 
-/**
- * An icon name: an SF Symbol, or `{ ios, android }` with a Material Symbol for Android. A
- * plain SF Symbol shows nothing on Android.
- */
-export type IconName = SymbolViewProps['name'];
+/** An icon on both platforms: an SF Symbol for iOS and a Material Symbol for Android. */
+export interface IconName {
+  ios: SFSymbol;
+  android: AndroidSymbol;
+}
 
 interface IconProps {
   name: IconName;
@@ -42,12 +43,10 @@ interface IconProps {
  * outlined, so Android draws `stop` and `play_arrow` solid itself, like their SF twins.
  */
 export function Icon({ name, size, color, weight }: IconProps) {
-  if (Platform.OS === 'android' && typeof name === 'object' && (name.android === 'stop' || name.android === 'play_arrow')) {
+  if (Platform.OS === 'android' && (name.android === 'stop' || name.android === 'play_arrow')) {
     return <Solid shape={name.android} size={size} color={color} />;
   }
-  return (
-    <SymbolView name={name} size={size} tintColor={color} weight={symbolWeight(weight)} />
-  );
+  return <SymbolView name={name} size={size} tintColor={color} weight={symbolWeight(weight)} />;
 }
 
 /** A solid stop square or play triangle in a `size` box. */
@@ -73,6 +72,49 @@ function Solid({ shape, size, color }: { shape: 'stop' | 'play_arrow'; size: num
       )}
     </View>
   );
+}
+
+/** Material Symbols drawn to images, once per app run; null when drawing failed. */
+const symbolImages = new Map<AndroidSymbol, ImageSourcePropType | null>();
+const drawing = new Map<AndroidSymbol, Promise<ImageSourcePropType | null>>();
+
+function drawSymbol(symbol: AndroidSymbol): Promise<ImageSourcePropType | null> {
+  let pending = drawing.get(symbol);
+  if (!pending) {
+    // Drawn black: native headers and Compose's Icon tint it themselves.
+    pending = unstable_getMaterialSymbolSourceAsync(symbol, 24, '#000000')
+      .catch(() => null)
+      .then((source) => {
+        symbolImages.set(symbol, source);
+        return source;
+      });
+    drawing.set(symbol, pending);
+  }
+  return pending;
+}
+
+/** Draws symbols ahead, e.g. so a menu's icons are there the first time it opens. Android only. */
+export function preloadSymbolImages(symbols: readonly AndroidSymbol[]) {
+  for (const symbol of symbols) void drawSymbol(symbol);
+}
+
+/**
+ * A Material Symbol as an image, for views that only take images (Android's header
+ * buttons, Compose's Icon); null until it's drawn. Android only: pass undefined elsewhere.
+ */
+export function useSymbolImage(symbol: AndroidSymbol | undefined): ImageSourcePropType | null {
+  // A fresh drawing arrives through state: React Compiler doesn't see the cache change.
+  const [drawn, setDrawn] = useState<{ symbol: AndroidSymbol; source: ImageSourcePropType | null } | null>(null);
+  useEffect(() => {
+    if (!symbol) return;
+    let live = true;
+    void drawSymbol(symbol).then((source) => live && setDrawn({ symbol, source }));
+    return () => {
+      live = false;
+    };
+  }, [symbol]);
+  if (!symbol) return null;
+  return drawn?.symbol === symbol ? drawn.source : (symbolImages.get(symbol) ?? null);
 }
 
 interface SquishyProps extends Omit<PressableProps, 'style' | 'children'> {

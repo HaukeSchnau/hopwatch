@@ -8,7 +8,7 @@ import { formatClock, type Hue } from '@/core';
 import { sheetsText } from '@/i18n/sheets';
 
 import { MaterialIcon, Pill, TimeDialog } from '../material';
-import { alpha, tabular, text, useTheme } from '../theme';
+import { alpha, rounded, tabular, useTheme } from '../theme';
 
 export function TimeWheel({ value, onChange, hue }: { value: Date; onChange: (d: Date) => void; hue: Hue }) {
   const t = useTheme();
@@ -43,5 +43,5 @@ export function TimeChip({ value, onChange, color }: { value: Date; onChange: (d
 
 const styles = StyleSheet.create({
   wheel: { height: 104, borderRadius: 24, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  digits: { fontFamily: text.title.fontFamily, fontSize: 52, fontWeight: '800', letterSpacing: -1 },
+  digits: { ...rounded('800'), fontSize: 52, letterSpacing: -1 },
 });
