@@ -1,0 +1,5 @@
+# SF Pro Rounded and its cuts: Apple's font, copied from the M1 by render.sh, not ours to check in.
+fonts/
+# Full-size simulator captures (1-3 MB each, over jj's snapshot limit). Kept locally so
+# render.sh can reframe them; recapture on the "Hopwatch Screens" simulator if they're gone.
+raw/
