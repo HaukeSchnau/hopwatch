@@ -1,0 +1,9 @@
+Hopwatch has no account and no sign-in, so no demo account is needed.
+
+On first launch, the welcome screen offers "or load sample data". It fills in three weeks of made-up entries with 18 jellies, so every screen has something to show. Tap a jelly on the Now tab to start it; tap another to switch.
+
+While an entry is running, Hopwatch shows a Live Activity on the Lock Screen and in the Dynamic Island.
+
+The Apple Intelligence features use Apple's on-device model (Foundation Models) and only appear where Apple Intelligence is available: suggested emoji, colors and looks when naming a new jelly (Stuff, +), the week summary on the Week tab, and typed entries such as "2h deep work this morning" in the search field of the "All jellies" sheet. Everything else works the same without Apple Intelligence.
+
+All data stays on the device; Hopwatch has no server. The only network request is the check for app updates (Expo EAS Update), which sends no user data.

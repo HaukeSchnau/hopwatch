@@ -1,0 +1,113 @@
+/* One App Store frame, 1320 x 2868 (the 6.9" iPhone size, APP_IPHONE_67): a two-line
+   caption over the simulator capture in a phone outline, on the website's cream day or plum
+   night with a few soft candy blobs. Colors and type follow site/style.css. All lengths are
+   in px of the final image. */
+
+:root {
+  --bg: #FFF4E8;
+  --ink: #2B1B3D;
+  --accent: #C22B74;
+  --bezel: #1E1626;
+  --rim: #4A3B57;
+  --shadow: rgb(43 27 61 / 0.42);
+  --blob-a: #FF6FB5;
+  --blob-b: #FFC53D;
+  --blob-c: #4B8BFF;
+  --blob-opacity: 0.32;
+
+  /* The phone: the capture scaled to 1030 px wide inside a 20 px bezel. */
+  --scale: 0.7803;
+  --screen-w: calc(1320px * var(--scale));
+  --screen-h: calc(2868px * var(--scale));
+  --bezel-w: 20px;
+  --screen-radius: 130px;
+}
+
+.dark {
+  --bg: #150F1D;
+  --ink: #FBF3FF;
+  --accent: #FF8CC8;
+  --bezel: #0B070F;
+  --rim: #4A3B57;
+  --shadow: rgb(0 0 0 / 0.6);
+  --blob-opacity: 0.22;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 1320px;
+  height: 2868px;
+  overflow: hidden;
+}
+
+body {
+  position: relative;
+  background: var(--bg);
+  color: var(--ink);
+  /* SF Pro Rounded Black, the site's headline face; render.sh makes it from the M1's copy
+     and hands it to Chromium through fontconfig. */
+  font-family: "Hopwatch Rounded Black", ui-rounded, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: var(--blob-opacity);
+}
+.blob.a { width: 760px; height: 760px; left: -300px; top: -260px; background: var(--blob-a); }
+.blob.b { width: 640px; height: 640px; right: -280px; top: 260px; background: var(--blob-b); }
+.blob.c { width: 900px; height: 900px; left: -260px; bottom: -420px; background: var(--blob-c); }
+
+h1 {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 140px;
+  margin: 0;
+  text-align: center;
+  font-size: 116px;
+  line-height: 1.04;
+  font-weight: normal;
+  letter-spacing: -0.015em;
+  word-spacing: 0.08em;
+}
+h1 span { display: block; white-space: nowrap; }
+h1 span + span { color: var(--accent); }
+
+.phone {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  padding: var(--bezel-w);
+  border-radius: calc(var(--screen-radius) + var(--bezel-w));
+  background: var(--bezel);
+  box-shadow:
+    0 0 0 3px var(--rim),
+    0 70px 140px -50px var(--shadow);
+}
+
+.screen {
+  position: relative;
+  width: var(--screen-w);
+  height: var(--screen-h);
+  border-radius: var(--screen-radius);
+  overflow: hidden;
+}
+.screen img { display: block; width: 100%; height: 100%; }
+
+/* The Dynamic Island, drawn on every frame since the simulator only sometimes captures it.
+   Same box as in the captures (x 518-801, y 42-151 of 1320 x 2868), scaled. */
+.island {
+  position: absolute;
+  left: calc(518px * var(--scale));
+  top: calc(42px * var(--scale));
+  width: calc(284px * var(--scale));
+  height: calc(110px * var(--scale));
+  border-radius: 999px;
+  background: #000;
+}
