@@ -8,6 +8,7 @@ import { router, useIsFocused } from 'expo-router';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useReducedMotion,
@@ -44,6 +45,7 @@ import { useFace, useLively, wake } from '../Gummy';
 import { Menu } from '../Menu';
 import { onStopMenu, stopMenu } from '../menus';
 import { Mould } from '../Mould';
+import { useShowing } from '../showing';
 import { springs, tabular, text, useTheme } from '../theme';
 import { Timer } from '../Timer';
 import { Icon, RoundButton } from '../ui';
@@ -129,16 +131,22 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
   const anchor = useAnchor('stage');
   const face = useFace('awake');
   const reduced = useReducedMotion();
+  const showing = useShowing();
   useLively(face, shown !== null && !reduced);
 
   const breath = useSharedValue(0);
   const squash = useSharedValue(0);
   const hop = useSharedValue(0);
 
+  // Breathes while it can be seen and rests otherwise, so other tabs and the background draw nothing.
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || !showing) return;
     breath.set(withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }), -1, true));
-  }, [breath, reduced]);
+    return () => {
+      cancelAnimation(breath);
+      breath.set(0);
+    };
+  }, [breath, reduced, showing]);
 
   // Land with a squash whenever a new jelly arrives on the stage.
   const shownId = shown?.id ?? null;
@@ -156,7 +164,7 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
 
   // Every so often the awake jelly does a happy little hop.
   useEffect(() => {
-    if (!shownId || reduced) return;
+    if (!shownId || reduced || !showing) return;
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       timer = setTimeout(() => {
@@ -167,7 +175,7 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [hop, reduced, shownId, squash]);
+  }, [hop, reduced, showing, shownId, squash]);
 
   const body = useAnimatedStyle(() => {
     const b = breath.get() * 0.035;

@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useReducedMotion,
@@ -27,6 +28,7 @@ import { sleep, useFace, wake } from '../Gummy';
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
 import { Mould } from '../Mould';
+import { useShowing } from '../showing';
 import { rounded, springs, text, useTheme } from '../theme';
 import { Squishy, useWiggle } from '../ui';
 import { isAway, noteSource, tileKey, useAnchor, useChoreo } from './choreo';
@@ -64,16 +66,21 @@ function Tile({ context, running, width, now }: { context: ResolvedContext; runn
   const hidden = useChoreo((s) => isAway(s, context.id));
   const face = useFace('asleep');
   const reduced = useReducedMotion();
+  const showing = useShowing();
   const { style: wiggleStyle, wiggle } = useWiggle();
 
-  // Slow sleepy breathing, each tile on its own phase.
+  // Slow sleepy breathing, each tile on its own phase, while the grid can be seen.
   const breath = useSharedValue(0);
   const land = useSharedValue(0);
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || !showing) return;
     const phase = hashSeed(context.id) % 1800;
     breath.set(withDelay(phase, withRepeat(withTiming(1, { duration: 2300, easing: Easing.inOut(Easing.sin) }), -1, true)));
-  }, [breath, context.id, reduced]);
+    return () => {
+      cancelAnimation(breath);
+      breath.set(0);
+    };
+  }, [breath, context.id, reduced, showing]);
 
   // Coming back from the stage: plop into the slot.
   const wasHidden = useRef(hidden);

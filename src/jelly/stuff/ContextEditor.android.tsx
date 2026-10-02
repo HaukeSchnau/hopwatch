@@ -16,7 +16,7 @@ import { LookEditor } from '../character/LookEditor';
 import { buzz } from '../feedback';
 import { EmojiField, HuePicker } from '../fields';
 import { HostedRow, JellyForm } from '../forms';
-import { ChoiceChips, FieldRow, PickerRow, Row, Section, StepperRow, SwitchRow } from '../material';
+import { ChoiceChips, FieldRow, PickerRow, Row, Section, sentence, StepperRow, SwitchRow } from '../material';
 import { text, useTheme } from '../theme';
 import { type EditorTarget, Header, NUDGE_CHIPS, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
 import { confirmDelete } from './StuffScreen';
@@ -156,7 +156,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
           {link}
         </Text>
         <Row
-          label={copied ? s.copied : s.copyLink}
+          label={copied ? s.copied : sentence(s.copyLink)}
           icon={copied ? 'check' : 'link'}
           onPress={() => {
             Clipboard.setStringAsync(link);
@@ -166,7 +166,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
         />
       </Section>
       <Section footer={context.archivedAt ? s.archivedFooter : s.archiveFooter}>
-        {context.hidden ? null : <Row label={s.addInside} icon="add" onPress={() => router.push({ pathname: '/context', params: { parent: context.id } })} />}
+        {context.hidden ? null : <Row label={sentence(s.addInside)} icon="add" onPress={() => router.push({ pathname: '/context', params: { parent: context.id } })} />}
         <Row
           label={context.archivedAt ? stuffText.unarchive : stuffText.archive}
           icon={context.archivedAt ? 'unarchive' : 'archive'}
@@ -179,7 +179,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
             }
           }}
         />
-        <Row label={s.delete} icon="delete" destructive onPress={() => confirmDelete(context, () => router.back())} />
+        <Row label={sentence(s.delete)} icon="delete" destructive onPress={() => confirmDelete(context, () => router.back())} />
       </Section>
     </>
   );

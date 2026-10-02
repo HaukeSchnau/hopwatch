@@ -9,11 +9,12 @@ import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { buzz } from './feedback';
-import { Dropdown, MenuLabel, MenuRow, preloadImages } from './material';
+import { Dropdown, MenuLabel, MenuRow } from './material';
 import type { MenuEntry, MenuItem, MenuProps } from './Menu';
 import { menuSymbols } from './menuSymbols';
+import { preloadSymbolImages } from './ui';
 
-preloadImages(Object.values(menuSymbols));
+preloadSymbolImages(Object.values(menuSymbols));
 
 export function Menu({ title, items, onPress, children }: MenuProps) {
   const [open, setOpen] = useState(false);

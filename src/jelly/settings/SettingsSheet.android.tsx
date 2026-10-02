@@ -8,7 +8,7 @@ import { settingsText } from '@/i18n/settings';
 
 import { setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
-import { Row, Section, SwitchRow } from '../material';
+import { Row, Section, sentence, SwitchRow } from '../material';
 import { useTheme } from '../theme';
 import { Idea, openPage, useSettingsActions } from './parts';
 
@@ -26,17 +26,17 @@ export function SettingsSheet() {
         <SwitchRow label={settingsText.sounds} icon="volume_up" value={sounds} onChange={setSounds} />
       </Section>
       <Section title={shortcuts.title} footer={shortcuts.footer}>
-        <Row label={copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop} icon="stop_circle" onPress={() => copy(stopLink)} />
-        <Row label={copied === resumeLink ? shortcuts.copiedResume : shortcuts.copyResume} icon="play_circle" onPress={() => copy(resumeLink)} />
+        <Row label={sentence(copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop)} icon="stop_circle" onPress={() => copy(stopLink)} />
+        <Row label={sentence(copied === resumeLink ? shortcuts.copiedResume : shortcuts.copyResume)} icon="play_circle" onPress={() => copy(resumeLink)} />
       </Section>
       <Section title={data.title} footer={data.footer(contexts, entries)}>
-        <Row label={data.export} icon="file_export" onPress={exportData} />
-        <Row label={data.restore} icon="settings_backup_restore" onPress={restore} />
-        <Row label={data.erase} icon="delete_forever" destructive onPress={erase} />
+        <Row label={sentence(data.export)} icon="file_export" onPress={exportData} />
+        <Row label={sentence(data.restore)} icon="settings_backup_restore" onPress={restore} />
+        <Row label={sentence(data.erase)} icon="delete_forever" destructive onPress={erase} />
       </Section>
       <Section>
         <Row label={about.help} icon="help" onPress={() => openPage(about.helpUrl)} />
-        <Row label={about.privacy} icon="privacy_tip" onPress={() => openPage(about.privacyUrl)} />
+        <Row label={sentence(about.privacy)} icon="privacy_tip" onPress={() => openPage(about.privacyUrl)} />
       </Section>
     </JellyForm>
   );

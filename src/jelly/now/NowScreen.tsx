@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useRunning } from '@/core';
 
+import { ScreenTab } from '../showing';
 import { alpha, useTheme } from '../theme';
 import { Toast } from '../Toast';
 import { BackPill } from './BackPill';
@@ -21,29 +22,31 @@ export function NowScreen() {
   const insets = useSafeAreaInsets();
   const running = useRunning();
   return (
-    <View style={[styles.screen, { backgroundColor: t.c.bg }]}>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        // Android doesn't inset scroll views by itself; the tab bar takes care of the bottom.
-        contentContainerStyle={[styles.content, Platform.OS === 'android' && { paddingTop: insets.top + 6 }]}
-        showsVerticalScrollIndicator={false}>
-        <Stage running={running} />
-        <View style={styles.gap} />
-        <BackPill />
-        <View style={styles.gap} />
-        <Grid runningId={running?.context.id ?? null} />
-        <Recents />
-      </ScrollView>
-      {/* The page melts away under the status bar instead of being sliced off. */}
-      <LinearGradient
-        pointerEvents="none"
-        colors={[t.c.bg, alpha(t.c.bg, 0.85), alpha(t.c.bg, 0)]}
-        locations={[0, 0.55, 1]}
-        style={[styles.fade, { height: insets.top + 14 }]}
-      />
-      <FlyerLayer />
-      <Toast />
-    </View>
+    <ScreenTab value="index">
+      <View style={[styles.screen, { backgroundColor: t.c.bg }]}>
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          // Android doesn't inset scroll views by itself; the tab bar takes care of the bottom.
+          contentContainerStyle={[styles.content, Platform.OS === 'android' && { paddingTop: insets.top + 6 }]}
+          showsVerticalScrollIndicator={false}>
+          <Stage running={running} />
+          <View style={styles.gap} />
+          <BackPill />
+          <View style={styles.gap} />
+          <Grid runningId={running?.context.id ?? null} />
+          <Recents />
+        </ScrollView>
+        {/* The page melts away under the status bar instead of being sliced off. */}
+        <LinearGradient
+          pointerEvents="none"
+          colors={[t.c.bg, alpha(t.c.bg, 0.85), alpha(t.c.bg, 0)]}
+          locations={[0, 0.55, 1]}
+          style={[styles.fade, { height: insets.top + 14 }]}
+        />
+        <FlyerLayer />
+        <Toast />
+      </View>
+    </ScreenTab>
   );
 }
 

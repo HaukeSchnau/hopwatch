@@ -27,6 +27,7 @@ import { accentHue, blushFor } from './character/paint';
 import { isBehind, TopperBack, TopperFront } from './character/toppers';
 import type { Look, Motion, Topper } from './character/traits';
 import { CoatPart, NeckPart } from './character/wear';
+import { useShowing } from './showing';
 import { alpha, type Candy, useTheme } from './theme';
 
 /** Animatable face state. 0/1 ranges unless noted. */
@@ -97,12 +98,14 @@ function settle(face: Face) {
 /**
  * Keeps an awake face alive in its personality (see character/idle.ts): blinks, glances
  * and a signature move now and then, like a hop or a yawn. Runs on JS timers, so nothing
- * ticks between events. With Reduce Motion on, it only blinks and glances.
+ * ticks between events, and rests while its screen can't be seen. With Reduce Motion on,
+ * it only blinks and glances.
  */
 export function useLively(face: Face, enabled: boolean) {
   const reduceMotion = useReducedMotion();
+  const showing = useShowing();
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !showing) return;
     let alive = true;
     let busyUntil = 0;
     const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -146,7 +149,7 @@ export function useLively(face: Face, enabled: boolean) {
       timers.forEach(clearTimeout);
       settle(face);
     };
-  }, [enabled, face, reduceMotion]);
+  }, [enabled, face, reduceMotion, showing]);
 }
 
 /** Level of detail for a size: fine details disappear first. */

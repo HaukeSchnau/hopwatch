@@ -1,16 +1,17 @@
 // Native navigation chrome shared by Jelly's routes: form sheet options, the stack that
 // gives Day, Week and Stuff their native headers, and icons for those headers' buttons.
 
-import { Stack } from 'expo-router';
-import { type AndroidSymbol, type SFSymbol, unstable_getMaterialSymbolSourceAsync } from 'expo-symbols';
-import { useEffect, useState } from 'react';
+import { Stack, useRoute } from 'expo-router';
+import type { AndroidSymbol, SFSymbol } from 'expo-symbols';
 import { type ImageSourcePropType, Platform, View } from 'react-native';
 
 import { useRunning } from '@/core';
 
 import { MiniPlayerCard } from './MiniPlayer';
+import { ScreenTab } from './showing';
 import { headerFont, useTheme } from './theme';
 import { Toast } from './Toast';
+import { useSymbolImage } from './ui';
 
 /** Stack options for a form sheet with a grabber resting at `detents` (fractions of the screen). */
 export const sheet = (detents: number[], background: string) =>
@@ -28,9 +29,12 @@ export const sheet = (detents: number[], background: string) =>
  *
  * Android's header is solid instead, so pages start below it and the status bar, and the
  * mini player is a card under the stack (see MiniPlayerCard).
+ *
+ * As a tab's screen, it tells the screens inside which tab they're in (see showing.ts).
  */
 export function TabStack() {
   const t = useTheme();
+  const tab = useRoute().name;
   const running = useRunning();
   const tint = running ? t.candy[running.context.hue].ink : t.c.pinkDeep;
   const stack = (
@@ -50,25 +54,26 @@ export function TabStack() {
   );
   if (Platform.OS === 'android') {
     return (
-      <View style={{ flex: 1, backgroundColor: t.c.bg }}>
-        <View style={{ flex: 1 }}>
-          {stack}
-          <Toast />
+      <ScreenTab value={tab}>
+        <View style={{ flex: 1, backgroundColor: t.c.bg }}>
+          <View style={{ flex: 1 }}>
+            {stack}
+            <Toast />
+          </View>
+          <MiniPlayerCard />
         </View>
-        <MiniPlayerCard />
-      </View>
+      </ScreenTab>
     );
   }
   return (
-    <View style={{ flex: 1 }}>
-      {stack}
-      <Toast lift={running ? 56 : 0} />
-    </View>
+    <ScreenTab value={tab}>
+      <View style={{ flex: 1 }}>
+        {stack}
+        <Toast lift={running ? 56 : 0} />
+      </View>
+    </ScreenTab>
   );
 }
-
-/** Material Symbols drawn to images, once per app run. */
-const headerImages = new Map<AndroidSymbol, ImageSourcePropType>();
 
 /**
  * The icon for a `Stack.Toolbar.Button`: the SF Symbol on iOS. Android's header buttons only
@@ -76,19 +81,6 @@ const headerImages = new Map<AndroidSymbol, ImageSourcePropType>();
  * hidden until it's ready.
  */
 export function useHeaderIcon(sf: SFSymbol, md: AndroidSymbol): SFSymbol | ImageSourcePropType | undefined {
-  const [image, setImage] = useState(() => headerImages.get(md));
-  useEffect(() => {
-    if (Platform.OS !== 'android' || image) return;
-    let live = true;
-    // The header tints the image, so its own color doesn't matter.
-    void unstable_getMaterialSymbolSourceAsync(md, 24, 'white').then((source) => {
-      if (!source) return;
-      headerImages.set(md, source);
-      if (live) setImage(source);
-    });
-    return () => {
-      live = false;
-    };
-  }, [image, md]);
-  return Platform.OS === 'android' ? image : sf;
+  const image = useSymbolImage(Platform.OS === 'android' ? md : undefined);
+  return Platform.OS === 'android' ? (image ?? undefined) : sf;
 }

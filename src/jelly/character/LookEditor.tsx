@@ -11,7 +11,7 @@ import { characterText, optionNames } from '@/i18n/character';
 import { Character } from '../Character';
 import { buzz } from '../feedback';
 import { useFace, useLively, wake } from '../Gummy';
-import { text, useTheme } from '../theme';
+import { rounded, text, useTheme } from '../theme';
 import { JellyButton, Squishy } from '../ui';
 import { surpriseLook } from './derive';
 import { hop, perform } from './idle';
@@ -189,7 +189,7 @@ function MotionChips({ look, auto, onPick }: { look: Look; auto: Look; onPick: (
               {optionNames.motion[motion]}
               {motion === auto.motion ? ' ✦' : ''}
             </Text>
-            <Text style={[text.caption, { color: on ? theme.c.faint : theme.c.muted, fontWeight: '600' }]}>{moods[motion]}</Text>
+            <Text style={[text.caption, rounded('600'), { color: on ? theme.c.faint : theme.c.muted }]}>{moods[motion]}</Text>
           </Squishy>
         );
       })}
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   strip: { gap: 4, paddingRight: 8 },
   cell: { width: CELL, alignItems: 'center' },
   thumb: { width: CELL - 6, height: CELL - 6, borderRadius: 22, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
-  label: { fontFamily: 'ui-rounded', fontSize: 12, fontWeight: '700', marginTop: 4 },
+  label: { ...rounded('700'), fontSize: 12, marginTop: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, minWidth: '30%' },
 });

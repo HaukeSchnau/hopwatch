@@ -24,7 +24,7 @@ import { sheetsText } from '@/i18n/sheets';
 import { Character } from '../Character';
 import { buzz } from '../feedback';
 import { useFace, useLively } from '../Gummy';
-import { tabular, text, useTheme } from '../theme';
+import { rounded, tabular, text, useTheme } from '../theme';
 
 export function useEntryDraft(entry: Entry) {
   const tree = useTree();
@@ -94,5 +94,5 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingLeft: 8, paddingRight: 16 },
   titles: { flex: 1 },
   path: { textTransform: 'uppercase', letterSpacing: 0.5 },
-  length: { fontFamily: 'ui-rounded', fontWeight: '800', fontSize: 24 },
+  length: { ...rounded('800'), fontSize: 24 },
 });

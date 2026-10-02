@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   Easing,
   type SharedValue,
   useAnimatedStyle,
@@ -22,6 +23,7 @@ import { actions, type DayReport, type EntryId, formatClock, formatDuration, MIN
 import { dayText } from '@/i18n/day';
 
 import { buzz } from '../feedback';
+import { useShowing } from '../showing';
 import { alpha, tabular, text, useTheme } from '../theme';
 
 export const PX_PER_MIN = 1.5;
@@ -242,12 +244,18 @@ function Bean({ seg, axis, now, width, active, selected, onActive }: BeanProps) 
   );
 }
 
-/** A soft pulse at the bottom of the running bean: it's still growing. */
+/** A soft pulse at the bottom of the running bean, while Day shows: it's still growing. */
 function RunningDrip({ color }: { color: string }) {
   const pulse = useSharedValue(0);
+  const showing = useShowing();
   useEffect(() => {
+    if (!showing) return;
     pulse.set(withRepeat(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }), -1, true));
-  }, [pulse]);
+    return () => {
+      cancelAnimation(pulse);
+      pulse.set(0);
+    };
+  }, [pulse, showing]);
   const style = useAnimatedStyle(() => ({ opacity: 0.25 + pulse.get() * 0.55 }));
   return <Animated.View style={[styles.drip, { backgroundColor: color }, style]} />;
 }
