@@ -1,0 +1,138 @@
+<!doctype html>
+<!--
+  Google Play feature graphic, 1024 x 500, no text (so one image serves every language).
+  The jellies are the website's SVG port of the app's characters (site/jelly.js), posed
+  still; the dial follows the app icon. Render the PNG from the repo root with:
+
+    nix shell nixpkgs#chromium -c chromium --headless --hide-scrollbars \
+      --force-device-scale-factor=1 --force-prefers-reduced-motion \
+      --window-size=1024,500 --virtual-time-budget=3000 \
+      --screenshot=store/play/graphics/feature-graphic.png \
+      "file://$PWD/store/play/graphics/feature-graphic.html"
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hopwatch feature graphic</title>
+<link rel="stylesheet" href="../../../site/style.css">
+<style>
+  :root { color-scheme: light; }
+  html, body { margin: 0; width: 1024px; height: 500px; overflow: hidden; background: #FFF4E8; }
+  .fg {
+    position: relative;
+    width: 1024px;
+    height: 500px;
+    overflow: hidden;
+    /* The icon's cream, warming towards peach at the bottom. */
+    background:
+      radial-gradient(circle at 512px 240px, #FFFBF6 0, rgb(255 251 246 / 0) 300px),
+      linear-gradient(180deg, #FFF8F0 0%, #FFF4E8 50%, #FBE2CD 100%);
+  }
+  .fg > * { position: absolute; }
+  .dial { left: 287px; top: 25px; width: 450px; height: 450px; }
+  .groove { fill: none; stroke: #F4E2D0; stroke-width: 36; }
+  .groove-rim { fill: none; stroke: #FFF9F2; stroke-width: 2.5; }
+  .groove-shade { fill: none; stroke: #E6CDB6; stroke-width: 2; opacity: 0.8; }
+  .bean { fill: none; stroke-width: 26; stroke-linecap: round; }
+  .bean-gloss { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; opacity: 0.45; }
+  .tick { fill: #8C7A99; opacity: 0.35; }
+  .glow { filter: blur(7px); opacity: 0.85; }
+  .trail { left: 0; top: 0; width: 1024px; height: 500px; overflow: visible; }
+  .trail path { fill: none; stroke: #4B8BFF; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0.1 15; opacity: 0.45; }
+  .floor-shadow { fill: #B07C5A; opacity: 0.16; filter: blur(3px); }
+  .sprinkle { width: 22px; height: 8px; border-radius: 4px; opacity: 0.7; }
+</style>
+</head>
+<body>
+<main class="fg">
+  <svg class="trail" viewBox="0 0 1024 500" aria-hidden="true">
+    <!-- The hop: from the floor next to the dog, up to the blue jelly in mid-air. -->
+    <path d="M 206 440 Q 200 262 246 196"/>
+    <ellipse class="floor-shadow" cx="262" cy="458" rx="38" ry="7"/>
+  </svg>
+
+  <svg class="dial" viewBox="0 0 400 400" aria-hidden="true">
+    <defs>
+      <radialGradient id="glow"><stop offset="0" stop-color="#FF6FB5" stop-opacity="0.9"/><stop offset="0.5" stop-color="#FF6FB5" stop-opacity="0.4"/><stop offset="1" stop-color="#FF6FB5" stop-opacity="0"/></radialGradient>
+    </defs>
+    <circle class="groove" cx="200" cy="200" r="158"/>
+    <circle class="groove-rim" cx="200" cy="200" r="176"/>
+    <circle class="groove-shade" cx="200" cy="200" r="140"/>
+    <g id="ticks"></g>
+    <g id="beans"></g>
+  </svg>
+
+  <span class="mascot" data-cast="mascot" data-size="236" data-sticker="off" data-breathe="off" style="left: 394px; top: 112px"></span>
+
+  <span data-cast="dog" data-size="156" data-sticker="off" data-breathe="off" style="left: 34px; top: 302px" data-pose="dog"></span>
+  <span data-cast="job" data-size="132" data-shadow="off" data-sticker="off" data-breathe="off" style="left: 194px; top: 64px" data-pose="job"></span>
+  <span data-cast="timer" data-size="104" data-sticker="off" data-breathe="off" style="left: 872px; top: 70px" data-pose="timer"></span>
+  <span data-cast="deep" data-size="150" data-mood="asleep" data-sticker="off" data-breathe="off" style="left: 818px; top: 300px"></span>
+
+  <span class="sprinkle" style="left: 92px; top: 92px; background: #FFC53D; transform: rotate(-28deg)"></span>
+  <span class="sprinkle" style="left: 150px; top: 210px; background: #A36AFF; transform: rotate(40deg)"></span>
+  <span class="sprinkle" style="left: 40px; top: 238px; background: #34C97E; transform: rotate(12deg)"></span>
+  <span class="sprinkle" style="left: 330px; top: 26px; background: #FF6FB5; transform: rotate(-12deg)"></span>
+  <span class="sprinkle" style="left: 770px; top: 40px; background: #4B8BFF; transform: rotate(30deg)"></span>
+  <span class="sprinkle" style="left: 790px; top: 236px; background: #FF8A3D; transform: rotate(-40deg)"></span>
+  <span class="sprinkle" style="left: 958px; top: 268px; background: #FFC53D; transform: rotate(18deg)"></span>
+  <span class="sprinkle" style="left: 730px; top: 452px; background: #34C97E; transform: rotate(-20deg)"></span>
+  <span class="sprinkle" style="left: 300px; top: 462px; background: #A36AFF; transform: rotate(24deg)"></span>
+</main>
+
+<script>
+  // The dial: a 24-hour track like the icon's, angles in degrees clockwise from the top.
+  const C = 200;
+  const R = 158;
+  const at = (deg, r = R) => {
+    const a = (deg - 90) * Math.PI / 180;
+    return [C + r * Math.cos(a), C + r * Math.sin(a)].map((v) => v.toFixed(2));
+  };
+  const arc = (from, to, r = R) => {
+    const [x1, y1] = at(from, r);
+    const [x2, y2] = at(to, r);
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${to - from > 180 ? 1 : 0} 1 ${x2} ${y2}`;
+  };
+  const ticks = [];
+  for (let h = 0; h < 24; h++) {
+    const [x, y] = at(h * 15, 118);
+    ticks.push(`<circle class="tick" cx="${x}" cy="${y}" r="${h % 6 === 0 ? 3 : 1.8}"/>`);
+  }
+  document.getElementById('ticks').innerHTML = ticks.join('');
+  const beans = [
+    [208, 252, '#FFC53D'],
+    [262, 306, '#34C97E'],
+    [316, 350, '#A36AFF'],
+    [12, 94, '#4B8BFF'],
+    [104, 150, '#FF6FB5'],
+  ];
+  const [hx, hy] = at(150);
+  document.getElementById('beans').innerHTML = beans
+    .map(([a, b, color]) => `<path class="bean" stroke="${color}" d="${arc(a, b)}"/><path class="bean-gloss" d="${arc(a + 4, b - 4, R + 4)}"/>`)
+    .join('') + `<circle class="glow" cx="${hx}" cy="${hy}" r="20" fill="url(#glow)"/><circle cx="${hx}" cy="${hy}" r="4.5" fill="#fff"/>`;
+</script>
+<script src="../../../site/jelly-data.js"></script>
+<script src="../../../site/jelly.js"></script>
+<script>
+  // jelly.js mounts [data-jelly] on load; these use data-cast so they can be mounted here
+  // with options (no floor shadow under the jumping one) and then posed.
+  const poses = {
+    // Waiting its turn, watching the jump.
+    dog: { lookX: 0.8, lookY: -0.4 },
+    // Mid-hop towards the dial: stretched, leaning in, eyes on the target.
+    job: { lookX: 1, lookY: 0.2, squash: -0.7, tilt: 14 },
+    timer: { lookX: -1, lookY: 0.7, tilt: -6 },
+  };
+  for (const el of document.querySelectorAll('[data-cast]')) {
+    el.dataset.jelly = el.dataset.cast;
+    const ch = Jelly.mount(el, el.dataset.shadow === 'off' ? { shadow: false } : {});
+    if (!ch) continue;
+    // Hold still: no idle blinks or glances, eyes open, then the pose.
+    ch.lively(false);
+    ch.v.blink.set(1);
+    for (const [key, value] of Object.entries(poses[el.dataset.pose] ?? {})) ch.v[key].set(value);
+    ch.render(true);
+  }
+</script>
+</body>
+</html>

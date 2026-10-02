@@ -1,0 +1,16 @@
+Hopwatch is a time tracker you'll keep using, because switching takes one tap.
+
+Every activity in your life is a jelly: your job, a client, deep work, the dog. Tap one and it hops into today's dial, while the one before goes back to sleep. That's the whole habit.
+
+WHAT YOU GET
+• One tap to switch. The last activity is always one tap away with "Back to".
+• Forgot to switch? Start or stop "10 min ago", and Hopwatch shows exactly what changes before it does.
+• Day: your day as a dial and a timeline. Tap a gap to fill it, drag an entry's edge to fix it.
+• Week: totals, bubbles and target jars for weekly goals like 40 hours of work.
+• Groups: jellies can live inside other jellies, like Clients › Acme › Website.
+• Nudges: a gentle reminder when something has been running for a long time.
+
+PRIVATE BY DESIGN
+No account, no ads, no tracking. Your entries stay on your phone, and we never see them. Hopwatch only goes online to check for app updates. Export your data as a file whenever you like, and restore it on a new phone.
+
+In English and German.
