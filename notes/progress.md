@@ -205,7 +205,9 @@ his phone until he moves his data over (export there, restore here).
 - First Hopwatch TestFlight build 202610022013 (2026-10-02): signing with the new bundle,
   widget extension and App Group works; internal testers have it. It was INTERNAL_ONLY
   (export option testFlightInternalTestingOnly), which App Store versions can't take;
-  removed the option, rebuilding for the 1.1.0 App Store version.
+  removed the option. Build 202610022047 is APP_STORE_ELIGIBLE and attached to App Store
+  version 1.1.0 (7f4890fc-d144-481c-adb6-21b6988dec09); the iOS listing is ready to
+  submit once Hauke says go.
 
 ## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
 
