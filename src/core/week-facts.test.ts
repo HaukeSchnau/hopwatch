@@ -111,7 +111,7 @@ describe('weekFacts', () => {
     });
     // Behind pace, the fact says what's still needed instead.
     const slow = weekFacts([entry('Deep work', at(0, 9), 300)], tree, monday, at(2, 20));
-    expect(slow?.facts[1]).toBe('Job got 5 hours so far, with 35 hours to go for its target of 40 hours.');
+    expect(slow?.facts[1]).toBe('Job got 5 hours so far, behind pace for its target of 40 hours.');
   });
 
   it('says the same in German', () => {
@@ -161,7 +161,7 @@ describe('checkSummary', () => {
         'Du hast bisher gut 42 Stunden erfasst.',
         'Job kam auf anderthalb Stunden, unter dem Ziel von 40 Stunden.',
         'An 2 Abenden (Dienstag und Mittwoch) lief nach 22 Uhr noch etwas.',
-        'Nebenprojekte kam auf 6,5 Stunden, noch eine Stunde bis zum Ziel von 21 Stunden.',
+        'Nebenprojekte kam auf 6,5 Stunden, hinter dem Plan zum Ziel von 21 Stunden.',
       ],
     };
     const check = (summary: string) => checkSummary(summary, woche, 'de');
@@ -169,7 +169,7 @@ describe('checkSummary', () => {
     it('accepts numbers from the facts, in digits, words or with a decimal comma', () => {
       expect(check('Zweiundvierzig Stunden bisher, und Job hatte eineinhalb davon. Vierzig waren das Ziel.')).toBeNull();
       expect(check('Nebenprojekte bekam sechseinhalb Stunden, zwei Abende gingen bis nach 22 Uhr.')).toBeNull();
-      expect(check('Nebenprojekte fehlt nur noch eine knappe Stunde bis zu den einundzwanzig.')).toBeNull();
+      expect(check('Nebenprojekte liegt hinter dem Plan zu den einundzwanzig Stunden.')).toBeNull();
       expect(check('Am Dienstagabend und mittwochs warst du lange wach, 6.5 Stunden Nebenprojekte.')).toBeNull();
     });
 

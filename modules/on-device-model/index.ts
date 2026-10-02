@@ -37,9 +37,13 @@ export async function availability(): Promise<Availability> {
   return native ? native.availability() : 'unsupported';
 }
 
+/** How long a request may take before callers fall back; a busy device can stall the model for minutes. */
+const TIMEOUT_MS = 20_000;
+
 /**
  * Asks the on-device model to fill `fields` for `prompt`. Resolves to null when the model
- * is unavailable or the request fails (e.g. a guardrail), so callers can fall back.
+ * is unavailable, the request fails (e.g. a guardrail) or takes longer than 20 s, so
+ * callers can fall back. A timed-out request still finishes natively; its answer is dropped.
  */
 export async function generate<const F extends readonly Field[]>(request: {
   instructions: string;
@@ -52,7 +56,13 @@ export async function generate<const F extends readonly Field[]>(request: {
     return null;
   }
   try {
-    const answer = await native.generate({ ...request, fields: [...request.fields] });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`no answer within ${TIMEOUT_MS / 1000} s`)), TIMEOUT_MS);
+    });
+    const answer = await Promise.race([native.generate({ ...request, fields: [...request.fields] }), timeout]).finally(() =>
+      clearTimeout(timer),
+    );
     // Trust the native schema, but verify at the boundary: every field present, choices kept.
     for (const field of request.fields) {
       const value = answer[field.name];
