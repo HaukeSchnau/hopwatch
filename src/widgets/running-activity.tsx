@@ -1,5 +1,6 @@
-// The running entry as a Live Activity: Lock Screen banner and Dynamic Island, drawn in
-// Jelly's palette. `live-activity.ts` starts, updates and ends it from the store.
+// The running entry as a Live Activity: Lock Screen banner, Dynamic Island, and a small
+// layout for Apple Watch and CarPlay, drawn in Jelly's palette. `live-activity.ts`
+// starts, updates and ends it from the store.
 //
 // The layout function carries the 'widget' directive: Babel turns it into a string that
 // runs in the widget extension's own JavaScript runtime. It can only use @expo/ui
@@ -15,6 +16,7 @@ import {
   frame,
   layoutPriority,
   lineLimit,
+  minimumScaleFactor,
   monospacedDigit,
   multilineTextAlignment,
   offset,
@@ -97,8 +99,14 @@ function RunningActivity(props: RunningActivityProps) {
   );
 
   // h:mm:ss counting up from the start, ticked by the system. A system timer claims all
-  // the width it gets, so it needs a fixed width, or a minimum and the trailing edge.
-  const timer = (size: number, color: ColorValue, width: number | null, weight: 'bold' | 'heavy' = 'heavy') => (
+  // the width it gets, so it needs a fixed width, or a minimum width and an edge to hug.
+  const timer = (
+    size: number,
+    color: ColorValue,
+    width: number | null,
+    weight: 'bold' | 'heavy' = 'heavy',
+    edge: 'leading' | 'trailing' = 'trailing',
+  ) => (
     <Text
       date={since}
       dateStyle="timer"
@@ -106,10 +114,10 @@ function RunningActivity(props: RunningActivityProps) {
         rounded(size, weight),
         monospacedDigit(),
         foregroundStyle(color),
-        multilineTextAlignment('trailing'),
+        multilineTextAlignment(edge),
         width === null
-          ? frame({ minWidth: size * 3.9, maxWidth: Infinity, alignment: 'trailing' })
-          : frame({ width, alignment: 'trailing' }),
+          ? frame({ minWidth: size * 3.9, maxWidth: Infinity, alignment: edge })
+          : frame({ width, alignment: edge }),
       ]}
     />
   );
@@ -168,6 +176,31 @@ function RunningActivity(props: RunningActivityProps) {
           {timer(30, paint.accent, null)}
         </HStack>
         {buttons(paint)}
+      </VStack>
+    ),
+    // The small family: Apple Watch's Smart Stack (152×69.5pt on 40mm up to 191×81.5pt
+    // on 49mm) and CarPlay (up to 240×100pt). The jelly and its name over a big timer,
+    // nothing else. No pills: a tap on the watch opens a full-screen view with "Open on
+    // iPhone", and CarPlay disables controls. The watch draws it dark, so the night
+    // colors apply. The background follows the card's corners, with or without margins.
+    // Sized for the 40mm watch: 132×53.5pt inside the margins, h:mm:ss needs about 95pt.
+    bannerSmall: (
+      <VStack
+        alignment="leading"
+        spacing={1}
+        modifiers={[
+          padding({ horizontal: 10, vertical: 8 }),
+          frame({ maxWidth: Infinity, maxHeight: Infinity, alignment: 'leading' }),
+          background(paint.bg, shapes.containerRelativeShape()),
+          activityBackgroundTint(paint.bg),
+        ]}>
+        <HStack spacing={6}>
+          {gummy(20)}
+          <Text modifiers={[rounded(15, 'bold'), foregroundStyle(paint.ink), lineLimit(1), minimumScaleFactor(0.8)]}>
+            {props.name}
+          </Text>
+        </HStack>
+        {timer(26, paint.accent, null, 'heavy', 'leading')}
       </VStack>
     ),
     compactLeading: gummy(24),
