@@ -4,8 +4,12 @@
 // Version 1 (Stint Five) has contexts and entries. Version 2 adds the device's preferences,
 // which hold each jelly's look. Soft-deleted rows travel too, for a later sync.
 
+import { coreText } from '@/i18n/core';
+
 import { type Context, type ContextId, defaultHueHex, type Entry, type EntryId, isHue } from './model';
 import type { Json } from './store';
+
+const text = coreText.backup;
 
 export const BACKUP_VERSION = 2;
 
@@ -106,10 +110,10 @@ function readAll<S extends Shape>(shape: S, list: unknown[]): Parsed<S>[] | numb
 function timelineProblem(entries: readonly Entry[], contextIds: ReadonlySet<ContextId>): string | null {
   const live = entries.filter((e) => e.deletedAt === null).sort((a, b) => a.startUtc - b.startUtc);
   for (const [i, e] of live.entries()) {
-    if (!contextIds.has(e.contextId)) return 'An entry belongs to a context that is not in the file.';
-    if (e.endUtc !== null && e.endUtc < e.startUtc) return 'An entry ends before it starts.';
+    if (!contextIds.has(e.contextId)) return text.missingContext;
+    if (e.endUtc !== null && e.endUtc < e.startUtc) return text.endsBeforeStart;
     const next = live[i + 1];
-    if (next && (e.endUtc === null || e.endUtc > next.startUtc)) return 'Entries overlap.';
+    if (next && (e.endUtc === null || e.endUtc > next.startUtc)) return text.overlap;
   }
   return null;
 }
@@ -119,32 +123,32 @@ export type ParseResult = { ok: true; backup: Backup } | { ok: false; reason: st
 /** Checks a parsed export file before a restore replaces everything with it. */
 export function parseBackup(json: unknown): ParseResult {
   const fail = (reason: string): ParseResult => ({ ok: false, reason });
-  if (typeof json !== 'object' || json === null) return fail('This file is not a Stint export.');
+  if (typeof json !== 'object' || json === null) return fail(text.notAnExport);
   const file = json as Record<string, unknown>;
-  if (file.app !== 'stint') return fail('This file is not a Stint export.');
+  if (file.app !== 'stint') return fail(text.notAnExport);
   const version = file.schemaVersion;
   if (typeof version === 'number' && version > BACKUP_VERSION) {
-    return fail('This export is from a newer version of Stint. Update the app, then try again.');
+    return fail(text.newer);
   }
-  if (version !== 1 && version !== BACKUP_VERSION) return fail('This file is not a Stint export.');
-  if (!Array.isArray(file.contexts) || !Array.isArray(file.entries)) return fail('This file is not a Stint export.');
+  if (version !== 1 && version !== BACKUP_VERSION) return fail(text.notAnExport);
+  if (!Array.isArray(file.contexts) || !Array.isArray(file.entries)) return fail(text.notAnExport);
 
   const contexts = readAll(contextShape, file.contexts);
-  if (typeof contexts === 'number') return fail(`Context ${contexts + 1} in the file is damaged.`);
+  if (typeof contexts === 'number') return fail(text.damagedContext(contexts + 1));
   const entries = readAll(entryShape, file.entries);
-  if (typeof entries === 'number') return fail(`Entry ${entries + 1} in the file is damaged.`);
+  if (typeof entries === 'number') return fail(text.damagedEntry(entries + 1));
 
   const contextIds = new Set(contexts.map((c) => c.id));
-  if (contextIds.size !== contexts.length) return fail('The file lists a context twice.');
-  if (new Set(entries.map((e) => e.id)).size !== entries.length) return fail('The file lists an entry twice.');
+  if (contextIds.size !== contexts.length) return fail(text.contextTwice);
+  if (new Set(entries.map((e) => e.id)).size !== entries.length) return fail(text.entryTwice);
   if (contexts.some((c) => c.parentId !== null && !contextIds.has(c.parentId))) {
-    return fail('A context belongs to a parent that is not in the file.');
+    return fail(text.missingParent);
   }
   const problem = timelineProblem(entries, contextIds);
   if (problem) return fail(problem);
 
   const prefs = file.prefs ?? {};
-  if (!isJsonObject(prefs)) return fail('The preferences in the file are damaged.');
+  if (!isJsonObject(prefs)) return fail(text.damagedPrefs);
   const exportedAt = typeof file.exportedAt === 'string' ? Date.parse(file.exportedAt) : Number.NaN;
 
   return {

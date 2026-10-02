@@ -35,4 +35,4 @@ export type { Backup, ParseResult } from './backup';
 export { pickBackup, shareExport } from './export';
 export { requestNudgePermission } from './permissions';
 export { eraseAllData, loadSampleData } from './sample-loader';
-export { checkSummary, weekFacts, type WeekFacts } from './week-facts';
+export { checkSummary, summaryRequest, weekFacts, type WeekFacts } from './week-facts';

@@ -6,6 +6,7 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, { withSpring, withTiming } from 'react-native-reanimated';
 
 import { durationParts, useNow } from '@/core';
+import { shellText } from '@/i18n/shell';
 
 import { springs, useTheme } from './theme';
 
@@ -25,7 +26,7 @@ export function Timer({ since, size = 52, color, secondsColor, seconds = true, s
   const now = useNow(1000);
   const parts = durationParts(now - since);
   return (
-    <View style={[styles.row, style]} accessible accessibilityRole="timer" accessibilityLabel={`${parts.hours} hours ${parts.minutes} minutes`}>
+    <View style={[styles.row, style]} accessible accessibilityRole="timer" accessibilityLabel={shellText.timer(parts.hours, parts.minutes)}>
       <Digits text={`${parts.hours}:${pad(parts.minutes)}`} size={size} color={color ?? t.c.ink} weight="800" />
       {seconds && (
         <Digits text={`:${pad(parts.seconds)}`} size={size * 0.42} color={secondsColor ?? t.c.muted} weight="700" style={{ marginBottom: size * 0.14 }} />

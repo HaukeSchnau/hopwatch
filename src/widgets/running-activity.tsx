@@ -37,7 +37,7 @@ export interface ActivityPaint {
   muted: ColorValue;
   /** The context's hue as text on `bg`. */
   accent: ColorValue;
-  /** A pale wash of the hue, behind "Back to". */
+  /** A pale wash of the hue, behind "Back to X". */
   wash: ColorValue;
   /** The Stop pill and its label. */
   stop: ColorValue;
@@ -53,7 +53,9 @@ export interface RunningActivityProps {
   path: string | null;
   /** The entry's start in epoch ms. The system timer counts up from it without updates. */
   since: number;
-  /** The context "Back to" starts (stint://resume), null when there is none. */
+  /** The Stop pill's label, in the app's language. */
+  stop: string;
+  /** The label of the pill that starts the previous context (stint://resume), "Back to Dog". Null when there is none. */
   back: string | null;
   /** The gummy's gradient from top to bottom, and `on` for an initial drawn on it. */
   candy: { light: string; fill: string; deep: string; on: string };
@@ -141,8 +143,8 @@ function RunningActivity(props: RunningActivityProps) {
 
   const buttons = (p: Pick<ActivityPaint, 'stop' | 'onStop' | 'wash' | 'accent'>) => (
     <HStack spacing={8}>
-      {pill('stint://stop', 'stop.fill', 'Stop', p.stop, p.onStop)}
-      {props.back ? pill('stint://resume', 'arrow.uturn.backward', `Back to ${props.back}`, p.wash, p.accent) : null}
+      {pill('stint://stop', 'stop.fill', props.stop, p.stop, p.onStop)}
+      {props.back ? pill('stint://resume', 'arrow.uturn.backward', props.back, p.wash, p.accent) : null}
     </HStack>
   );
 

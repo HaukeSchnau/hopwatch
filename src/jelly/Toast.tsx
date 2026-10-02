@@ -8,6 +8,7 @@ import { initialWindowMetrics } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 
 import { actions, useUndoToast } from '@/core';
+import { shellText } from '@/i18n/shell';
 
 import { buzz } from './feedback';
 import { springs, text, useTheme } from './theme';
@@ -40,14 +41,14 @@ export function Toast({ lift = 0 }: { lift?: number }) {
     <View pointerEvents="box-none" style={[styles.wrap, { bottom }]}>
       {showNote ? (
         <Animated.View key={`note-${note.at}`} entering={popIn} exiting={ZoomOut.duration(160)} style={toast}>
-          <Text style={[text.callout, styles.text, { color: t.c.onToast }]} numberOfLines={1}>
+          <Text style={[text.callout, styles.text, { color: t.c.onToast }]} numberOfLines={2}>
             {note.text}
           </Text>
         </Animated.View>
       ) : showUndo ? (
         <Animated.View key={`undo-${action.at}`} entering={popIn} exiting={ZoomOut.duration(160)} style={toast}>
-          <Pressable onPress={() => actions.dismissLastAction()} style={styles.label} accessibilityLabel={`${action.label}. Dismiss`}>
-            <Text style={[text.callout, styles.text, { color: t.c.onToast }]} numberOfLines={1}>
+          <Pressable onPress={() => actions.dismissLastAction()} style={styles.label} accessibilityLabel={shellText.dismiss(action.label)}>
+            <Text style={[text.callout, styles.text, { color: t.c.onToast }]} numberOfLines={2}>
               {action.label}
             </Text>
           </Pressable>
@@ -59,10 +60,10 @@ export function Toast({ lift = 0 }: { lift?: number }) {
             }}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Undo"
+            accessibilityLabel={shellText.undo}
             style={({ pressed }) => [styles.undo, { backgroundColor: t.c.pink }, pressed && { transform: [{ scale: 0.92 }] }]}>
             <SymbolView name="arrow.uturn.backward" size={13} tintColor="#FFFFFF" weight="heavy" />
-            <Text style={[text.headline, styles.undoText]}>Undo</Text>
+            <Text style={[text.headline, styles.undoText]}>{shellText.undo}</Text>
           </Pressable>
         </Animated.View>
       ) : null}
@@ -102,7 +103,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
   },
   label: { flexShrink: 1, alignSelf: 'stretch', justifyContent: 'center' },
-  text: { flexShrink: 1, paddingRight: 8 },
+  // Long labels (German, long names) wrap to a second line inside the pill.
+  text: { flexShrink: 1, paddingRight: 8, lineHeight: 19 },
   undo: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 20, height: 40, paddingHorizontal: 14 },
   undoText: { color: '#FFFFFF' },
 });

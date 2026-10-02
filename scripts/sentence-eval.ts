@@ -2,9 +2,11 @@
 // Evaluates typed logging (src/core/sentence.ts) against Apple's on-device model on the M1:
 // each phrase goes through the app's own request and resolver, against the sample data's
 // jellies, at a fixed "now" (Wednesday 30 September 2026, 15:10, Berlin). Prints a Markdown
-// table of phrase, model answer, plan, verdict and latency. Run from the repo root:
+// table of phrase, model answer, plan, verdict and latency. Run from the repo root, with
+// the `@/` paths and the React Native stub vitest uses (src/i18n reads the language through
+// React Native; the stub makes it English):
 //
-//   TZ=Europe/Berlin node -e "import('vite').then((v) => v.runnerImport('./scripts/sentence-eval.ts', { configFile: false }))"
+//   TZ=Europe/Berlin node -e "import('vite').then((v) => v.runnerImport('./scripts/sentence-eval.ts', { resolve: { tsconfigPaths: true, alias: { 'react-native': process.cwd() + '/src/test/react-native.ts' } } }))"
 //
 // Set ONLY=<substring> to run matching phrases.
 

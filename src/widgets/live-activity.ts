@@ -8,6 +8,7 @@ import type { LiveActivity } from 'expo-widgets';
 import { AppState, DynamicColorIOS } from 'react-native';
 
 import { findOpen, type Hue, previousContextId, type StintState, useStint } from '@/core';
+import { widgetText } from '@/i18n/widgets';
 import { darkTheme, lightTheme, mix } from '@/jelly/theme';
 
 import { type RunningActivityProps, runningActivity } from './running-activity';
@@ -45,7 +46,8 @@ function describe(state: StintState): RunningActivityProps | null {
     name: context.name,
     path: context.ancestors.map((a) => a.name).join(' › ') || null,
     since: open.startUtc,
-    back: back && !back.hidden ? back.name : null,
+    stop: widgetText.stop,
+    back: back && !back.hidden ? widgetText.back(back.name) : null,
     ...paint(context.hue),
   };
 }

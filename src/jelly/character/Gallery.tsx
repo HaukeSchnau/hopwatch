@@ -9,6 +9,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { actions, type Hue, loadSampleData, useStint, useTree } from '@/core';
+import { optionNames } from '@/i18n/character';
 
 import { Character } from '../Character';
 import { useFace, useLively, wake } from '../Gummy';
@@ -18,7 +19,7 @@ import { suggestedKey } from './look';
 import { LookEditor } from './LookEditor';
 import { suggestForContext, useDressUp } from './suggest';
 import { useTheme } from '../theme';
-import { bodies, type Look, member, optionNames, traitOptions } from './traits';
+import { bodies, type Look, member, traitOptions } from './traits';
 
 type Sample = LookSource & { hue: Hue; name: string };
 

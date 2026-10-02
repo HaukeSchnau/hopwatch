@@ -3,7 +3,10 @@
 // a jelly, clock times, minutes, a day, a part of the day) as plain strings. This module
 // builds that request and does everything else in code: date math, a.m./p.m., where a
 // block without times goes, clamping to now and validation. Small models are bad at time
-// arithmetic; code isn't. Nothing here calls the model or writes entries.
+// arithmetic; code isn't. Nothing here calls the model or writes entries. The request
+// stays in English; sentences and names may be English or German.
+
+import { coreText } from '@/i18n/core';
 
 import { type ContextId, type Entry, MIN_ENTRY_MS } from './model';
 import { addDays, formatClock, HOUR, MINUTE, startOfDay } from './time';
@@ -18,6 +21,8 @@ export type Plan =
 
 /** A plan, or what's wrong with the sentence in words. */
 export type Reading = { plan: Plan } | { problem: string };
+
+const problems = coreText.sentence;
 
 const ACTIONS = ['start', 'log', 'stop', 'none'] as const;
 const DAYS = ['today', 'yesterday', 'other'] as const;
@@ -288,7 +293,7 @@ export function readSentence(
   const said = plain(sentence);
   const today = startOfDay(now);
   const offset = namedDay(said, now) ?? (answer.day === 'yesterday' ? -1 : answer.day === 'today' ? 0 : null);
-  if (offset !== 0 && offset !== -1) return problem('Only today and yesterday work');
+  if (offset !== 0 && offset !== -1) return problem(problems.onlyTodayAndYesterday);
   const day = addDays(today, offset);
 
   // The model sometimes makes numbers up. A time counts only if its hour is written in the
@@ -309,23 +314,23 @@ export function readSentence(
   const instant = (clock: ClockTime | null): number | Reading => {
     const ago = writtenAgo(sentence);
     if (ago !== null) return now - ago * MINUTE;
-    if (clock) return recent(day, clock, now) ?? problem(`${formatClock(on(day, clock))} is still to come`);
+    if (clock) return recent(day, clock, now) ?? problem(problems.stillToCome(formatClock(on(day, clock))));
     return minutes !== null ? now - minutes * MINUTE : now;
   };
 
   if (answer.action === 'stop') {
     const open = findOpen(entries);
-    if (!open) return problem('Nothing is running');
+    if (!open) return problem(problems.nothingRunning);
     // A model may put the stop time in either field.
     const at = instant(to ?? from);
     if (typeof at !== 'number') return at;
-    const name = tree.byId.get(open.contextId)?.name ?? 'It';
-    if (at < open.startUtc) return problem(`That's before ${name} started at ${formatClock(open.startUtc)}`);
+    const name = tree.byId.get(open.contextId)?.name;
+    if (at < open.startUtc) return problem(problems.beforeStart(name, formatClock(open.startUtc)));
     return { plan: { kind: 'stop', at } };
   }
 
   const contextId = namedJelly(said, jellyChoices(tree).get(answer.jelly), tree);
-  if (!contextId) return problem("Couldn't tell which jelly");
+  if (!contextId) return problem(problems.whichJelly);
 
   // A start with an end is a block. A block with nothing but a start today, or one that
   // says "since", is still going.
@@ -337,7 +342,7 @@ export function readSentence(
   if (!isBlock) {
     const at = instant(from);
     if (typeof at !== 'number') return at;
-    if (now - at > LONGEST) return problem('That started more than 16 hours ago');
+    if (now - at > LONGEST) return problem(problems.startedTooLongAgo);
     return { plan: { kind: 'start', contextId, at } };
   }
 
@@ -354,12 +359,12 @@ export function readSentence(
   } else if (minutes !== null) {
     range = placeLength(entries, day, answer.part, minutes * MINUTE, now);
   } else {
-    return problem('Say how long, or until when');
+    return problem(problems.howLong);
   }
 
-  if (range.from >= now) return problem(`${formatClock(range.from)} is still to come`);
+  if (range.from >= now) return problem(problems.stillToCome(formatClock(range.from)));
   const end = Math.min(range.to, now);
-  if (end - range.from < Math.max(MIN_ENTRY_MS, MINUTE)) return problem("That's too short");
-  if (end - range.from > LONGEST) return problem("That's longer than 16 hours");
+  if (end - range.from < Math.max(MIN_ENTRY_MS, MINUTE)) return problem(problems.tooShort);
+  if (end - range.from > LONGEST) return problem(problems.tooLong);
   return { plan: { kind: 'place', contextId, from: range.from, to: end } };
 }

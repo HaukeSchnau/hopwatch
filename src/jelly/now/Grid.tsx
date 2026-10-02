@@ -18,6 +18,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { actions, type ContextId, type ResolvedContext, useNow, usePinned } from '@/core';
+import { menuText } from '@/i18n/menus';
+import { nowText } from '@/i18n/now';
 
 import { Character } from '../Character';
 import { hashSeed } from '../geometry';
@@ -98,8 +100,8 @@ function Tile({ context, running, width, now }: { context: ResolvedContext; runn
         amount={0.15}
         style={[styles.tile, { width }]}
         accessibilityRole="button"
-        accessibilityLabel={running ? `${context.name}, running` : `Switch to ${context.name}`}
-        accessibilityHint="Hold to start it at an earlier time"
+        accessibilityLabel={running ? nowText.running(context.name) : nowText.switchTo(context.name)}
+        accessibilityHint={menuText.startHint}
         onPressIn={() => !hidden && wake(face)}
         onPressOut={() => !hidden && setTimeout(() => sleep(face), 350)}
         onPress={() => {
@@ -137,7 +139,7 @@ function NewTile({ width }: { width: number }) {
       grounded
       style={[styles.tile, { width }]}
       accessibilityRole="button"
-      accessibilityLabel="New jelly"
+      accessibilityLabel={nowText.newJelly}
       onPress={() => router.push({ pathname: '/context', params: { pin: '1' } })}>
       <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
         <View style={StyleSheet.absoluteFill}>
@@ -145,7 +147,7 @@ function NewTile({ width }: { width: number }) {
         </View>
         <Text style={[styles.plus, { color: t.c.muted }]}>+</Text>
       </View>
-      <Text style={[text.subhead, styles.label, { color: t.c.muted }]}>New jelly</Text>
+      <Text style={[text.subhead, styles.label, { color: t.c.muted }]}>{nowText.newJelly}</Text>
     </Squishy>
   );
 }

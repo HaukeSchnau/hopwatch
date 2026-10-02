@@ -6,6 +6,8 @@ import { useRef } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { type Hue, hues } from '@/core';
+import { characterText } from '@/i18n/character';
+import { welcomeText } from '@/i18n/welcome';
 
 import { buzz } from './feedback';
 import { useTheme } from './theme';
@@ -42,7 +44,7 @@ export function HuePicker({ value, onChange }: { value: Hue; onChange: (hue: Hue
             }}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
-            accessibilityLabel={hue}>
+            accessibilityLabel={characterText.hues[hue]}>
             <View style={[styles.ring, selected && { borderColor: t.candy[hue].fill }]}>
               <CandySurface hue={hue} radius={20} flat style={[styles.drop, selected && { transform: [{ scale: 1.08 }] }]}>
                 {selected && <SymbolView name="checkmark" size={14} tintColor={t.candy[hue].on} weight="heavy" />}
@@ -64,7 +66,7 @@ export function EmojiField({ value, onChange, suggested }: { value: string | nul
   const input = useRef<TextInput>(null);
   return (
     <View style={styles.emojiRow}>
-      <Squishy amount={0.12} onPress={() => input.current?.focus()} accessibilityRole="button" accessibilityLabel={suggested ? 'Suggested emoji. Type another' : 'Type an emoji'}>
+      <Squishy amount={0.12} onPress={() => input.current?.focus()} accessibilityRole="button" accessibilityLabel={suggested ? welcomeText.suggestedEmoji : welcomeText.typeEmoji}>
         <View style={[styles.emojiWell, { backgroundColor: t.c.card, borderColor: suggested ? t.c.pink : t.c.line }]}>
           <Text style={[styles.emojiBig, !value && { opacity: 0.35 }]}>{value ?? '🙂'}</Text>
           {suggested && (

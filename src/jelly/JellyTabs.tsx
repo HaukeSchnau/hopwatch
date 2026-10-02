@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { actions, useIntent, useRunning, useStint, useTree } from '@/core';
+import { shellText } from '@/i18n/shell';
 
 import { MiniPlayer } from './MiniPlayer';
 import { useTheme } from './theme';
@@ -36,19 +37,19 @@ export function JellyTabs() {
           </NativeTabs.BottomAccessory>
         ) : null}
         <NativeTabs.Trigger name="index">
-          <NativeTabs.Trigger.Label>Now</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{shellText.tabs.now}</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon sf={{ default: 'face.smiling', selected: 'face.smiling.inverse' }} />
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="day">
-          <NativeTabs.Trigger.Label>Day</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{shellText.tabs.day}</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon sf="calendar.day.timeline.left" />
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="week">
-          <NativeTabs.Trigger.Label>Week</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{shellText.tabs.week}</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon sf={{ default: 'circle.hexagongrid', selected: 'circle.hexagongrid.fill' }} />
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="stuff">
-          <NativeTabs.Trigger.Label>Stuff</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>{shellText.tabs.stuff}</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon sf={{ default: 'square.stack.3d.up', selected: 'square.stack.3d.up.fill' }} />
         </NativeTabs.Trigger>
       </NativeTabs>

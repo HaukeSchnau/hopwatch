@@ -8,6 +8,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { actions, type Hue, loadSampleData, newContextId } from '@/core';
+import { welcomeText } from '@/i18n/welcome';
 
 import { Character } from '../Character';
 import { lookFor } from '../character/derive';
@@ -74,10 +75,8 @@ export function Welcome() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets>
-      <Text style={[styles.hello, { color: t.c.ink }]}>Hi there!</Text>
-      <Text style={[text.body, styles.intro, { color: t.c.muted }]}>
-        {"Let's make your first jelly. One for each thing your time goes to: the job, a client, the dog. Tap one to start tracking it."}
-      </Text>
+      <Text style={[styles.hello, { color: t.c.ink }]}>{welcomeText.hello}</Text>
+      <Text style={[text.body, styles.intro, { color: t.c.muted }]}>{welcomeText.intro}</Text>
 
       <Animated.View style={[styles.preview, { transformOrigin: 'bottom' }, blob]}>
         <Character context={preview} size={170} face={face} look={suggested ? lookFor(preview, suggested.suggestion) : undefined} />
@@ -86,7 +85,7 @@ export function Welcome() {
       <TextInput
         value={name}
         onChangeText={setName}
-        placeholder="Name it, e.g. Job"
+        placeholder={welcomeText.namePlaceholder}
         placeholderTextColor={t.c.faint}
         style={[styles.name, { color: t.c.ink, backgroundColor: t.c.card, borderColor: t.c.line }]}
         returnKeyType="done"
@@ -95,7 +94,7 @@ export function Welcome() {
         autoCapitalize="sentences"
       />
 
-      <Text style={[text.headline, styles.label, { color: t.c.ink }]}>Emoji</Text>
+      <Text style={[text.headline, styles.label, { color: t.c.ink }]}>{welcomeText.emoji}</Text>
       <EmojiField
         value={shownEmoji}
         suggested={suggestedEmoji !== null}
@@ -107,8 +106,8 @@ export function Welcome() {
       />
 
       <Text style={[text.headline, styles.label, { color: t.c.ink }]}>
-        Color
-        {suggestedHue ? <Text style={[text.subhead, { color: t.c.muted }]}>{'  ✨ suggested for the name'}</Text> : null}
+        {welcomeText.color}
+        {suggestedHue ? <Text style={[text.subhead, { color: t.c.muted }]}>{`  ${welcomeText.colorSuggested}`}</Text> : null}
       </Text>
       <HuePicker
         value={shownHue}
@@ -119,18 +118,18 @@ export function Welcome() {
         }}
       />
 
-      <JellyButton label="Make it!" hue={shownHue} size="large" icon="sparkles" onPress={create} disabled={!name.trim()} style={styles.cta} />
+      <JellyButton label={welcomeText.make} hue={shownHue} size="large" icon="sparkles" onPress={create} disabled={!name.trim()} style={styles.cta} />
 
       <Pressable
         onPress={() =>
-          Alert.alert('Load sample data?', 'Three weeks of made-up days with 18 jellies, to try out the timeline and reports.', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Load', onPress: () => loadSampleData() },
+          Alert.alert(welcomeText.sampleTitle, welcomeText.sampleMessage, [
+            { text: welcomeText.cancel, style: 'cancel' },
+            { text: welcomeText.load, onPress: () => loadSampleData() },
           ])
         }
         style={({ pressed }) => [styles.sample, pressed && { opacity: 0.5 }]}
         accessibilityRole="button">
-        <Text style={[text.subhead, styles.sampleText, { color: t.c.muted }]}>or load sample data</Text>
+        <Text style={[text.subhead, styles.sampleText, { color: t.c.muted }]}>{welcomeText.sample}</Text>
       </Pressable>
     </ScrollView>
   );

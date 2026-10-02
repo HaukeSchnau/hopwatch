@@ -8,6 +8,8 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { actions, durationParts, formatClock, type Running, useNow } from '@/core';
+import { menuText } from '@/i18n/menus';
+import { shellText } from '@/i18n/shell';
 
 import { Character } from './Character';
 import { buzz, play } from './feedback';
@@ -27,7 +29,7 @@ export function MiniPlayer({ running }: { running: Running }) {
     <View style={styles.bar}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${context.name} running. Opens Now`}
+        accessibilityLabel={shellText.miniPlayer(context.name)}
         onPress={() => router.navigate('/')}
         style={styles.main}>
         <Character context={context} size={inline ? 30 : 38} face={face} shadow={false} sticker={false} />
@@ -36,7 +38,7 @@ export function MiniPlayer({ running }: { running: Running }) {
             <Text style={[text.subhead, { color: t.c.ink }]} numberOfLines={1}>
               {context.name}
             </Text>
-            <Text style={[text.caption, tabular, { color: t.c.muted }]}>since {formatClock(entry.startUtc)}</Text>
+            <Text style={[text.caption, tabular, { color: t.c.muted }]}>{shellText.since(formatClock(entry.startUtc))}</Text>
           </View>
         )}
         <LiveTime since={entry.startUtc} color={t.c.ink} />
@@ -63,11 +65,11 @@ function LiveTime({ since, color }: { since: number; color: string }) {
 function StopButton({ since, name, color }: { since: number; name: string; color: string }) {
   const now = useNow(60_000);
   return (
-    <Menu title={`Stop ${name}`} items={stopMenu(name, since, now)} onPress={onStopMenu}>
+    <Menu title={menuText.stop(name)} items={stopMenu(name, since, now)} onPress={onStopMenu}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Stop ${name}`}
-        accessibilityHint="Hold to stop at an earlier time"
+        accessibilityLabel={menuText.stop(name)}
+        accessibilityHint={menuText.stopHint}
         hitSlop={6}
         onPress={() => {
           buzz.thud();

@@ -19,6 +19,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { actions, type DayReport, type EntryId, formatClock, formatDuration, MINUTE, type Segment } from '@/core';
+import { dayText } from '@/i18n/day';
 
 import { buzz } from '../feedback';
 import { alpha, tabular, text, useTheme } from '../theme';
@@ -116,7 +117,7 @@ function GapBean({ start, end, axis, width }: { start: number; end: number; axis
       }}
       hitSlop={{ top: Math.max(0, (24 - h) / 2), bottom: Math.max(0, (24 - h) / 2) }}
       accessibilityRole="button"
-      accessibilityLabel={`Untracked ${formatClock(start)} to ${formatClock(end)}. What was this?`}
+      accessibilityLabel={dayText.gapLabel(formatClock(start), formatClock(end))}
       style={({ pressed }) => [
         styles.gap,
         { top: top + pad, height: Math.max(2, h - pad * 2), width, borderRadius: Math.min(18, h / 2), borderColor: alpha(t.c.ink, 0.18) },
@@ -124,7 +125,7 @@ function GapBean({ start, end, axis, width }: { start: number; end: number; axis
       ]}>
       {h >= 22 && (
         <Text style={[text.footnote, { color: t.c.faint }]} numberOfLines={1}>
-          + untracked {formatDuration(end - start)}
+          {dayText.untracked(formatDuration(end - start))}
         </Text>
       )}
     </Pressable>
@@ -179,7 +180,7 @@ function Bean({ seg, axis, now, width, active, selected, onActive }: BeanProps) 
           style={StyleSheet.absoluteFill}
           onPress={() => router.push({ pathname: '/entry', params: { id: seg.entry.id } })}
           accessibilityRole="button"
-          accessibilityLabel={`${seg.context.name}, ${formatClock(seg.start)} to ${running ? 'now' : formatClock(seg.end)}, ${formatDuration(seg.end - seg.start)}`}>
+          accessibilityLabel={dayText.beanLabel(seg.context.name, formatClock(seg.start), running ? null : formatClock(seg.end), formatDuration(seg.end - seg.start))}>
           <View
             style={[
               styles.beanBody,
@@ -214,7 +215,7 @@ function Bean({ seg, axis, now, width, active, selected, onActive }: BeanProps) 
                 </View>
                 {h >= 54 ? (
                   <Text style={[text.footnote, styles.beanSub, { color: c.on }]} numberOfLines={Math.max(1, Math.floor((h - 36) / 17))}>
-                    {formatClock(seg.start)}–{running ? 'now' : formatClock(seg.end)}
+                    {formatClock(seg.start)}–{running ? dayText.now : formatClock(seg.end)}
                     {seg.entry.note ? ` · ${seg.entry.note}` : ''}
                   </Text>
                 ) : null}
@@ -276,11 +277,7 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
     setLabel(null);
     onActive(false);
     if (t === origin) return;
-    actions.updateEntry(
-      seg.entry.id,
-      edge === 'start' ? { startUtc: t } : { endUtc: t },
-      `${seg.context.name} ${edge === 'start' ? 'starts' : 'ends'} at ${formatClock(t)}`,
-    );
+    actions.updateEntry(seg.entry.id, edge === 'start' ? { startUtc: t } : { endUtc: t }, dayText.moved(seg.context.name, edge, formatClock(t)));
   };
   const moved = (t: number) => {
     buzz.tick();
@@ -333,7 +330,7 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
       <Animated.View
         style={[styles.knobHit, { left: x - KNOB / 2 }, style]}
         accessibilityRole="adjustable"
-        accessibilityLabel={`${edge === 'start' ? 'Start' : 'End'} of ${seg.context.name}, ${formatClock(origin)}`}>
+        accessibilityLabel={dayText.knobLabel(seg.context.name, edge, formatClock(origin))}>
         <View style={[styles.knob, { borderColor: c.deep, shadowColor: t.c.ink }]} />
         {label && (
           <View style={[styles.bubble, { backgroundColor: t.c.toast }]}>
@@ -350,7 +347,7 @@ function NowLine({ y }: { y: number }) {
   return (
     <View pointerEvents="none" style={[styles.nowRow, { top: y - 9 }]}>
       <View style={[styles.nowPill, { backgroundColor: t.c.pinkDeep }]}>
-        <Text style={[text.caption, styles.nowText]}>now</Text>
+        <Text style={[text.caption, styles.nowText]}>{dayText.now}</Text>
       </View>
       <View style={[styles.nowLine, { backgroundColor: t.c.pinkDeep }]} />
     </View>

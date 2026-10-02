@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { formatClock, type Hue, MINUTE, type ResolvedContext } from '@/core';
+import { locale } from '@/i18n';
+import { sheetsText } from '@/i18n/sheets';
 
 import { Character } from '../Character';
 import { useFace, useLively } from '../Gummy';
@@ -72,10 +74,10 @@ export function AgoChips({
             onPress={() => onPick(at)}
             style={[styles.chipWrap, disabled && { opacity: 0.3 }]}
             accessibilityRole="button"
-            accessibilityLabel={`${m} minutes ago, ${formatClock(at)}`}>
+            accessibilityLabel={sheetsText.agoLabel(m, formatClock(at))}>
             <CandySurface hue={hue} radius={22} style={styles.chip}>
               <Text style={[styles.chipNumber, { color: c.on }]}>{m}</Text>
-              <Text style={[text.caption, styles.chipUnit, { color: c.on }]}>min ago</Text>
+              <Text style={[text.caption, styles.chipUnit, { color: c.on }]}>{sheetsText.agoUnit}</Text>
             </CandySurface>
             <Text style={[text.caption, tabular, { color: t.c.muted }]}>{formatClock(at)}</Text>
           </Squishy>
@@ -84,6 +86,9 @@ export function AgoChips({
     </View>
   );
 }
+
+/** For native date and time pickers: the app's language with a 24-hour clock, as "de_DE". */
+export const pickerLocale = locale.replace('-', '_');
 
 /**
  * The most recent past instant at the picked wall-clock time: 23:30 picked at 00:10
@@ -104,7 +109,7 @@ export function TimeWheel({ value, onChange, hue }: { value: Date; onChange: (d:
         value={value}
         mode="time"
         display="spinner"
-        locale="en_GB"
+        locale={pickerLocale}
         themeVariant={t.scheme}
         accentColor={t.candy[hue].ink}
         onValueChange={(_, d) => onChange(d)}

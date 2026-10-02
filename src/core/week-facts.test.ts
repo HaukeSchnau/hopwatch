@@ -65,6 +65,14 @@ describe('spoken', () => {
     expect(spoken(38 * HOUR + 20 * MINUTE)).toBe('just over 38 hours');
     expect(spoken(47 * HOUR + 3 * MINUTE)).toBe('47 hours');
   });
+
+  it('speaks German', () => {
+    expect(spoken(22 * MINUTE, 'de')).toBe('20 Minuten');
+    expect(spoken(57 * MINUTE, 'de')).toBe('eine Stunde');
+    expect(spoken(80 * MINUTE, 'de')).toBe('knapp anderthalb Stunden');
+    expect(spoken(6 * HOUR + 32 * MINUTE, 'de')).toBe('6,5 Stunden');
+    expect(spoken(38 * HOUR + 20 * MINUTE, 'de')).toBe('gut 38 Stunden');
+  });
 });
 
 describe('weekFacts', () => {
@@ -106,6 +114,19 @@ describe('weekFacts', () => {
     expect(slow?.facts[1]).toBe('Job got 5 hours so far, with 35 hours to go for its target of 40 hours.');
   });
 
+  it('says the same in German', () => {
+    const entries = [...workweek(addDays(monday, -7), [8, 8, 8, 8, 8]), ...workweek(monday, [9, 9, 9])];
+    expect(weekFacts(entries, tree, monday, at(2, 20), 'de')).toEqual({
+      over: false,
+      span: 'Montag bis Mittwoch',
+      facts: [
+        'Du hast bisher 30 Stunden erfasst, 3 Stunden mehr als letzte Woche um diese Zeit.',
+        'Job kam bisher auf 30 Stunden, auf Kurs zum Ziel von 40 Stunden.',
+        'Dein längster Block waren 9 Stunden Deep work am Montag.',
+      ],
+    });
+  });
+
   it('picks late evenings as the notable thing', () => {
     const entries = [...workweek(monday, [6, 6, 6, 6, 6]), entry('Side projects', at(1, 21.5), 90), entry('Side projects', at(3, 22), 60)];
     expect(weekFacts(entries, tree, monday, addDays(monday, 7))?.facts).toContain(
@@ -130,6 +151,35 @@ describe('checkSummary', () => {
     expect(checkSummary('You tracked 42 hours, 12% more than usual.', week)).toBe('numbers not in the facts: 12');
     expect(checkSummary('Side projects got 1.5 hours this week, nice.', week)).toBe('numbers not in the facts: 1.5');
     expect(checkSummary('Wednesday was your busiest day of the week.', week)).toBe('days not in the facts: wednesday');
+  });
+
+  describe('in German', () => {
+    const woche = {
+      over: false,
+      span: 'Montag bis Mittwoch',
+      facts: [
+        'Du hast bisher gut 42 Stunden erfasst.',
+        'Job kam auf anderthalb Stunden, unter dem Ziel von 40 Stunden.',
+        'An 2 Abenden (Dienstag und Mittwoch) lief nach 22 Uhr noch etwas.',
+        'Nebenprojekte kam auf 6,5 Stunden, noch eine Stunde bis zum Ziel von 21 Stunden.',
+      ],
+    };
+    const check = (summary: string) => checkSummary(summary, woche, 'de');
+
+    it('accepts numbers from the facts, in digits, words or with a decimal comma', () => {
+      expect(check('Zweiundvierzig Stunden bisher, und Job hatte eineinhalb davon. Vierzig waren das Ziel.')).toBeNull();
+      expect(check('Nebenprojekte bekam sechseinhalb Stunden, zwei Abende gingen bis nach 22 Uhr.')).toBeNull();
+      expect(check('Nebenprojekte fehlt nur noch eine knappe Stunde bis zu den einundzwanzig.')).toBeNull();
+      expect(check('Am Dienstagabend und mittwochs warst du lange wach, 6.5 Stunden Nebenprojekte.')).toBeNull();
+    });
+
+    it('turns down invented numbers and days', () => {
+      expect(check('Du hast 42 Stunden erfasst, davon 2,5 Stunden Job.')).toBe('numbers not in the facts: 2.5');
+      expect(check('Job kam auf eine halbe Stunde, drei Abende lang.')).toBe('numbers not in the facts: 0.5, 3');
+      expect(check('Fünfzehn Stunden Job und dreißig Minuten Pause.')).toBe('numbers not in the facts: 15, 30');
+      expect(check('Am Donnerstag war am meisten los, gut 42 Stunden bisher.')).toBe('days not in the facts: donnerstag');
+      expect(check('Am Samstag und am Sonnabend war es ruhig, gut 42 Stunden.')).toBe('days not in the facts: samstag');
+    });
   });
 
   it('turns down empty, rambling or questioning answers', () => {

@@ -6,6 +6,8 @@ import { SymbolView } from 'expo-symbols';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { actions, type ResolvedContext, useNow, useSwitchTarget } from '@/core';
+import { menuText } from '@/i18n/menus';
+import { nowText } from '@/i18n/now';
 
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
@@ -25,16 +27,17 @@ function Pill({ kind, context }: { kind: 'back' | 'resume'; context: ResolvedCon
   const { width } = useWindowDimensions();
   const menu = useStartMenu(context, now, false);
   const c = t.candy[context.hue];
-  const verb = kind === 'back' ? 'Back to' : 'Resume';
+  const { before, after } = nowText.pill(kind);
+  const label = `${before}${context.name}${after}`;
   return (
     <View style={styles.wrap}>
-      <Menu title={`${verb} ${context.name}`} items={menu} onPress={(id) => onStartMenu(context.id, id, 'back')}>
+      <Menu title={label} items={menu} onPress={(id) => onStartMenu(context.id, id, 'back')}>
         <Squishy
           amount={0.07}
           style={{ width: width - 32 }}
           accessibilityRole="button"
-          accessibilityLabel={`${verb} ${context.name}`}
-          accessibilityHint="Hold to start it at an earlier time"
+          accessibilityLabel={label}
+          accessibilityHint={menuText.startHint}
           onPress={() => {
             noteSource(context.id, 'back');
             actions.back();
@@ -46,8 +49,9 @@ function Pill({ kind, context }: { kind: 'back' | 'resume'; context: ResolvedCon
               </Text>
             </View>
             <Text style={[styles.label, { color: c.on }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-              <Text style={styles.verb}>{verb} </Text>
+              {before ? <Text style={styles.verb}>{before}</Text> : null}
               {context.name}
+              {after ? <Text style={styles.verb}>{after}</Text> : null}
             </Text>
             <View style={styles.icon}>
               <SymbolView name={kind === 'back' ? 'arrow.uturn.backward' : 'play.fill'} size={17} tintColor={c.on} weight="heavy" />

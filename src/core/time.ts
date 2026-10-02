@@ -1,5 +1,11 @@
 // Local calendar math and duration formatting. Days and weeks follow the device's
 // current time zone; weeks start on Monday. Durations are shown as h:mm, never decimals.
+// Names of days and months are in the app's language.
+
+import { locale } from '@/i18n';
+import { coreText } from '@/i18n/core';
+
+const text = coreText.time;
 
 export const MINUTE = 60_000;
 export const HOUR = 60 * MINUTE;
@@ -69,38 +75,38 @@ export function formatClock(ts: number): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const weekdayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
-const dayMonthFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
-const longDayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+const weekdayFormat = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+const dayMonthFormat = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
+const longDayFormat = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' });
 
-/** Mon */
+/** Mon, Mo. */
 export const formatWeekday = (ts: number) => weekdayFormat.format(ts);
-/** 24 Sep */
+/** 24 Sep, 24. Sept. */
 export const formatDayMonth = (ts: number) => dayMonthFormat.format(ts);
-/** Wednesday 24 September */
+/** Wednesday 24 September, Mittwoch, 24. September */
 export const formatLongDay = (ts: number) => longDayFormat.format(ts);
 
 /** Today, Yesterday, or Mon 22 Sep. */
 export function formatRelativeDay(ts: number, now: number): string {
   const day = startOfDay(ts);
   const today = startOfDay(now);
-  if (day === today) return 'Today';
-  if (day === addDays(today, -1)) return 'Yesterday';
+  if (day === today) return text.today;
+  if (day === addDays(today, -1)) return text.yesterday;
   return `${formatWeekday(ts)} ${formatDayMonth(ts)}`;
 }
 
-/** 22–28 Sep, or 29 Sep – 5 Oct across months. */
+/** 22–28 Sep, or 29 Sep – 5 Oct across months. In German 22.–28. Sept. */
 export function formatWeekRange(weekStart: number): string {
   const last = addDays(weekStart, 6);
   const a = new Date(weekStart);
   const b = new Date(last);
-  if (a.getMonth() === b.getMonth()) return `${a.getDate()}–${formatDayMonth(last)}`;
+  if (a.getMonth() === b.getMonth()) return `${text.rangeStart(a.getDate())}–${formatDayMonth(last)}`;
   return `${formatDayMonth(weekStart)} – ${formatDayMonth(last)}`;
 }
 
 /** "just now", "5 min ago", "1:20 ago": for backdating choices. */
 export function formatAgo(ms: number): string {
   const minutes = Math.round(ms / MINUTE);
-  if (minutes < 1) return 'just now';
-  return minutes < 60 ? `${minutes} min ago` : `${formatDuration(ms)} ago`;
+  if (minutes < 1) return text.justNow;
+  return minutes < 60 ? text.minutesAgo(minutes) : text.ago(formatDuration(ms));
 }

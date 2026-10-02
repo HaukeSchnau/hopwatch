@@ -44,3 +44,23 @@ sake. These rules keep the three people (or agents) writing it consistent.
 | erase all data | alle Daten löschen | |
 | Today / Yesterday | Heute / Gestern | |
 | min, h | Min., Std. | |
+| tracked | erfasst | |
+| added (an entry) | eingetragen | Toast: „Fokus eingetragen“ |
+| almost / just over (summary) | knapp / gut | „knapp 38 Stunden“; in a week sentence „Ziel von 40 Stunden“ reads better than „Wochenziel“ |
+| bean, bead, block | Bohne, Perle, Block (Blöcke) | Day and Week visuals |
+| target jars, totals, bubbles | Zielgläser, Summen, Blasen | Week tab |
+| At a time… | Uhrzeit wählen… | Menus |
+| greetings | Nachteule / Morgen! / Hallo! / Abend! / Noch wach? | Now header |
+| dial | Rad | |
+| unarchive | zurückholen | |
+| pin to Now / unpin | Auf Jetzt anpinnen / Von Jetzt lösen | |
+| start at 14:50 / stop at 14:50 (buttons) | Ab 14:50 starten / Um 14:50 stoppen | „Seit“ reads oddly on a button |
+| N a week | N pro Woche | |
+| Shortcuts, Action Button, start link | Kurzbefehle, Aktionstaste, Start-Link | |
+| sample data | Beispieldaten | |
+| Suggest / Surprise me / Automatic | Vorschlag / Überrasch mich / Automatisch | |
+| look parts | Körper, Augen, Mund, Kopf, Hals, Muster, Laune | „Muster“ for coat |
+| squishy sounds | Glibbertöne | |
+
+In `localized({ en, de })`, give optional parameters as `flag?: boolean`, not with a default
+value: a default in the `en` function makes the `de` side lose its parameter types.

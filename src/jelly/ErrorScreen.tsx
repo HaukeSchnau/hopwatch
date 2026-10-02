@@ -8,6 +8,8 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { shellText } from '@/i18n/shell';
+
 import { text, useTheme } from './theme';
 
 export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
@@ -18,9 +20,9 @@ export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: t.c.bg }]}>
       <Text style={styles.emoji}>🫠</Text>
-      <Text style={[text.title2, styles.center, { color: t.c.ink }]}>This screen melted</Text>
+      <Text style={[text.title2, styles.center, { color: t.c.ink }]}>{shellText.error.title}</Text>
       <Text style={[text.body, styles.center, { color: t.c.ink, opacity: 0.7 }]}>
-        Your entries are safe. Everything you saved before this is still there.
+        {shellText.error.body}
       </Text>
       <Text selectable style={[text.footnote, styles.center, { color: t.c.ink, opacity: 0.45 }]}>
         {error.message}
@@ -30,11 +32,11 @@ export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
           accessibilityRole="button"
           onPress={retry}
           style={({ pressed }) => [styles.button, { backgroundColor: t.c.pinkDeep, opacity: pressed ? 0.7 : 1 }]}>
-          <Text style={[text.headline, { color: t.c.bg }]}>Try Again</Text>
+          <Text style={[text.headline, { color: t.c.bg }]}>{shellText.error.retry}</Text>
         </Pressable>
         {canClose && (
           <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.button}>
-            <Text style={[text.headline, { color: t.c.pinkDeep }]}>Close</Text>
+            <Text style={[text.headline, { color: t.c.pinkDeep }]}>{shellText.error.close}</Text>
           </Pressable>
         )}
       </View>

@@ -24,23 +24,26 @@ import {
   usePickableContexts,
   useTree,
 } from '@/core';
+import { sheetsText } from '@/i18n/sheets';
 
 import { Character } from '../Character';
 import { buzz } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
 import { useFace, useLively } from '../Gummy';
 import { tabular, text, useTheme } from '../theme';
+import { pickerLocale } from './parts';
 
-const clock24 = environment('locale', 'en_GB');
+const s = sheetsText.entry;
+const clock24 = environment('locale', pickerLocale);
 
 export function EntrySheet() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const entry = useEntries().find((e) => e.id === id) ?? null;
   if (!entry) {
     return (
-      <JellyForm title="Entry">
+      <JellyForm title={s.title}>
         <Section>
-          <SwiftText>This entry is gone. It was deleted or merged away.</SwiftText>
+          <SwiftText>{s.gone}</SwiftText>
         </Section>
       </JellyForm>
     );
@@ -79,13 +82,13 @@ function EntryForm({ entry }: { entry: Entry }) {
   };
 
   return (
-    <JellyForm title={running ? 'Running' : 'Entry'} tint={context ? t.candy[context.hue].ink : undefined} confirm={{ label: 'Done', onPress: save, disabled: invalid }}>
+    <JellyForm title={running ? s.running : s.title} tint={context ? t.candy[context.hue].ink : undefined} confirm={{ label: sheetsText.done, onPress: save, disabled: invalid }}>
       {context ? (
         <HostedRow color={t.candy[context.hue].tint} render={(width) => <Header width={width} context={context} start={start} end={end} />} />
       ) : null}
       <Section>
         <Picker
-          label="Jelly"
+          label={s.jelly}
           selection={contextId}
           onSelectionChange={(value: string) => {
             const next = options.find((c) => c.id === value);
@@ -99,9 +102,9 @@ function EntryForm({ entry }: { entry: Entry }) {
           ))}
         </Picker>
       </Section>
-      <Section title="Time" footer={<SwiftText>{invalid ? 'It ends before it starts.' : 'Changing the time trims any entry it overlaps.'}</SwiftText>}>
+      <Section title={s.time} footer={<SwiftText>{invalid ? s.endsBeforeStart : s.trims}</SwiftText>}>
         <DatePicker
-          title="Starts"
+          title={s.starts}
           selection={new Date(start)}
           range={{ end: new Date(end ?? now) }}
           displayedComponents={['date', 'hourAndMinute']}
@@ -110,13 +113,13 @@ function EntryForm({ entry }: { entry: Entry }) {
         />
         {running ? (
           <HStack>
-            <SwiftText>Ends</SwiftText>
+            <SwiftText>{s.ends}</SwiftText>
             <Spacer />
-            <Button label="Stop Now" systemImage="stop.fill" onPress={() => setEnd(Math.max(start + 60_000, Date.now()))} />
+            <Button label={s.stopNow} systemImage="stop.fill" onPress={() => setEnd(Math.max(start + 60_000, Date.now()))} />
           </HStack>
         ) : (
           <DatePicker
-            title="Ends"
+            title={s.ends}
             selection={new Date(end)}
             range={{ start: new Date(start), end: new Date(now) }}
             displayedComponents={['date', 'hourAndMinute']}
@@ -125,13 +128,13 @@ function EntryForm({ entry }: { entry: Entry }) {
           />
         )}
       </Section>
-      <Section title="Note">
-        <TextField text={note} placeholder="What happened? (optional)" axis="vertical" modifiers={[lineLimit(6)]} />
+      <Section title={s.note}>
+        <TextField text={note} placeholder={s.notePlaceholder} axis="vertical" modifiers={[lineLimit(6)]} />
       </Section>
       <Section>
         <Button
           role="destructive"
-          label="Delete Entry"
+          label={s.delete}
           systemImage="trash"
           onPress={() => {
             buzz.thud();
@@ -163,7 +166,7 @@ function Header({ width, context, start, end }: { width: number; context: Resolv
           {context.name}
         </Text>
         <Text style={[text.footnote, tabular, { color: t.c.muted }]} numberOfLines={1}>
-          {formatWeekday(start)} {formatDayMonth(start)} · {formatClock(start)}–{end === null ? 'now' : formatClock(end)}
+          {formatWeekday(start)} {formatDayMonth(start)} · {formatClock(start)}–{end === null ? sheetsText.now : formatClock(end)}
         </Text>
       </View>
       <Text style={[styles.length, tabular, { color: t.c.ink }]}>{formatDuration(Math.max(0, (end ?? now) - start))}</Text>

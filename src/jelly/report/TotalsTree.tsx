@@ -6,6 +6,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type ContextId, formatDuration, formatTargetLine, type TargetLine, type TotalsNode } from '@/core';
+import { weekText } from '@/i18n/week';
 
 import { buzz } from '../feedback';
 import { alpha, tabular, text, useTheme } from '../theme';
@@ -47,7 +48,7 @@ export function TotalsTree({ roots, expanded, onToggle, targets, textFor }: Tota
           onCopy={() => {
             Clipboard.setStringAsync(textFor(node.context.id));
             buzz.success();
-            say(`Copied ${node.context.name} totals`);
+            say(weekText.copied(node.context.name));
           }}
         />
       ))}
@@ -92,7 +93,7 @@ function Row({
           </CandySurface>
           <Text style={[text.body, styles.name, { color: node.context.hidden ? t.c.muted : t.c.ink }]} numberOfLines={1}>
             {node.context.name}
-            {node.context.hidden ? ' (archived)' : ''}
+            {node.context.hidden ? weekText.archived : ''}
           </Text>
           <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatDuration(node.total)}</Text>
         </View>
@@ -109,7 +110,7 @@ function Row({
         onPress={onCopy}
         hitSlop={6}
         accessibilityRole="button"
-        accessibilityLabel={`Copy ${node.context.name} totals`}
+        accessibilityLabel={weekText.copy(node.context.name)}
         style={({ pressed }) => [styles.copy, pressed && { backgroundColor: c.tint }]}>
         <SymbolView name="doc.on.doc" size={15} tintColor={t.c.muted} weight="semibold" />
       </Pressable>
