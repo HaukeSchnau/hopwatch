@@ -8,7 +8,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { actions, useIntent, useRunning, useStint, useTree } from '@/core';
+import { actions, useIntent, useRunning, useHopwatch, useTree } from '@/core';
 import { shellText } from '@/i18n/shell';
 
 import { MiniPlayer } from './MiniPlayer';
@@ -63,7 +63,7 @@ function useStopSheetIntent() {
   useEffect(() => {
     if (intent?.kind !== 'stop-sheet') return;
     actions.consumeIntent();
-    if (!useStint.getState().entries.some((e) => e.endUtc === null)) return;
+    if (!useHopwatch.getState().entries.some((e) => e.endUtc === null)) return;
     router.navigate('/');
     router.push('/stop');
   }, [intent]);

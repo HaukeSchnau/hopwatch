@@ -8,7 +8,7 @@ import { coreText } from '@/i18n/core';
 
 import * as db from './db';
 import { requestNudgePermission } from './permissions';
-import { actions, type StintState, useStint } from './store';
+import { actions, type HopwatchState, useHopwatch } from './store';
 import { formatDuration, MINUTE } from './time';
 import { findOpen } from './timeline';
 
@@ -20,7 +20,7 @@ interface Scheduled {
 let scheduled: Scheduled | null = null;
 let queue = Promise.resolve();
 
-function desiredNudge(state: StintState) {
+function desiredNudge(state: HopwatchState) {
   const open = findOpen(state.entries);
   if (!open) return null;
   const context = state.tree.byId.get(open.contextId);
@@ -33,7 +33,7 @@ function desiredNudge(state: StintState) {
   return { key: `${open.id}@${fireAt}@${title}@${body}`, fireAt, title, body, entryId: open.id };
 }
 
-async function sync(state: StintState) {
+async function sync(state: HopwatchState) {
   const want = desiredNudge(state);
   if ((want?.key ?? null) === (scheduled?.key ?? null)) return;
 
@@ -79,11 +79,11 @@ export function startNudges(): () => void {
   const saved = db.getMeta('nudge');
   scheduled = saved ? (JSON.parse(saved) as Scheduled) : null;
 
-  const enqueue = (state: StintState) => {
+  const enqueue = (state: HopwatchState) => {
     queue = queue.then(() => sync(state)).catch((error) => console.warn('nudge sync failed', error));
   };
-  enqueue(useStint.getState());
-  const unsubscribe = useStint.subscribe((state, prev) => {
+  enqueue(useHopwatch.getState());
+  const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries !== prev.entries || state.tree !== prev.tree) enqueue(state);
   });
 

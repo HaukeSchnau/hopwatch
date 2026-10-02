@@ -55,7 +55,7 @@ export interface RunningActivityProps {
   since: number;
   /** The Stop pill's label, in the app's language. */
   stop: string;
-  /** The label of the pill that starts the previous context (stint://resume), "Back to Dog". Null when there is none. */
+  /** The label of the pill that starts the previous context (hopwatch://resume), "Back to Dog". Null when there is none. */
   back: string | null;
   /** The gummy's gradient from top to bottom, and `on` for an initial drawn on it. */
   candy: { light: string; fill: string; deep: string; on: string };
@@ -143,8 +143,8 @@ function RunningActivity(props: RunningActivityProps) {
 
   const buttons = (p: Pick<ActivityPaint, 'stop' | 'onStop' | 'wash' | 'accent'>) => (
     <HStack spacing={8}>
-      {pill('stint://stop', 'stop.fill', props.stop, p.stop, p.onStop)}
-      {props.back ? pill('stint://resume', 'arrow.uturn.backward', props.back, p.wash, p.accent) : null}
+      {pill('hopwatch://stop', 'stop.fill', props.stop, p.stop, p.onStop)}
+      {props.back ? pill('hopwatch://resume', 'arrow.uturn.backward', props.back, p.wash, p.accent) : null}
     </HStack>
   );
 

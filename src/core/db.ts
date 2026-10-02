@@ -108,7 +108,7 @@ let db: SQLiteDatabase | null = null;
 
 function open(): SQLiteDatabase {
   if (db) return db;
-  db = openDatabaseSync('stint.db');
+  db = openDatabaseSync('hopwatch.db');
   db.execSync('PRAGMA journal_mode = WAL;');
   migrate(db);
   return db;

@@ -32,7 +32,7 @@ const PREF_PREFIX = 'pref:';
 /** Something outside the app asked a screen to do something. */
 export type Intent = { kind: 'stop-sheet' };
 
-export interface StintState {
+export interface HopwatchState {
   ready: boolean;
   /** Live contexts, archived ones included. */
   contexts: readonly Context[];
@@ -49,7 +49,7 @@ export interface StintState {
   prefs: Readonly<Record<string, Json>>;
 }
 
-export const useStint = create<StintState>()(() => ({
+export const useHopwatch = create<HopwatchState>()(() => ({
   ready: false,
   contexts: [],
   entries: [],
@@ -59,8 +59,8 @@ export const useStint = create<StintState>()(() => ({
   prefs: {},
 }));
 
-const get = useStint.getState;
-const set = useStint.setState;
+const get = useHopwatch.getState;
+const set = useHopwatch.setState;
 
 const clock = (): timeline.Clock => ({
   now: Date.now(),

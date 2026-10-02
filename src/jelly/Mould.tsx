@@ -3,7 +3,7 @@
 
 import { Canvas, DashPathEffect, Group, Path } from '@shopify/react-native-skia';
 
-import { useStint } from '@/core';
+import { useHopwatch } from '@/core';
 
 import { bodyGeo, UNIT } from './character/bodies';
 import type { LookSource } from './character/derive';
@@ -21,7 +21,7 @@ interface MouldProps {
 }
 
 export function Mould({ seed, size, color, fill, context }: MouldProps) {
-  const known = useStint((s) => (context ? null : (s.tree.ordered.find((c) => c.id === seed) ?? null)));
+  const known = useHopwatch((s) => (context ? null : (s.tree.ordered.find((c) => c.id === seed) ?? null)));
   const look = useLook(context ?? known ?? { id: seed, glyph: null });
   const geo = bodyGeo(look.body, seed);
   const unit = size / UNIT;

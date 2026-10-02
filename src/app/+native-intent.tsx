@@ -2,7 +2,7 @@ import { parseLink } from '@/core/links';
 import { actions } from '@/core/store';
 
 /**
- * Runs stint://start, stop and resume as actions, then lands on Now. Other paths route
+ * Runs hopwatch://start, stop and resume as actions, then lands on Now. Other paths route
  * normally.
  */
 export function redirectSystemPath({ path }: { path: string; initial: boolean }) {

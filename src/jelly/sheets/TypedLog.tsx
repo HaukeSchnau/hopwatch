@@ -31,7 +31,7 @@ import {
   sentenceRequest,
   useEntries,
   useNow,
-  useStint,
+  useHopwatch,
   useTree,
 } from '@/core';
 import { sheetsText } from '@/i18n/sheets';
@@ -61,7 +61,7 @@ function useSentenceAnswer(sentence: string, enabled: boolean): SentenceAnswer |
     if (!enabled) return;
     let live = true;
     const timer = setTimeout(() => {
-      generate(sentenceRequest(trimmed, useStint.getState().tree))
+      generate(sentenceRequest(trimmed, useHopwatch.getState().tree))
         .catch(() => null)
         .then((answer) => {
           if (__DEV__ && !answer) console.warn('typed logging:', lastFailure());

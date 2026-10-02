@@ -149,6 +149,18 @@ his phone until he moves his data over (export there, restore here).
     stint-android, emulator, scripts/emu.sh), iOS release pass (rename, dev paths, stranger
     pass, iPad), website. Next: Android UI port, screenshots, metadata push, Play setup.
 
+- Internal IDs renamed to hopwatch (2026-10-02, Hauke's call): iOS bundle
+  dev.schnau.hopwatch (+ .widgets, App Group group.dev.schnau.hopwatch, all registered and
+  wired in the portal), new ASC app **6818526671** (SKU hopwatch; names en/de, privacy
+  URLs, internal TestFlight group "Hauke" with hauke@schnau-lilienthal.de). The old record
+  6818258577 (dev.schnau.stint) is renamed "Stint Schnau"; Hauke's installed TestFlight
+  "Stint" keeps working until he moves his data (Export → Restore; parser accepts
+  app 'stint' and 'hopwatch'). Expo project @haukeschnau/hopwatch
+  (7e0183d8-3743-41ea-a29a-7188f5dd5cf5, channel production); the old @haukeschnau/stint
+  project stays for the old build. Scheme hopwatch://, DB hopwatch.db, useHopwatch,
+  -hopwatchRoute, HOPWATCH_BUILD_NUMBER, m1 dirs ~/Developer/hopwatch-{ios,android,ota}.
+  Simulators need a new dev client (bundle changed); sim.sh takes SIM_BUNDLE for old ones.
+
 ## Next
 
 1. Commit the builders' work, final QA (light/dark), `scripts/m1.sh testflight`.

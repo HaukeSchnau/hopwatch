@@ -4,7 +4,7 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
-import { actions, type Json, usePref, useStint } from '@/core';
+import { actions, type Json, usePref, useHopwatch } from '@/core';
 
 export const buzz = {
   tap: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
@@ -46,7 +46,7 @@ function ensurePlayers() {
 
 /** Plays one of the candy sounds from the start, if sounds are on. */
 export function play(name: SoundName) {
-  const stored = useStint.getState().prefs[SOUNDS];
+  const stored = useHopwatch.getState().prefs[SOUNDS];
   if (stored !== undefined && parseSounds(stored) === false) return;
   try {
     const player = ensurePlayers()[name];

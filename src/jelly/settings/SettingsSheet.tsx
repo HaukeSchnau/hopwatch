@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { actions, eraseAllData, resumeLink, shareExport, stopLink, useStint } from '@/core';
+import { actions, eraseAllData, resumeLink, shareExport, stopLink, useHopwatch } from '@/core';
 import { settingsText } from '@/i18n/settings';
 
 import { Character } from '../Character';
@@ -27,8 +27,8 @@ const { intelligence, shortcuts, data } = settingsText;
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
-  const contexts = useStint((s) => s.contexts.length);
-  const entries = useStint((s) => s.entries.length);
+  const contexts = useHopwatch((s) => s.contexts.length);
+  const entries = useHopwatch((s) => s.entries.length);
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = (link: string) => {

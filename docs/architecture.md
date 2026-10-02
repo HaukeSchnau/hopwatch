@@ -49,7 +49,7 @@ the migration steps in `db.ts`.
   bump `version` in app.json, then `scripts/m1.sh testflight`. The build reaches Hauke's
   internal TestFlight group on its own.
 - JavaScript and asset changes: `scripts/m1.sh ota "What changed"` publishes an EAS Update to
-  the `production` channel. Release builds download it when they come to the foreground
+  the `production` channel of @haukeschnau/hopwatch. Release builds download it when they come to the foreground
   and switch to it the next time they go to the background (`src/shell/updates.ts`).
   Updates only reach builds whose runtime version (the app `version`) matches. That's
   why native changes need the version bump: without it, JS that expects the new native

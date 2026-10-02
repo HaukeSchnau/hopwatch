@@ -61,7 +61,7 @@ export default function RootLayout() {
   );
 }
 
-/** Development only: opens the route passed as `-stintRoute` (see scripts/sim.sh). */
+/** Development only: opens the route passed as `-hopwatchRoute` (see scripts/sim.sh). */
 function useDevLaunchRoute() {
   useEffect(() => {
     const route = devLaunchRoute();

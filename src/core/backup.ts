@@ -23,7 +23,7 @@ export interface Backup {
 /** The export file's contents. `colorHex` is only for people reading the JSON. */
 export function backupPayload(data: Omit<Backup, 'exportedAt'>, exportedAt: Date) {
   return {
-    app: 'stint',
+    app: 'hopwatch',
     schemaVersion: BACKUP_VERSION,
     exportedAt: exportedAt.toISOString(),
     contexts: data.contexts.map((c) => ({ ...c, colorHex: c.color ? defaultHueHex[c.color] : null })),
@@ -125,7 +125,8 @@ export function parseBackup(json: unknown): ParseResult {
   const fail = (reason: string): ParseResult => ({ ok: false, reason });
   if (typeof json !== 'object' || json === null) return fail(text.notAnExport);
   const file = json as Record<string, unknown>;
-  if (file.app !== 'stint') return fail(text.notAnExport);
+  // Exports from before the rename say 'stint'; they restore all the same.
+  if (file.app !== 'hopwatch' && file.app !== 'stint') return fail(text.notAnExport);
   const version = file.schemaVersion;
   if (typeof version === 'number' && version > BACKUP_VERSION) {
     return fail(text.newer);
