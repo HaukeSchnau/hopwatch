@@ -43,6 +43,16 @@ the migration steps in `db.ts`.
   Store Connect upload. `scripts/sim.sh` drives the simulators (launch into a route,
   screenshots, taps). `scripts/model.sh` runs on-device model prompts on the M1.
 
+## Android
+
+Package dev.schnau.hopwatch. Builds run on the M1 in ~/Developer/hopwatch-android:
+`scripts/m1.sh android-dev` + `android-install` put a dev client on the `hopwatch-pixel`
+emulator, which `scripts/emu.sh` drives (launch into a route, screenshots, taps; read its
+header); `android-release` builds a signed AAB into dist/ with the upload key from
+Bitwarden ("Hopwatch Play upload key"; Play App Signing holds the app signing key).
+iOS-only pieces (SwiftUI views from @expo/ui, SF Symbols, the Live Activity, Apple
+Intelligence) need Android counterparts or must stay hidden there.
+
 ## Releasing
 
 - Native changes (a new native package, a config plugin, native settings in app.json):

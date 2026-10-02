@@ -47,12 +47,12 @@ sync() {
 
 # Runs a command in the project directory on the builder, queued behind other builds.
 remote() {
-  ssh m1 "cd ~/$REMOTE_DIR && builder-control run --timeout 3600 -- bash -lc $(printf '%q' "ulimit -n 65536; $1")"
+  ssh m1 "cd ~/$REMOTE_DIR && builder-control run --timeout 3600 -- bash -lc $(printf '%q' "set -o pipefail; ulimit -n 65536; $1")"
 }
 
 # Like `remote`, but in Hauke's GUI session, where the login keychain is unlocked for signing.
 remote_gui() {
-  ssh m1 "cd ~/$REMOTE_DIR && builder-control run --gui --timeout 3600 -- bash -lc $(printf '%q' "ulimit -n 65536; $1")"
+  ssh m1 "cd ~/$REMOTE_DIR && builder-control run --gui --timeout 3600 -- bash -lc $(printf '%q' "set -o pipefail; ulimit -n 65536; $1")"
 }
 
 ANDROID_DIR=Developer/hopwatch-android
