@@ -175,9 +175,10 @@ his phone until he moves his data over (export there, restore here).
   compress finals or raise snapshot.max-new-file-size for the repo).
 
 - App Store listing done on 6818526671 (store/app-store + scripts/app-store.mjs; 12 framed
-  screenshots). Open: App Privacy is saved as "Data Not Collected" but unpublished; the
-  accurate label would be Identifiers › Device ID (+ Diagnostics for the update error),
-  not linked, no tracking. Asked Hauke; Play already declares it that way.
+  screenshots). App Privacy published (Hauke left it to me): Identifiers › Device ID and
+  Diagnostics › Crash Data, App Functionality + Analytics, not linked, no tracking; same
+  as Play's data safety and the privacy policy (Expo's EAS-Client-ID and update error).
+  "Not linked" because the ID is random and tied to no account or person.
 - Google Play draft app 4975816330263293130 (Urbs), package dev.schnau.hopwatch: all App
   content declarations (18+, IARC Everyone/USK 0, data safety: device IDs + crash logs via
   Expo, nothing shared), listing en/de with icon and feature graphic (console only: an API
