@@ -9,6 +9,8 @@ WHAT YOU GET
 • Week: totals, bubbles and target jars for weekly goals like 40 hours of work.
 • Groups: jellies can live inside other jellies, like Clients › Acme › Website.
 • Nudges: a gentle reminder when something has been running for a long time.
+• In your notifications: the running jelly with a live timer, plus Stop and "Back to" buttons.
+• Shortcuts: long-press the app icon to stop, go back, or start a pinned jelly.
 
 PRIVATE BY DESIGN
 No account, no ads, no tracking. Your entries stay on your phone, and we never see them. Hopwatch only goes online to check for app updates. Export your data as a file whenever you like, and restore it on a new phone.
