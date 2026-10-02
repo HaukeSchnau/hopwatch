@@ -1,5 +1,11 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 {
+  imports = [
+    (inputs.projectSdk + "/modules/devenv/project.nix")
+    ./project.nix
+  ];
+  project.enable = true;
+
   # Node for Expo/Metro and the domain tests. Native iOS builds run on the M1 builder.
   languages.javascript = {
     enable = true;

@@ -1,0 +1,370 @@
+/* Hopwatch website. One stylesheet for every page: the app's cream day and plum night
+   (follows prefers-color-scheme), candy hues from src/jelly/theme.ts, SF Pro Rounded via
+   the system font stack. No external fonts or assets. */
+
+:root {
+  color-scheme: light dark;
+  --bg: #FFF4E8;
+  --card: #FFFBF6;
+  --sunken: #F8E7D5;
+  --line: #EEDCCB;
+  --ink: #2B1B3D;
+  /* The app's muted (#8C7A99) is too light for running text on cream; this one clears 5:1. */
+  --muted: #6E5C7D;
+  --link: #C22B74;
+  --track: #F4E2D0;
+  --track-rim: #FFF9F2;
+  --track-shade: #E6CDB6;
+
+  --pink: #FF6FB5;
+  --blue: #4B8BFF;
+  --violet: #A36AFF;
+  --amber: #FFC53D;
+  --orange: #FF8A3D;
+  --green: #34C97E;
+
+  --font: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Nunito, Quicksand, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --measure: 36rem;
+  --gutter: clamp(1.25rem, 5vw, 2.5rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #150F1D;
+    --card: #1E1728;
+    --sunken: #241B2F;
+    --line: #30263C;
+    --ink: #FBF3FF;
+    --muted: #A99BB8;
+    --link: #FF8CC8;
+    --track: #261D31;
+    --track-rim: #3A2E47;
+    --track-shade: #1A1323;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--font);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-underline-offset: 0.18em; text-decoration-thickness: 0.08em; }
+a:hover { text-decoration-thickness: 0.14em; }
+
+:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+img { display: block; max-width: 100%; height: auto; }
+
+.wrap {
+  width: 100%;
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.skip {
+  position: absolute;
+  left: -999px;
+}
+.skip:focus { left: var(--gutter); top: 0.75rem; z-index: 10; background: var(--card); padding: 0.5rem 0.9rem; border-radius: 999px; }
+
+/* Top bar: the app icon, the name, and a few quiet links. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+.brand img { width: 2.25rem; height: 2.25rem; border-radius: 22%; }
+.bar nav { margin-left: auto; display: flex; gap: 1.1rem; font-weight: 600; font-size: 0.98rem; }
+.bar nav a { color: var(--ink); text-decoration: none; }
+.bar nav a:hover { color: var(--link); }
+
+/* Landing: the hero. Phones stack headline, lede, demo, stores; wide screens put the
+   copy on the left and the live dial on the right. */
+.hero {
+  display: grid;
+  gap: 0 3rem;
+  padding-top: clamp(0.5rem, 3vw, 2.5rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+.hero .demo { margin-top: 1.6rem; }
+@media (min-width: 52rem) {
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: 1fr auto auto 1fr; }
+  .hero h1 { grid-row: 2; }
+  .hero .lede { grid-row: 3; }
+  .hero .stores { grid-row: 4; align-self: start; }
+  .hero .demo { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; }
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 9.5vw, 4.6rem);
+  line-height: 0.98;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.hero h1 span { display: block; }
+
+.lede {
+  margin: 1.1rem 0 0;
+  max-width: 32rem;
+  font-size: clamp(1.08rem, 2.6vw, 1.22rem);
+  line-height: 1.5;
+}
+
+.stores { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.6rem; }
+
+/* Store buttons. Until a listing exists the button is an <a> without href plus .soon;
+   to go live, add the href and drop class="soon". */
+.store {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1.15rem 0.7rem 0.95rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1.15;
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.18), 0 6px 16px -8px rgb(43 27 61 / 0.6);
+}
+.store small { display: block; font-size: 0.72rem; font-weight: 600; opacity: 0.75; }
+.store.soon { background: var(--sunken); color: var(--ink); box-shadow: none; cursor: default; }
+a.store[href]:hover { transform: translateY(-1px); }
+
+/* The demo: a 24-hour candy dial with the running jelly in the middle. */
+.demo { display: grid; justify-items: center; gap: 0.4rem; }
+
+.dial {
+  position: relative;
+  width: min(100%, 25rem);
+  aspect-ratio: 1;
+}
+.dial > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.dial .groove { fill: none; stroke: var(--track); stroke-width: 30; }
+.dial .groove-rim { fill: none; stroke: var(--track-rim); stroke-width: 2; }
+.dial .groove-shade { fill: none; stroke: var(--track-shade); stroke-width: 2; opacity: 0.8; }
+.dial .tick { fill: var(--muted); opacity: 0.35; }
+.dial .hour { fill: var(--muted); font: 600 11px var(--font); letter-spacing: 0.04em; }
+.dial .bean { fill: none; stroke-width: 19; stroke-linecap: round; }
+.dial .bean-gloss { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; opacity: 0.45; }
+.dial .head { filter: blur(5px); opacity: 0.8; }
+.dial .head-dot { fill: #fff; }
+
+.center {
+  position: absolute;
+  inset: 22%;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  text-align: center;
+}
+.center .jelly { width: 46%; margin-bottom: -2%; }
+.center .name { font-weight: 800; font-size: clamp(1rem, 3.6vw, 1.2rem); line-height: 1.2; }
+.timer {
+  font-weight: 900;
+  font-size: clamp(2.1rem, 9vw, 2.9rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.timer small { font-size: 0.42em; font-weight: 800; color: var(--muted); letter-spacing: 0; }
+.since { margin-top: 0.35rem; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* The cast: tap a jelly to switch to it. Sleeping until picked, like in the app. */
+.cast {
+  display: flex;
+  justify-content: center;
+  gap: clamp(0.25rem, 2vw, 0.9rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cast button {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  width: clamp(4.4rem, 21vw, 5.6rem);
+  padding: 0.2rem 0 0.4rem;
+  border: 0;
+  border-radius: 1.2rem;
+  background: none;
+  color: var(--ink);
+  font: 700 0.86rem/1.2 var(--font);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cast button:hover .jelly { transform: translateY(-3px); }
+.cast .slot { position: relative; width: 100%; aspect-ratio: 1; }
+.cast .jelly { position: absolute; inset: 0; transition: transform 0.2s ease; }
+/* The running jelly's slot shows its empty mould, as on the Now screen. */
+.cast .mould { position: absolute; inset: 0; opacity: 0; }
+.cast [aria-pressed="true"] .jelly { opacity: 0; }
+.cast [aria-pressed="true"] .mould { opacity: 1; }
+.cast [aria-pressed="true"] .label { color: var(--link); }
+.mould use { fill: var(--sunken); stroke: var(--muted); stroke-width: 1.6; stroke-dasharray: 4 4; stroke-linecap: round; opacity: 0.75; }
+
+.hint { margin: 0.2rem 0 0; font-size: 0.86rem; color: var(--muted); }
+
+/* A jelly drawn from the symbols in the page's sprite. --c is the candy color; the body
+   inherits it as fill through <use>. Jellies nap until they're the running one. */
+.jelly { overflow: visible; }
+.jelly .b { fill: var(--c); }
+.jelly .shadow { fill: var(--c); opacity: 0.3; }
+.jelly .awake { display: none; }
+.jelly.is-awake .awake { display: inline; }
+.jelly.is-awake .asleep { display: none; }
+.sticker circle { fill: #fff; stroke: rgb(43 27 61 / 0.12); stroke-width: 0.8; }
+.sticker text { font-size: 12.5px; text-anchor: middle; }
+
+.hop { animation: hop 0.62s cubic-bezier(0.3, 0.7, 0.4, 1); transform-origin: 50% 90%; }
+@keyframes hop {
+  0% { transform: translate(var(--dx), var(--dy)) scale(var(--s)); }
+  45% { transform: translate(calc(var(--dx) * 0.45), calc(var(--dy) * 0.45 - 30%)) scale(calc(var(--s) * 0.92 + 0.08), calc(var(--s) * 1.08 - 0.08)); }
+  80% { transform: translate(0, 0) scale(1.08, 0.9); }
+  100% { transform: none; }
+}
+.settle { animation: settle 0.45s cubic-bezier(0.3, 0.7, 0.4, 1); transform-origin: 50% 90%; }
+@keyframes settle {
+  0% { transform: translateY(-14%) scale(0.9, 1.08); }
+  60% { transform: translateY(0) scale(1.06, 0.93); }
+  100% { transform: none; }
+}
+
+/* Screens: a scroll-snapping strip on phones, four across on wide screens. */
+.section { padding-top: clamp(2.5rem, 7vw, 5rem); }
+h2 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.6rem, 5vw, 2.3rem);
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.section > p { max-width: var(--measure); margin: 0; color: var(--muted); }
+
+.shots {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(62vw, 15rem);
+  gap: 1rem;
+  margin: 1.6rem calc(var(--gutter) * -1) 0;
+  padding: 0.5rem var(--gutter) 1.2rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  list-style: none;
+  scrollbar-width: none;
+}
+.shots::-webkit-scrollbar { display: none; }
+@media (min-width: 60rem) {
+  .shots { grid-auto-flow: row; grid-template-columns: repeat(4, 1fr); overflow: visible; margin-inline: 0; padding-inline: 0; }
+}
+.shots li { scroll-snap-align: start; }
+.shots figure { margin: 0; }
+.shots img {
+  width: 100%;
+  aspect-ratio: 460 / 1000;
+  border-radius: 1.6rem;
+  background: var(--sunken);
+  box-shadow: 0 0 0 1px var(--line), 0 18px 36px -22px rgb(43 27 61 / 0.55);
+}
+.shots figcaption { margin-top: 0.8rem; font-size: 0.95rem; line-height: 1.4; color: var(--muted); }
+.shots figcaption b { display: block; color: var(--ink); font-weight: 800; font-size: 1.05rem; }
+
+/* What's inside: a plain list, each item marked with a jelly bean from the dial. */
+.inside {
+  display: grid;
+  gap: 1.6rem 3rem;
+  margin: 1.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 46rem) { .inside { grid-template-columns: 1fr 1fr; } }
+.inside li { position: relative; padding-left: 2.2rem; max-width: var(--measure); }
+.inside li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.32rem;
+  width: 1.35rem;
+  height: 0.62rem;
+  border-radius: 999px;
+  background: var(--c, var(--pink));
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.45), inset 0 -2px 0 rgb(0 0 0 / 0.12);
+  transform: rotate(-24deg);
+}
+.inside h3 { margin: 0 0 0.2rem; font-size: 1.12rem; font-weight: 800; letter-spacing: -0.01em; }
+.inside p { margin: 0; }
+
+/* Text pages: privacy, support, Impressum. */
+.page { padding-top: clamp(1rem, 4vw, 2.5rem); padding-bottom: 1rem; }
+.page h1 { font-size: clamp(2.3rem, 8vw, 3.4rem); }
+.page .lede { max-width: var(--measure); }
+.updated { margin: 0.8rem 0 0; font-size: 0.9rem; color: var(--muted); }
+.prose { max-width: var(--measure); }
+.prose h2 { margin-top: 2.4rem; font-size: clamp(1.3rem, 4vw, 1.6rem); }
+.prose p, .prose ul, .prose ol, .prose address { margin: 0 0 0.9rem; }
+.prose ul, .prose ol { padding-left: 1.3rem; }
+.prose li { margin-bottom: 0.4rem; }
+.prose address { font-style: normal; }
+.prose dl { margin: 0 0 0.9rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; }
+.prose dt { color: var(--muted); }
+.prose dd { margin: 0; }
+.note {
+  margin: 1.4rem 0 0;
+  padding: 1rem 1.2rem;
+  border-radius: 1.1rem;
+  background: var(--sunken);
+}
+.note p { margin: 0; }
+.mail { font-weight: 800; font-size: 1.15rem; }
+
+/* Footer: the legal links every page needs. */
+.site-foot {
+  margin-top: clamp(3.5rem, 9vw, 6rem);
+  padding-top: 1.6rem;
+  padding-bottom: 2.4rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  align-items: baseline;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.site-foot nav { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+.site-foot p { margin: 0; margin-right: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
