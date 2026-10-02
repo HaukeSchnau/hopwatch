@@ -8,6 +8,7 @@ import { coreText } from '@/i18n/core';
 
 import type { Backup } from './backup';
 import * as db from './db';
+import { initialLinkIsStale } from './launch';
 import type { LinkAction } from './links';
 import type { Context, ContextId, Entry, EntryId, Hue } from './model';
 import * as timeline from './timeline';
@@ -76,6 +77,8 @@ let pendingLinks: LinkAction[] = [];
 /** Loads everything from SQLite. Synchronous, so the first frame has data. */
 export function initStore() {
   if (get().ready) return;
+  // Consumes an update-reload mark even when this start has no initial link.
+  initialLinkIsStale();
   const { contexts, entries } = db.loadAll();
   const prefs: Record<string, Json> = {};
   for (const row of db.metaWithPrefix(PREF_PREFIX)) {
