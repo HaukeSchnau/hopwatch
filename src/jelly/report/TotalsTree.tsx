@@ -2,7 +2,6 @@
 // weekly target show the target line; each row can copy its totals as plain text.
 
 import * as Clipboard from 'expo-clipboard';
-import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type ContextId, formatDuration, formatTargetLine, type TargetLine, type TotalsNode } from '@/core';
@@ -11,7 +10,7 @@ import { weekText } from '@/i18n/week';
 import { buzz } from '../feedback';
 import { alpha, tabular, text, useTheme } from '../theme';
 import { say } from '../Toast';
-import { CandySurface } from '../ui';
+import { CandySurface, Icon } from '../ui';
 
 interface TotalsTreeProps {
   roots: TotalsNode[];
@@ -86,7 +85,14 @@ function Row({
         accessibilityLabel={`${node.context.name}, ${formatDuration(node.total)}`}>
         <View style={styles.top}>
           <View style={styles.chevron}>
-            {expandable && <SymbolView name={open ? 'chevron.down' : 'chevron.right'} size={12} tintColor={t.c.muted} weight="heavy" />}
+            {expandable && (
+              <Icon
+                name={open ? { ios: 'chevron.down', android: 'expand_more' } : { ios: 'chevron.right', android: 'chevron_right' }}
+                size={12}
+                color={t.c.muted}
+                weight="heavy"
+              />
+            )}
           </View>
           <CandySurface hue={node.context.hue} radius={15} flat style={styles.dot}>
             <Text style={styles.dotEmoji}>{node.context.glyph ?? ''}</Text>
@@ -112,7 +118,7 @@ function Row({
         accessibilityRole="button"
         accessibilityLabel={weekText.copy(node.context.name)}
         style={({ pressed }) => [styles.copy, pressed && { backgroundColor: c.tint }]}>
-        <SymbolView name="doc.on.doc" size={15} tintColor={t.c.muted} weight="semibold" />
+        <Icon name={{ ios: 'doc.on.doc', android: 'content_copy' }} size={15} color={t.c.muted} weight="semibold" />
       </Pressable>
     </View>
   );

@@ -7,7 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { type ContextId, formatDuration, type TotalsNode } from '@/core';
 
 import { buzz } from '../feedback';
-import { springs, tabular, text, useTheme } from '../theme';
+import { rounded, springs, tabular, text, useTheme } from '../theme';
 import { CandySurface, Squishy } from '../ui';
 import { pack } from './pack';
 
@@ -75,5 +75,5 @@ const styles = StyleSheet.create({
   bubble: { position: 'absolute' },
   body: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   name: { marginTop: -1, maxWidth: '86%' },
-  time: { fontFamily: 'ui-rounded', fontWeight: '800' },
+  time: rounded('800'),
 });

@@ -5,7 +5,7 @@
 // does after 8 hours.
 
 import type { LiveActivity } from 'expo-widgets';
-import { AppState, DynamicColorIOS } from 'react-native';
+import { AppState, DynamicColorIOS, Platform } from 'react-native';
 
 import { findOpen, type Hue, previousContextId, type HopwatchState, useHopwatch } from '@/core';
 import { widgetText } from '@/i18n/widgets';
@@ -80,9 +80,10 @@ const isUnavailable = (error: unknown) =>
 
 /**
  * Starts mirroring the running entry into a Live Activity. Call once from the root
- * layout; returns a cleanup function.
+ * layout; returns a cleanup function. iOS only: elsewhere it does nothing.
  */
 export function startLiveActivity(): () => void {
+  if (Platform.OS !== 'ios') return () => {};
   const enqueue = () => {
     const want = describe(useHopwatch.getState());
     queue = queue

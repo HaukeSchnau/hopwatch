@@ -5,7 +5,7 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -21,7 +21,7 @@ import { useFace, useLively } from '../Gummy';
 import type { PreviewJelly } from '../preview';
 import { chooseBackup } from '../settings/restore';
 import { useNameSuggestion } from '../suggestions';
-import { alpha, springs, text, useTheme } from '../theme';
+import { alpha, rounded, springs, text, useTheme } from '../theme';
 import { JellyButton } from '../ui';
 
 export function Welcome() {
@@ -130,7 +130,7 @@ export function Welcome() {
           }}
         />
 
-        <JellyButton label={welcomeText.make} hue={shownHue} size="large" icon="sparkles" onPress={create} disabled={!name.trim()} style={styles.cta} />
+        <JellyButton label={welcomeText.make} hue={shownHue} size="large" icon={{ ios: 'sparkles', android: 'auto_awesome' }} onPress={create} disabled={!name.trim()} style={styles.cta} />
 
         <Pressable
           onPress={() =>
@@ -159,7 +159,7 @@ export function Welcome() {
 }
 
 /**
- * Puts the first data in place, then explains the nudge and lets iOS ask for notifications.
+ * Puts the first data in place, then explains the nudge and lets the system ask for notifications.
  * The ask starts first, so a nudge the new data schedules waits for the explanation.
  */
 function begin(setUp: () => void) {
@@ -170,7 +170,7 @@ function begin(setUp: () => void) {
 /** Resolves once the user has read why Hopwatch wants to send notifications. */
 const explainNudges = () =>
   new Promise<void>((resolve) =>
-    Alert.alert(welcomeText.nudge.title, welcomeText.nudge.message(DEFAULT_NUDGE_MINUTES / 60), [
+    Alert.alert(welcomeText.nudge.title, welcomeText.nudge.message(DEFAULT_NUDGE_MINUTES / 60, Platform.OS === 'android'), [
       { text: welcomeText.nudge.ok, onPress: () => resolve() },
     ]),
   );
@@ -180,16 +180,14 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 24 },
   fade: { position: 'absolute', top: 0, left: 0, right: 0 },
   hello: {
-    fontFamily: 'ui-rounded',
-    fontWeight: '800',
+    ...rounded('800'),
     fontSize: 40,
     letterSpacing: -0.6,
   },
   intro: { lineHeight: 23, marginTop: 6 },
   preview: { alignSelf: 'center', marginVertical: 18 },
   name: {
-    fontFamily: 'ui-rounded',
-    fontWeight: '700',
+    ...rounded('700'),
     fontSize: 24,
     borderRadius: 22,
     borderWidth: 2,

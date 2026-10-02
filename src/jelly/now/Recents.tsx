@@ -3,7 +3,6 @@
 // backdating menu.
 
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { actions, type ResolvedContext, useNow, useRecents } from '@/core';
@@ -12,8 +11,8 @@ import { nowText } from '@/i18n/now';
 
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
-import { useTheme } from '../theme';
-import { CandySurface, Squishy } from '../ui';
+import { rounded, useTheme } from '../theme';
+import { CandySurface, Icon, Squishy } from '../ui';
 import { beanKey, noteSource, useAnchor } from './choreo';
 
 export function Recents() {
@@ -28,7 +27,7 @@ export function Recents() {
         accessibilityHint={nowText.allHint}
         onPress={() => router.push({ pathname: '/pick', params: { mode: 'start' } })}>
         <CandySurface palette={t.plainCandy} radius={22} style={styles.bean}>
-          <SymbolView name="square.grid.2x2.fill" size={15} tintColor={t.plainCandy.on} />
+          <Icon name={{ ios: 'square.grid.2x2.fill', android: 'grid_view' }} size={15} color={t.plainCandy.on} />
           <Text style={[styles.name, { color: t.plainCandy.on }]}>{nowText.all}</Text>
         </CandySurface>
       </Squishy>
@@ -72,5 +71,5 @@ const styles = StyleSheet.create({
   row: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12, gap: 10, alignItems: 'center' },
   bean: { height: 44, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 7, maxWidth: 220 },
   emoji: { fontSize: 18 },
-  name: { fontFamily: 'ui-rounded', fontWeight: '700', fontSize: 16 },
+  name: { ...rounded('700'), fontSize: 16 },
 });

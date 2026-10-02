@@ -5,7 +5,6 @@
 
 import { BlurMask, Canvas, Oval } from '@shopify/react-native-skia';
 import { router, useIsFocused } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -47,7 +46,7 @@ import { onStopMenu, stopMenu } from '../menus';
 import { Mould } from '../Mould';
 import { springs, tabular, text, useTheme } from '../theme';
 import { Timer } from '../Timer';
-import { RoundButton } from '../ui';
+import { Icon, RoundButton } from '../ui';
 import { choreograph, useAnchor, useChoreo } from './choreo';
 
 export const STAGE_BLOB = 104;
@@ -249,7 +248,7 @@ function Since({ context, since }: { context: ResolvedContext; since: number }) 
       <Text style={[text.footnote, { color: t.c.muted }]}>{nowText.since}</Text>
       <View style={styles.sinceRow}>
         <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatClock(since)}</Text>
-        <SymbolView name="pencil" size={12} tintColor={t.c.muted} weight="bold" />
+        <Icon name={{ ios: 'pencil', android: 'edit' }} size={12} color={t.c.muted} weight="bold" />
       </View>
     </Pressable>
   );
@@ -263,7 +262,7 @@ function Stop({ context, since }: { context: ResolvedContext; since: number }) {
     <View style={[styles.corner, styles.bottomRight]}>
       <Menu title={menuText.stop(context.name)} items={stopMenu(context.name, since, now)} onPress={onStopMenu}>
         <RoundButton
-          icon="stop.fill"
+          icon={{ ios: 'stop.fill', android: 'stop' }}
           size={54}
           palette={t.inkCandy}
           accessibilityLabel={menuText.stop(context.name)}

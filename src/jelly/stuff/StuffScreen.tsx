@@ -4,9 +4,8 @@
 // jellies hide behind a switch.
 
 import { router, Stack } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from 'react-native';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { actions, formatDuration, MINUTE, pathLabel, type ResolvedContext, useNow, useRunning, useTree } from '@/core';
@@ -16,7 +15,9 @@ import { Character } from '../Character';
 import { buzz, play } from '../feedback';
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
-import { alpha, text, useTheme } from '../theme';
+import { useHeaderIcon } from '../nav';
+import { alpha, headerFont, text, useTheme } from '../theme';
+import { Icon, type IconName } from '../ui';
 
 const edit = (id: string) => router.push({ pathname: '/context', params: { id } });
 
@@ -25,9 +26,12 @@ export function StuffScreen() {
   const { width } = useWindowDimensions();
   const tree = useTree();
   const running = useRunning();
+  const tint = running ? t.candy[running.context.hue].ink : t.c.pinkDeep;
   const now = useNow(60_000);
   const [showArchived, setShowArchived] = useState(false);
   const [query, setQuery] = useState('');
+  const settingsIcon = useHeaderIcon('gearshape', 'settings');
+  const addIcon = useHeaderIcon('plus', 'add');
   const archivedCount = tree.ordered.filter((c) => c.archivedAt !== null).length;
   const q = query.trim().toLowerCase();
   const visible = tree.ordered.filter((c) => (showArchived || !c.hidden) && (!q || pathLabel(c).toLowerCase().includes(q)));
@@ -35,15 +39,26 @@ export function StuffScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ backgroundColor: t.c.bg }} contentContainerStyle={styles.content} keyboardDismissMode="on-drag">
-      <Stack.Title large largeStyle={{ color: t.c.ink }} style={{ color: t.c.ink }}>
+      <Stack.Title large largeStyle={{ color: t.c.ink }} style={{ color: t.c.ink, ...headerFont }}>
         {stuffText.title}
       </Stack.Title>
-      <Stack.SearchBar placement="stacked" hideWhenScrolling={false} placeholder={stuffText.find} onChangeText={(e) => setQuery(e.nativeEvent.text)} onCancelButtonPress={() => setQuery('')} />
+      <Stack.SearchBar
+        placement="stacked"
+        hideWhenScrolling={false}
+        placeholder={stuffText.find}
+        onChangeText={(e) => setQuery(e.nativeEvent.text)}
+        onCancelButtonPress={() => setQuery('')}
+        // Android only: the search icon and field in the header's colors, and closing clears.
+        headerIconColor={tint}
+        textColor={Platform.OS === 'android' ? t.c.ink : undefined}
+        hintTextColor={t.c.faint}
+        onClose={() => setQuery('')}
+      />
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="gearshape" accessibilityLabel={stuffText.settings} onPress={() => router.push('/settings')} />
+        {settingsIcon && <Stack.Toolbar.Button icon={settingsIcon} accessibilityLabel={stuffText.settings} onPress={() => router.push('/settings')} />}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="plus" accessibilityLabel={stuffText.newJelly} onPress={() => router.push('/context')} />
+        {addIcon && <Stack.Toolbar.Button icon={addIcon} accessibilityLabel={stuffText.newJelly} onPress={() => router.push('/context')} />}
       </Stack.Toolbar>
 
       <Text style={[text.footnote, styles.caption, { color: t.c.muted }]}>
@@ -126,14 +141,20 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
       containerStyle={styles.swipe}
       renderLeftActions={(_p, _x, swipe) =>
         context.hidden ? null : (
-          <SwipeAction icon={pinned ? 'pin.slash.fill' : 'pin.fill'} label={pinned ? stuffText.unpin : stuffText.pin} color={t.candy.orange.fill} swipe={swipe} onPress={() => onMenu('pin')} />
+          <SwipeAction
+            icon={pinned ? { ios: 'pin.slash.fill', android: 'keep_off' } : { ios: 'pin.fill', android: 'keep' }}
+            label={pinned ? stuffText.unpin : stuffText.pin}
+            color={t.candy.orange.fill}
+            swipe={swipe}
+            onPress={() => onMenu('pin')}
+          />
         )
       }
       renderRightActions={(_p, _x, swipe) => (
         <View style={styles.actions}>
-          <SwipeAction icon="pencil" label={stuffText.edit} color={t.candy.gray.fill} swipe={swipe} onPress={() => edit(context.id)} />
+          <SwipeAction icon={{ ios: 'pencil', android: 'edit' }} label={stuffText.edit} color={t.candy.gray.fill} swipe={swipe} onPress={() => edit(context.id)} />
           <SwipeAction
-            icon={archived ? 'tray.and.arrow.up.fill' : 'archivebox.fill'}
+            icon={archived ? { ios: 'tray.and.arrow.up.fill', android: 'unarchive' } : { ios: 'archivebox.fill', android: 'archive' }}
             label={archived ? stuffText.unarchive : stuffText.archive}
             color={t.candy.indigo.fill}
             swipe={swipe}
@@ -173,7 +194,7 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
             </View>
           </Pressable>
           <Pressable onPress={() => edit(context.id)} hitSlop={6} accessibilityRole="button" accessibilityLabel={stuffText.editName(context.name)} style={styles.info}>
-            <SymbolView name="info.circle" size={21} tintColor={t.c.pinkDeep} />
+            <Icon name={{ ios: 'info.circle', android: 'info' }} size={21} color={t.c.pinkDeep} />
           </Pressable>
           {!last && <View style={[styles.separator, { left: 16 + depth * 18 + 64, backgroundColor: t.c.line }]} />}
         </View>
@@ -189,7 +210,7 @@ function SwipeAction({
   swipe,
   onPress,
 }: {
-  icon: SymbolViewProps['name'];
+  icon: IconName;
   label: string;
   color: string;
   swipe: SwipeableMethods;
@@ -205,7 +226,7 @@ function SwipeAction({
       accessibilityRole="button"
       accessibilityLabel={label}
       style={[styles.swipeAction, { backgroundColor: color }]}>
-      <SymbolView name={icon} size={18} tintColor="#FFFFFF" weight="semibold" />
+      <Icon name={icon} size={18} color="#FFFFFF" weight="semibold" />
       <Text style={[text.caption, styles.swipeLabel]}>{label}</Text>
     </Pressable>
   );

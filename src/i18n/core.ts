@@ -30,6 +30,9 @@ export const coreText = localized({
     nudge: {
       title: (name: string) => `Still on ${name}?`,
       body: (duration: string) => `It's been running for ${duration}. Tap to stop it at the right time.`,
+      /** The Android notification channel, as listed in the system's notification settings. */
+      channel: 'Nudges',
+      channelDescription: 'Asks whether you forgot to stop a jelly that has been running for a while.',
     },
     exportTitle: 'Export Hopwatch data',
     backup: {
@@ -103,6 +106,8 @@ export const coreText = localized({
     nudge: {
       title: (name) => `Noch bei ${name}?`,
       body: (duration) => `Läuft schon ${duration} Std. Tippe, um es zur richtigen Zeit zu stoppen.`,
+      channel: 'Erinnerungen',
+      channelDescription: 'Fragt, ob du das Stoppen vergessen hast, wenn ein Jelly schon eine Weile läuft.',
     },
     exportTitle: 'Hopwatch-Daten exportieren',
     backup: {

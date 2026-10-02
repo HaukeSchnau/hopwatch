@@ -20,7 +20,7 @@ import { summaryText } from '@/i18n/summary';
 import { Character } from '../Character';
 import { useFace, useLively } from '../Gummy';
 import type { PreviewJelly } from '../preview';
-import { alpha, springs, text, useTheme } from '../theme';
+import { alpha, rounded, springs, text, useTheme } from '../theme';
 import { type SummaryState, useWeekSummary } from './summary';
 
 /** The app's mascot, the same jelly as in Settings and the icon. */
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 16, marginHorizontal: 16 },
   bubble: { flex: 1, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 15 },
   tail: { position: 'absolute', left: -5, top: 17, width: 14, height: 14, borderRadius: 3, transform: [{ rotate: '45deg' }] },
-  words: { ...text.subhead, fontWeight: '500', fontSize: 16, lineHeight: 22 },
+  words: { ...text.subhead, ...rounded('500'), fontSize: 16, lineHeight: 22 },
   sparkle: { position: 'absolute', top: -10, right: -2, fontSize: 18, transform: [{ rotate: '14deg' }] },
   lines: { gap: 10, paddingVertical: 6 },
   line: { height: 10, borderRadius: 5 },

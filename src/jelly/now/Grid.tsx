@@ -27,7 +27,7 @@ import { sleep, useFace, wake } from '../Gummy';
 import { Menu } from '../Menu';
 import { onStartMenu, useStartMenu } from '../menus';
 import { Mould } from '../Mould';
-import { springs, text, useTheme } from '../theme';
+import { rounded, springs, text, useTheme } from '../theme';
 import { Squishy, useWiggle } from '../ui';
 import { isAway, noteSource, tileKey, useAnchor, useChoreo } from './choreo';
 
@@ -157,5 +157,5 @@ const styles = StyleSheet.create({
   tile: { alignItems: 'center', paddingBottom: 6 },
   fill: { flex: 1 },
   label: { textAlign: 'center', marginTop: -2, paddingHorizontal: 2, lineHeight: 18 },
-  plus: { fontFamily: 'ui-rounded', fontWeight: '600', fontSize: 34, marginTop: -8 },
+  plus: { ...rounded('600'), fontSize: 34, marginTop: -8 },
 });
