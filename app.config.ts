@@ -4,7 +4,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 // which every TestFlight upload needs (scripts/m1.sh sets STINT_BUILD_NUMBER).
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: config.name ?? 'Stint',
+  name: config.name ?? 'Hopwatch',
   slug: config.slug ?? 'stint',
   ios: { ...config.ios, buildNumber: process.env.STINT_BUILD_NUMBER ?? config.ios?.buildNumber },
 });

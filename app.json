@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Stint",
+    "name": "Hopwatch",
     "slug": "stint",
     "version": "1.1.0",
     "orientation": "portrait",
@@ -19,7 +19,8 @@
           "de"
         ]
       },
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "deploymentTarget": "26.0"
     },
     "plugins": [
       "expo-router",
