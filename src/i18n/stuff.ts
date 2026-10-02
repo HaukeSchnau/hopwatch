@@ -12,6 +12,8 @@ export const stuffText = localized({
     matches: (count: number) => `${count} ${count === 1 ? 'match' : 'matches'}`,
     caption: (count: number) => `${count} ${count === 1 ? 'jelly' : 'jellies'} · tap to start, hold or swipe for more`,
     noMatch: (query: string) => `No jelly matches “${query}”.`,
+    /** Stuff with every jelly archived and the archive hidden. */
+    allArchived: 'Every jelly is archived. Tap + to make a new one.',
     showArchived: 'Show archived',
     showArchivedCount: (count: number) => `Show archived (${count})`,
     /** The line under a jelly's name. */
@@ -99,6 +101,7 @@ export const stuffText = localized({
     matches: (count) => `${count} Treffer`,
     caption: (count) => `${count} ${count === 1 ? 'Jelly' : 'Jellys'} · zum Starten tippen, für mehr halten`,
     noMatch: (query) => `Kein Jelly passt zu „${query}“.`,
+    allArchived: 'Alle Jellys sind archiviert. Tipp auf +, um ein neues zu machen.',
     showArchived: 'Archivierte zeigen',
     showArchivedCount: (count) => `Archivierte zeigen (${count})`,
     meta: {

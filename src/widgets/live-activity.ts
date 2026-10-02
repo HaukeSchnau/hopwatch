@@ -74,7 +74,7 @@ async function sync(want: RunningActivityProps | null) {
   }
 }
 
-/** Disabled in Settings or unsupported: Stint then simply has no Live Activity. */
+/** Disabled in Settings or unsupported: Hopwatch then simply has no Live Activity. */
 const isUnavailable = (error: unknown) =>
   error instanceof Error && 'code' in error && error.code === 'ERR_LIVE_ACTIVITIES_NOT_SUPPORTED';
 

@@ -116,6 +116,39 @@ his phone until he moves his data over (export there, restore here).
   Unchecked on screen: the German Live Activity (needs a dev client with
   NSSupportsLiveActivities, i.e. a new `scripts/m1.sh sim`), a German nudge.
 
+- Public release (2026-10-02, in progress). Decisions: name **Hopwatch** (home screen and
+  in-app; store "Hopwatch: Time Tracker" / de "Hopwatch: Zeiterfassung", both claimed on
+  the ASC record; plain "Stint", "Hopwatch" and "Jellytime" are taken). Internal IDs stay
+  (dev.schnau.stint, stint://, Expo slug). Android package dev.schnau.hopwatch. iOS 26 min.
+  Publisher Urbs UG on both stores.
+  - ASC: free-apps agreement active; EU DSA trader declaration already active since
+    2025-06-05. Name checks: a PATCH of appInfoLocalizations.name answers 409 when taken;
+    only trust a response that echoes the name (network errors looked like success once).
+  - Play: HaukeSchnau@gmail.com's own developer account (7788062506280838249) was closed
+    by Google in April 2026 for inactivity. The Urbs account (6128263103673779539) is
+    active (apps one.urbs.urbs, dev.schnau.studienbuch, .merkbeet, .schnipsel); its API
+    service account is in Bitwarden (bcfce376-…, attachment). Creating the app and the
+    content declarations need the web UI: use `play-console-browser` (host Chromium signed
+    in as info@urbs.one, residential route; CSS selectors; shared state: never sign out or
+    switch accounts; on a Google security challenge stop and ask infra). Urbs is an
+    organization account, so no 12-testers rule.
+  - Store copy lives in store/ (fastlane layout).
+  - Website: site/ (static, EN/DE), served at https://hopwatch.schnau.dev from Gitea
+    `schnau/hopwatch` main (remote `origin`, pushed 2026-10-02; infra deploys on push via
+    project.nix/flake.nix/CI). Preview: agent-service hopwatch-site. Impressum data from
+    App Store trader info + North Data (HRB 185737); Hauke to confirm, VAT ID unknown.
+    Store buttons/screenshots on the site are placeholders.
+  - History cleanup for the push: abandoned three empty undescribed commits (no content).
+  - Android i18n gap: src/i18n/device.ts only reads iOS AppleLanguages.
+  - ASC privacy URLs set (en /privacy/, de /de/datenschutz/).
+  - M1 network (2026-10-02): on Hauke's Android phone hotspot (metered). IPv4 dropped
+    upstream for ~1 h while IPv6 worked; check `ping 10.97.241.181` vs
+    `nc -4 -vz -G 4 1.1.1.1 80`, and if only IPv4 fails ask Hauke to reset the hotspot.
+    The ASC key stays on m1 only (moving ASC work to srv-2 is Hauke's call).
+  - Wave 1 builders: Android groundwork (app.json android, builds in m1:~/Developer/
+    stint-android, emulator, scripts/emu.sh), iOS release pass (rename, dev paths, stranger
+    pass, iPad), website. Next: Android UI port, screenshots, metadata push, Play setup.
+
 ## Next
 
 1. Commit the builders' work, final QA (light/dark), `scripts/m1.sh testflight`.

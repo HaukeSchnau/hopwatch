@@ -2,7 +2,7 @@
 // awake, several sizes, light and dark, and a check of the on-device model. Open it with
 // `scripts/sim.sh view UDID "/looks?s=grid" OUT.png`; `s` picks one section.
 
-import { availability } from '@modules/on-device-model';
+import { availability, lastFailure } from '@modules/on-device-model';
 import { useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -31,7 +31,7 @@ const samples: Sample[] = [
   { id: 's-dog', name: 'Dog', glyph: '🐕', hue: 'amber' },
   { id: 's-lunch', name: 'Lunch', glyph: '🥪', hue: 'pink' },
   { id: 's-website', name: 'Website', glyph: '🌐', hue: 'orange' },
-  { id: 's-stint', name: 'Stint', glyph: '⏱️', hue: 'lime' },
+  { id: 's-podcast', name: 'Podcast', glyph: '🎙️', hue: 'lime' },
   { id: 's-cooking', name: 'Cooking', glyph: '🍳', hue: 'orange' },
   { id: 's-sport', name: 'Sport', glyph: '🏃', hue: 'red' },
 ];
@@ -131,7 +131,8 @@ function ModelCheck() {
         { name: 'Standup', ancestors: ['Job'], siblings: [{ name: 'Meetings', emoji: '🗣️' }], wantEmoji: true },
         { name: 'Cooking', ancestors: ['Household'], siblings: [{ name: 'Dog', emoji: '🐕' }], wantEmoji: false },
       ]) {
-        results.push(`${input.name}: ${JSON.stringify(await suggestForContext(input))}`);
+        const suggestion = await suggestForContext(input);
+        results.push(`${input.name}: ${suggestion ? JSON.stringify(suggestion) : `failed, ${lastFailure() ?? 'no answer'}`}`);
       }
       if (live) setAnswer(`${results.join('\n')}\nin ${Date.now() - started} ms`);
     })();

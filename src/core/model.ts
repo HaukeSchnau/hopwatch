@@ -1,4 +1,4 @@
-// Stint's data model. Two tables, contexts and entries, shaped for a later
+// Hopwatch's data model. Two tables, contexts and entries, shaped for a later
 // last-write-wins sync: device-generated UUIDs, updatedAt on every row, soft deletes.
 // All timestamps are epoch milliseconds (UTC).
 

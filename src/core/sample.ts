@@ -30,7 +30,7 @@ const seeds: Seed[] = [
   { key: 'app', parent: 'acme', color: 'red', emoji: '📱' },
   { key: 'nordlicht', parent: 'clients', color: 'teal', emoji: '🌌' },
   { key: 'side', color: 'green', emoji: '🧪', target: 6 * 60 },
-  { key: 'stint', parent: 'side', color: 'lime', emoji: '⏱️', pin: 6 },
+  { key: 'podcast', parent: 'side', color: 'lime', emoji: '🎙️', pin: 6 },
   { key: 'garden', parent: 'side', emoji: '🌱' },
   { key: 'home', color: 'amber', emoji: '🏠' },
   { key: 'dog', parent: 'home', emoji: '🐕', pin: 3, nudge: 60 },
@@ -103,14 +103,14 @@ export function sampleData(
     plan.push(['dog', between(25, 45), between(10, 30)], ['cooking', between(25, 50), between(15, 60)]);
     const evening = random();
     if (evening < 0.45) plan.push([pick(['website', 'app', 'nordlicht']), between(50, 130)]);
-    else if (evening < 0.75) plan.push(['stint', between(40, 100)]);
+    else if (evening < 0.75) plan.push(['podcast', between(40, 100)]);
     return plan;
   };
 
   const weekend = (): Plan => [
     ['dog', between(45, 70), between(30, 90)],
     ['groceries', between(30, 50), between(20, 60)],
-    [pick(['stint', 'garden']), between(70, 150), between(20, 60)],
+    [pick(['podcast', 'garden']), between(70, 150), between(20, 60)],
     ['cooking', between(40, 70), between(10, 40)],
     ['dog', between(30, 50), between(30, 60)],
     random() < 0.6 ? ['sport', between(45, 80), between(20, 50)] : ['garden', between(40, 80), 20],

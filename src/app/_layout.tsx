@@ -22,11 +22,11 @@ SplashScreen.preventAutoHideAsync();
 initStore();
 
 // Unsigned simulator builds have no keychain entitlement, so expo-notifications can't read
-// its push registration at startup. Stint only uses local notifications.
+// its push registration at startup. Hopwatch only uses local notifications.
 LogBox.ignoreLogs(['[expo-notifications] Error reading persisted server registration info']);
 
 /**
- * Stint: native tabs at the root, with every detail presented as a form sheet over them.
+ * Hopwatch: native tabs at the root, with every detail presented as a form sheet over them.
  * System fonts only, so the splash can go right away. Navigation colors follow the
  * appearance: cream by day, night candy after dark.
  */

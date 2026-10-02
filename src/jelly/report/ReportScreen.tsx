@@ -106,11 +106,15 @@ function WeekBody({ week, now }: { week: number; now: number }) {
           </>
         )}
       </Overview>
-      <SectionTitle style={styles.section}>{weekText.beadsPerDay}</SectionTitle>
-      <View style={[styles.card, { backgroundColor: t.c.card }]}>
-        <WeekBeads days={report.days} width={width - 64} now={now} />
-        <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>{weekText.beadsLegend}</Text>
-      </View>
+      {report.totals.total > 0 && (
+        <>
+          <SectionTitle style={styles.section}>{weekText.beadsPerDay}</SectionTitle>
+          <View style={[styles.card, { backgroundColor: t.c.card }]}>
+            <WeekBeads days={report.days} width={width - 64} now={now} />
+            <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>{weekText.beadsLegend}</Text>
+          </View>
+        </>
+      )}
     </>
   );
 }
@@ -121,8 +125,12 @@ function DayBody({ day, now }: { day: number; now: number }) {
   return (
     <>
       <Overview totals={report.totals} label={weekText.trackedDay} range={{ start: report.start, end: report.end }} targets={new Map()} now={now} />
-      <SectionTitle style={styles.section}>{weekText.beads}</SectionTitle>
-      <DayBeads report={report} width={width - 64} />
+      {report.totals.total > 0 && (
+        <>
+          <SectionTitle style={styles.section}>{weekText.beads}</SectionTitle>
+          <DayBeads report={report} width={width - 64} />
+        </>
+      )}
     </>
   );
 }
