@@ -1,0 +1,72 @@
+{
+  "nodes": {
+    "home-manager": {
+      "inputs": {
+        "nixpkgs": [
+          "nix-infra-modules",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783388784,
+        "narHash": "sha256-w+YU5vatysjLZIg1wOKSzo/RL9Z66eBQuIjVnBM/1Zg=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "63d02d1c19f1c2b47a5bc7e55c620b6af7b218a6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "master",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "nix-infra-modules": {
+      "inputs": {
+        "home-manager": "home-manager",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790115917,
+        "narHash": "sha256-Y/hfCjK9o8xThCCLZt09NbGRv+tVwF9v1+a2GzG7BgU=",
+        "owner": "HaukeSchnau",
+        "repo": "nix-infra-modules",
+        "rev": "c08469c9ed76a0e2223cb6bf1ac624580be6f98c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "HaukeSchnau",
+        "repo": "nix-infra-modules",
+        "rev": "c08469c9ed76a0e2223cb6bf1ac624580be6f98c",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1790822859,
+        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nix-infra-modules": "nix-infra-modules",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
