@@ -1,6 +1,7 @@
 <!doctype html>
-<!-- One App Store frame. Open as frame.html?shot=<id>&lang=<locale>, e.g.
-     frame.html?shot=now&lang=de-DE; shots.js lists the ids, render.sh renders them all. -->
+<!-- One store frame. Open as frame.html?shot=<id>&lang=<locale> for the App Store, e.g.
+     frame.html?shot=now&lang=de-DE, and add &set=phone|tablet-7|tablet-10 for a Google Play
+     frame from the Android captures; shots.js lists the ids, render.sh renders them all. -->
 <html>
 <head>
 <meta charset="utf-8">
@@ -17,14 +18,20 @@
     <img alt="">
     <div class="island"></div>
   </div>
+  <div class="camera"></div>
 </div>
 <script>
   const params = new URLSearchParams(location.search);
   const lang = params.get('lang') ?? 'en-US';
   const shot = SHOTS.find((s) => s.id === params.get('shot')) ?? SHOTS[0];
-  document.documentElement.lang = lang.slice(0, 2);
+  // Google Play: phone, tablet-7 or tablet-10 (frame.css sizes them); none for the App Store.
+  const set = params.get('set');
+  const root = document.documentElement;
+  root.lang = lang.slice(0, 2);
+  root.classList.toggle('play', Boolean(set));
+  root.classList.toggle('tablet', Boolean(set?.startsWith('tablet')));
   document.body.classList.toggle('dark', Boolean(shot.dark));
-  document.querySelector('img').src = `raw/${lang}/${shot.raw}`;
+  document.querySelector('img').src = set ? `raw/android/${set}/${lang}/${shot.raw}` : `raw/${lang}/${shot.raw}`;
   const h1 = document.querySelector('h1');
   for (const line of shot.caption[lang]) {
     const span = document.createElement('span');
@@ -34,7 +41,7 @@
   // A caption line wider than the page shrinks the whole caption.
   document.fonts.ready.then(() => {
     const max = h1.clientWidth;
-    let size = 116;
+    let size = parseFloat(getComputedStyle(h1).fontSize);
     while ([...h1.children].some((span) => span.scrollWidth > max) && size > 60) {
       size -= 2;
       h1.style.fontSize = `${size}px`;

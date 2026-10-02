@@ -1,7 +1,8 @@
-/* One App Store frame, 1320 x 2868 (the 6.9" iPhone size, APP_IPHONE_67): a two-line
-   caption over the simulator capture in a phone outline, on the website's cream day or plum
-   night with a few soft candy blobs. Colors and type follow site/style.css. All lengths are
-   in px of the final image. */
+/* One store frame: a two-line caption over a capture in a device outline, on the website's
+   cream day or plum night with a few soft candy blobs. Colors and type follow site/style.css.
+   The App Store frame is 1320 x 2868 (the 6.9" iPhone size, APP_IPHONE_67) with an iPhone;
+   html.play (frame.html?set=…) is a Google Play frame, further down. All lengths are in px of
+   the final image (the 10-inch tablet set is rendered at 4/3 scale). */
 
 :root {
   --bg: #FFF4E8;
@@ -15,10 +16,14 @@
   --blob-c: #4B8BFF;
   --blob-opacity: 0.32;
 
+  --page-w: 1320px;
+  --page-h: 2868px;
   /* The phone: the capture scaled to 1030 px wide inside a 20 px bezel. */
+  --capture-w: 1320px;
+  --capture-h: 2868px;
   --scale: 0.7803;
-  --screen-w: calc(1320px * var(--scale));
-  --screen-h: calc(2868px * var(--scale));
+  --screen-w: calc(var(--capture-w) * var(--scale));
+  --screen-h: calc(var(--capture-h) * var(--scale));
   --bezel-w: 20px;
   --screen-radius: 130px;
 }
@@ -37,8 +42,8 @@
 
 html, body {
   margin: 0;
-  width: 1320px;
-  height: 2868px;
+  width: var(--page-w);
+  height: var(--page-h);
   overflow: hidden;
 }
 
@@ -110,4 +115,60 @@ h1 span + span { color: var(--accent); }
   height: calc(110px * var(--scale));
   border-radius: 999px;
   background: #000;
+}
+
+.camera { display: none; }
+
+/* Google Play: 1080 x 1920 (9:16, which Play asks for) with an Android phone, the Pixel 9
+   emulator's 1080 x 2424 capture. */
+html.play {
+  --page-w: 1080px;
+  --page-h: 1920px;
+  --capture-w: 1080px;
+  --capture-h: 2424px;
+  --scale: 0.61;
+  --bezel-w: 16px;
+  /* The Pixel 9's rounded display corners (132 px), scaled. */
+  --screen-radius: calc(132px * var(--scale));
+}
+html.play h1 {
+  left: 40px;
+  right: 40px;
+  top: 92px;
+  font-size: 88px;
+}
+html.play .phone { bottom: 60px; }
+html.play .island { display: none; }
+html.play .blob.a { width: 620px; height: 620px; left: -250px; top: -220px; }
+html.play .blob.b { width: 520px; height: 520px; right: -230px; top: 200px; }
+html.play .blob.c { width: 740px; height: 740px; left: -220px; bottom: -340px; }
+
+/* The punch-hole camera, which screencap leaves out: a 42 px circle around (539.5, 86.5) of
+   the capture. */
+html.play .camera {
+  display: block;
+  position: absolute;
+  left: calc(var(--bezel-w) + 497.5px * var(--scale));
+  top: calc(var(--bezel-w) + 44.5px * var(--scale));
+  width: calc(84px * var(--scale));
+  height: calc(84px * var(--scale));
+  border-radius: 50%;
+  background: #000;
+}
+
+/* The tablet sets: a portrait tablet with a 10:16 screen (the 7-inch Nexus 7 emulator's
+   1200 x 1920, the 10-inch Pixel Tablet's 1600 x 2560) and its camera in the top bezel. */
+html.play.tablet {
+  --capture-w: 1200px;
+  --capture-h: 1920px;
+  --scale: 0.76;
+  --bezel-w: 28px;
+  --screen-radius: 24px;
+}
+html.play.tablet .camera {
+  left: calc(50% - 6px);
+  top: calc(var(--bezel-w) / 2 - 6px);
+  width: 12px;
+  height: 12px;
+  background: var(--rim);
 }
