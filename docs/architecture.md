@@ -51,7 +51,19 @@ emulator, which `scripts/emu.sh` drives (launch into a route, screenshots, taps;
 header); `android-release` builds a signed AAB into dist/ with the upload key from
 Bitwarden ("Hopwatch Play upload key"; Play App Signing holds the app signing key).
 iOS-only pieces (SwiftUI views from @expo/ui, SF Symbols, the Live Activity, Apple
-Intelligence) need Android counterparts or must stay hidden there.
+Intelligence) have Android counterparts (`*.android.tsx`, Material via @expo/ui's Jetpack
+Compose, Material Symbols) or stay hidden there.
+
+`modules/system-surfaces` (Kotlin) shows the running entry as an ongoing notification
+(channel "running", system chronometer, Stop / Back to buttons) and publishes the launcher's
+dynamic shortcuts; `src/widgets/running-notification.ts` and `shortcuts.ts` drive them from
+the store, like `live-activity.ts` does the iOS Live Activity. Buttons and shortcuts open
+hopwatch:// links in a fresh activity start, so they work after the process was killed.
+A link that cold-started the app must not run again after an over-the-air reload in the
+same process: Android clears it natively (`forgetLaunchLink`), and on both platforms
+`src/core/launch.ts` skips the initial link once after an update reload. Nunito is embedded
+by expo-font; `plugins/with-android-accent.js` colors AppCompat dialogs; expo-localization
+declares en/de for the per-app language pickers.
 
 ## Releasing
 

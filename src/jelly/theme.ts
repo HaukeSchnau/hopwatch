@@ -206,27 +206,17 @@ export const darkTheme = themes.dark;
 export type Weight = '500' | '600' | '700' | '800';
 
 /**
- * Nunito, Android's stand-in for SF Pro Rounded, as one family per weight: Android can't
- * pick a weight from a font loaded at runtime and falls back to Roboto for bold. Loaded
- * by src/shell/fonts.android.ts before the first screen shows.
+ * The system's SF Pro Rounded on iOS. Nunito on Android, embedded in all four weights by
+ * expo-font's config plugin (app.json).
  */
-export const nunito = {
-  '500': 'Nunito-Medium',
-  '600': 'Nunito-SemiBold',
-  '700': 'Nunito-Bold',
-  '800': 'Nunito-ExtraBold',
-} as const satisfies Record<Weight, string>;
+const face = Platform.OS === 'android' ? 'Nunito' : 'ui-rounded';
 
-/**
- * The rounded face at `weight`: SF Pro Rounded on iOS, Nunito on Android. Use it instead of
- * setting `fontFamily` and `fontWeight` yourself; on Android a `fontWeight` of 700 or more
- * on top of it would bring Roboto back.
- */
-export const rounded = (weight: Weight): TextStyle =>
-  Platform.OS === 'android' ? { fontFamily: nunito[weight], fontWeight: 'normal' } : { fontFamily: 'ui-rounded', fontWeight: weight };
+/** The rounded face at `weight`. Use it instead of setting `fontFamily` and `fontWeight` yourself. */
+export const rounded = (weight: Weight): TextStyle => ({ fontFamily: face, fontWeight: weight });
 
 /** Header titles in the rounded face on Android; iOS keeps its system header font. */
-export const headerFont: { fontFamily?: string } = Platform.OS === 'android' ? { fontFamily: nunito['800'] } : {};
+export const headerFont: { fontFamily?: string; fontWeight?: Weight } =
+  Platform.OS === 'android' ? { fontFamily: face, fontWeight: '800' } : {};
 
 /**
  * Text styles in the rounded face, sized like the iOS text styles. Colors come from the

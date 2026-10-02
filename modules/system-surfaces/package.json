@@ -1,0 +1,7 @@
+{
+  "name": "system-surfaces",
+  "version": "1.0.0",
+  "description": "Android surfaces outside the app: the running entry's ongoing notification and the launcher's shortcuts",
+  "main": "index.ts",
+  "private": true
+}

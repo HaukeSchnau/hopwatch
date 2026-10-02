@@ -11,10 +11,11 @@ import { useDressUp } from '@/jelly/character/suggest';
 import { sheet } from '@/jelly/nav';
 import { useTheme } from '@/jelly/theme';
 import { devLaunchRoute } from '@/shell/dev-route';
-import { useFontsReady } from '@/shell/fonts';
 import { useHideSplash } from '@/shell/splash';
 import { startUpdates } from '@/shell/updates';
 import { startLiveActivity } from '@/widgets/live-activity';
+import { startRunningNotification } from '@/widgets/running-notification';
+import { startShortcuts } from '@/widgets/shortcuts';
 
 // The last resort if the frame itself fails; each route also exports its own.
 export { ErrorScreen as ErrorBoundary } from '@/jelly/ErrorScreen';
@@ -28,16 +29,16 @@ LogBox.ignoreLogs(['[expo-notifications] Error reading persisted server registra
 
 /**
  * Hopwatch: native tabs at the root, with every detail presented as a form sheet over them.
- * iOS uses system fonts only, so the splash can go right away. Android keeps it up, and
- * the screens empty, until Nunito has loaded: text laid out before that would stay in
- * Roboto. Navigation colors follow the appearance: cream by day, night candy after dark.
+ * Fonts are the system's or embedded at build time, so the splash can go right away.
+ * Navigation colors follow the appearance: cream by day, night candy after dark.
  */
 export default function RootLayout() {
   const t = useTheme();
-  const fontsReady = useFontsReady();
-  useHideSplash(fontsReady);
+  useHideSplash();
   useEffect(() => startNudges(), []);
   useEffect(() => startLiveActivity(), []);
+  useEffect(() => startRunningNotification(), []);
+  useEffect(() => startShortcuts(), []);
   useEffect(() => startUpdates(), []);
   useDressUp();
   useDevLaunchRoute();
@@ -50,10 +51,7 @@ export default function RootLayout() {
           colors: { ...nav.colors, background: t.c.bg, card: t.c.bg, text: t.c.ink, primary: t.c.pinkDeep, border: t.c.line },
         }}>
         <StatusBar style="auto" />
-        <Stack
-          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.c.bg } }}
-          // Empties the screens rather than the navigator, so routes and links work meanwhile.
-          screenLayout={fontsReady ? undefined : blank}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.c.bg } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="start" options={sheet([0.78], t.c.bg)} />
           <Stack.Screen name="stop" options={sheet([0.84], t.c.bg)} />
@@ -66,8 +64,6 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
-
-const blank = () => <></>;
 
 /** Development only: opens the route passed as `-hopwatchRoute` (see scripts/sim.sh). */
 function useDevLaunchRoute() {

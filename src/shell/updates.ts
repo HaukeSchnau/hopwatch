@@ -1,11 +1,15 @@
 import { AppState } from 'react-native';
 
+import { markReloadForUpdate } from '@/core/launch';
+
 /**
  * Keeps release builds current with EAS Update (see `scripts/m1.sh ota`). expo-updates on its
  * own applies a downloaded update at the next cold start, and iOS keeps a time tracker
  * alive for days. So: every return to the foreground checks and downloads, and once an
  * update is waiting, the app reloads into it when it goes to the background, where nobody
- * sees the restart. Development builds load from Metro and skip all of this.
+ * sees the restart, and marks the reload so the next start doesn't replay the link that
+ * cold-started this process (src/core/launch.ts). Development builds load from Metro and
+ * skip all of this.
  * Call once from the root layout; returns a cleanup function.
  */
 export function startUpdates(): () => void {
@@ -29,7 +33,8 @@ export function startUpdates(): () => void {
 
   const apply = async () => {
     const Updates = await import('expo-updates');
-    await Updates.reloadAsync().catch(() => undefined);
+    markReloadForUpdate(true);
+    await Updates.reloadAsync().catch(() => markReloadForUpdate(false));
   };
 
   void check();
