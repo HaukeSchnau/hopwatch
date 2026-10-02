@@ -1,0 +1,16 @@
+Hopwatch ist eine Zeiterfassung, die du wirklich benutzt, weil Wechseln nur einen Tipp braucht.
+
+Alles, womit du deine Zeit verbringst, ist ein Jelly: dein Job, ein Kunde, Deep Work, der Hund. Tipp eins an, und es hüpft in das Rad von heute, während das vorige wieder einschläft. Mehr musst du dir nicht angewöhnen.
+
+DAS STECKT DRIN
+• Ein Tipp zum Wechseln. Das letzte Jelly ist mit „Zurück zu“ immer einen Tipp entfernt.
+• Vergessen zu wechseln? Starte oder stoppe „vor 10 Min.“, und Hopwatch zeigt dir vorher genau, was sich ändert.
+• Tag: dein Tag als Rad und als Zeitleiste. Tipp auf eine Lücke, um sie zu füllen, und zieh an einem Eintrag, um ihn zu korrigieren.
+• Woche: Summen, Blasen und Zielgläser für Wochenziele wie 40 Stunden Arbeit.
+• Gruppen: Jellys können in anderen Jellys wohnen, etwa Kunden › Acme › Website.
+• Erinnerungen: ein sanfter Hinweis, wenn etwas schon sehr lange läuft.
+
+PRIVAT VON GRUND AUF
+Kein Konto, keine Werbung, kein Tracking. Deine Einträge bleiben auf deinem Handy, und wir sehen sie nie. Ins Internet geht Hopwatch nur, um nach App-Updates zu schauen. Exportiere deine Daten jederzeit als Datei und stelle sie auf einem neuen Handy wieder her.
+
+Auf Deutsch und Englisch.

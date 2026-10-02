@@ -24,6 +24,31 @@ pushes one half. It finds the app by app.json's bundle ID (or `--app ID`) and is
 Set once in App Store Connect and not handled by the script: price (free), availability (all
 territories, new ones included), Mac and Vision Pro availability (off), App Privacy.
 
+## Google Play
+
+App "Hopwatch: Time Tracker" (dev.schnau.hopwatch, console app ID 4975816330263293130) in
+the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
+
+- `play/<locale>/` holds title, short and full description. The Play copy leaves out what
+  Android doesn't have (Apple Intelligence, Live Activity, Shortcuts). Add the ongoing
+  notification and app shortcuts once they ship.
+- `play/graphics/feature-graphic.html` draws the 1024 x 500 feature graphic from the
+  website's jellies (`site/jelly.js`), with no text, so all languages share it. The render
+  command is in its header. The 512 px icon is `assets/images/android-icon.png`.
+- There's no push script yet. Managed publishing is off, so the Play API refuses
+  `changesNotSentForReview` ("Changes are sent for review automatically"), and committing an
+  API edit would send the queued changes for review. Until that's wanted, edit the listing in
+  the console (Store presence › Store listings, "Save as draft"). To script it later, turn on
+  managed publishing first.
+- App content, set in the console: no ads, no advertising ID, no sign-in, not a government,
+  financial or health app, target age 18+, IARC "All other app types" with every answer no
+  (Everyone, PEGI 3, USK 0). Data safety declares two collected types, both from the
+  expo-updates check, neither shared: device or other IDs (the random install ID, for app
+  functionality and analytics) and crash logs (the failed-update error, for analytics), both
+  required and encrypted in transit; no accounts; the optional deletion question is left
+  blank. Revisit it when the app gains a network call or an SDK that sends data, and keep it
+  in line with the privacy policy.
+
 ## Screenshots
 
 `screenshots/app-store/<locale>/` holds the framed App Store screenshots, 1320 x 2868 for the
