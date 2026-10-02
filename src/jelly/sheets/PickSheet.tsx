@@ -4,12 +4,15 @@
 //           (`at` preselects the hour around it inside a long gap)
 //   entry   change an entry's context                 /jelly/pick?mode=entry&entry=…
 //   parent  move a context under another one          /jelly/pick?mode=parent&id=…
+//
+// In start mode, with Apple's on-device model, the search field also takes a sentence
+// like "2h deep work this morning" and offers to log it (see TypedLog).
 
 import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   actions,
@@ -18,6 +21,7 @@ import {
   formatDuration,
   MINUTE,
   pathLabel,
+  type Plan,
   type ResolvedContext,
   subtreeIds,
   useEntries,
@@ -27,9 +31,11 @@ import {
 
 import { buzz, play } from '../feedback';
 import { Character } from '../Character';
+import { useModelAvailable } from '../character/suggest';
 import { tabular, text, useTheme } from '../theme';
 import { Squishy } from '../ui';
 import { sheetBody } from './parts';
+import { LogConfirm, LogRow, looksLikeSentence, useTypedLog } from './TypedLog';
 
 type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string };
 
@@ -43,6 +49,10 @@ export function PickSheet() {
   const entries = useEntries();
   const pickable = usePickableContexts();
   const [query, setQuery] = useState('');
+  // The typed sentence's plan, once its row is tapped.
+  const [confirming, setConfirming] = useState<Plan | null>(null);
+  const modelReady = useModelAvailable();
+  const canType = mode === 'start' && modelReady;
 
   const gapFrom = Number(params.from);
   const gapTo = Number(params.to);
@@ -76,6 +86,13 @@ export function PickSheet() {
 
   const q = query.trim().toLowerCase();
   const list = pickable.filter((c) => !excluded.has(c.id) && (!q || pathLabel(c).toLowerCase().includes(q)));
+  const log = useTypedLog(query, canType && looksLikeSentence(query, list.length));
+  const confirm = (plan: Plan | null) => {
+    if (!plan) return;
+    buzz.tap();
+    Keyboard.dismiss();
+    setConfirming(plan);
+  };
   const pick = (c: ResolvedContext | null) => {
     buzz.tap();
     onPick(c);
@@ -112,13 +129,17 @@ export function PickSheet() {
           />
         </View>
       )}
-      {pickable.length > 8 && (
+      {(pickable.length > 8 || canType) && (
         <View style={[styles.search, { backgroundColor: t.c.sunken }]}>
           <SymbolView name="magnifyingglass" size={16} tintColor={t.c.muted} weight="bold" />
           <TextInput
             value={query}
-            onChangeText={setQuery}
-            placeholder="Find a jelly"
+            onChangeText={(value) => {
+              setQuery(value);
+              setConfirming(null);
+            }}
+            onSubmitEditing={() => confirm(log.plan)}
+            placeholder={canType ? 'Find a jelly or type what you did' : 'Find a jelly'}
             placeholderTextColor={t.c.faint}
             style={[text.body, styles.searchInput, { color: t.c.ink }]}
             autoCorrect={false}
@@ -126,20 +147,25 @@ export function PickSheet() {
           />
         </View>
       )}
-      <View style={styles.list}>
-        {mode === 'parent' && moving && !q && <Row label="Top level" context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
-        {list.map((c) => (
-          <Row
-            key={c.id}
-            label={q ? pathLabel(c) : c.name}
-            context={c}
-            depth={q ? 0 : c.depth}
-            selected={(mode === 'entry' && entry?.contextId === c.id) || (mode === 'parent' && moving?.parentId === c.id)}
-            onPress={() => pick(c)}
-          />
-        ))}
-        {list.length === 0 && <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{`No jelly matches “${query}”.`}</Text>}
-      </View>
+      {confirming ? (
+        <LogConfirm plan={confirming} onDone={() => router.back()} onCancel={() => setConfirming(null)} />
+      ) : (
+        <View style={styles.list}>
+          <LogRow log={log} onPress={confirm} />
+          {mode === 'parent' && moving && !q && <Row label="Top level" context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
+          {list.map((c) => (
+            <Row
+              key={c.id}
+              label={q ? pathLabel(c) : c.name}
+              context={c}
+              depth={q ? 0 : c.depth}
+              selected={(mode === 'entry' && entry?.contextId === c.id) || (mode === 'parent' && moving?.parentId === c.id)}
+              onPress={() => pick(c)}
+            />
+          ))}
+          {list.length === 0 && !log.shown && <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{`No jelly matches “${query}”.`}</Text>}
+        </View>
+      )}
     </ScrollView>
   );
 }

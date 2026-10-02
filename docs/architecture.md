@@ -17,7 +17,11 @@ Stint is a personal iOS time tracker (spec: [spec.md](spec.md)) with one design,
 - `src/app`: expo-router routes, thin files that render `src/jelly` screens. Native tabs at
   the root, details as form sheets.
 - `modules/on-device-model`: a local Expo module over Apple's Foundation Models, used as a
-  progressive enhancement for character and emoji suggestions.
+  progressive enhancement. It suggests a jelly's emoji, color, look and mood
+  (`src/jelly/character/ask.ts`), phrases the week summary from facts computed in
+  `src/core/week-facts.ts` (which also rejects invented numbers), and reads typed entries
+  like "2h deep work this morning": the model extracts, `src/core/sentence.ts` resolves the
+  times, and the user confirms a preview. Without the model, none of it shows.
 - `plugins/with-scene-lifecycle.js`: the UIScene life cycle iOS 27 requires (TODO: drop
   when the Expo SDK 58 template includes it).
 

@@ -15,7 +15,7 @@ import * as tree from './tree';
 
 /** The most recent timeline change, for the "Switched to X · Undo" toast. */
 export interface LastAction {
-  kind: 'start' | 'stop' | 'back' | 'resume' | 'edit' | 'delete' | 'fill';
+  kind: 'start' | 'stop' | 'back' | 'resume' | 'edit' | 'delete' | 'fill' | 'place';
   /** Ready-made toast text, e.g. "Switched to Dog". */
   label: string;
   contextId: ContextId | null;
@@ -193,6 +193,15 @@ export const actions = {
   fillGap(contextId: ContextId, from: number, to: number) {
     const rows = timeline.fillGap(get().entries, contextId, from, to, clock());
     commitEntries(rows, { kind: 'fill', label: `Added ${nameOf(contextId)}`, contextId });
+  },
+
+  /**
+   * Logs a past block for [from, to] over whatever is there, trimming or replacing it
+   * (see `timeline.place`). `previewPlace` says what that will do.
+   */
+  place(contextId: ContextId, from: number, to: number) {
+    const rows = timeline.place(get().entries, contextId, from, to, clock());
+    commitEntries(rows, { kind: 'place', label: `Added ${nameOf(contextId)}`, contextId });
   },
 
   /** Hides the undo toast without undoing. */

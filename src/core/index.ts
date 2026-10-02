@@ -28,9 +28,11 @@ export {
   useStint,
 } from './store';
 export * from './time';
-export { type EntryPatch, findOpen, type Gap, previousContextId, previewStart, type StartPreview } from './timeline';
+export { type EntryPatch, findOpen, type Gap, type PlacePreview, previewPlace, previousContextId, previewStart, type StartPreview } from './timeline';
+export { type Plan, type Reading, readSentence, type SentenceAnswer, sentenceRequest } from './sentence';
 export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
 export type { Backup, ParseResult } from './backup';
 export { pickBackup, shareExport } from './export';
 export { requestNudgePermission } from './permissions';
 export { eraseAllData, loadSampleData } from './sample-loader';
+export { checkSummary, weekFacts, type WeekFacts } from './week-facts';
