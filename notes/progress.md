@@ -161,6 +161,20 @@ his phone until he moves his data over (export there, restore here).
   -hopwatchRoute, HOPWATCH_BUILD_NUMBER, m1 dirs ~/Developer/hopwatch-{ios,android,ota}.
   Simulators need a new dev client (bundle changed); sim.sh takes SIM_BUNDLE for old ones.
 
+## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
+
+Rename everything that still says stint, once no agents are working:
+- the workspace folder /home/haukeschnau/stint and the T3 project ("Stint") → hopwatch,
+  plus anything in ~/infra that refers to the old path or name;
+- simulators named "Stint Five …" (and the spare ones) → rename or delete; the old dev
+  clients with bundle dev.schnau.stint;
+- old M1 folders ~/Developer/stint-five (ours; stint, stint-lab* belong to other threads);
+- the old App Store Connect record 6818258577 ("Stint Schnau", dev.schnau.stint, its
+  bundle IDs and App Group) and the old Expo project @haukeschnau/stint, once Hauke has
+  moved his data to Hopwatch;
+- the file share folders /srv/agent-share/stint-five and /srv/agent-share/stint;
+- remaining "Stint" mentions in docs and notes (history like "Stint Five" can stay).
+
 ## Next
 
 1. Commit the builders' work, final QA (light/dark), `scripts/m1.sh testflight`.
