@@ -161,6 +161,19 @@ his phone until he moves his data over (export there, restore here).
   -hopwatchRoute, HOPWATCH_BUILD_NUMBER, m1 dirs ~/Developer/hopwatch-{ios,android,ota}.
   Simulators need a new dev client (bundle changed); sim.sh takes SIM_BUNDLE for old ones.
 
+- Release work in flight (2026-10-02): App Store assets builder (screenshots in
+  store/screenshots, scripts/app-store.mjs, ASC metadata on app 6818526671), website polish
+  (livelier jellies, better hop, footer "Eine Hauke Schnau Produktion" / "A Hauke Schnau
+  Production"), Android port in two parts (forms/sheets/menus; shell/screens/platform),
+  Google Play setup (app record, declarations, store/play listing, feature graphic,
+  internal track). Next after the port: Android ongoing notification + app shortcuts
+  (native), Play screenshots, final iOS 1.1.0 build to TestFlight and attach, OTA for
+  Android (`m1.sh ota` is iOS-only so far), then ask Hauke before submitting either store.
+- Done since: t3.json (T3 Code icon), Apple Watch Live Activity layout (bannerSmall, OTA-able,
+  unseen on a real watch), Android groundwork committed (see docs/architecture.md).
+- Store screenshots exceed jj's 1 MiB snapshot limit; decide at commit (ignore raw/,
+  compress finals or raise snapshot.max-new-file-size for the repo).
+
 ## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
 
 Rename everything that still says stint, once no agents are working:
