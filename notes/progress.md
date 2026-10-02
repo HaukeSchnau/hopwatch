@@ -188,6 +188,19 @@ his phone until he moves his data over (export there, restore here).
 - Fixed: generate() 20 s timeout; week summary "behind pace" instead of hours to go;
   AD_ID permission blocked. In-app privacy/help links requested from the forms porter.
 
+- Android port committed (2026-10-02): forms/sheets/menus (Menu.android.tsx, forms.android.tsx,
+  material.tsx, menuSymbols.ts, .android screens; shared logic in settings/parts.tsx,
+  sheets/entry.tsx, sheets/time.tsx, stuff/editor.tsx) and shell/screens (Material tabs,
+  mini player card, headers/insets, Icon in ui.tsx, Nunito via rounded(weight), Android
+  locale, notification permission + "Nudges" channel). In flight: native features
+  (ongoing notification with timer + Stop/Back, app shortcuts, alert accent, locale
+  config, embedded Nunito; one rebuild) and JS polish (font/icon leftovers, pause idle
+  animations off-screen, dev warning).
+- After that: Android release AAB → Play internal testing (first upload in the console),
+  Play phone + tablet screenshots, final iOS 1.1.0 build → TestFlight → attach to the
+  App Store version, App Privacy decision (asked Hauke), `m1.sh ota` for Android, then ask
+  Hauke before submitting either store.
+
 ## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
 
 Rename everything that still says stint, once no agents are working:
