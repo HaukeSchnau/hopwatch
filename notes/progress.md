@@ -202,6 +202,11 @@ his phone until he moves his data over (export there, restore here).
   App Store version, App Privacy decision (asked Hauke), `m1.sh ota` for Android, then ask
   Hauke before submitting either store.
 
+- First Hopwatch TestFlight build 202610022013 (2026-10-02): signing with the new bundle,
+  widget extension and App Group works; internal testers have it. It was INTERNAL_ONLY
+  (export option testFlightInternalTestingOnly), which App Store versions can't take;
+  removed the option, rebuilding for the 1.1.0 App Store version.
+
 ## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
 
 Rename everything that still says stint, once no agents are working:
