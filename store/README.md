@@ -30,16 +30,18 @@ App "Hopwatch: Time Tracker" (dev.schnau.hopwatch, console app ID 49758163302632
 the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
 
 - `play/<locale>/` holds title, short and full description. The Play copy leaves out what
-  Android doesn't have (Apple Intelligence, Live Activity, Shortcuts). Add the ongoing
-  notification and app shortcuts once they ship.
+  Android doesn't have (Apple Intelligence, Live Activity, the Shortcuts app) and mentions the
+  running notification and the launcher shortcuts instead.
 - `play/graphics/feature-graphic.html` draws the 1024 x 500 feature graphic from the
   website's jellies (`site/jelly.js`), with no text, so all languages share it. The render
   command is in its header. The 512 px icon is `assets/images/android-icon.png`.
 - There's no push script yet. Managed publishing is off, so the Play API refuses
   `changesNotSentForReview` ("Changes are sent for review automatically"), and committing an
   API edit would send the queued changes for review. Until that's wanted, edit the listing in
-  the console (Store presence › Store listings, "Save as draft"). To script it later, turn on
-  managed publishing first.
+  the console (Store presence › Store listings). The full "Save" only queues the change in
+  Publishing overview, and it's what ticks "Set up your store listing" on the dashboard; both
+  languages were saved that way with the current copy. To script it later, turn on managed
+  publishing first.
 - App content, set in the console: no ads, no advertising ID, no sign-in, not a government,
   financial or health app, target age 18+, IARC "All other app types" with every answer no
   (Everyone, PEGI 3, USK 0). Data safety declares two collected types, both from the
@@ -62,6 +64,12 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   review needed. Testers: the email list "Hauke" (haukeschnau@gmail.com). Opt-in link:
   https://play.google.com/apps/internaltest/4701468743687124341. Until the app has passed a
   first review, testers see it as "dev.schnau.hopwatch (unreviewed)".
+- Production: all 178 countries and regions Play lists, Rest of World included. Release
+  29849538 (1.1.0) is promoted from internal testing as a draft, with the same notes. What's
+  left is Hauke's go: open the draft, Next › "Save" (the dashboard's "Preview and confirm"
+  step, which unlocks sending), then Publishing overview › "Send … for review". Managed
+  publishing is off, so an approved app goes live right away; turn it on first to pick the
+  moment.
 
 ## Screenshots
 
