@@ -61,9 +61,9 @@ function mostly(segments: readonly Segment[], share: number, lang: Language, roo
 
 /**
  * Where a weekly target stands, said after "Job got 38 hours": past it, just short of it
- * or short of it, or for the running week whether that's on pace with the week so far and
- * otherwise what's still needed. The shortfall itself stays unsaid, so the model has no
- * second number to mix up with the first.
+ * or short of it, or for the running week whether it's on pace with the week so far or
+ * behind. The shortfall itself stays unsaid, so the model has no second number to mix up
+ * with the first (when it got one, it wrote "with 5 hours left for 6 hours").
  */
 function targetState(line: TargetLine, running: boolean, elapsed: number, lang: Language) {
   const of = spoken(line.target, lang);
@@ -71,7 +71,7 @@ function targetState(line: TargetLine, running: boolean, elapsed: number, lang: 
   if (running) {
     return line.actual >= line.target * elapsed
       ? ({ of, state: { kind: 'onTrack' } } as const)
-      : ({ of, state: { kind: 'toGo', rest: spoken(-line.diff, lang) } } as const);
+      : ({ of, state: { kind: 'behind' } } as const);
   }
   return { of, state: { kind: -line.diff <= line.target * 0.1 ? 'justShort' : 'short' } } as const;
 }

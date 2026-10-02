@@ -8,7 +8,7 @@ import { type Language, localized } from '.';
 type TargetState =
   | { kind: 'past'; running: boolean }
   | { kind: 'onTrack' }
-  | { kind: 'toGo'; rest: string }
+  | { kind: 'behind' }
   | { kind: 'justShort' }
   | { kind: 'short' };
 
@@ -45,8 +45,8 @@ const en = {
         ? `${s.running ? 'already ' : ''}past ${its}`
         : s.kind === 'onTrack'
           ? `on track for ${its}`
-          : s.kind === 'toGo'
-            ? `with ${s.rest} to go for ${its}`
+          : s.kind === 'behind'
+            ? `behind pace for ${its}`
             : `${s.kind === 'justShort' ? 'just short' : 'short'} of ${its}`;
     return `${name} ${got}, ${clause}.`;
   },
@@ -98,8 +98,8 @@ export const factText: Record<Language, typeof en> = {
           ? `${s.running ? 'schon ' : ''}über dem ${goal}`
           : s.kind === 'onTrack'
             ? `auf Kurs zum ${goal}`
-            : s.kind === 'toGo'
-              ? `noch ${s.rest} bis zum ${goal}`
+            : s.kind === 'behind'
+              ? `hinter dem Plan zum ${goal}`
               : `${s.kind === 'justShort' ? 'knapp ' : ''}unter dem ${goal}`;
       return `${name} ${got}, ${clause}.`;
     },
