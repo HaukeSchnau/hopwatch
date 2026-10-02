@@ -47,7 +47,7 @@ export function StuffScreen() {
       </Stack.Toolbar>
 
       <Text style={[text.footnote, styles.caption, { color: t.c.muted }]}>
-        {q ? stuffText.matches(visible.length) : stuffText.caption(live)}
+        {q ? stuffText.matches(visible.length) : live > 0 ? stuffText.caption(live) : null}
       </Text>
       <View style={[styles.card, { backgroundColor: t.c.card }]}>
         {visible.map((c, i) => (
@@ -61,7 +61,7 @@ export function StuffScreen() {
             flat={q.length > 0}
           />
         ))}
-        {visible.length === 0 && <Text style={[text.body, styles.none, { color: t.c.muted }]}>{stuffText.noMatch(query)}</Text>}
+        {visible.length === 0 && <Text style={[text.body, styles.none, { color: t.c.muted }]}>{q ? stuffText.noMatch(query) : stuffText.allArchived}</Text>}
       </View>
 
       {archivedCount > 0 && !q && (

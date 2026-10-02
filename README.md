@@ -1,4 +1,4 @@
-# Stint
+# Hopwatch
 
 A personal time tracker for iOS where switching context is one tap. Every context is a
 little jelly character; the one you're on lives in the middle of today's 24-hour dial.

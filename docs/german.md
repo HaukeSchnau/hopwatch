@@ -1,13 +1,13 @@
 # German
 
-Stint is in English and German (src/i18n). The German should read like it was written in
+Hopwatch is in English and German (src/i18n). The German should read like it was written in
 German for this app, not translated: short, warm, a little playful, never cute for its own
 sake. These rules keep the three people (or agents) writing it consistent.
 
 ## Tone
 
 - Du, never Sie. Lowercase "du" and "dein" in running text.
-- Short. German runs about 30% longer than English, and Stint's labels sit in pills, tabs
+- Short. German runs about 30% longer than English, and Hopwatch's labels sit in pills, tabs
   and menus. Prefer the shorter word when it means the same ("Ziel" over "Zielsetzung").
 - Plain words over anglicisms, except where Germans really say the English word in this
   context ("Meeting", "Deep Work" as a jelly name, "Live Activity", "Apple Intelligence").
@@ -19,7 +19,7 @@ sake. These rules keep the three people (or agents) writing it consistent.
 
 | English | German | Notes |
 |---|---|---|
-| jelly, jellies | Jelly, Jellys | das Jelly. Stint's word for a context; keep it as a name. |
+| jelly, jellies | Jelly, Jellys | das Jelly. Hopwatch's word for a context; keep it as a name. |
 | Now / Day / Week / Stuff (tabs) | Jetzt / Tag / Woche / Kram | |
 | entry, entries | Eintrag, Einträge | |
 | switch to X | zu X wechseln | Toast: „Zu Hund gewechselt“ |
@@ -61,6 +61,9 @@ sake. These rules keep the three people (or agents) writing it consistent.
 | Suggest / Surprise me / Automatic | Vorschlag / Überrasch mich / Automatisch | |
 | look parts | Körper, Augen, Mund, Kopf, Hals, Muster, Laune | „Muster“ for coat |
 | squishy sounds | Glibbertöne | |
+| Sound (settings section) | Ton | |
+| Export Data | Daten exportieren | |
+| One more thing | Noch eine Sache | before the notification prompt |
 
 In `localized({ en, de })`, give optional parameters as `flag?: boolean`, not with a default
 value: a default in the `en` function makes the `de` side lose its parameter types.

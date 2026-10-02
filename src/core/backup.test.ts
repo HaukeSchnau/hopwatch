@@ -72,7 +72,7 @@ describe('parseBackup', () => {
   it('names the damaged row', () => {
     const broken = file(work, []);
     broken.contexts[1].name = 42;
-    expect(parseBackup(broken)).toEqual({ ok: false, reason: 'Context 2 in the file is damaged.' });
+    expect(parseBackup(broken)).toEqual({ ok: false, reason: 'Jelly 2 in the file is damaged.' });
   });
 
   it('rejects other files and newer formats', () => {

@@ -187,7 +187,7 @@ export function summaryRequest(week: WeekFacts, lang: Language = language) {
   const text = factText[lang].request;
   return {
     instructions: [
-      'You write the short summary at the top of the Week screen in Stint, a personal time tracker.',
+      'You write the short summary at the top of the Week screen in Hopwatch, a personal time tracker.',
       `Write 2 or 3 short sentences, under 45 words in all, ${text.addressAs}. Sound warm and a little playful, like a friend glancing at their week.`,
       'Weave the facts into flowing sentences with lively, friendly verbs instead of listing them.',
       'Use only the facts you are given. Keep each number with the thing it belongs to, copy numbers as written and keep names as written.',

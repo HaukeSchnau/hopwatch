@@ -2,33 +2,19 @@
 
 import type { Availability } from '@modules/on-device-model';
 
-import type { Hue } from '@/core/model';
-import type { Motion } from '@/jelly/character/traits';
-
 import { localized } from '.';
-import { characterText } from './character';
 
 const jelliesEn = (count: number) => `${count} ${count === 1 ? 'jelly' : 'jellies'}`;
 const entriesEn = (count: number) => `${count} ${count === 1 ? 'entry' : 'entries'}`;
 const jelliesDe = (count: number) => `${count} ${count === 1 ? 'Jelly' : 'Jellys'}`;
 const entriesDe = (count: number) => `${count} ${count === 1 ? 'Eintrag' : 'Einträge'}`;
 
-/** What the test suggestion came back with; `seconds` arrives formatted. */
-interface Tried {
-  name: string;
-  emoji: string | null;
-  hue: Hue | null;
-  topic: string | null;
-  motion: Motion | undefined;
-  seconds: string;
-}
-
 export const settingsText = localized({
   en: {
     title: 'Settings',
     done: 'Done',
     cancel: 'Cancel',
-    jelly: 'Jelly',
+    sound: 'Sound',
     sounds: 'Squishy sounds',
     intelligence: {
       footer:
@@ -38,18 +24,9 @@ export const settingsText = localized({
         appleIntelligenceNotEnabled: 'Off. Turn on Apple Intelligence in the Settings app.',
         modelNotReady: 'The model is still downloading. Try again later.',
         deviceNotEligible: 'Not supported on this iPhone.',
-        unsupported: 'Needs iOS 26 or later.',
+        unsupported: 'Not available right now.',
       } satisfies Record<Availability, string>,
       checking: 'Checking…',
-      asking: 'Asking…',
-      try: 'Try a Suggestion',
-      /** The name the test suggestion is for. */
-      sample: 'Espresso run',
-      worked: 'It works',
-      got: ({ name, emoji, hue, topic, motion, seconds }: Tried) =>
-        `"${name}" got ${emoji ?? 'no emoji'}, ${hue ?? 'no color'}, ${topic ? `the ${topic} look` : 'the look its name points at'}${motion ? ` and a ${motion} mood` : ''}, in ${seconds} s.`,
-      none: 'No suggestion',
-      noAnswer: 'The model gave no answer.',
     },
     shortcuts: {
       title: 'Shortcuts',
@@ -61,8 +38,9 @@ export const settingsText = localized({
     },
     data: {
       title: 'Data',
-      footer: (jellies: number, entries: number) => `${jelliesEn(jellies)} and ${entriesEn(entries)}, stored on this iPhone.`,
-      export: 'Export JSON',
+      footer: (jellies: number, entries: number) =>
+        `${jelliesEn(jellies)} and ${entriesEn(entries)}, stored on this iPhone. An export is a file you can restore here or on your next iPhone.`,
+      export: 'Export Data',
       exportFailed: 'Export failed',
       restore: 'Restore from Export',
       cantRestore: "Can't restore this file",
@@ -76,13 +54,13 @@ export const settingsText = localized({
       eraseMessage: 'Every jelly and every entry goes. Export first if you want a backup.',
       eraseConfirm: 'Erase',
     },
-    idea: "Every context is a gummy with a face. The one you're on wakes up in the dial; the rest nap in their slots until you tap them.",
+    idea: "Everything your time goes to is a gummy with a face. The one you're on wakes up in the dial. The others nap in their slots until you tap them.",
   },
   de: {
     title: 'Einstellungen',
     done: 'Fertig',
     cancel: 'Abbrechen',
-    jelly: 'Jelly',
+    sound: 'Ton',
     sounds: 'Glibbertöne',
     intelligence: {
       footer:
@@ -92,18 +70,9 @@ export const settingsText = localized({
         appleIntelligenceNotEnabled: 'Aus. Schalte Apple Intelligence in der Einstellungen-App ein.',
         modelNotReady: 'Das Modell lädt noch. Versuch es später noch mal.',
         deviceNotEligible: 'Auf diesem iPhone nicht verfügbar.',
-        unsupported: 'Braucht iOS 26 oder neuer.',
+        unsupported: 'Gerade nicht verfügbar.',
       },
       checking: 'Wird geprüft…',
-      asking: 'Fragt…',
-      try: 'Vorschlag testen',
-      sample: 'Espresso holen',
-      worked: 'Klappt',
-      // The topic is the look's internal name, quoted as such.
-      got: ({ name, emoji, hue, topic, motion, seconds }) =>
-        `„${name}“ bekam ${emoji ?? 'kein Emoji'}, ${hue ? characterText.hues[hue] : 'keine Farbe'}, ${topic ? `den Look „${topic}“` : 'den Look, der zum Namen passt'}${motion ? ` und die Laune ${characterText.options.motion[motion]}` : ''}, in ${seconds} s.`,
-      none: 'Kein Vorschlag',
-      noAnswer: 'Das Modell hat nicht geantwortet.',
     },
     shortcuts: {
       title: 'Kurzbefehle',
@@ -115,8 +84,9 @@ export const settingsText = localized({
     },
     data: {
       title: 'Daten',
-      footer: (jellies, entries) => `${jelliesDe(jellies)} und ${entriesDe(entries)}, gespeichert auf diesem iPhone.`,
-      export: 'JSON exportieren',
+      footer: (jellies, entries) =>
+        `${jelliesDe(jellies)} und ${entriesDe(entries)}, gespeichert auf diesem iPhone. Einen Export kannst du hier oder auf deinem nächsten iPhone wiederherstellen.`,
+      export: 'Daten exportieren',
       exportFailed: 'Export fehlgeschlagen',
       restore: 'Aus Export wiederherstellen',
       cantRestore: 'Diese Datei lässt sich nicht wiederherstellen',

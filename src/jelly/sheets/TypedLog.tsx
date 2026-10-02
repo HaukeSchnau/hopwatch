@@ -83,7 +83,7 @@ interface Scene {
   now: number;
 }
 
-/** A plan in Stint's words: the headline, a detail line and the button. */
+/** A plan in Hopwatch's words: the headline, a detail line and the button. */
 function words(plan: Plan, { tree, entries, now }: Scene) {
   const name = (id: ContextId) => tree.byId.get(id)?.name ?? s.something;
   // A start or stop before today reads "yesterday 21:00".

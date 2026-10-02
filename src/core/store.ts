@@ -9,7 +9,6 @@ import { coreText } from '@/i18n/core';
 import type { Backup } from './backup';
 import * as db from './db';
 import type { LinkAction } from './links';
-import { requestNudgePermission } from './permissions';
 import type { Context, ContextId, Entry, EntryId, Hue } from './model';
 import * as timeline from './timeline';
 import { offsetAt } from './time';
@@ -218,10 +217,7 @@ export const actions = {
    */
   createContext(input: Omit<tree.NewContextInput, 'id'> & { id?: ContextId }): ContextId {
     const id = input.id ?? newContextId();
-    const first = get().contexts.length === 0;
     commitContexts(tree.createContext(get().contexts, { ...input, id }, Date.now()));
-    // The end of onboarding is the calm moment to ask, before the first switch.
-    if (first) void requestNudgePermission();
     return id;
   },
 

@@ -18,7 +18,7 @@ async function write(week: WeekFacts): Promise<string | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
     const answer = await generate(request);
     if (!answer) return null;
-    // Stint's text uses plain punctuation; the model likes em dashes.
+    // Hopwatch's text uses plain punctuation; the model likes em dashes.
     const text = answer.summary.trim().replace(/\s*—\s*/g, ', ');
     const problem = checkSummary(text, week);
     if (!problem) return text;

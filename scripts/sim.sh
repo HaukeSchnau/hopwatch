@@ -49,7 +49,7 @@ launch() {
       -EXDevMenuIsOnboardingFinished YES -EXDevMenuShowFloatingActionButton NO $route_args >/dev/null"
     sleep 14
     if ssh m1 "xcrun simctl spawn $1 log show --last 15s --style compact \
-      --predicate 'process == \"Stint\" AND eventMessage CONTAINS \"request timed out\"' 2>/dev/null" |
+      --predicate 'process == \"Hopwatch\" AND eventMessage CONTAINS \"request timed out\"' 2>/dev/null" |
       grep -q "timed out"; then
       echo "sim.sh: manifest request timed out, relaunching (attempt $attempt)" >&2
       continue

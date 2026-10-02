@@ -4,31 +4,21 @@
 import { Button, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
 import { foregroundStyle, tint } from '@expo/ui/swift-ui/modifiers';
 import * as Clipboard from 'expo-clipboard';
-import { type Availability, availability, lastFailure } from '@modules/on-device-model';
+import { type Availability, availability } from '@modules/on-device-model';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import {
-  actions,
-  eraseAllData,
-  formatLongDay,
-  pickBackup,
-  resumeLink,
-  shareExport,
-  stopLink,
-  useStint,
-} from '@/core';
-import { locale } from '@/i18n';
+import { actions, eraseAllData, resumeLink, shareExport, stopLink, useStint } from '@/core';
 import { settingsText } from '@/i18n/settings';
 
 import { Character } from '../Character';
-import { suggestForContext } from '../character/suggest';
 import { buzz, setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
 import { useFace, useLively } from '../Gummy';
 import type { PreviewJelly } from '../preview';
 import { text, useTheme } from '../theme';
+import { chooseBackup } from './restore';
 
 /** System red, so erasing never reads like the pink actions around it. */
 const DANGER = '#FF3B30';
@@ -47,40 +37,29 @@ export function SettingsSheet() {
     setCopied(link);
   };
 
-  const confirm = (title: string, message: string, label: string, run: () => void) =>
-    Alert.alert(title, message, [
+  /** Runs a change that replaces all data, then lands on Now. */
+  const replace = (run: () => void) => {
+    run();
+    buzz.thud();
+    if (router.canGoBack()) router.back();
+    router.navigate('/');
+  };
+
+  const erase = () =>
+    Alert.alert(data.eraseTitle, data.eraseMessage, [
       { text: settingsText.cancel, style: 'cancel' },
-      {
-        text: label,
-        style: 'destructive',
-        onPress: () => {
-          run();
-          buzz.thud();
-          if (router.canGoBack()) router.back();
-          router.navigate('/');
-        },
-      },
+      { text: data.eraseConfirm, style: 'destructive', onPress: () => replace(eraseAllData) },
     ]);
 
-  /** Picks an export file, checks it, and replaces everything after a confirmation. */
   const restore = async () => {
-    const result = await pickBackup().catch((e: unknown) => ({ ok: false as const, reason: String(e) }));
-    if (!result) return;
-    if (!result.ok) {
-      Alert.alert(data.cantRestore, result.reason);
-      return;
-    }
-    const { backup } = result;
-    const jellies = backup.contexts.filter((c) => c.deletedAt === null).length;
-    const logged = backup.entries.filter((e) => e.deletedAt === null).length;
-    const day = backup.exportedAt ? formatLongDay(backup.exportedAt) : null;
-    confirm(data.restoreTitle, data.restoreMessage(day, jellies, logged, contexts > 0), data.restoreConfirm, () => actions.restore(backup));
+    const backup = await chooseBackup(contexts > 0);
+    if (backup) replace(() => actions.restore(backup));
   };
 
   return (
     <JellyForm title={settingsText.title} cancel={null} confirm={{ label: settingsText.done, onPress: () => router.back() }}>
       <HostedRow color={t.candy.pink.tint} render={(width) => <Idea width={width} />} />
-      <Section title={settingsText.jelly}>
+      <Section title={settingsText.sound}>
         <Toggle label={settingsText.sounds} systemImage="speaker.wave.2" isOn={sounds} onIsOnChange={setSounds} />
       </Section>
       <AppleIntelligence />
@@ -96,23 +75,16 @@ export function SettingsSheet() {
           modifiers={[tint(DANGER), foregroundStyle(DANGER)]}
           label={data.erase}
           systemImage="trash"
-          onPress={() => confirm(data.eraseTitle, data.eraseMessage, data.eraseConfirm, eraseAllData)}
+          onPress={erase}
         />
       </Section>
     </JellyForm>
   );
 }
 
-/** "1.2" or "1,2" seconds. */
-const tenths = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-/**
- * The on-device model's status and a test request, so a silent fallback can be told apart
- * from a failing model. Failures show the reason from the native side.
- */
+/** Whether the on-device model is ready, and if not, what to do about it. */
 function AppleIntelligence() {
   const [state, setState] = useState<Availability | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -124,28 +96,9 @@ function AppleIntelligence() {
     };
   }, []);
 
-  const tryIt = async () => {
-    setBusy(true);
-    const started = Date.now();
-    const name = intelligence.sample;
-    const suggestion = await suggestForContext({ name, ancestors: [], siblings: [], wantEmoji: true, wantHue: true });
-    const seconds = tenths.format((Date.now() - started) / 1000);
-    setBusy(false);
-    setState(await availability().catch((): Availability => 'unsupported'));
-    if (suggestion) {
-      const { emoji, hue, topic, traits } = suggestion;
-      Alert.alert(intelligence.worked, intelligence.got({ name, emoji, hue, topic, motion: traits.motion, seconds }));
-    } else {
-      Alert.alert(intelligence.none, `${lastFailure() ?? intelligence.noAnswer} (${seconds} s)`);
-    }
-  };
-
   return (
-    <Section
-      title="Apple Intelligence"
-      footer={<SwiftText>{intelligence.footer}</SwiftText>}>
+    <Section title="Apple Intelligence" footer={<SwiftText>{intelligence.footer}</SwiftText>}>
       <SwiftText>{state ? intelligence.status[state] : intelligence.checking}</SwiftText>
-      <Button label={busy ? intelligence.asking : intelligence.try} systemImage="sparkles" onPress={tryIt} />
     </Section>
   );
 }
@@ -161,7 +114,7 @@ function Idea({ width }: { width: number }) {
     <View style={[styles.idea, { width }]}>
       <Character context={mascot} size={84} face={face} />
       <View style={styles.ideaText}>
-        <Text style={[text.title3, { color: t.c.ink }]}>Stint</Text>
+        <Text style={[text.title3, { color: t.c.ink }]}>Hopwatch</Text>
         <Text style={[text.subhead, { color: t.c.ink, opacity: 0.75 }]}>{settingsText.idea}</Text>
       </View>
     </View>
