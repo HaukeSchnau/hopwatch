@@ -209,6 +209,19 @@ his phone until he moves his data over (export there, restore here).
   version 1.1.0 (7f4890fc-d144-481c-adb6-21b6988dec09); the iOS listing is ready to
   submit once Hauke says go.
 
+- Ready for Hauke's go (2026-10-02):
+  - iOS: version 1.1.0 with build 202610022047 attached, listing complete; only "Add for
+    Review" / "Submit" left.
+  - Android: 1.1.0 (versionCode 29849538) live on internal testing (opt-in
+    https://play.google.com/apps/internaltest/4701468743687124341, haukeschnau@gmail.com);
+    Play App Signing set (Google key, our upload key); listing en/de with 24 screenshots,
+    178 countries; production release drafted from 29849538. Left: replace its release
+    notes ("First Android build for testing") with the public ones, Preview and confirm →
+    Save, then "Send app for review" in Publishing overview (managed publishing is off,
+    so Google publishes as soon as it approves; turn it on to pick the moment).
+  - After launch: website store buttons (site/index.html, site/de/index.html: add href,
+    drop class="soon"), then the final cleanup below.
+
 ## Final cleanup (after both stores are done; Hauke asked, 2026-10-02)
 
 Rename everything that still says stint, once no agents are working:
