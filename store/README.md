@@ -65,11 +65,14 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   https://play.google.com/apps/internaltest/4701468743687124341. Until the app has passed a
   first review, testers see it as "dev.schnau.hopwatch (unreviewed)".
 - Production: all 178 countries and regions Play lists, Rest of World included. Release
-  29849538 (1.1.0) is promoted from internal testing as a draft, with the same notes. What's
-  left is Hauke's go: open the draft, Next › "Save" (the dashboard's "Preview and confirm"
-  step, which unlocks sending), then Publishing overview › "Send … for review". Managed
-  publishing is off, so an approved app goes live right away; turn it on first to pick the
-  moment.
+  29849538 (1.1.0), promoted from internal testing, with the public notes "Hello! This is the
+  first version of Hopwatch." / "Hallo! Das ist die erste Version von Hopwatch.", confirmed
+  with Next › "Save" on 2026-10-05. Publishing overview then lists 12 changes (the full
+  rollout, the countries, both listings, the App content declarations, the category) and Play's
+  quick checks passed ("Your changes can now be sent for review"). Sent for review on
+  2026-10-05 ("Submit 12 changes for review" → "Send changes for review"; the confirmation
+  needs a few seconds before the page may be reloaded). Managed publishing stays off
+  (Hauke's call), so Google publishes as soon as it approves.
 
 ## Screenshots
 

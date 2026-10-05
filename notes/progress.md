@@ -212,8 +212,11 @@ his phone until he moves his data over (export there, restore here).
 - SHIPPING (2026-10-05, Hauke tested both and said go; both stores publish on approval):
   iOS 1.1.0 submitted for App Review via the API (reviewSubmission
   154e7a56-8631-4c23-8661-41fb5749fcfc, releaseType AFTER_APPROVAL, state
-  WAITING_FOR_REVIEW). Android: Play submission in progress (public release notes, then
-  "Send app for review"; managed publishing off).
+  WAITING_FOR_REVIEW). Android: sent for review on 2026-10-05 (12 changes: production
+  release 29849538 with public notes, 178 countries, both listings, App content, category;
+  Publishing overview "Changes in review"; managed publishing off).
+  Next: when each store approves, switch the website's buttons to the real store links
+  (site/index.html, site/de/index.html), then the final cleanup.
 - Was ready for Hauke's go (2026-10-02):
   - iOS: version 1.1.0 with build 202610022047 attached, listing complete; only "Add for
     Review" / "Submit" left.
