@@ -101,7 +101,7 @@ hobbies, family, health, vague ones; same request as the app):
 
 - Topic: right for about 42 of 46 in the last run. Misses: "Nickerchen" became family,
   "Steam Deck" code, "Doomscrolling" urgent. Some names flip between runs:
-  "Steuererklärung" money or clients, "Date night" love or family, the sample data's
+  "Steuererklärung" money or clients, "Date night" love or family, an older sample data set's
   "Stint ⏱️" science, code, tinkering and once garden (its sibling is Garden planner 🌱).
 - Mood: sensible for about 42 of 46 ("Deadline crunch" jittery, "Commute" dozy,
   "Daydreaming" dreamy, "Bug bash" jittery). Described as adjectives ("energetic",
@@ -248,7 +248,7 @@ In `.shots/`: `j2c-grid-asleep.png`, `j2c-grid-awake.png`, `j2c-grid-dark.png` a
   than a ghost body. Topics the model isn't offered (alien, time, magic, star, ghost and the other
   body shapes) only come from the heuristic, so they apply when the model says "other".
 - Derivation looks at one context at a time, so neighbours can share traits by chance
-  (in the sample data, Stint and Garden planner are both one-eyed onigiri, told apart by
+  (in an older sample data set, Stint and Garden planner are both one-eyed onigiri, told apart by
   antenna, sprout and color).
 - Checked on the simulator only. The model answered from the simulator through the M1's
   Apple Intelligence; an iPhone 16 Pro should behave the same but hasn't been tried.

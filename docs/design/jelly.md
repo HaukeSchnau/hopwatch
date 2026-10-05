@@ -1,6 +1,6 @@
 # Jelly
 
-**Squishy, bouncy, joyful.** Stint as a toy. Contexts are gummy candy blobs with tiny
+**Squishy, bouncy, joyful.** Hopwatch as a toy. Contexts are gummy candy blobs with tiny
 faces: the running one is awake and bouncing, the others snooze. Everything squishes
 when you touch it. It should make you smile every time you switch, and still be the
 fastest way to switch.

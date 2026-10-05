@@ -10,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 hash=$(sha1sum on-device-model.swift | cut -c1-12)
-bin="/tmp/stint-on-device-model-$hash"
+bin="/tmp/hopwatch-on-device-model-$hash"
 if ! ssh -n m1 "test -x $bin"; then
   scp -q on-device-model.swift "m1:$bin.swift"
   ssh -n m1 "xcrun swiftc -parse-as-library -O -o $bin $bin.swift" >&2
