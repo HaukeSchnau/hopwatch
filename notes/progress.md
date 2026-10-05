@@ -209,7 +209,12 @@ his phone until he moves his data over (export there, restore here).
   version 1.1.0 (7f4890fc-d144-481c-adb6-21b6988dec09); the iOS listing is ready to
   submit once Hauke says go.
 
-- Ready for Hauke's go (2026-10-02):
+- SHIPPING (2026-10-05, Hauke tested both and said go; both stores publish on approval):
+  iOS 1.1.0 submitted for App Review via the API (reviewSubmission
+  154e7a56-8631-4c23-8661-41fb5749fcfc, releaseType AFTER_APPROVAL, state
+  WAITING_FOR_REVIEW). Android: Play submission in progress (public release notes, then
+  "Send app for review"; managed publishing off).
+- Was ready for Hauke's go (2026-10-02):
   - iOS: version 1.1.0 with build 202610022047 attached, listing complete; only "Add for
     Review" / "Submit" left.
   - Android: 1.1.0 (versionCode 29849538) live on internal testing (opt-in
