@@ -61,7 +61,7 @@ launch() {
 
 # Serializes access to one simulator across builders; released when the script exits.
 lock() {
-  exec 9>"/tmp/stint-sim-$1.lock"
+  exec 9>"/tmp/hopwatch-sim-$1.lock"
   flock 9
 }
 
@@ -72,7 +72,7 @@ ad_cmd() {
 }
 
 shot() {
-  local remote="/tmp/stint-shot-$$-$RANDOM.png"
+  local remote="/tmp/hopwatch-shot-$$-$RANDOM.png"
   # Downscaled to 1000 px (or $SHOT_SIZE) so screenshots stay cheap to look at.
   ssh m1 "xcrun simctl io $1 screenshot --type=png $remote >/dev/null 2>&1 && sips -Z ${SHOT_SIZE:-1000} $remote >/dev/null && cat $remote && rm -f $remote" >"$2"
 }
@@ -110,7 +110,7 @@ case "${1:-}" in
     shot "$udid" "$out"
     ;;
   bundle)
-    out="/tmp/stint-bundle.js"
+    out="/tmp/hopwatch-bundle.js"
     code=$(curl -s -m 600 -o "$out" -w '%{http_code}' \
       "http://127.0.0.1:$METRO_PORT/node_modules/expo-router/entry.bundle?platform=ios&dev=true&minify=false")
     echo "$code"

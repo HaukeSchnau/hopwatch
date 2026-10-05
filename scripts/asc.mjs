@@ -1,7 +1,7 @@
 // Calls the App Store Connect API with the team's API key, which only exists on m1.
 // Run it through scripts/m1.sh, which pipes this file to node over SSH:
 //
-//   scripts/m1.sh asc GET '/v1/apps?filter[bundleId]=dev.schnau.stint'
+//   scripts/m1.sh asc GET '/v1/apps?filter[bundleId]=dev.schnau.hopwatch'
 //   scripts/m1.sh asc POST /v1/betaGroups '{"data": {...}}'
 //
 // Prints the JSON response; exits non-zero on HTTP errors.

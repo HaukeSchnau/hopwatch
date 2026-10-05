@@ -9,18 +9,18 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-SHARE_DIR=/srv/agent-share/stint
-BASE_URL="${AGENT_SHARE_URL:?}/stint"
+SHARE_DIR=/srv/agent-share/hopwatch
+BASE_URL="${AGENT_SHARE_URL:?}/hopwatch"
 
 mkdir -p "$SHARE_DIR"
-scp -q m1:Developer/stint-v1/ios/build/export/Stint.ipa "$SHARE_DIR/Stint.ipa"
+scp -q m1:Developer/hopwatch-ios/ios/build/export/Hopwatch.ipa "$SHARE_DIR/Hopwatch.ipa"
 cp assets/images/icon.png "$SHARE_DIR/icon-512.png"
 
 python3 - "$SHARE_DIR" "$BASE_URL" <<'EOF'
 import html, os, plistlib, sys, time, zipfile
 
 share, base = sys.argv[1], sys.argv[2]
-with zipfile.ZipFile(f"{share}/Stint.ipa") as ipa:
+with zipfile.ZipFile(f"{share}/Hopwatch.ipa") as ipa:
     name = next(n for n in ipa.namelist() if n.count("/") == 2 and n.endswith(".app/Info.plist"))
     info = plistlib.loads(ipa.read(name))
 
@@ -32,7 +32,7 @@ title = info.get("CFBundleDisplayName") or info["CFBundleName"]
 manifest = {
     "items": [{
         "assets": [
-            {"kind": "software-package", "url": f"{base}/Stint.ipa"},
+            {"kind": "software-package", "url": f"{base}/Hopwatch.ipa"},
             {"kind": "display-image", "url": f"{base}/icon-512.png"},
             {"kind": "full-size-image", "url": f"{base}/icon-512.png"},
         ],

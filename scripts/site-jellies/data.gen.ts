@@ -80,7 +80,7 @@ const cast: Record<string, [string, string, string, string]> = {
   mascot: ['hopwatch:mascot', '', 'Hopwatch', 'pink'],
 };
 
-// The app icon's jelly (assets/stint.icon): a pink blob with a curl, big shiny eyes and a smile.
+// The app icon's jelly (assets/hopwatch.icon): a pink blob with a curl, big shiny eyes and a smile.
 const looks: Record<string, Partial<ReturnType<typeof lookFor>>> = {
   mascot: { body: 'blob', eyes: 'shiny', mouth: 'smile', topper: 'tuft', neck: 'none', surface: 'plain', motion: 'bouncy' },
 };
