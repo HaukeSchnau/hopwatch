@@ -3,6 +3,9 @@
 The App Store and Google Play texts, one file per field and locale, in the layout fastlane
 uses (`app-store/<locale>/<field>.txt`, `play/<locale>/<field>.txt`). Edit them here and push
 them with the store scripts rather than in the web consoles, so the copy stays reviewable.
+For everything else (review status, builds, TestFlight, bundle IDs, App Groups, Play tracks
+and releases) use the `asc` and `gplay` CLIs, which come with the Urbs UG credentials (see
+the `app-stores` skill).
 Limits: App Store name and subtitle 30 characters, promotional text 170, keywords 100
 (comma-separated, no spaces needed, don't repeat words from the name), description 4000;
 Play title 30, short description 80, full description 4000.
@@ -35,10 +38,11 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
 - `play/graphics/feature-graphic.html` draws the 1024 x 500 feature graphic from the
   website's jellies (`site/jelly.js`), with no text, so all languages share it. The render
   command is in its header. The 512 px icon is `assets/images/android-icon.png`.
-- There's no push script yet. Managed publishing is off, so the Play API refuses
-  `changesNotSentForReview` ("Changes are sent for review automatically"), and committing an
-  API edit would send the queued changes for review. Until that's wanted, edit the listing in
-  the console (Store presence › Store listings). The full "Save" only queues the change in
+- There's no push script yet, and `gplay` has the same catch: managed publishing is off, so
+  the Play API refuses `changesNotSentForReview` ("Changes are sent for review
+  automatically"), and committing any API edit sends every change queued in the console for
+  review. Check Publishing overview first, or edit the listing in the console (Store
+  presence › Store listings). The full "Save" only queues the change in
   Publishing overview, and it's what ticks "Set up your store listing" on the dashboard; both
   languages were saved that way with the current copy. To script it later, turn on managed
   publishing first.

@@ -46,14 +46,19 @@ architecture is in docs/architecture.md, store details in store/README.md.
   ask Hauke to reset the hotspot. When it drops off the Tailnet entirely (as on 2026-10-05,
   09:21 to sometime that night), only Hauke can fix it on site: the O2 hotspot phone first,
   then the Mac itself. Infra's `M1Unreachable` alert fires meanwhile.
+- Store CLIs (infra, 2026-10-06): `asc` and `gplay` in the project environment, with the
+  Urbs credentials set by the host wrapper (skill `app-stores`). `asc web …` covers what the
+  public API can't (creating and removing apps, App Groups, App Privacy) with an Apple web
+  session for info@urbs.one; its first sign-in texts a code to the number ending 08, which
+  the wrapper reads from the M1's Messages, so don't retry sign-ins in a loop.
 - Signing: team 2243J9RD68 (Urbs UG), automatic signing with the ASC API key at
-  /run/secrets/app-store-connect/api-key on m1 (it stays there; moving ASC work to srv-2 is
-  Hauke's call). The keychain is only unlocked in Hauke's GUI session
-  (`builder-control run --gui`). `scripts/m1.sh asc METHOD PATH [JSON]` calls the API.
-- App Store Connect web UI, when the API can't (creating apps, App Groups, App Privacy):
-  `agent-browser-personal` signed in as info@urbs.one (shared profile, leave it signed in),
-  credentials from `bw-personal` item 95ac0ffc-4d39-4722-87c0-b881b82d7387. SMS codes for
-  the number ending 08 land in m1's `~/Library/Messages/chat.db`.
+  /run/secrets/app-store-connect/api-key on m1 (Hauke agreed on 2026-10-06 that it may live
+  on srv-2 too, which is how `asc` gets it). The keychain is only unlocked in Hauke's GUI
+  session (`builder-control run --gui`). `scripts/m1.sh asc METHOD PATH [JSON]` still calls
+  the API for scripts/app-store.mjs.
+- App Store Connect web UI as a fallback: `agent-browser-personal` signed in as
+  info@urbs.one (shared profile, leave it signed in), credentials from `bw-personal` item
+  95ac0ffc-4d39-4722-87c0-b881b82d7387, SMS codes from m1's `~/Library/Messages/chat.db`.
 - Play Console: `play-console-browser` (host Chromium signed in as info@urbs.one; shared
   state, never sign out or switch accounts; on a Google security challenge stop and ask
   infra). Play API service account and the upload key are in Bitwarden (store/README.md).
@@ -103,15 +108,10 @@ Left: the workspace folder /home/haukeschnau/stint and the T3 project ("Stint") 
 hopwatch, plus anything in ~/infra that refers to the old path or name; do it from outside
 this workspace, since the running agent lives in it.
 
-## Open (2026-10-06)
+## Open
 
-- Store CLIs for agents (Hauke asked, and agreed to the ASC key living on srv-2 too): asc
-  (rorkai/App-Store-Connect-CLI) and gplay (tamtom/play-console-cli), packaged and wired by
-  infra. Requested in infra thread "Store CLIs: asc and gplay"
-  (thread-orchestration:thread:73f102cb-76c5-46ed-9da5-675bd3d3a6e9), created over SSH on
-  srv-2 (`ssh -p 2222 haukeschnau@100.110.63.61`; the sandbox maps the name srv-2 to
-  127.0.0.2) because the project bridge answers "Unknown bridge method" to every
-  `t3 thread`/`agent-help` call since 2026-10-06 ~11:45 UTC. The request also reports that.
+- Possible cleanup: scripts/app-store.mjs could call `asc api` instead of
+  `scripts/m1.sh asc`, which would retire scripts/asc.mjs and the M1 hop.
 
 ## Expo notes
 
