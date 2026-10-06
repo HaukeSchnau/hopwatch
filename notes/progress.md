@@ -84,18 +84,37 @@ architecture is in docs/architecture.md, store details in store/README.md.
 The compact Dynamic Island timer past one hour, the Apple Watch Live Activity layout,
 week summary latency on the phone.
 
-## Final cleanup (Hauke asked, 2026-10-02; once both stores are live)
+## Final cleanup (Hauke asked, 2026-10-02)
 
-Done: the old file share folders, the leftover Stint names in scripts and docs (history
-like "Stint Five" and the jelly named Stint in test data stay), the four spare "Stint Five"
-simulators, the old dev clients on the main one (renamed "Hopwatch"), and
-m1:~/Developer/stint-five (stint-v1, stint-android and stint-ota were already gone).
+Done:
+- old file share folders; leftover Stint names in scripts and docs (history like "Stint
+  Five" and the jelly named Stint in test data stay);
+- the four spare "Stint Five" simulators, the old dev clients on the main one (renamed
+  "Hopwatch"), m1:~/Developer/stint-five;
+- 2026-10-06, after Hauke moved his data: App Store Connect app 6818258577 "Stint Schnau"
+  removed (web UI, App Information › Remove App), bundle IDs dev.schnau.stint.widgets and
+  dev.schnau.stint.five deleted, App Group group.dev.schnau.stint removed; Expo project
+  @haukeschnau/stint deleted. dev.schnau.stint itself can't be deleted ("in use by the App
+  Store", Apple keeps an app's bundle ID reserved).
 
-Left:
-- the workspace folder /home/haukeschnau/stint and the T3 project ("Stint") → hopwatch,
-  plus anything in ~/infra that refers to the old path or name; do it from outside this
-  workspace, since the running agent lives in it;
-- once Hauke has moved his data to Hopwatch (TestFlight "Stint" › Settings › Export, then
-  Hopwatch › Settings › Restore from Export): the old App Store Connect record 6818258577
-  ("Stint Schnau", bundle IDs dev.schnau.stint and .widgets, App Group
-  group.dev.schnau.stint) and the old Expo project @haukeschnau/stint.
+Left: the workspace folder /home/haukeschnau/stint and the T3 project ("Stint") →
+hopwatch, plus anything in ~/infra that refers to the old path or name; do it from outside
+this workspace, since the running agent lives in it.
+
+## Open (2026-10-06)
+
+- Store CLIs for agents (Hauke asked): asc (rorkai/App-Store-Connect-CLI) and gplay
+  (tamtom/play-console-cli), to be packaged and wired with credentials by infra. The
+  request couldn't be sent yet: the T3 bridge answers "Unknown bridge method" to every
+  `t3 thread` and `agent-help` call since 2026-10-06 ~11:45 UTC.
+- Website store buttons: official badges (preview
+  https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/hopwatch-badges/) versus the
+  current pills; my recommendation is the badges, switched together with the App Store
+  link. The German Apple badge ("Laden im App Store") still has to be fetched:
+  tools.applemarketingtools.com doesn't resolve from the project environment.
+
+## Expo notes
+
+- Robot tokens (EXPO_TOKEN) can't delete projects. A user session can: POST
+  https://api.expo.dev/v2/auth/loginAsync, then v2/auth/upgradeSudo with the password
+  (sudo mode), then the `app.scheduleAppDeletion` mutation; log the session out after.
