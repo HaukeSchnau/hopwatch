@@ -17,9 +17,11 @@ architecture is in docs/architecture.md, store details in store/README.md.
   in `himalaya --account urbs`; `https://itunes.apple.com/lookup?bundleId=dev.schnau.hopwatch&country=de`
   turns non-empty once it's live.
 - Website https://hopwatch.schnau.dev (site/, Gitea `schnau/hopwatch` main, deployed by
-  Kiln CI on push). The Play button is live; the App Store button still says "Coming soon"
-  (TODO in site/index.html and site/de/index.html: add
-  https://apps.apple.com/app/id6818526671, drop class "soon").
+  Kiln CI on push). Official store badges (Hauke's call, 2026-10-06; artwork in
+  site/img/badges, Apple's from toolbox.marketingtools.apple.com/api/badges/…, Google's
+  PNGs cropped to the badge) with the trademark credits in the footer. Google Play is live;
+  the App Store badge waits in a TODO comment next to "Coming soon to the App Store" in
+  site/index.html and site/de/index.html.
 - OTA: EAS project @haukeschnau/hopwatch (7e0183d8-3743-41ea-a29a-7188f5dd5cf5), channel
   production, runtime = app version 1.1.0, `scripts/m1.sh ota` publishes for both platforms.
 
@@ -103,15 +105,13 @@ this workspace, since the running agent lives in it.
 
 ## Open (2026-10-06)
 
-- Store CLIs for agents (Hauke asked): asc (rorkai/App-Store-Connect-CLI) and gplay
-  (tamtom/play-console-cli), to be packaged and wired with credentials by infra. The
-  request couldn't be sent yet: the T3 bridge answers "Unknown bridge method" to every
-  `t3 thread` and `agent-help` call since 2026-10-06 ~11:45 UTC.
-- Website store buttons: official badges (preview
-  https://files.schnau.dev/isolated/b8ee4debfea9131bf7c6/hopwatch-badges/) versus the
-  current pills; my recommendation is the badges, switched together with the App Store
-  link. The German Apple badge ("Laden im App Store") still has to be fetched:
-  tools.applemarketingtools.com doesn't resolve from the project environment.
+- Store CLIs for agents (Hauke asked, and agreed to the ASC key living on srv-2 too): asc
+  (rorkai/App-Store-Connect-CLI) and gplay (tamtom/play-console-cli), packaged and wired by
+  infra. Requested in infra thread "Store CLIs: asc and gplay"
+  (thread-orchestration:thread:73f102cb-76c5-46ed-9da5-675bd3d3a6e9), created over SSH on
+  srv-2 (`ssh -p 2222 haukeschnau@100.110.63.61`; the sandbox maps the name srv-2 to
+  127.0.0.2) because the project bridge answers "Unknown bridge method" to every
+  `t3 thread`/`agent-help` call since 2026-10-06 ~11:45 UTC. The request also reports that.
 
 ## Expo notes
 
