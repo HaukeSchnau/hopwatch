@@ -50,7 +50,9 @@ architecture is in docs/architecture.md, store details in store/README.md.
   Urbs credentials set by the host wrapper (skill `app-stores`). `asc web …` covers what the
   public API can't (creating and removing apps, App Groups, App Privacy) with an Apple web
   session for info@urbs.one; its first sign-in texts a code to the number ending 08, which
-  the wrapper reads from the M1's Messages, so don't retry sign-ins in a loop.
+  the wrapper reads from the M1's Messages, so don't retry sign-ins in a loop. Signed in
+  since 2026-10-06; the session is cached in ~/.asc/web on the srv-2 host and shared by
+  every project there (`asc web auth status` checks it).
 - Signing: team 2243J9RD68 (Urbs UG), automatic signing with the ASC API key at
   /run/secrets/app-store-connect/api-key on m1 (Hauke agreed on 2026-10-06 that it may live
   on srv-2 too, which is how `asc` gets it). The keychain is only unlocked in Hauke's GUI
