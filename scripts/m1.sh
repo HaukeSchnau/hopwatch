@@ -12,8 +12,6 @@
 #   scripts/m1.sh ota "What changed" sync, then publish the JS to installed release builds over the
 #                                    air (EAS Update, channel production). JS and assets only;
 #                                    native changes need a version bump and a TestFlight build
-#   scripts/m1.sh asc METHOD PATH [JSON]
-#                                    call the App Store Connect API (see scripts/asc.mjs)
 #
 #   scripts/m1.sh android-dev        sync, then build a debug dev client APK (arm64) for the
 #                                    emulator and Android phones
@@ -157,13 +155,8 @@ case "${1:-}" in
     scp -q "m1:$ANDROID_DIR/dist/hopwatch-$build.aab" dist/
     echo "dist/hopwatch-$build.aab"
     ;;
-  asc)
-    shift
-    # The key is readable over plain SSH, so API calls don't queue behind builds.
-    ssh -o LogLevel=error m1 "node --input-type=module - $(printf '%q ' "$@")" <scripts/asc.mjs
-    ;;
   *)
-    sed -n '2,30p' "$0"
+    awk 'NR > 1 && /^#/ { print; next } NR > 1 { exit }' "$0"
     exit 1
     ;;
 esac

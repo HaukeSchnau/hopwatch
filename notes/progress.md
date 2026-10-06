@@ -54,8 +54,8 @@ architecture is in docs/architecture.md, store details in store/README.md.
 - Signing: team 2243J9RD68 (Urbs UG), automatic signing with the ASC API key at
   /run/secrets/app-store-connect/api-key on m1 (Hauke agreed on 2026-10-06 that it may live
   on srv-2 too, which is how `asc` gets it). The keychain is only unlocked in Hauke's GUI
-  session (`builder-control run --gui`). `scripts/m1.sh asc METHOD PATH [JSON]` still calls
-  the API for scripts/app-store.mjs.
+  session (`builder-control run --gui`). scripts/app-store.mjs calls the API through
+  `asc api`.
 - App Store Connect web UI as a fallback: `agent-browser-personal` signed in as
   info@urbs.one (shared profile, leave it signed in), credentials from `bw-personal` item
   95ac0ffc-4d39-4722-87c0-b881b82d7387, SMS codes from m1's `~/Library/Messages/chat.db`.
@@ -107,11 +107,6 @@ Done:
 Left: the workspace folder /home/haukeschnau/stint and the T3 project ("Stint") →
 hopwatch, plus anything in ~/infra that refers to the old path or name; do it from outside
 this workspace, since the running agent lives in it.
-
-## Open
-
-- Possible cleanup: scripts/app-store.mjs could call `asc api` instead of
-  `scripts/m1.sh asc`, which would retire scripts/asc.mjs and the M1 hop.
 
 ## Expo notes
 
