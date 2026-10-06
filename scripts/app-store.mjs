@@ -10,9 +10,9 @@
 //   ... --app 6818526671                      another app than the one with app.json's bundle ID
 //
 // It works on the version being prepared (or creates one for app.json's version) and never
-// submits anything. API calls go through `scripts/m1.sh asc` (the API key lives on the M1);
-// screenshot bytes go from here straight to Apple's upload URLs, sparing the M1's metered
-// connection. Pricing, availability and App Privacy are set once and aren't handled here.
+// submits anything. API calls go through the `asc` CLI (`asc api`, signed in to Urbs UG);
+// screenshot bytes go from here straight to Apple's upload URLs. Pricing, availability and
+// App Privacy are set once and aren't handled here.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -35,14 +35,15 @@ if (!['all', 'text', 'screenshots'].includes(only)) {
   process.exit(2);
 }
 
-/** One App Store Connect API call through the M1. Returns the parsed JSON (null for 204s). */
+/** One App Store Connect API call through `asc api`. Returns the parsed JSON (null for 204s). */
 function asc(method, path, body) {
-  const callArgs = ['asc', method, path, ...(body ? [JSON.stringify(body)] : [])];
+  const writes = method === 'GET' ? [] : ['--confirm', ...(body ? ['--body', JSON.stringify(body)] : [])];
   let out;
   try {
-    out = execFileSync(join(root, 'scripts/m1.sh'), callArgs, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
-  } catch (error) {
-    throw new Error(`${method} ${path} failed:\n${error.stdout ?? error.message}`);
+    // asc prints Apple's error on stderr, which goes straight to the terminal.
+    out = execFileSync('asc', ['api', method, path, ...writes], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+  } catch {
+    throw new Error(`${method} ${path} failed`);
   }
   return out.trim().startsWith('{') ? JSON.parse(out) : null;
 }
