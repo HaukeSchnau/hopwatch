@@ -12,6 +12,8 @@ current state, then `docs/architecture.md`.
 - `src/jelly`: the UI. `src/app`: expo-router routes.
 - `modules/on-device-model`: Apple Foundation Models bridge.
 - `scripts/m1.sh`: native builds and TestFlight uploads on the M1 builder (`ssh m1`).
+- `asc` and `gplay`: App Store Connect and Google Play Console CLIs, already signed in to
+  Urbs UG (see the `app-stores` skill).
 - Node comes from `devenv.nix`.
 
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
