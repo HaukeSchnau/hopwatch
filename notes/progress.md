@@ -9,10 +9,10 @@ architecture is in docs/architecture.md, store details in store/README.md.
   https://play.google.com/store/apps/details?id=dev.schnau.hopwatch (app
   4975816330263293130 in the Urbs UG account). Release 1.1.0, versionCode 29849538, 178
   countries. Managed publishing off.
-- App Store: 1.1.0 (build 202610022047) submitted 2026-10-05 via the API, "Waiting for
-  Review" (reviewSubmission 154e7a56-8631-4c23-8661-41fb5749fcfc, appStoreVersion
-  7f4890fc-d144-481c-adb6-21b6988dec09, releaseType AFTER_APPROVAL, so it goes live on
-  approval). App 6818526671, "Hopwatch: Time Tracker" / "Hopwatch: Zeiterfassung".
+- App Store: 1.1.0 (build 202610022047) submitted 2026-10-05 08:25 UTC via the API, still
+  "Waiting for Review" on 2026-10-06 11:42 UTC (reviewSubmission
+  154e7a56-8631-4c23-8661-41fb5749fcfc, appStoreVersion 7f4890fc-d144-481c-adb6-21b6988dec09,
+  releaseType AFTER_APPROVAL, so it goes live on approval). App 6818526671, "Hopwatch: Time Tracker" / "Hopwatch: Zeiterfassung".
   Status mails ("The status of your (iOS) app, Hopwatch: Time Tracker, is now …") arrive
   in `himalaya --account urbs`; `https://itunes.apple.com/lookup?bundleId=dev.schnau.hopwatch&country=de`
   turns non-empty once it's live.
@@ -41,8 +41,9 @@ architecture is in docs/architecture.md, store details in store/README.md.
 - `ssh m1` = M1 builder (Xcode 27), on Hauke's metered phone hotspot. `scripts/m1.sh`
   works in m1:~/Developer/hopwatch-{ios,android,ota}. Don't touch ~/Developer/stint or
   ~/Developer/stint-lab* (other threads). If only IPv4 fails (`nc -4 -vz -G 4 1.1.1.1 80`),
-  ask Hauke to reset the hotspot. The M1 was unreachable over SSH on 2026-10-05; infra was
-  asked.
+  ask Hauke to reset the hotspot. When it drops off the Tailnet entirely (as on 2026-10-05,
+  09:21 to sometime that night), only Hauke can fix it on site: the O2 hotspot phone first,
+  then the Mac itself. Infra's `M1Unreachable` alert fires meanwhile.
 - Signing: team 2243J9RD68 (Urbs UG), automatic signing with the ASC API key at
   /run/secrets/app-store-connect/api-key on m1 (it stays there; moving ASC work to srv-2 is
   Hauke's call). The keychain is only unlocked in Hauke's GUI session
@@ -55,9 +56,11 @@ architecture is in docs/architecture.md, store details in store/README.md.
   state, never sign out or switch accounts; on a Google security challenge stop and ask
   infra). Play API service account and the upload key are in Bitwarden (store/README.md).
 - Metro: agent-service `metro-all` on port 3100.
-- Simulators: iPhone 18 Pro, iOS 27; Jelly 9CD905EA-FFD6-4B75-B2C4-FBABF7327CFE is the
-  main one, "Hopwatch Screens" (iPhone 18 Pro Max) took the store screenshots. Android
-  emulators hopwatch-pixel, hopwatch-tablet-7, hopwatch-tablet-10 (`scripts/emu.sh`).
+- Simulators (iOS 27): "Hopwatch" (iPhone 18 Pro, 9CD905EA-FFD6-4B75-B2C4-FBABF7327CFE) is
+  the main one, "Hopwatch Screens" (iPhone 18 Pro Max) took the store screenshots,
+  "Hopwatch iPad" checks the iPhone app in iPad compatibility mode. The other "Stint …"
+  simulators belong to other threads. Android emulators: hopwatch-pixel, hopwatch-tablet-7,
+  hopwatch-tablet-10 (`scripts/emu.sh`).
 
 ## Gotchas
 
@@ -83,17 +86,15 @@ week summary latency on the phone.
 
 ## Final cleanup (Hauke asked, 2026-10-02; once both stores are live)
 
-Done 2026-10-05: the old file share folders, the leftover Stint names in scripts and docs
-(history like "Stint Five" and the jelly named Stint in test data stay).
+Done: the old file share folders, the leftover Stint names in scripts and docs (history
+like "Stint Five" and the jelly named Stint in test data stay), the four spare "Stint Five"
+simulators, the old dev clients on the main one (renamed "Hopwatch"), and
+m1:~/Developer/stint-five (stint-v1, stint-android and stint-ota were already gone).
 
 Left:
 - the workspace folder /home/haukeschnau/stint and the T3 project ("Stint") → hopwatch,
   plus anything in ~/infra that refers to the old path or name; do it from outside this
   workspace, since the running agent lives in it;
-- simulators named "Stint Five …" and the spare ones (5230DDD4…, 594D2BB8…, 66FBBE5F…,
-  2EB1D0E2…), and old dev clients with bundle dev.schnau.stint;
-- the pre-rename M1 checkouts ~/Developer/stint-five, stint-v1, stint-android and stint-ota
-  (ours; stint and stint-lab* belong to other threads);
 - once Hauke has moved his data to Hopwatch (TestFlight "Stint" › Settings › Export, then
   Hopwatch › Settings › Restore from Export): the old App Store Connect record 6818258577
   ("Stint Schnau", bundle IDs dev.schnau.stint and .widgets, App Group
