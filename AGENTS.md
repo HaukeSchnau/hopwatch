@@ -11,7 +11,9 @@ current state, then `docs/architecture.md`.
   hooks, reports, nudges, deep links, export and import. Tests: `npm test`.
 - `src/jelly`: the UI. `src/app`: expo-router routes.
 - `modules/on-device-model`: Apple Foundation Models bridge.
-- `scripts/m1.sh`: native builds and TestFlight uploads on the M1 builder (`ssh m1`).
+- `scripts/m1.sh`: native development builds on the M1 builder (`ssh m1`). Releases
+  (TestFlight, Play internal testing, OTA updates) are manual Kiln runs on the M1, see
+  `docs/architecture.md`.
 - `asc` and `gplay`: App Store Connect and Google Play Console CLIs, already signed in to
   Urbs UG (see the `app-stores` skill).
 - Node comes from `devenv.nix`.

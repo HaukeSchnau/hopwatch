@@ -38,18 +38,18 @@ the migration steps in `db.ts`.
 - Node comes from `devenv.nix`. `npm test` runs the domain tests, `npx tsc --noEmit`
   type-checks, `npx expo lint` lints.
 - Metro runs as the agent-service `metro-all` (port 3100, published on the Tailnet).
-- Native builds run on the M1 builder (`ssh m1`) via `scripts/m1.sh`: `sim` for the
-  simulator dev client, `device` for a development-signed IPA, `testflight` for an App
-  Store Connect upload. `scripts/sim.sh` drives the simulators (launch into a route,
-  screenshots, taps). `scripts/model.sh` runs on-device model prompts on the M1.
+- Native development builds run on the M1 builder (`ssh m1`) via `scripts/m1.sh`: `sim`
+  for the simulator dev client, `device` for a development-signed IPA. `scripts/sim.sh`
+  drives the simulators (launch into a route, screenshots, taps). `scripts/model.sh`
+  runs on-device model prompts on the M1.
 
 ## Android
 
 Package dev.schnau.hopwatch. Builds run on the M1 in ~/Developer/hopwatch-android:
 `scripts/m1.sh android-dev` + `android-install` put a dev client on the `hopwatch-pixel`
 emulator, which `scripts/emu.sh` drives (launch into a route, screenshots, taps; read its
-header); `android-release` builds a signed AAB into dist/ with the upload key from
-Bitwarden ("Hopwatch Play upload key"; Play App Signing holds the app signing key).
+header). Release builds run in Kiln (see Releasing), signed with the upload key ("Hopwatch
+Play upload key" in Bitwarden; Play App Signing holds the app signing key).
 iOS-only pieces (SwiftUI views from @expo/ui, SF Symbols, the Live Activity, Apple
 Intelligence) have Android counterparts (`*.android.tsx`, Material via @expo/ui's Jetpack
 Compose, Material Symbols) or stay hidden there.
@@ -67,17 +67,33 @@ declares en/de for the per-app language pickers.
 
 ## Releasing
 
-- JavaScript and asset changes: `scripts/m1.sh ota "What changed"` publishes an EAS Update
-  for iOS and Android to the `production` channel of @haukeschnau/hopwatch. Release builds
-  download it when they come to the foreground and switch to it the next time they go to
-  the background (`src/shell/updates.ts`). Updates only reach builds whose runtime version
-  (the app `version`) matches.
+Releases build on the M1 builder from the head of `main` as manual Kiln runs (`.kiln/ci.ts`),
+one step each, so a push to `main` only deploys the website. Follow a run with `kiln status`
+and `kiln logs`, or at https://kiln.schnau.dev.
+
+- JavaScript and asset changes: `kiln trigger hopwatch --inputs '{"release":"ota"}'`
+  (`scripts/ota.sh`) publishes an EAS Update for iOS and Android to the `production` channel
+  of @haukeschnau/hopwatch, with the commit subject as its message. Release builds download
+  it when they come to the foreground and switch to it the next time they go to the
+  background (`src/shell/updates.ts`). Updates only reach builds whose runtime version (the
+  app `version`) matches.
 - Native changes (a new native package, a config plugin, native settings in app.json) need
   new store builds: bump `version` in app.json (otherwise JS that expects the new native
-  code would reach older builds over the air), then
-  - iOS: `scripts/m1.sh testflight`. The build reaches Hauke's internal TestFlight group on
-    its own; for the App Store, create the new version in App Store Connect, push the
-    listing with `scripts/app-store.mjs` (release notes now apply), attach the build and
-    submit it.
-  - Android: `scripts/m1.sh android-release`, then upload the AAB in the Play Console
-    (`store/README.md` explains why not through the API) and roll it out.
+  code would reach older builds over the air), push, then
+  - iOS: `kiln trigger hopwatch --inputs '{"release":"testflight"}'`
+    (`scripts/testflight.sh`). The build reaches Hauke's internal TestFlight group on its
+    own; for the App Store, create the new version in App Store Connect, push the listing
+    with `scripts/app-store.mjs` (release notes now apply), attach the build and submit it.
+  - Android: `kiln trigger hopwatch --inputs '{"release":"play"}'`
+    (`scripts/play-internal.sh`) builds a signed AAB and releases it to the internal testing
+    track. Managed publishing is off, so that commit also sends every change queued in the
+    Play Console for review; check Publishing overview first (`store/README.md`). Promote
+    the release to production in the Console.
+
+Kiln hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
+base64, and `play-upload-password`) and the developer-role Expo robot's token
+(`expo-token`). ~/infra maps them in hosts/srv-2/kiln.nix to the SOPS keys
+`projects/hopwatch/*`, copies of the Bitwarden items "Hopwatch Play upload key"
+(***REMOVED***) and ***REMOVED***. The App
+Store Connect key comes with the M1's Kiln agent, the Play service account with the M1's
+`gplay`.
