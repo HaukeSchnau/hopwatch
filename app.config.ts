@@ -1,8 +1,9 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 // app.json holds the config; this only lets release builds stamp a unique build number,
-// which every TestFlight and Play upload needs. scripts/m1.sh sets HOPWATCH_BUILD_NUMBER to a
-// UTC timestamp (YYYYMMDDHHMM): iOS uses it as is, Android as minutes since 1970.
+// which every TestFlight and Play upload needs. scripts/testflight.sh and scripts/play-internal.sh
+// set HOPWATCH_BUILD_NUMBER to a UTC timestamp (YYYYMMDDHHMM): iOS uses it as is, Android as
+// minutes since 1970.
 const build = process.env.HOPWATCH_BUILD_NUMBER || undefined;
 
 /** Google Play caps versionCode at 2100000000, which a 12-digit timestamp exceeds. */

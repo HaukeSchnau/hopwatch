@@ -57,13 +57,15 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
 - Signing: Play App Signing with a Google-generated app signing key (the console's default;
   Play signs what it delivers). Our Bitwarden key ("Hopwatch Play upload key", CN=Hopwatch,
   O=Urbs UG, SHA-256 92:A8:D2:2E:…:B6:DC) is the upload key, registered by the first upload.
+  Kiln signs release builds with a copy of it (`docs/architecture.md`, Releasing).
   Fingerprints of both are under Protected with Play › App signing.
-- Releases: `scripts/m1.sh android-release` builds the signed AAB into `dist/`. Upload it in
-  the console (Test and release › Internal testing › Create new release), since an API edit
-  would also commit the queued listing. Release notes go in one `<en-US>…</en-US><de-DE>…</de-DE>`
-  block; check that both languages survive "Save as draft" before publishing (the German one got
-  dropped once). The bundle is too big for the console's browser bridge in one piece; it went
-  in through chunked `eval` calls and a `DataTransfer` on the upload input.
+- Releases: the manual Kiln run `kiln trigger hopwatch --inputs '{"release":"play"}'` builds
+  the signed AAB on the M1 and releases it to internal testing with `gplay release`, without
+  release notes. Managed publishing is off, so that API commit also sends every change queued
+  in the console for review: check Publishing overview first, and don't start the run while
+  anything there should wait. Promote the release to production in the console. Release notes
+  go in one `<en-US>…</en-US><de-DE>…</de-DE>` block; check that both languages survive "Save
+  as draft" before publishing (the German one got dropped once).
 - Internal testing: first release 1.1.0 (versionCode 29849538) rolled out 2026-10-02, no
   review needed. Testers: the email list "Hauke" (***REMOVED***). Opt-in link:
   https://play.google.com/apps/internaltest/4701468743687124341. Until the app has passed a
