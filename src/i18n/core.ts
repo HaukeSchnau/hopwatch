@@ -28,6 +28,12 @@ export const coreText = localized({
       /** Stands in for a jelly that's gone. */
       unknown: 'a jelly',
     },
+    evening: {
+      title: (gaps: number) => (gaps === 1 ? 'Today has a gap' : `Today has ${gaps} gaps`),
+      body: (untracked: string, gaps: number) => `${untracked} untracked. Tap to fill ${gaps === 1 ? 'it' : 'them'} in, or mark a break.`,
+      channel: 'Evening check',
+      channelDescription: 'Asks in the evening about gaps in your day.',
+    },
     nudge: {
       title: (name: string) => `Still on ${name}?`,
       body: (duration: string) => `It's been running for ${duration}. Tap to stop it at the right time.`,
@@ -104,6 +110,12 @@ export const coreText = localized({
       added: (name) => `${name} eingetragen`,
       untracked: (from, to) => `${from}–${to} nicht erfasst`,
       unknown: 'Jelly',
+    },
+    evening: {
+      title: (gaps) => (gaps === 1 ? 'Heute gibt es eine Lücke' : `Heute gibt es ${gaps} Lücken`),
+      body: (untracked) => `${untracked} Std. nicht erfasst. Tippe, um sie zu füllen oder als Pause zu markieren.`,
+      channel: 'Abendcheck',
+      channelDescription: 'Fragt abends nach Lücken in deinem Tag.',
     },
     nudge: {
       title: (name) => `Noch bei ${name}?`,

@@ -25,6 +25,7 @@ export function JellyTabs() {
   const empty = useTree().ordered.length === 0;
   const tab = useShownTab();
   useStopSheetIntent();
+  useDayGapsIntent();
 
   if (empty) return <Welcome />;
   const accessory = running !== null && tab !== 'index';
@@ -77,6 +78,18 @@ function materialBar(t: Theme, tint: string, wash: string | null) {
     rippleColor: alpha(tint, 0.16),
     labelVisibilityMode: 'labeled',
   } as const;
+}
+
+/** A tapped evening check opens Day on the day it asked about. */
+function useDayGapsIntent() {
+  const intent = useIntent();
+  useEffect(() => {
+    if (intent?.kind !== 'day-gaps') return;
+    actions.consumeIntent();
+    // Close any sheet in front first; navigating to a tab leaves it open.
+    if (router.canDismiss()) router.dismissAll();
+    router.navigate({ pathname: '/day', params: { day: String(intent.day), open: String(Date.now()) } });
+  }, [intent]);
 }
 
 /** A tapped nudge asks for the backdated-stop sheet. */

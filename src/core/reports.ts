@@ -2,7 +2,7 @@
 // roll-ups with weekly targets, fragmentation, and the plain-text totals export.
 
 import type { ContextId, Entry } from './model';
-import { addDays, formatDayMonth, formatDuration, formatSignedDuration, formatWeekday, formatWeekRange } from './time';
+import { addDays, formatDayMonth, formatDuration, formatSignedDuration, formatWeekday, formatWeekRange, MINUTE } from './time';
 import { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
 
 /** An entry clipped to a range. A running entry is clipped to now. */
@@ -55,6 +55,27 @@ export function gapsIn(segments: readonly Segment[], from: number, to: number, n
   }
   if (cursor < limit) gaps.push({ start: cursor, end: limit });
   return gaps.filter((g) => g.end > g.start);
+}
+
+/** A stretch the user marked as a break: untracked on purpose, so not worth asking about. */
+export type Break = readonly [from: number, to: number];
+
+/** Gaps shorter than this aren't worth an evening question. */
+export const REVIEW_GAP_MS = 15 * MINUTE;
+
+/**
+ * The gaps worth a look at the end of the day starting `dayStart`: untracked stretches of
+ * at least REVIEW_GAP_MS between the day's first tracked moment and its last, minus
+ * marked breaks. Time before the first entry and after the last never counts, so the
+ * night doesn't either.
+ */
+export function reviewGaps(entries: readonly Entry[], tree: ContextTree, dayStart: number, now: number, breaks: readonly Break[]): GapSegment[] {
+  const segments = segmentsIn(entries, tree, dayStart, addDays(dayStart, 1), now);
+  if (segments.length === 0) return [];
+  const last = Math.max(...segments.map((s) => s.end));
+  return gapsIn(segments, segments[0].start, last, now).filter(
+    (g) => g.end - g.start >= REVIEW_GAP_MS && !breaks.some(([from, to]) => from <= g.start && to >= g.end),
+  );
 }
 
 export interface TotalsNode {

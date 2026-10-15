@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { startEveningCheck } from '@/core/evening';
 import { startNudges } from '@/core/nudges';
 import { initStore } from '@/core/store';
 import { useDressUp } from '@/jelly/character/suggest';
@@ -36,6 +37,7 @@ export default function RootLayout() {
   const t = useTheme();
   useHideSplash();
   useEffect(() => startNudges(), []);
+  useEffect(() => startEveningCheck(), []);
   useEffect(() => startLiveActivity(), []);
   useEffect(() => startRunningNotification(), []);
   useEffect(() => startShortcuts(), []);

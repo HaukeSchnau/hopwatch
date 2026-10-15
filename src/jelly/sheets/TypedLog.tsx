@@ -17,6 +17,7 @@ import {
   findOpen,
   formatAgo,
   formatClock,
+  markBreak,
   formatDuration,
   formatRelativeDay,
   isSameDay,
@@ -271,6 +272,8 @@ export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Confirm
     buzz.success();
     if (plan.kind === 'place') {
       actions.place(plan.contextId, plan.from, plan.to);
+      // A break left untracked on purpose; the evening check won't ask about it.
+      if (plan.contextId === null) markBreak(plan.from, plan.to);
       play('pop');
     } else if (plan.kind === 'stop') {
       actions.stop({ at: plan.at });

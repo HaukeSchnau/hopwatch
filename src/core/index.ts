@@ -2,6 +2,7 @@
 // with the time helpers. Nothing in src/jelly talks to SQLite, notifications or the
 // timeline module directly.
 
+export { markBreak, setEveningCheck, useEveningCheck } from './evening';
 export * from './hooks';
 export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from './links';
 export * from './model';

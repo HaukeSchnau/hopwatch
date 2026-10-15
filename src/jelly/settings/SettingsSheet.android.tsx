@@ -8,22 +8,27 @@ import { settingsText } from '@/i18n/settings';
 
 import { setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
-import { Row, Section, sentence, SwitchRow } from '../material';
+import { Row, Section, sentence, SwitchRow, TimeRow } from '../material';
 import { useTheme } from '../theme';
-import { Idea, openPage, useSettingsActions } from './parts';
+import { Idea, openPage, useEveningSetting, useSettingsActions } from './parts';
 
-const { shortcuts, data, about } = settingsText;
+const { evening, shortcuts, data, about } = settingsText;
 
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
   const { contexts, entries, copied, copy, erase, restore, exportData } = useSettingsActions();
+  const check = useEveningSetting();
 
   return (
     <JellyForm title={settingsText.title} cancel={null} confirm={{ label: settingsText.done, onPress: () => router.back() }}>
       <HostedRow color={t.candy.pink.tint} render={(width) => <Idea width={width} />} />
       <Section title={settingsText.sound}>
         <SwitchRow label={settingsText.sounds} icon="volume_up" value={sounds} onChange={setSounds} />
+      </Section>
+      <Section title={evening.title} footer={evening.footer}>
+        <SwitchRow label={evening.toggle} icon="bedtime" value={check.on} onChange={check.toggle} />
+        {check.on ? <TimeRow label={evening.at} value={check.at} onChange={check.setAt} /> : null}
       </Section>
       <Section title={shortcuts.title} footer={shortcuts.footer}>
         <Row label={sentence(copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop)} icon="stop_circle" onPress={() => copy(stopLink)} />

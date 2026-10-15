@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Context, ContextId, Entry, EntryId } from './model';
-import { dayReport, formatTargetLine, totalsText, weekReport } from './reports';
+import { dayReport, formatTargetLine, reviewGaps, totalsText, weekReport } from './reports';
 import { sampleData } from './sample';
 import { addDays, HOUR, MINUTE, startOfDay, startOfWeek } from './time';
 import { buildTree } from './tree';
@@ -97,5 +97,28 @@ describe('sample data', () => {
     expect(sorted.every((e) => e.startUtc < now)).toBe(true);
     expect(new Set(contexts.map((c) => c.pinPosition).filter((p) => p !== null)).size).toBe(9);
     expect(sorted[0].startUtc).toBeGreaterThanOrEqual(addDays(startOfDay(now), -20));
+  });
+});
+
+describe('the evening review', () => {
+  const at = (h: number, m = 0) => monday + h * HOUR + m * MINUTE;
+  const spans = (gaps: { start: number; end: number }[]) => gaps.map((g) => [g.start - monday, g.end - monday]);
+
+  it('asks about gaps between the first and last entry, not the night around them', () => {
+    const entries = [entry('job', at(9), at(12)), entry('job', at(13), at(17)), entry('meetings', at(17, 10), at(18))];
+    // 12–13 counts; the 10 minutes at 17:00 are too short; before 9 and after 18 don't count.
+    expect(spans(reviewGaps(entries, tree, monday, at(21), []))).toEqual([[12 * HOUR, 13 * HOUR]]);
+  });
+
+  it('skips a gap inside a marked break', () => {
+    const entries = [entry('job', at(9), at(12)), entry('job', at(12, 45), at(17))];
+    expect(reviewGaps(entries, tree, monday, at(21), [[at(11, 55), at(12, 50)]])).toEqual([]);
+    expect(reviewGaps(entries, tree, monday, at(21), [[at(12, 10), at(12, 45)]])).toHaveLength(1);
+  });
+
+  it('stops at the running entry and asks nothing on an empty day', () => {
+    const entries = [entry('job', at(9), at(10)), entry('job', at(11), null)];
+    expect(spans(reviewGaps(entries, tree, monday, at(15), []))).toEqual([[10 * HOUR, 11 * HOUR]]);
+    expect(reviewGaps([], tree, monday, at(15), [])).toEqual([]);
   });
 });

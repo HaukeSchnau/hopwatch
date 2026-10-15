@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 
-import { actions, eraseAllData, shareExport, useHopwatch } from '@/core';
+import { actions, eraseAllData, requestNudgePermission, setEveningCheck, shareExport, useEveningCheck, useHopwatch } from '@/core';
 import { settingsText } from '@/i18n/settings';
 
 import { Character } from '../Character';
@@ -17,6 +17,29 @@ import { text, useTheme } from '../theme';
 import { chooseBackup } from './restore';
 
 const { data } = settingsText;
+
+/** Where the evening check starts out when it's turned on: 20:30. */
+const DEFAULT_EVENING = 20 * 60 + 30;
+
+/**
+ * The evening check's switch and time. `at` is today at the chosen time, for the pickers;
+ * turning it on asks for notification permission if that's still undecided.
+ */
+export function useEveningSetting() {
+  const minutes = useEveningCheck();
+  const at = new Date();
+  at.setHours(0, minutes ?? DEFAULT_EVENING, 0, 0);
+  return {
+    on: minutes !== null,
+    at,
+    toggle: (on: boolean) => {
+      buzz.tap();
+      setEveningCheck(on ? (minutes ?? DEFAULT_EVENING) : null);
+      if (on) requestNudgePermission();
+    },
+    setAt: (date: Date) => setEveningCheck(date.getHours() * 60 + date.getMinutes()),
+  };
+}
 
 export function useSettingsActions() {
   const contexts = useHopwatch((s) => s.contexts.length);

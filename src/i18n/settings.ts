@@ -23,6 +23,12 @@ export const settingsText = localized({
     cancel: 'Cancel',
     sound: 'Sound',
     sounds: 'Squishy sounds',
+    evening: {
+      title: 'Evening check',
+      toggle: 'Ask about gaps',
+      at: 'At',
+      footer: 'One notification in the evening when today has gaps of 15 minutes or more between your first and last entry. Gaps you mark as a break don\'t count.',
+    },
     intelligence: {
       footer:
         'While you name a new jelly, it suggests an emoji, a look and a mood, and a color for jellies at the top level. Existing jellies get dressed up in the background. It also writes the summary on the Week tab and reads what you type when picking a jelly, like "2h deep work this morning". Everything works without it.',
@@ -77,6 +83,12 @@ export const settingsText = localized({
     cancel: 'Abbrechen',
     sound: 'Ton',
     sounds: 'Glibbertöne',
+    evening: {
+      title: 'Abendcheck',
+      toggle: 'Nach Lücken fragen',
+      at: 'Um',
+      footer: 'Eine Mitteilung am Abend, wenn dein Tag zwischen erstem und letztem Eintrag Lücken ab 15 Minuten hat. Lücken, die du als Pause markierst, zählen nicht.',
+    },
     intelligence: {
       footer:
         'Während du ein neues Jelly benennst, schlägt es ein Emoji, einen Look und eine Laune vor, auf oberster Ebene auch eine Farbe. Bestehende Jellys kleidet es nebenbei ein. Es schreibt auch die Zusammenfassung im Tab Woche und versteht, was du beim Wählen eines Jellys tippst, etwa „2 Stunden Deep Work heute Morgen“. Alles geht auch ohne.',

@@ -34,13 +34,20 @@ export function DayScreen() {
   const t = useTheme();
   const { width, height } = useWindowDimensions();
   const header = useHeaderHeight();
-  const params = useLocalSearchParams<{ day?: string }>();
+  const params = useLocalSearchParams<{ day?: string; open?: string }>();
   const previousIcon = useHeaderIcon('chevron.left', 'chevron_left');
   const nextIcon = useHeaderIcon('chevron.right', 'chevron_right');
   const now = useNow(30_000);
   const today = startOfDay(now);
   const [day, setDay] = useState(() => (params.day ? startOfDay(Number(params.day)) : startOfDay(Date.now())));
   const [selected, setSelected] = useState<EntryId | null>(null);
+  // A tapped evening check navigates here with a new `open`; follow it even when Day is
+  // already showing another day.
+  const [opening, setOpening] = useState(params.open);
+  if (params.open !== opening) {
+    setOpening(params.open);
+    if (params.day) setDay(startOfDay(Number(params.day)));
+  }
   const report = useDayReport(day);
   const running = useRunning();
   const axis = axisFor(report, now);

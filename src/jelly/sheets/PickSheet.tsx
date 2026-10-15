@@ -21,6 +21,7 @@ import {
   type ContextId,
   formatClock,
   formatDuration,
+  markBreak,
   MINUTE,
   pathLabel,
   type Plan,
@@ -82,7 +83,8 @@ export function PickSheet() {
   if (mode === 'fill' && Number.isFinite(from) && Number.isFinite(to)) {
     title = s.fill;
     subtitle = `${formatClock(from)} – ${formatClock(to)} · ${formatDuration(to - from)}`;
-    onPick = (c) => c && actions.fillGap(c.id, from, to);
+    // No jelly: the gap was a break, which the evening check then leaves alone.
+    onPick = (c) => (c ? actions.fillGap(c.id, from, to) : markBreak(from, to));
   } else if (mode === 'entry' && entry) {
     const current = tree.byId.get(entry.contextId);
     title = s.change;
@@ -149,7 +151,9 @@ export function PickSheet() {
         <View style={styles.list}>
           <LogRow log={log} onPress={confirm} />
           {mode === 'parent' && moving && !q && <Row label={s.topLevel} context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
-          {placing && !q && <Row label={s.nothing} context={null} symbol={{ ios: 'cup.and.saucer.fill', android: 'coffee' }} depth={0} onPress={() => pick(null)} />}
+          {(placing || mode === 'fill') && !q && (
+            <Row label={s.nothing} context={null} symbol={{ ios: 'cup.and.saucer.fill', android: 'coffee' }} depth={0} onPress={() => pick(null)} />
+          )}
           {list.map((c) => (
             <Row
               key={c.id}

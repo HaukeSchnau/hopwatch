@@ -31,7 +31,8 @@ export type Json = string | number | boolean | null | Json[] | { [key: string]: 
 const PREF_PREFIX = 'pref:';
 
 /** Something outside the app asked a screen to do something. */
-export type Intent = { kind: 'stop-sheet' };
+/** Something a notification tap asks the UI to open: the stop sheet, or a day to review. */
+export type Intent = { kind: 'stop-sheet' } | { kind: 'day-gaps'; day: number };
 
 export interface HopwatchState {
   ready: boolean;
