@@ -538,6 +538,32 @@ export function TonalButton({ label, icon, onPress }: { label: string; icon?: An
 }
 
 /** A row with a day and a time to change, each in Material's dialog, like a calendar event. */
+/** A row with a day in a pill, which opens Material's calendar dialog. */
+export function DateRow({ label, value, latest, onChange }: { label: string; value: number; latest?: number; onChange: (at: number) => void }) {
+  const accent = useAccent();
+  const [open, setOpen] = useState(false);
+  const day = `${formatWeekday(value)} ${formatDayMonth(value)}`;
+  return (
+    <Row
+      label={label}
+      trailing={
+        <View style={styles.pills}>
+          <Pill label={day} accessibilityLabel={sheetsText.changeDate(day)} color={accent} onPress={() => setOpen(true)} />
+          {open ? (
+            <DateDialog
+              value={new Date(value)}
+              color={accent}
+              latest={latest === undefined ? undefined : new Date(latest)}
+              onPick={(date) => onChange(date.getTime())}
+              onClose={() => setOpen(false)}
+            />
+          ) : null}
+        </View>
+      }
+    />
+  );
+}
+
 /** A row with a time of day in a pill, which opens Material's time dialog. */
 export function TimeRow({ label, value, onChange }: { label: string; value: Date; onChange: (date: Date) => void }) {
   const accent = useAccent();

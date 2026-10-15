@@ -4,10 +4,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 
-import type { ContextId, EntryId } from './model';
-import { dayReport, weekReport } from './reports';
-import { type Json, type LastAction, useHopwatch } from './store';
-import { addDays } from './time';
+import { type GermanState, type HolidayId, isGermanState } from './holidays';
+import type { ContextId, DayOffKind, EntryId } from './model';
+import { dayReport, overtimeBalance, weekReport } from './reports';
+import { actions, type Json, type LastAction, useHopwatch } from './store';
+import { addDays, dayKey } from './time';
+import { holidayOn, type OffDays, offDaysOf } from './workdays';
 import { findOpen, gapAt, previousContextId } from './timeline';
 import { pickable, type ResolvedContext } from './tree';
 
@@ -136,8 +138,40 @@ export function useDayReport(dayStart: number) {
 export function useWeekReport(weekStart: number) {
   const entries = useEntries();
   const tree = useTree();
+  const offDays = useOffDays();
   const at = Math.min(useNow(30_000), addDays(weekStart, 7));
-  return useMemo(() => weekReport(entries, tree, weekStart, at), [entries, tree, weekStart, at]);
+  return useMemo(() => weekReport(entries, tree, weekStart, at, offDays), [entries, tree, weekStart, at, offDays]);
+}
+
+const HOLIDAYS = 'holidays.region';
+
+/** The German state whose public holidays count as days off, or null for none. */
+export const useHolidayRegion = () => usePref<GermanState | null>(HOLIDAYS, null, (v) => (isGermanState(v) ? v : undefined));
+export const setHolidayRegion = (region: GermanState | null) => actions.setPref(HOLIDAYS, region);
+
+/** Which days are off work: marked days off and the region's public holidays. */
+export function useOffDays(): OffDays {
+  const daysOff = useHopwatch((s) => s.daysOff);
+  const region = useHolidayRegion();
+  return useMemo(() => offDaysOf(daysOff, region), [daysOff, region]);
+}
+
+/** Why the day starting at `dayStart` is off work, if it is: a marked kind, or a holiday. */
+export function useDayOff(dayStart: number): { kind: DayOffKind | null; holiday: HolidayId | null } {
+  const day = dayKey(dayStart);
+  const kind = useHopwatch((s) => s.daysOff.find((o) => o.day === day)?.kind ?? null);
+  const region = useHolidayRegion();
+  return { kind, holiday: holidayOn(day, region) };
+}
+
+/** A job-hours context's overtime balance, or null when it keeps none. */
+export function useOvertimeBalance(contextId: ContextId) {
+  const entries = useEntries();
+  const tree = useTree();
+  const offDays = useOffDays();
+  const now = useNow(60_000);
+  const context = tree.byId.get(contextId);
+  return useMemo(() => (context ? overtimeBalance(entries, tree, context, offDays, now) : null), [entries, tree, context, offDays, now]);
 }
 
 /** The gap around `at`, for "what was this?" sheets. Null inside an entry. */

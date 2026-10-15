@@ -2,8 +2,9 @@
 // roll-ups with weekly targets, fragmentation, and the plain-text totals export.
 
 import type { ContextId, Entry } from './model';
-import { addDays, formatDayMonth, formatDuration, formatSignedDuration, formatWeekday, formatWeekRange, MINUTE } from './time';
+import { addDays, dayStart, formatDayMonth, formatDuration, formatSignedDuration, formatWeekday, formatWeekRange, MINUTE, startOfDay } from './time';
 import { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
+import { dailyTarget, isJobHours, noOffDays, type OffDays, weekTarget } from './workdays';
 
 /** An entry clipped to a range. A running entry is clipped to now. */
 export interface Segment {
@@ -154,9 +155,12 @@ export function dayReport(entries: readonly Entry[], tree: ContextTree, dayStart
 export interface TargetLine {
   context: ResolvedContext;
   actual: number;
+  /** For job hours, already less the shares of the week's days off. */
   target: number;
   /** actual − target; negative means behind. */
   diff: number;
+  /** Job hours: the work days this week that were off (days off, public holidays). */
+  daysOff: number;
 }
 
 export interface WeekReport {
@@ -168,7 +172,13 @@ export interface WeekReport {
   targets: TargetLine[];
 }
 
-export function weekReport(entries: readonly Entry[], tree: ContextTree, weekStart: number, now: number): WeekReport {
+export function weekReport(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  weekStart: number,
+  now: number,
+  offDays: OffDays = noOffDays,
+): WeekReport {
   const days = Array.from({ length: 7 }, (_, i) => dayReport(entries, tree, addDays(weekStart, i), now));
   const segments = days.flatMap((d) => d.segments);
   const weekTotals = totals(tree, segments);
@@ -176,10 +186,43 @@ export function weekReport(entries: readonly Entry[], tree: ContextTree, weekSta
     .filter((c) => c.weeklyTargetMinutes !== null)
     .map((context) => {
       const actual = weekTotals.byId.get(context.id)?.total ?? 0;
-      const target = context.weeklyTargetMinutes! * 60_000;
-      return { context, actual, target, diff: actual - target };
+      const { target, daysOff } = weekTarget(context, weekStart, offDays);
+      return { context, actual, target, diff: actual - target, daysOff };
     });
   return { start: weekStart, end: addDays(weekStart, 7), days, totals: weekTotals, targets };
+}
+
+export interface OvertimeBalance {
+  /** The starting balance plus tracked minus target time for every finished day. */
+  balance: number;
+  /** Today so far, which the balance leaves out until the day is over. */
+  today: { actual: number; target: number };
+}
+
+/**
+ * The overtime balance of a job-hours context with a balance start: tracked time in its
+ * subtree minus its daily targets, for every day from `balanceSince` through yesterday,
+ * plus the starting balance. Null for any other context.
+ */
+export function overtimeBalance(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  context: ResolvedContext,
+  offDays: OffDays,
+  now: number,
+): OvertimeBalance | null {
+  if (!isJobHours(context) || context.balanceSince === null) return null;
+  const ids = subtreeIds(tree, context.id);
+  const tracked = (from: number, to: number) =>
+    from >= to ? 0 : segmentsIn(entries, tree, from, to, now).reduce((sum, s) => (ids.has(s.context.id) ? sum + s.end - s.start : sum), 0);
+  const today = startOfDay(now);
+  const since = dayStart(context.balanceSince);
+  let target = 0;
+  for (let day = since; day < today; day = addDays(day, 1)) target += dailyTarget(context, day, offDays);
+  return {
+    balance: context.balanceStartMinutes * MINUTE + tracked(since, today) - target,
+    today: { actual: tracked(today, addDays(today, 1)), target: since <= today ? dailyTarget(context, today, offDays) : 0 },
+  };
 }
 
 /** "Job 36:40 / 40:00 (−3:20)" */

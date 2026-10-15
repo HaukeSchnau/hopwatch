@@ -8,7 +8,21 @@
 import { generate } from '@modules/on-device-model';
 import { useEffect, useMemo, useState } from 'react';
 
-import { actions, checkSummary, type Json, MINUTE, summaryRequest, useEntries, useNow, usePref, useTree, weekFacts, type WeekFacts } from '@/core';
+import {
+  actions,
+  checkSummary,
+  type Json,
+  MINUTE,
+  summaryRequest,
+  useEntries,
+  useNow,
+  useOffDays,
+  usePref,
+  useTree,
+  weekFacts,
+  type WeekFacts,
+} from '@/core';
+import { language } from '@/i18n';
 
 import { useModelAvailable } from '../character/suggest';
 
@@ -73,7 +87,8 @@ export function useWeekSummary(weekStart: number): SummaryState | null {
   // The clock moves in half-hour steps, so a running entry asks for a new summary at most
   // twice an hour, while edits change the facts at once.
   const now = Math.floor(useNow(STEP) / STEP) * STEP;
-  const facts = useMemo(() => weekFacts(entries, tree, weekStart, now), [entries, tree, weekStart, now]);
+  const offDays = useOffDays();
+  const facts = useMemo(() => weekFacts(entries, tree, weekStart, now, language, offDays), [entries, tree, weekStart, now, offDays]);
   const hash = facts ? hashOf(facts) : null;
   const key = keyOf(weekStart);
   const stored = usePref<Stored | null>(key, null, parseStored);

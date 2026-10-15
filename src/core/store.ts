@@ -10,7 +10,7 @@ import type { Backup } from './backup';
 import * as db from './db';
 import { initialLinkIsStale } from './launch';
 import type { LinkAction } from './links';
-import type { Context, ContextId, Entry, EntryId, Hue } from './model';
+import type { Context, ContextId, DayOff, DayOffId, DayOffKind, Entry, EntryId, Hue } from './model';
 import * as timeline from './timeline';
 import { formatClock, offsetAt } from './time';
 import * as tree from './tree';
@@ -40,6 +40,8 @@ export interface HopwatchState {
   contexts: readonly Context[];
   /** Live entries sorted by start. */
   entries: readonly Entry[];
+  /** Live days off, sorted by day. */
+  daysOff: readonly DayOff[];
   /** Derived from contexts on every change. */
   tree: tree.ContextTree;
   lastAction: LastAction | null;
@@ -55,6 +57,7 @@ export const useHopwatch = create<HopwatchState>()(() => ({
   ready: false,
   contexts: [],
   entries: [],
+  daysOff: [],
   tree: tree.buildTree([]),
   lastAction: null,
   intent: null,
@@ -80,7 +83,7 @@ export function initStore() {
   if (get().ready) return;
   // Consumes an update-reload mark even when this start has no initial link.
   initialLinkIsStale();
-  const { contexts, entries } = db.loadAll();
+  const { contexts, entries, daysOff } = db.loadAll();
   const prefs: Record<string, Json> = {};
   for (const row of db.metaWithPrefix(PREF_PREFIX)) {
     try {
@@ -94,6 +97,7 @@ export function initStore() {
     ready: true,
     contexts,
     entries,
+    daysOff,
     tree: tree.buildTree(contexts),
   });
   const links = pendingLinks;
@@ -138,6 +142,9 @@ export interface ContextPatch {
   color?: Hue | null;
   emoji?: string | null;
   weeklyTargetMinutes?: number | null;
+  workDays?: number | null;
+  balanceSince?: string | null;
+  balanceStartMinutes?: number;
   nudgeAfterMinutes?: number | null;
 }
 
@@ -300,21 +307,44 @@ export const actions = {
     return intent;
   },
 
+  /**
+   * Marks `day` (YYYY-MM-DD) as a day off of `kind`, or as a normal day again with null.
+   * One row per day: changing the kind updates it, clearing soft-deletes it.
+   */
+  setDayOff(day: string, kind: DayOffKind | null) {
+    const now = Date.now();
+    const existing = get().daysOff.find((o) => o.day === day);
+    let row: DayOff;
+    if (kind === null) {
+      if (!existing) return;
+      row = { ...existing, updatedAt: now, deletedAt: now };
+    } else if (existing) {
+      if (existing.kind === kind) return;
+      row = { ...existing, kind, updatedAt: now };
+    } else {
+      row = { id: randomUUID() as DayOffId, day, kind, note: null, createdAt: now, updatedAt: now, deletedAt: null };
+    }
+    db.writeRows({ daysOff: [row] });
+    const others = get().daysOff.filter((o) => o.id !== row.id);
+    set({ daysOff: row.deletedAt === null ? [...others, row].sort((a, b) => a.day.localeCompare(b.day)) : others });
+  },
+
   /** Replaces all data with a checked backup (see `pickBackup`) and merges its preferences. */
-  restore({ contexts, entries, prefs }: Backup) {
-    actions.replaceAll({ contexts, entries });
+  restore({ contexts, entries, daysOff, prefs }: Backup) {
+    actions.replaceAll({ contexts, entries, daysOff });
     for (const [key, value] of Object.entries(prefs)) db.setMeta(`${PREF_PREFIX}${key}`, JSON.stringify(value));
     set({ prefs: { ...get().prefs, ...prefs } });
   },
 
   /** Replaces all data with the given rows. Used by restore, sample data and erase. */
-  replaceAll(data: { contexts: Context[]; entries: Entry[] }) {
+  replaceAll(data: { contexts: Context[]; entries: Entry[]; daysOff?: DayOff[] }) {
     db.eraseAll();
     db.writeRows(data);
     const contexts = data.contexts.filter((c) => c.deletedAt === null);
     set({
       contexts,
       entries: timeline.applyRows([], data.entries),
+      daysOff: (data.daysOff ?? []).filter((o) => o.deletedAt === null).sort((a, b) => a.day.localeCompare(b.day)),
       tree: tree.buildTree(contexts),
       lastAction: null,
     });

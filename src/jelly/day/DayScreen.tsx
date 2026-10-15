@@ -28,6 +28,7 @@ import { HeaderTitle } from '../HeaderTitle';
 import { useHeaderIcon } from '../nav';
 import { rounded, tabular, text, useTheme } from '../theme';
 import { dayTitles } from '../titles';
+import { DayOffPill } from './DayOffPill';
 import { axisFor, Timeline, yOf } from './Timeline';
 
 export function DayScreen() {
@@ -157,6 +158,9 @@ export function DayScreen() {
             )}
           </View>
         </Pressable>
+        <View style={styles.dayOff}>
+          <DayOffPill dayStart={day} />
+        </View>
 
         {report.segments.length === 0 && (
           <View style={[styles.emptyCard, { backgroundColor: t.c.card }]}>
@@ -179,6 +183,7 @@ const styles = StyleSheet.create({
   // and mini player, and the opening scroll must still be able to lift a late "now" above them.
   content: { paddingBottom: 160 },
   dial: { alignSelf: 'center', marginTop: 4 },
+  dayOff: { alignItems: 'center', marginTop: 4, marginBottom: 8 },
   center: { alignItems: 'center', justifyContent: 'center' },
   total: {
     ...rounded('800'),

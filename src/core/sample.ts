@@ -4,8 +4,8 @@
 
 import { coreText } from '@/i18n/core';
 
-import type { Context, ContextId, Entry, EntryId, Hue } from './model';
-import { addDays, HOUR, MINUTE, startOfDay } from './time';
+import { type Context, type ContextId, type Entry, type EntryId, type Hue, MONDAY_TO_FRIDAY } from './model';
+import { addDays, dayKey, HOUR, MINUTE, startOfDay, startOfWeek } from './time';
 
 const { names, notes } = coreText.sample;
 
@@ -16,12 +16,14 @@ interface Seed {
   emoji?: string;
   pin?: number;
   target?: number;
+  /** Job hours from Monday to Friday, with a balance since the sample's first week. */
+  job?: boolean;
   nudge?: number;
   archived?: boolean;
 }
 
 const seeds: Seed[] = [
-  { key: 'job', color: 'blue', emoji: '💼', pin: 0, target: 40 * 60 },
+  { key: 'job', color: 'blue', emoji: '💼', pin: 0, target: 40 * 60, job: true },
   { key: 'deep', parent: 'job', emoji: '🎧', pin: 1 },
   { key: 'meetings', parent: 'job', color: 'indigo', emoji: '🗣️', pin: 2 },
   { key: 'clients', color: 'violet', emoji: '🤝' },
@@ -79,6 +81,9 @@ export function sampleData(
       pinPosition: s.pin ?? null,
       sortOrder,
       weeklyTargetMinutes: s.target ?? null,
+      workDays: s.job ? MONDAY_TO_FRIDAY : null,
+      balanceSince: s.job ? dayKey(addDays(startOfWeek(now), -14)) : null,
+      balanceStartMinutes: 0,
       nudgeAfterMinutes: s.nudge ?? null,
       archivedAt: s.archived ? now - 30 * 24 * HOUR : null,
       createdAt: now - 60 * 24 * HOUR,

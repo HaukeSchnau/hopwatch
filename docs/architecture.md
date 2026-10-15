@@ -27,8 +27,11 @@ Hopwatch (formerly Stint) is a personal time tracker (spec: [spec.md](spec.md)) 
 
 ## Data
 
-Two tables, `contexts` and `entries`, with UUIDs, `updated_at` and soft deletes, so a later
-last-write-wins sync needs no migration. Timestamps are epoch milliseconds plus the local
+Three tables, `contexts`, `entries` and `days_off`, with UUIDs, `updated_at` and soft
+deletes, so a later last-write-wins sync needs no migration. Job hours live on the context
+(`work_days` as a Monday-first bitmask, `balance_since`, `balance_start_minutes`);
+`src/core/workdays.ts` spreads a target over work days and `holidays.ts` computes German
+public holidays per state (pref `holidays.region`). Timestamps are epoch milliseconds plus the local
 UTC offset at recording time. Colors are hue keys the UI maps to its palette. A `meta` table
 holds the schema version and preferences (`pref:<area>.<name>`). Schema changes go through
 the migration steps in `db.ts`.

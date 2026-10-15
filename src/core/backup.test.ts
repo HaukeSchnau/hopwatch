@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { backupPayload, parseBackup } from './backup';
-import type { Context, ContextId, Entry, EntryId } from './model';
+import { BACKUP_VERSION, backupPayload, parseBackup } from './backup';
+import type { Context, ContextId, DayOff, DayOffId, Entry, EntryId } from './model';
 
 const T0 = Date.UTC(2026, 9, 1, 8, 0);
 const HOUR = 3_600_000;
@@ -15,6 +15,9 @@ const context = (id: string, parentId: string | null = null): Context => ({
   pinPosition: null,
   sortOrder: 0,
   weeklyTargetMinutes: null,
+  workDays: null,
+  balanceSince: null,
+  balanceStartMinutes: 0,
   nudgeAfterMinutes: null,
   archivedAt: null,
   createdAt: T0,
@@ -36,8 +39,8 @@ const entry = (id: string, contextId: string, start: number, end: number | null)
 });
 
 /** An export file as the app writes it, round-tripped through JSON. */
-const file = (contexts: Context[], entries: Entry[], prefs = {}) =>
-  JSON.parse(JSON.stringify(backupPayload({ contexts, entries, prefs }, new Date(T0))));
+const file = (contexts: Context[], entries: Entry[], prefs = {}, daysOff: DayOff[] = []) =>
+  JSON.parse(JSON.stringify(backupPayload({ contexts, entries, daysOff, prefs }, new Date(T0))));
 
 const work = [context('work'), context('deep', 'work')];
 
@@ -46,7 +49,25 @@ describe('parseBackup', () => {
     const entries = [entry('a', 'work', T0, T0 + HOUR), entry('b', 'deep', T0 + HOUR, null)];
     const prefs = { 'jelly.look.deep': { body: 'drop' }, 'jelly.sounds': false };
     const result = parseBackup(file(work, entries, prefs));
-    expect(result).toEqual({ ok: true, backup: { exportedAt: T0, contexts: work, entries, prefs } });
+    expect(result).toEqual({ ok: true, backup: { exportedAt: T0, contexts: work, entries, daysOff: [], prefs } });
+  });
+
+  it('carries job hours: work days, the balance and days off', () => {
+    const job = [{ ...context('work'), weeklyTargetMinutes: 40 * 60, workDays: 0b0011111, balanceSince: '2026-01-01', balanceStartMinutes: 150 }];
+    const daysOff: DayOff[] = [
+      { id: 'o1' as DayOffId, day: '2026-09-21', kind: 'vacation', note: null, createdAt: T0, updatedAt: T0, deletedAt: null },
+    ];
+    const result = parseBackup(file(job, [], {}, daysOff));
+    expect(result.ok && [result.backup.contexts, result.backup.daysOff]).toEqual([job, daysOff]);
+  });
+
+  it('reads version 2 files as having no job hours', () => {
+    const v2 = { ...file(work, []), schemaVersion: 2 };
+    for (const c of v2.contexts) for (const key of ['workDays', 'balanceSince', 'balanceStartMinutes']) delete c[key];
+    delete v2.daysOff;
+    const result = parseBackup(v2);
+    expect(result.ok && result.backup.contexts).toEqual(work);
+    expect(result.ok && result.backup.daysOff).toEqual([]);
   });
 
   it('restores exports from before the rename to Hopwatch', () => {
@@ -82,7 +103,7 @@ describe('parseBackup', () => {
   it('rejects other files and newer formats', () => {
     expect(parseBackup({ hello: 'world' }).ok).toBe(false);
     expect(parseBackup(null).ok).toBe(false);
-    const newer = parseBackup({ ...file(work, []), schemaVersion: 3 });
+    const newer = parseBackup({ ...file(work, []), schemaVersion: BACKUP_VERSION + 1 });
     expect(!newer.ok && newer.reason).toMatch(/newer version/);
   });
 });

@@ -1,12 +1,13 @@
 // Weekly targets as candy jars filling up with jelly: "Job jar 36:40 / 40:00".
-// Reaching the target fills the jar to the brim with a little confetti burst.
+// Reaching the target fills the jar to the brim with a little confetti burst. Job hours
+// say how many work days were off, and an overtime balance shows under the jar.
 
 import { Canvas, Circle, Group, LinearGradient, Path, RoundedRect, rect, rrect, Skia, vec } from '@shopify/react-native-skia';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { cancelAnimation, Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
 
-import { formatDuration, formatSignedDuration, type TargetLine } from '@/core';
+import { formatDuration, formatSignedDuration, type TargetLine, useOvertimeBalance } from '@/core';
 import { weekText } from '@/i18n/week';
 
 import { buzz, play } from '../feedback';
@@ -41,6 +42,7 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
   const phase = useSharedValue(0);
   const showing = useShowing();
   const [burst, setBurst] = useState(0);
+  const balance = useOvertimeBalance(line.context.id);
 
   useEffect(() => {
     level.set(withDelay(delay, withSpring(full ? 1.04 : ratio, { damping: 9, stiffness: 70 })));
@@ -121,12 +123,18 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
       <Text style={[text.subhead, tabular, { color: t.c.ink }]}>
         {formatDuration(line.actual)} <Text style={{ color: t.c.muted }}>/ {formatDuration(line.target)}</Text>
       </Text>
+      {line.daysOff > 0 ? <Text style={[text.caption, { color: t.c.muted }]}>{weekText.daysOff(line.daysOff)}</Text> : null}
       <View style={[styles.diff, { backgroundColor: full ? t.candy.green.tint : t.c.sunken }]}>
         <Text style={[text.footnote, tabular, { color: full ? t.candy.green.ink : t.c.muted }]}>
           {full ? '★ ' : ''}
           {formatSignedDuration(line.diff)}
         </Text>
       </View>
+      {balance ? (
+        <Text style={[text.footnote, tabular, styles.balance, { color: balance.balance >= 0 ? t.candy.green.ink : t.c.muted }]}>
+          {weekText.balance(formatSignedDuration(balance.balance))}
+        </Text>
+      ) : null}
     </Squishy>
   );
 }
@@ -137,4 +145,5 @@ const styles = StyleSheet.create({
   emoji: { position: 'absolute', top: 46, alignSelf: 'center', fontSize: 26 },
   name: { marginTop: 6, maxWidth: W + 10 },
   diff: { marginTop: 4, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+  balance: { marginTop: 4 },
 });

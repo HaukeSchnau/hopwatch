@@ -1,12 +1,13 @@
-// Hopwatch's data model. Two tables, contexts and entries, shaped for a later
-// last-write-wins sync: device-generated UUIDs, updatedAt on every row, soft deletes.
-// All timestamps are epoch milliseconds (UTC).
+// Hopwatch's data model. Contexts and entries, plus days off for job hours, shaped for a
+// later last-write-wins sync: device-generated UUIDs, updatedAt on every row, soft
+// deletes. All timestamps are epoch milliseconds (UTC); days are local YYYY-MM-DD keys.
 
 declare const brand: unique symbol;
 type Brand<T, B extends string> = T & { readonly [brand]: B };
 
 export type ContextId = Brand<string, 'ContextId'>;
 export type EntryId = Brand<string, 'EntryId'>;
+export type DayOffId = Brand<string, 'DayOffId'>;
 
 /**
  * Colors are stored as hue keys, not hex values, so the UI maps them onto its own tuned
@@ -68,6 +69,16 @@ export interface Context extends SyncFields {
   sortOrder: number;
   /** Applies to the whole subtree. */
   weeklyTargetMinutes: number | null;
+  /**
+   * The weekdays a weekly target is spread over, as bits (Monday is bit 0, see
+   * `isWorkday`). Null is a plain weekly target. Set, it's job hours: a day off or a public
+   * holiday on one of these days takes that day's share off the target.
+   */
+  workDays: number | null;
+  /** Job hours keep an overtime balance from this day (YYYY-MM-DD) on; null keeps none. */
+  balanceSince: string | null;
+  /** Where the balance stood when it started, e.g. carried over from the employer's count. */
+  balanceStartMinutes: number;
   /** Inherited from the parent, then from DEFAULT_NUDGE_MINUTES. */
   nudgeAfterMinutes: number | null;
   /** Archived nodes leave the pickers and stay in history and reports. */
@@ -85,6 +96,27 @@ export interface Entry extends SyncFields {
   endOffsetMinutes: number | null;
   note: string | null;
 }
+
+/** Why a day is off. Public holidays aren't stored; they're computed (holidays.ts). */
+export const dayOffKinds = ['vacation', 'sick', 'other'] as const;
+export type DayOffKind = (typeof dayOffKinds)[number];
+export const isDayOffKind = (value: unknown): value is DayOffKind =>
+  typeof value === 'string' && (dayOffKinds as readonly string[]).includes(value);
+
+/** A whole day off work. It takes its share off every job-hours target (`workDays`). */
+export interface DayOff extends SyncFields {
+  id: DayOffId;
+  /** The local day, YYYY-MM-DD. */
+  day: string;
+  kind: DayOffKind;
+  note: string | null;
+}
+
+/** Monday to Friday, the work days a new job-hours target starts with. */
+export const MONDAY_TO_FRIDAY = 0b0011111;
+
+/** Whether `workDays` includes `weekday` (0 is Monday, 6 Sunday). */
+export const isWorkday = (workDays: number, weekday: number) => (workDays & (1 << weekday)) !== 0;
 
 export const DEFAULT_NUDGE_MINUTES = 180;
 /** Entries shorter than this are discarded on stop, switch and trim. */

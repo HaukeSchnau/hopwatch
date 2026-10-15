@@ -20,6 +20,10 @@ export const weekText = localized({
     totals: 'Totals',
     /** A target jar, read out: "Job: 36:40 of 40:00". */
     jarLabel: (name: string, actual: string, target: string) => `${name}: ${actual} of ${target}`,
+    /** Under a job-hours jar: the week's work days that were off. */
+    daysOff: (count: number) => (count === 1 ? '1 day off' : `${count} days off`),
+    /** A job-hours jar's overtime balance, as of the last finished day. */
+    balance: (duration: string) => `Balance ${duration}`,
     archived: ' (archived)',
     copy: (name: string) => `Copy ${name} totals`,
     copied: (name: string) => `Copied ${name} totals`,
@@ -38,6 +42,8 @@ export const weekText = localized({
     emptyText: 'Erfasste Zeit zeigt sich hier als Blasen, Gläser und Perlen.',
     totals: 'Summen',
     jarLabel: (name, actual, target) => `${name}: ${actual} von ${target}`,
+    daysOff: (count) => (count === 1 ? '1 freier Tag' : `${count} freie Tage`),
+    balance: (duration) => `Konto ${duration}`,
     archived: ' (archiviert)',
     copy: (name) => `Summen von ${name} kopieren`,
     copied: (name) => `Summen von ${name} kopiert`,

@@ -3,13 +3,13 @@
 // links to help and the privacy policy.
 // Android: SettingsSheet.android.tsx.
 
-import { Button, DatePicker, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
-import { environment, foregroundStyle, tint } from '@expo/ui/swift-ui/modifiers';
+import { Button, DatePicker, Picker, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
+import { environment, foregroundStyle, pickerStyle, tag, tint } from '@expo/ui/swift-ui/modifiers';
 import { type Availability, availability } from '@modules/on-device-model';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { resumeLink, stopLink } from '@/core';
+import { germanStates, resumeLink, setHolidayRegion, stopLink, useHolidayRegion } from '@/core';
 import { settingsText } from '@/i18n/settings';
 
 import { setSounds, useSounds } from '../feedback';
@@ -20,13 +20,15 @@ import { Idea, openPage, useEveningSetting, useSettingsActions } from './parts';
 
 /** System red, so erasing never reads like the pink actions around it. */
 const DANGER = '#FF3B30';
-const { evening, intelligence, shortcuts, data, about } = settingsText;
+const { evening, holidays, intelligence, shortcuts, data, about } = settingsText;
+const NONE = 'none';
 
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
   const { contexts, entries, copied, copy, erase, restore, exportData } = useSettingsActions();
   const check = useEveningSetting();
+  const region = useHolidayRegion();
 
   return (
     <JellyForm title={settingsText.title} cancel={null} confirm={{ label: settingsText.done, onPress: () => router.back() }}>
@@ -45,6 +47,20 @@ export function SettingsSheet() {
             modifiers={[environment('locale', pickerLocale)]}
           />
         ) : null}
+      </Section>
+      <Section title={holidays.title} footer={<SwiftText>{holidays.footer}</SwiftText>}>
+        <Picker
+          label={holidays.picker}
+          selection={region ?? NONE}
+          onSelectionChange={(value: string) => setHolidayRegion(germanStates.find((state) => state === value) ?? null)}
+          modifiers={[pickerStyle('menu')]}>
+          <SwiftText modifiers={[tag(NONE)]}>{holidays.none}</SwiftText>
+          {germanStates.map((state) => (
+            <SwiftText key={state} modifiers={[tag(state)]}>
+              {holidays.states[state]}
+            </SwiftText>
+          ))}
+        </Picker>
       </Section>
       <AppleIntelligence />
       <Section title={shortcuts.title} footer={<SwiftText>{shortcuts.footer}</SwiftText>}>

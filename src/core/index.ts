@@ -6,9 +6,12 @@ export { markBreak, setEveningCheck, useEveningCheck } from './evening';
 export * from './hooks';
 export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from './links';
 export * from './model';
+export { type GermanState, germanStates, type HolidayId } from './holidays';
+export { isJobHours } from './workdays';
 export {
   type DayReport,
   formatTargetLine,
+  type OvertimeBalance,
   type Fragmentation,
   type GapSegment,
   type Segment,

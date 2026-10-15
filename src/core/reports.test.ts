@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Context, ContextId, Entry, EntryId } from './model';
-import { dayReport, formatTargetLine, reviewGaps, totalsText, weekReport } from './reports';
+import { type Context, type ContextId, type DayOff, type DayOffId, type Entry, type EntryId, MONDAY_TO_FRIDAY } from './model';
+import { dayReport, formatTargetLine, overtimeBalance, reviewGaps, totalsText, weekReport } from './reports';
 import { sampleData } from './sample';
-import { addDays, HOUR, MINUTE, startOfDay, startOfWeek } from './time';
+import { addDays, dayKey, HOUR, MINUTE, startOfDay, startOfWeek } from './time';
 import { buildTree } from './tree';
+import { offDaysOf } from './workdays';
 
 const context = (id: string, parentId: string | null, extra: Partial<Context> = {}): Context => ({
   id: id as ContextId,
@@ -15,6 +16,9 @@ const context = (id: string, parentId: string | null, extra: Partial<Context> = 
   pinPosition: null,
   sortOrder: 0,
   weeklyTargetMinutes: null,
+  workDays: null,
+  balanceSince: null,
+  balanceStartMinutes: 0,
   nudgeAfterMinutes: null,
   archivedAt: null,
   createdAt: 0,
@@ -120,5 +124,43 @@ describe('the evening review', () => {
     const entries = [entry('job', at(9), at(10)), entry('job', at(11), null)];
     expect(spans(reviewGaps(entries, tree, monday, at(15), []))).toEqual([[10 * HOUR, 11 * HOUR]]);
     expect(reviewGaps([], tree, monday, at(15), [])).toEqual([]);
+  });
+});
+
+describe('job hours', () => {
+  const day = (n: number) => addDays(monday, n);
+  const off = (n: number): DayOff => ({ id: `o${n}` as DayOffId, day: dayKey(day(n)), kind: 'vacation', note: null, createdAt: 0, updatedAt: 0, deletedAt: null });
+  const jobTree = buildTree([
+    context('job', null, { weeklyTargetMinutes: 40 * 60, workDays: MONDAY_TO_FRIDAY, balanceSince: dayKey(monday), balanceStartMinutes: 120 }),
+    context('meetings', 'job'),
+    context('side', null, { weeklyTargetMinutes: 6 * 60 }),
+  ]);
+  const job = jobTree.byId.get('job' as ContextId)!;
+  const workday = (n: number, hours: number, id = 'job') => entry(id, day(n) + 9 * HOUR, day(n) + 9 * HOUR + hours * HOUR);
+
+  it('takes a day off and a public holiday off the target, but not off a plain one', () => {
+    // 2026-09-21 is a Monday; Thursday is marked off, and Friday stands in for a holiday.
+    const offDays = offDaysOf([off(3)], null);
+    const withHoliday = (d: string) => offDays(d) || d === dayKey(day(4));
+    const week = weekReport([workday(0, 9)], jobTree, monday, day(7), withHoliday);
+    const [jobLine, sideLine] = week.targets;
+    expect([jobLine.target, jobLine.daysOff]).toEqual([24 * HOUR, 2]);
+    expect([sideLine.target, sideLine.daysOff]).toEqual([6 * HOUR, 0]);
+  });
+
+  it('keeps a balance from its start: tracked minus target for finished days, today apart', () => {
+    const entries = [workday(0, 9), workday(1, 7), entry('meetings', day(1) + 17 * HOUR, day(1) + 18 * HOUR), workday(3, 8), workday(4, 3)];
+    // Wednesday (day 2) is off; now is Friday 12:00.
+    const result = overtimeBalance(entries, jobTree, job, offDaysOf([off(2)], null), day(4) + 12 * HOUR);
+    // +2:00 start; Mon 9 − 8; Tue 7 + 1 (meetings) − 8; Wed off; Thu 8 − 8.
+    expect(result?.balance).toBe(3 * HOUR);
+    expect(result?.today).toEqual({ actual: 3 * HOUR, target: 8 * HOUR });
+  });
+
+  it('counts time on a day off as overtime, and keeps no balance without a start', () => {
+    const result = overtimeBalance([workday(2, 2)], jobTree, job, offDaysOf([off(2)], null), day(3));
+    // Mon and Tue untracked (−16), Wednesday off but worked (+2), +2 start.
+    expect(result?.balance).toBe(-12 * HOUR);
+    expect(overtimeBalance([], jobTree, jobTree.byId.get('side' as ContextId)!, offDaysOf([], null), day(3))).toBeNull();
   });
 });

@@ -2,21 +2,23 @@
 // the parser is tested without React Native.
 //
 // Version 1 (Stint Five) has contexts and entries. Version 2 adds the device's preferences,
-// which hold each jelly's look. Soft-deleted rows travel too, for a later sync.
+// which hold each jelly's look. Version 3 adds job hours: days off, and each jelly's work
+// days and overtime balance. Soft-deleted rows travel too, for a later sync.
 
 import { coreText } from '@/i18n/core';
 
-import { type Context, type ContextId, defaultHueHex, type Entry, type EntryId, isHue } from './model';
+import { type Context, type ContextId, type DayOff, type DayOffId, defaultHueHex, type Entry, type EntryId, isDayOffKind, isHue } from './model';
 import type { Json } from './store';
 
 const text = coreText.backup;
 
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
 export interface Backup {
   exportedAt: number;
   contexts: Context[];
   entries: Entry[];
+  daysOff: DayOff[];
   prefs: Record<string, Json>;
 }
 
@@ -28,6 +30,7 @@ export function backupPayload(data: Omit<Backup, 'exportedAt'>, exportedAt: Date
     exportedAt: exportedAt.toISOString(),
     contexts: data.contexts.map((c) => ({ ...c, colorHex: c.color ? defaultHueHex[c.color] : null })),
     entries: data.entries,
+    daysOff: data.daysOff,
     prefs: data.prefs,
   };
 }
@@ -40,6 +43,12 @@ type Parsed<S extends Shape> = { [K in keyof S]: Exclude<ReturnType<S[K]>, undef
 const num: Read<number> = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
 const str: Read<string> = (v) => (typeof v === 'string' ? v : undefined);
 const id = <T extends string>(): Read<T> => (v) => (typeof v === 'string' && v.length > 0 ? (v as T) : undefined);
+const day: Read<string> = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
+/** Reads a field that older versions don't have, as `fallback` when it's missing. */
+const since =
+  <T,>(read: Read<T>, fallback: T): Read<T> =>
+  (v) =>
+    v === undefined ? fallback : read(v);
 const nullable =
   <T,>(read: Read<T>): Read<T | null> =>
   (v) =>
@@ -67,6 +76,9 @@ const contextShape = {
   pinPosition: nullable(num),
   sortOrder: num,
   weeklyTargetMinutes: nullable(num),
+  workDays: since(nullable(num), null),
+  balanceSince: since(nullable(day), null),
+  balanceStartMinutes: since(num, 0),
   nudgeAfterMinutes: nullable(num),
   archivedAt: nullable(num),
   createdAt: num,
@@ -81,6 +93,16 @@ const entryShape = {
   startOffsetMinutes: num,
   endUtc: nullable(num),
   endOffsetMinutes: nullable(num),
+  note: nullable(str),
+  createdAt: num,
+  updatedAt: num,
+  deletedAt: nullable(num),
+} satisfies Shape;
+
+const dayOffShape = {
+  id: id<DayOffId>(),
+  day,
+  kind: (v: unknown) => (isDayOffKind(v) ? v : undefined),
   note: nullable(str),
   createdAt: num,
   updatedAt: num,
@@ -131,13 +153,15 @@ export function parseBackup(json: unknown): ParseResult {
   if (typeof version === 'number' && version > BACKUP_VERSION) {
     return fail(text.newer);
   }
-  if (version !== 1 && version !== BACKUP_VERSION) return fail(text.notAnExport);
+  if (version !== 1 && version !== 2 && version !== BACKUP_VERSION) return fail(text.notAnExport);
   if (!Array.isArray(file.contexts) || !Array.isArray(file.entries)) return fail(text.notAnExport);
 
   const contexts = readAll(contextShape, file.contexts);
   if (typeof contexts === 'number') return fail(text.damagedContext(contexts + 1));
   const entries = readAll(entryShape, file.entries);
   if (typeof entries === 'number') return fail(text.damagedEntry(entries + 1));
+  const daysOff = readAll(dayOffShape, Array.isArray(file.daysOff) ? file.daysOff : []);
+  if (typeof daysOff === 'number') return fail(text.damagedDayOff(daysOff + 1));
 
   const contextIds = new Set(contexts.map((c) => c.id));
   if (contextIds.size !== contexts.length) return fail(text.contextTwice);
@@ -154,6 +178,6 @@ export function parseBackup(json: unknown): ParseResult {
 
   return {
     ok: true,
-    backup: { exportedAt: Number.isNaN(exportedAt) ? 0 : exportedAt, contexts, entries, prefs },
+    backup: { exportedAt: Number.isNaN(exportedAt) ? 0 : exportedAt, contexts, entries, daysOff, prefs },
   };
 }

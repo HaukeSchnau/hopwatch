@@ -9,6 +9,7 @@ import { factText } from '@/i18n/summary';
 
 import type { ContextId, Entry } from './model';
 import { type Segment, type TargetLine, weekReport, type WeekReport } from './reports';
+import { noOffDays, type OffDays } from './workdays';
 import { addDays, HOUR, MINUTE } from './time';
 import type { ContextTree, ResolvedContext } from './tree';
 
@@ -105,6 +106,7 @@ export function weekFacts(
   weekStart: number,
   now: number,
   lang: Language = language,
+  offDays: OffDays = noOffDays,
 ): WeekFacts | null {
   const text = factText[lang];
   const say = (ms: number) => spoken(ms, lang);
@@ -112,10 +114,10 @@ export function weekFacts(
   const weekday = (ts: number) => text.weekdays[(new Date(ts).getDay() + 6) % 7];
   const end = addDays(weekStart, 7);
   const at = Math.min(now, end);
-  const week = weekReport(entries, tree, weekStart, at);
+  const week = weekReport(entries, tree, weekStart, at, offDays);
   const total = week.totals.total;
   if (total < MIN_TRACKED) return null;
-  const previous = weekReport(entries, tree, addDays(weekStart, -7), weekStart);
+  const previous = weekReport(entries, tree, addDays(weekStart, -7), weekStart, offDays);
   const running = now < end;
   const today = week.days.findIndex((d) => at >= d.start && at < d.end);
   const elapsed = (at - weekStart) / (end - weekStart);

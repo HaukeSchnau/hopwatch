@@ -32,6 +32,10 @@ sake. These rules keep the three people (or agents) writing it consistent.
 | fill the gap | Lücke füllen | |
 | backdate | zurückdatieren | Prefer showing the time: „Seit 14:50“ |
 | weekly target | Wochenziel | |
+| job hours, work days | Arbeitszeit, Arbeitstage | Jelly editor |
+| day off (vacation, sick, other) | freier Tag (Urlaub, krank, anderer Grund) | |
+| public holiday | Feiertag | |
+| overtime balance, starting balance | Überstundenkonto, Startsaldo | |
 | nudge, nudge after | Erinnerung, erinnern nach | |
 | pin, pinned | anpinnen, angepinnt | Unpin: „lösen“ |
 | archive, archived | archivieren, archiviert | |

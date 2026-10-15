@@ -8,7 +8,21 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { actions, formatDuration, MINUTE, pathLabel, type ResolvedContext, startLink } from '@/core';
+import {
+  actions,
+  dayKey,
+  dayStart,
+  formatDuration,
+  formatSignedDuration,
+  MINUTE,
+  MONDAY_TO_FRIDAY,
+  pathLabel,
+  type ResolvedContext,
+  startLink,
+  startOfDay,
+  startOfWeek,
+  useNow,
+} from '@/core';
 import { stuffText } from '@/i18n/stuff';
 
 import { lookFor } from '../character/derive';
@@ -16,10 +30,11 @@ import { LookEditor } from '../character/LookEditor';
 import { buzz } from '../feedback';
 import { EmojiField, HuePicker } from '../fields';
 import { HostedRow, JellyForm } from '../forms';
-import { ChoiceChips, FieldRow, PickerRow, Row, Section, sentence, StepperRow, SwitchRow } from '../material';
+import { ChoiceChips, DateRow, FieldRow, PickerRow, Row, Section, sentence, StepperRow, SwitchRow } from '../material';
 import { text, useTheme } from '../theme';
 import { type EditorTarget, Header, NUDGE_CHIPS, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
 import { confirmDelete } from './StuffScreen';
+import { WeekdayChips } from './WeekdayChips';
 
 const s = stuffText.editor;
 const ROOT = 'root';
@@ -42,6 +57,7 @@ function Editor(props: EditorTarget) {
   const { context } = props;
   const t = useTheme();
   const d = useJellyDraft(props);
+  const now = useNow(60_000);
   const c = t.candy[d.hue];
   const { parent } = d;
 
@@ -123,6 +139,41 @@ function Editor(props: EditorTarget) {
           <StepperRow label={s.perWeek(formatDuration(d.target * MINUTE))} value={d.target} step={60} min={60} max={100 * 60} onChange={d.changeTarget} />
         ) : null}
       </Section>
+
+      {d.target !== null ? (
+        <Section title={s.jobHours} footer={d.workDays !== null && d.balanceSince !== null ? s.balanceFooter : s.jobHoursFooter}>
+          <SwitchRow label={s.countDaysOff} icon="calendar_month" value={d.workDays !== null} onChange={(on) => d.changeWorkDays(on ? MONDAY_TO_FRIDAY : null)} />
+          {d.workDays !== null ? (
+            <>
+              <WeekdayChips value={d.workDays} onChange={d.changeWorkDays} hue={d.hue} />
+              <SwitchRow
+                label={s.balance}
+                icon="exposure"
+                value={d.balanceSince !== null}
+                onChange={(on) => d.changeBalanceSince(on ? dayKey(startOfWeek(Date.now())) : null)}
+              />
+            </>
+          ) : null}
+          {d.workDays !== null && d.balanceSince !== null ? (
+            <>
+              <DateRow
+                label={s.balanceSince}
+                value={dayStart(d.balanceSince)}
+                latest={startOfDay(now)}
+                onChange={(at) => d.changeBalanceSince(dayKey(at))}
+              />
+              <StepperRow
+                label={s.balanceStart(formatSignedDuration(d.balanceStart * MINUTE))}
+                value={d.balanceStart}
+                step={30}
+                min={-500 * 60}
+                max={500 * 60}
+                onChange={d.changeBalanceStart}
+              />
+            </>
+          ) : null}
+        </Section>
+      ) : null}
 
       <Section title={s.nudge} footer={s.nudgeFooter}>
         <ChoiceChips

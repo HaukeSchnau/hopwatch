@@ -3,22 +3,24 @@
 
 import { router } from 'expo-router';
 
-import { resumeLink, stopLink } from '@/core';
+import { germanStates, resumeLink, setHolidayRegion, stopLink, useHolidayRegion } from '@/core';
 import { settingsText } from '@/i18n/settings';
 
 import { setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
-import { Row, Section, sentence, SwitchRow, TimeRow } from '../material';
+import { PickerRow, Row, Section, sentence, SwitchRow, TimeRow } from '../material';
 import { useTheme } from '../theme';
 import { Idea, openPage, useEveningSetting, useSettingsActions } from './parts';
 
-const { evening, shortcuts, data, about } = settingsText;
+const { evening, holidays, shortcuts, data, about } = settingsText;
+const NONE = 'none';
 
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
   const { contexts, entries, copied, copy, erase, restore, exportData } = useSettingsActions();
   const check = useEveningSetting();
+  const region = useHolidayRegion();
 
   return (
     <JellyForm title={settingsText.title} cancel={null} confirm={{ label: settingsText.done, onPress: () => router.back() }}>
@@ -29,6 +31,15 @@ export function SettingsSheet() {
       <Section title={evening.title} footer={evening.footer}>
         <SwitchRow label={evening.toggle} icon="bedtime" value={check.on} onChange={check.toggle} />
         {check.on ? <TimeRow label={evening.at} value={check.at} onChange={check.setAt} /> : null}
+      </Section>
+      <Section title={holidays.title} footer={holidays.footer}>
+        <PickerRow
+          label={holidays.picker}
+          icon="celebration"
+          choices={[{ value: NONE, label: holidays.none }, ...germanStates.map((state) => ({ value: state, label: holidays.states[state] }))]}
+          value={region ?? NONE}
+          onChange={(value) => setHolidayRegion(germanStates.find((state) => state === value) ?? null)}
+        />
       </Section>
       <Section title={shortcuts.title} footer={shortcuts.footer}>
         <Row label={sentence(copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop)} icon="stop_circle" onPress={() => copy(stopLink)} />

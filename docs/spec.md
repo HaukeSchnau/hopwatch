@@ -47,7 +47,6 @@ The MVP is complete when all of the following work on the phone, offline:
 - Calendar integration of any kind
 - Home screen widgets, Live Activities and native App Intents, deferred for scope and planned right after the MVP
 - Billable flags, hourly rates and invoice exports
-- Holiday and vacation handling, and a cumulative overtime balance
 - Tags or any second dimension besides the tree
 - Pomodoro features, and automatic tracking by location or calendar
 - Dashboards beyond the day and week report
@@ -165,6 +164,7 @@ The MVP has one report screen with a day and a week mode. It shows an expandable
 - **Weekly target.** A context with a target shows actual against target and the difference, for example "Job 36:40 / 40:00 (−3:20)". The day mode shows no target.
 - **Fragmentation.** Each day shows its number of blocks and its median block length.
 - **Copy totals.** A button copies the totals of one context for the selected range as plain text, for client hours.
+- **Job hours.** A weekly target can be spread over work days (Monday to Friday by default). Days marked off on the Day tab (vacation, sick, other) and the public holidays of a German state picked in Settings take their day's share off it, so time tracked stays what it was and the target shrinks. Time on such a day counts as overtime. An optional overtime balance adds tracked minus target time for every finished day since a start date, from a starting balance.
 
 The five questions from the purpose section map onto this screen as follows:
 
@@ -208,11 +208,11 @@ The order below is a proposal, to be revisited after about a month of daily use.
 2. **Native App Intents**, so that Shortcuts and Siri can switch contexts without opening the app.
 3. **Sync service** on one of the NixOS VPSs, single user, last-write-wins. It also opens the way to a web and desktop version through Expo's web target.
 4. **Read-only ICS feed** served by the sync service, which any calendar app can subscribe to. It needs no OAuth and no CalDAV. Subscribed feeds refresh slowly, often every few hours, so this serves reviewing a day and not a live view.
-5. **Job hours, extended.** Days off that reduce the target, and a cumulative overtime balance.
+5. **Job hours, extended.** Days off that reduce the target, and a cumulative overtime balance. Built (see Reports).
 6. **Home screen widgets.**
 
 ### Open questions
 
-- [ ] How should the job target treat holidays and vacation? To be decided after a month of real data.
+- [x] How should the job target treat holidays and vacation? Days off and public holidays lower the target; tracked hours stay as tracked (decided 2026-10-15).
 - [ ] Which analyses are worth building into the app? To be decided from what gets run on the exports.
 - [ ] Is the single-timer rule still right once whole-life tracking is routine?

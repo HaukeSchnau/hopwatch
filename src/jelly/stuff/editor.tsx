@@ -78,6 +78,9 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const [pinned, setPinned] = useState(context ? context.pinPosition !== null : pin);
   const [target, setTarget] = useState<number | null>(context?.weeklyTargetMinutes ?? null);
   const [nudge, setNudge] = useState<number | null>(context?.nudgeAfterMinutes ?? null);
+  const [workDays, setWorkDays] = useState<number | null>(context?.workDays ?? null);
+  const [balanceSince, setBalanceSince] = useState<string | null>(context?.balanceSince ?? null);
+  const [balanceStart, setBalanceStart] = useState(context?.balanceStartMinutes ?? 0);
 
   // Only top-level jellies get a suggested color; inside a group they share the parent's.
   const suggested = useNameSuggestion(context ? '' : name, parentId, emojiTouched ? emoji : null, !colorTouched && parentId === null);
@@ -162,6 +165,24 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     if (context) actions.updateContext(context.id, { nudgeAfterMinutes: next });
   };
 
+  /** Job hours on (Monday to Friday to start) or off; off also ends the balance. */
+  const changeWorkDays = (next: number | null) => {
+    setWorkDays(next);
+    if (next === null) setBalanceSince(null);
+    if (context) actions.updateContext(context.id, next === null ? { workDays: null, balanceSince: null } : { workDays: next });
+  };
+
+  /** The balance from a day on (this week's Monday to start), or none. */
+  const changeBalanceSince = (next: string | null) => {
+    setBalanceSince(next);
+    if (context) actions.updateContext(context.id, { balanceSince: next });
+  };
+
+  const changeBalanceStart = (minutes: number) => {
+    setBalanceStart(minutes);
+    if (context) actions.updateContext(context.id, { balanceStartMinutes: minutes });
+  };
+
   const create = () => {
     const typed = name.trim();
     if (!typed) return buzz.warn();
@@ -177,6 +198,9 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
       actions.updateContext(id, {
         weeklyTargetMinutes: target,
         nudgeAfterMinutes: nudge,
+        workDays,
+        balanceSince,
+        balanceStartMinutes: balanceStart,
       });
     if (suggested && suggested.forName === typed) saveSuggestedLook(id, suggested.suggestion, typed, glyph);
     buzz.success();
@@ -212,6 +236,12 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     changeTarget,
     nudge,
     changeNudge,
+    workDays,
+    changeWorkDays,
+    balanceSince,
+    changeBalanceSince,
+    balanceStart,
+    changeBalanceStart,
     inheritedNudge,
     hue,
     suggested,

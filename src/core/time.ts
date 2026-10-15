@@ -47,6 +47,22 @@ export const weekRange = (ts: number) => {
 
 export const isSameDay = (a: number, b: number) => startOfDay(a) === startOfDay(b);
 
+/** The local day `ts` falls on, as YYYY-MM-DD: how days off and balance starts are stored. */
+export function dayKey(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Local midnight of a YYYY-MM-DD day key. */
+export function dayStart(key: string): number {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
+/** 0 for Monday through 6 for Sunday, in local time. */
+export const weekdayOf = (ts: number) => (new Date(ts).getDay() + 6) % 7;
+
 const MINUS = '−';
 
 /** 36:40, 0:05. Negative values get a real minus sign: −3:20. */

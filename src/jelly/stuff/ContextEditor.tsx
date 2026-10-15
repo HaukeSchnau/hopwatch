@@ -5,6 +5,7 @@
 
 import {
   Button,
+  DatePicker,
   HStack,
   Image,
   LabeledContent,
@@ -22,6 +23,7 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   background,
+  environment,
   font,
   foregroundStyle,
   frame,
@@ -37,7 +39,23 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-import { actions, type ContextId, formatDuration, type Hue, hues, MINUTE, pathLabel, type ResolvedContext, startLink } from '@/core';
+import {
+  actions,
+  type ContextId,
+  dayKey,
+  dayStart,
+  formatDuration,
+  formatSignedDuration,
+  type Hue,
+  hues,
+  MINUTE,
+  MONDAY_TO_FRIDAY,
+  pathLabel,
+  type ResolvedContext,
+  startLink,
+  startOfWeek,
+  useNow,
+} from '@/core';
 import { stuffText } from '@/i18n/stuff';
 
 import { lookFor } from '../character/derive';
@@ -47,8 +65,10 @@ import { buzz } from '../feedback';
 import { EMOJI_SUGGESTIONS } from '../fields';
 import { HostedRow, JellyForm } from '../forms';
 import { suggestInput } from '../suggestions';
+import { pickerLocale } from '../sheets/parts';
 import { useTheme } from '../theme';
 import { type EditorTarget, Header, NUDGE_CHIPS, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
+import { WeekdayChips } from './WeekdayChips';
 import { confirmDelete } from './StuffScreen';
 
 const s = stuffText.editor;
@@ -96,6 +116,12 @@ function Editor(props: EditorTarget) {
     nudge,
     changeNudge,
     inheritedNudge,
+    workDays,
+    changeWorkDays,
+    balanceSince,
+    changeBalanceSince,
+    balanceStart,
+    changeBalanceStart,
     hue,
     suggested,
     draft,
@@ -103,6 +129,7 @@ function Editor(props: EditorTarget) {
     bump,
     create,
   } = useJellyDraft(props);
+  const now = useNow(60_000);
   const nameState = useNativeState(context?.name ?? '');
   const emojiState = useNativeState(context?.emoji ?? '');
   useEffect(() => {
@@ -242,6 +269,44 @@ function Editor(props: EditorTarget) {
           />
         ) : null}
       </Section>
+
+      {target !== null ? (
+        <Section title={s.jobHours} footer={<SwiftText>{workDays !== null && balanceSince !== null ? s.balanceFooter : s.jobHoursFooter}</SwiftText>}>
+          <Toggle label={s.countDaysOff} systemImage="calendar" isOn={workDays !== null} onIsOnChange={(on) => changeWorkDays(on ? MONDAY_TO_FRIDAY : null)} />
+          {workDays !== null ? (
+            <>
+              <HostedRow render={(width) => <WeekdayChips width={width} value={workDays} onChange={changeWorkDays} hue={hue} />} />
+              <Toggle
+                label={s.balance}
+                systemImage="plusminus"
+                isOn={balanceSince !== null}
+                onIsOnChange={(on) => changeBalanceSince(on ? dayKey(startOfWeek(Date.now())) : null)}
+              />
+            </>
+          ) : null}
+          {workDays !== null && balanceSince !== null ? (
+            <>
+              <DatePicker
+                title={s.balanceSince}
+                selection={new Date(dayStart(balanceSince))}
+                range={{ end: new Date(now) }}
+                displayedComponents={['date']}
+                onDateChange={(date) => changeBalanceSince(dayKey(date.getTime()))}
+                modifiers={[environment('locale', pickerLocale)]}
+              />
+              <Stepper
+                label={s.balanceStart(formatSignedDuration(balanceStart * MINUTE))}
+                value={balanceStart}
+                step={30}
+                min={-500 * 60}
+                max={500 * 60}
+                onValueChange={changeBalanceStart}
+                modifiers={[monospacedDigit()]}
+              />
+            </>
+          ) : null}
+        </Section>
+      ) : null}
 
       <Section title={s.nudge} footer={<SwiftText>{s.nudgeFooter}</SwiftText>}>
         <Chips
