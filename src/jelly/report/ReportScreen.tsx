@@ -4,7 +4,7 @@
 // tree of totals with copy buttons, and bead strings showing how fragmented each day was.
 
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { type ReactNode, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
@@ -33,7 +33,7 @@ import { HeaderTitle } from '../HeaderTitle';
 import { useHeaderIcon } from '../nav';
 import { rounded, tabular, text, useTheme } from '../theme';
 import { dayTitles, weekTitles } from '../titles';
-import { SectionTitle } from '../ui';
+import { JellyButton, SectionTitle } from '../ui';
 import { BeadString, WeekBeads } from './Beads';
 import { Bubbles } from './Bubbles';
 import { Jars } from './Jars';
@@ -120,6 +120,12 @@ function WeekBody({ week, now }: { week: number; now: number }) {
             <WeekBeads days={report.days} width={width - 64} now={now} />
             <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>{weekText.beadsLegend}</Text>
           </View>
+          <JellyButton
+            label={weekText.card.button}
+            icon={{ ios: 'square.and.arrow.up', android: 'share' }}
+            onPress={() => router.push({ pathname: '/week-card', params: { week: String(week) } })}
+            style={styles.shareWeek}
+          />
         </>
       )}
     </>
@@ -228,6 +234,7 @@ const styles = StyleSheet.create({
   totalRow: { alignItems: 'center', marginTop: 14 },
   total: { ...rounded('800'), fontSize: 52, letterSpacing: -1 },
   bubbles: { alignItems: 'center', marginTop: 12, paddingHorizontal: 16 },
+  shareWeek: { marginHorizontal: 16, marginTop: 20 },
   section: { marginHorizontal: 20, marginTop: 28 },
   card: { borderRadius: 24, padding: 16, marginHorizontal: 16 },
   legend: { marginTop: 12 },

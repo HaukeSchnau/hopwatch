@@ -61,6 +61,7 @@ export default function RootLayout() {
           <Stack.Screen name="context" options={sheet([1], t.c.bg)} />
           <Stack.Screen name="entry" options={sheet([1], t.c.bg)} />
           <Stack.Screen name="settings" options={sheet([1], t.c.bg)} />
+          <Stack.Screen name="week-card" options={sheet('fitToContents', t.c.bg)} />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>

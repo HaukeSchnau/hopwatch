@@ -22,6 +22,13 @@ export const weekText = localized({
     jarLabel: (name: string, actual: string, target: string) => `${name}: ${actual} of ${target}`,
     /** Under a job-hours jar: the week's work days that were off. */
     daysOff: (count: number) => (count === 1 ? '1 day off' : `${count} days off`),
+    card: {
+      button: 'Share this week',
+      title: 'Share this week',
+      share: 'Share',
+      kicker: (range: string) => `My week · ${range}`,
+      across: (count: number) => `tracked across ${count === 1 ? 'one jelly' : `${count} jellies`}`,
+    },
     /** A job-hours jar's overtime balance, as of the last finished day. */
     balance: (duration: string) => `Balance ${duration}`,
     archived: ' (archived)',
@@ -43,6 +50,13 @@ export const weekText = localized({
     totals: 'Summen',
     jarLabel: (name, actual, target) => `${name}: ${actual} von ${target}`,
     daysOff: (count) => (count === 1 ? '1 freier Tag' : `${count} freie Tage`),
+    card: {
+      button: 'Diese Woche teilen',
+      title: 'Diese Woche teilen',
+      share: 'Teilen',
+      kicker: (range) => `Meine Woche · ${range}`,
+      across: (count) => `erfasst in ${count === 1 ? 'einem Jelly' : `${count} Jellys`}`,
+    },
     balance: (duration) => `Konto ${duration}`,
     archived: ' (archiviert)',
     copy: (name) => `Summen von ${name} kopieren`,
