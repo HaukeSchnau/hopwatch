@@ -18,7 +18,7 @@ const NONE = 'none';
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
-  const { contexts, entries, copied, copy, erase, restore, exportData } = useSettingsActions();
+  const { contexts, entries, lastExport, copied, copy, erase, restore, exportData } = useSettingsActions();
   const check = useEveningSetting();
   const region = useHolidayRegion();
 
@@ -45,7 +45,7 @@ export function SettingsSheet() {
         <Row label={sentence(copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop)} icon="stop_circle" onPress={() => copy(stopLink)} />
         <Row label={sentence(copied === resumeLink ? shortcuts.copiedResume : shortcuts.copyResume)} icon="play_circle" onPress={() => copy(resumeLink)} />
       </Section>
-      <Section title={data.title} footer={data.footer(contexts, entries)}>
+      <Section title={data.title} footer={data.footer(contexts, entries, lastExport)}>
         <Row label={sentence(data.export)} icon="file_export" onPress={exportData} />
         <Row label={sentence(data.restore)} icon="settings_backup_restore" onPress={restore} />
         <Row label={sentence(data.erase)} icon="delete_forever" destructive onPress={erase} />

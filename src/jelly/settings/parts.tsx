@@ -6,7 +6,17 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 
-import { actions, eraseAllData, requestNudgePermission, setEveningCheck, shareExport, useEveningCheck, useHopwatch } from '@/core';
+import {
+  actions,
+  eraseAllData,
+  formatDayMonth,
+  LAST_EXPORT,
+  requestNudgePermission,
+  setEveningCheck,
+  shareExport,
+  useEveningCheck,
+  useHopwatch,
+} from '@/core';
 import { settingsText } from '@/i18n/settings';
 
 import { Character } from '../Character';
@@ -44,6 +54,8 @@ export function useEveningSetting() {
 export function useSettingsActions() {
   const contexts = useHopwatch((s) => s.contexts.length);
   const entries = useHopwatch((s) => s.entries.length);
+  const exportedAt = useHopwatch((s) => s.prefs[LAST_EXPORT]);
+  const lastExport = typeof exportedAt === 'number' ? formatDayMonth(exportedAt) : null;
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = (link: string) => {
@@ -79,7 +91,7 @@ export function useSettingsActions() {
 
   const exportData = () => shareExport().catch((e: unknown) => Alert.alert(data.exportFailed, String(e)));
 
-  return { contexts, entries, copied, copy, erase, restore, exportData };
+  return { contexts, entries, lastExport, copied, copy, erase, restore, exportData };
 }
 
 /** Opens a page of the website, e.g. the privacy policy, in the browser. */

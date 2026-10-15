@@ -26,7 +26,7 @@ const NONE = 'none';
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
-  const { contexts, entries, copied, copy, erase, restore, exportData } = useSettingsActions();
+  const { contexts, entries, lastExport, copied, copy, erase, restore, exportData } = useSettingsActions();
   const check = useEveningSetting();
   const region = useHolidayRegion();
 
@@ -67,7 +67,7 @@ export function SettingsSheet() {
         <Button label={copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop} systemImage="stop.circle" onPress={() => copy(stopLink)} />
         <Button label={copied === resumeLink ? shortcuts.copiedResume : shortcuts.copyResume} systemImage="play.circle" onPress={() => copy(resumeLink)} />
       </Section>
-      <Section title={data.title} footer={<SwiftText>{data.footer(contexts, entries)}</SwiftText>}>
+      <Section title={data.title} footer={<SwiftText>{data.footer(contexts, entries, lastExport)}</SwiftText>}>
         <Button label={data.export} systemImage="square.and.arrow.up" onPress={exportData} />
         <Button label={data.restore} systemImage="square.and.arrow.down" onPress={restore} />
         <Button

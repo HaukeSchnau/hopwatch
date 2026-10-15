@@ -10,7 +10,10 @@ import { coreText } from '@/i18n/core';
 
 import { backupPayload, type ParseResult, parseBackup } from './backup';
 import * as db from './db';
-import { useHopwatch } from './store';
+import { actions, useHopwatch } from './store';
+
+/** Pref with the time of the last export, which Settings shows. */
+export const LAST_EXPORT = 'data.lastExport';
 
 export async function shareExport(): Promise<void> {
   const exportedAt = new Date();
@@ -20,6 +23,8 @@ export async function shareExport(): Promise<void> {
   file.create();
   file.write(JSON.stringify(payload, null, 2));
   await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: coreText.exportTitle });
+  // The share sheet doesn't say whether the file was kept, so this is when it was offered.
+  actions.setPref(LAST_EXPORT, exportedAt.getTime());
 }
 
 /**

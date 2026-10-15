@@ -77,8 +77,8 @@ export const settingsText = localized({
     },
     data: {
       title: 'Data',
-      footer: (jellies: number, entries: number) =>
-        `${jelliesEn(jellies)} and ${entriesEn(entries)}, stored on this ${deviceEn}. An export is a file you can restore here or on your next ${deviceEn}.`,
+      footer: (jellies: number, entries: number, lastExport: string | null) =>
+        `${jelliesEn(jellies)} and ${entriesEn(entries)}, stored on this ${deviceEn}. ${android ? 'Google' : 'iCloud'} backup includes them when it's on. An export is a file you can keep anywhere and restore here or on your next ${deviceEn}.${lastExport ? ` Last exported ${lastExport}.` : ''}`,
       export: 'Export Data',
       exportFailed: 'Export failed',
       restore: 'Restore from Export',
@@ -161,8 +161,8 @@ export const settingsText = localized({
     },
     data: {
       title: 'Daten',
-      footer: (jellies, entries) =>
-        `${jelliesDe(jellies)} und ${entriesDe(entries)}, gespeichert auf diesem ${deviceDe}. Einen Export kannst du hier oder auf deinem nächsten ${deviceDe} wiederherstellen.`,
+      footer: (jellies, entries, lastExport) =>
+        `${jelliesDe(jellies)} und ${entriesDe(entries)}, gespeichert auf diesem ${deviceDe}. Das ${android ? 'Google' : 'iCloud'}-Backup nimmt sie mit, wenn es an ist. Einen Export kannst du überall aufheben und hier oder auf deinem nächsten ${deviceDe} wiederherstellen.${lastExport ? ` Zuletzt exportiert am ${lastExport}.` : ''}`,
       export: 'Daten exportieren',
       exportFailed: 'Export fehlgeschlagen',
       restore: 'Aus Export wiederherstellen',

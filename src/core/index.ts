@@ -46,7 +46,7 @@ export {
 export { type Plan, type Reading, readSentence, type SentenceAnswer, sentenceRequest } from './sentence';
 export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
 export type { Backup, ParseResult } from './backup';
-export { pickBackup, shareExport } from './export';
+export { LAST_EXPORT, pickBackup, shareExport } from './export';
 export { requestNudgePermission } from './permissions';
 export { eraseAllData, loadSampleData } from './sample-loader';
 export { checkSummary, summaryRequest, weekFacts, type WeekFacts } from './week-facts';
