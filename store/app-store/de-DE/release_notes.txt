@@ -1,1 +1,7 @@
-Hallo! Das ist die erste Version von Hopwatch.
+Wechseln von überall. Stopp und Zurück in der Live Activity wirken jetzt direkt, ohne die App zu öffnen. Neu sind Widgets für Home- und Sperrbildschirm, Steuerelemente für Kontrollzentrum und Aktionstaste, und Siri: „Starte Hund in Hopwatch“.
+
+Arbeitszeit: Urlaubs- und Krankheitstage eintragen, Feiertage (bisher Deutschland) mitzählen und ein Überstundenkonto führen.
+
+Ein Abendcheck fragt nach den Lücken des Tages, und deine Woche kannst du als Karte teilen.
+
+Behoben: das Zeitrad beim Starten und Stoppen, eine Mittagspause in einen Block legen im Tab Tag, und ein Tippen auf ein Jelly unter Kram öffnet jetzt seine Einstellungen.

@@ -8,9 +8,10 @@ WHAT YOU GET
 • Day: your day as a dial and a timeline. Tap a gap to fill it, drag an entry's edge to fix it.
 • Week: totals, bubbles and target jars for weekly goals like 40 hours of work.
 • Groups: jellies can live inside other jellies, like Clients › Acme › Website.
-• Nudges: a gentle reminder when something has been running for a long time.
+• Job hours: days off, public holidays and an overtime balance.
+• Nudges: a gentle reminder when something has been running for a long time, and an evening check about gaps you didn't track.
 • Live Activity: the running jelly and its timer on your Lock Screen and in the Dynamic Island.
-• Shortcuts: links to start, stop and resume for the Action Button and automations.
+• Switch from anywhere: Stop and Back on the Live Activity, widgets for the Home Screen and Lock Screen, controls for Control Center and the Action Button, and Siri. None of them open the app.
 
 APPLE INTELLIGENCE, IF YOU HAVE IT
 On iPhones with Apple Intelligence, Hopwatch suggests an emoji, a color and a look for new jellies, writes a short summary of your week, and understands entries like "2h deep work this morning". It all runs on your iPhone. Without Apple Intelligence, everything else works the same.

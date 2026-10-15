@@ -1,1 +1,7 @@
-Hello! This is the first version of Hopwatch.
+Switch from anywhere. Stop and Back on the Live Activity now work right there, without opening the app. New widgets for the Home Screen and Lock Screen, controls for Control Center and the Action Button, and Siri: "Start Dog in Hopwatch".
+
+Job hours: mark vacation and sick days, count public holidays (Germany for now) and keep an overtime balance.
+
+An evening check asks about the day's gaps, and you can share your week as a card.
+
+Fixed: the time wheel when starting and stopping, putting a lunch break inside a block on the Day tab, and tapping a jelly in Stuff now opens its settings.

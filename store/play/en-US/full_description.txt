@@ -8,8 +8,9 @@ WHAT YOU GET
 • Day: your day as a dial and a timeline. Tap a gap to fill it, drag an entry's edge to fix it.
 • Week: totals, bubbles and target jars for weekly goals like 40 hours of work.
 • Groups: jellies can live inside other jellies, like Clients › Acme › Website.
-• Nudges: a gentle reminder when something has been running for a long time.
-• In your notifications: the running jelly with a live timer, plus Stop and "Back to" buttons.
+• Job hours: days off, public holidays and an overtime balance.
+• Nudges: a gentle reminder when something has been running for a long time, and an evening check about gaps you didn't track.
+• Switch from anywhere: the running jelly in your notifications with Stop and "Back to", a home screen widget with your pinned jellies, and a Quick Settings tile. None of them open the app.
 • Shortcuts: long-press the app icon to stop, go back, or start a pinned jelly.
 
 PRIVATE BY DESIGN
