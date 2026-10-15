@@ -1,11 +1,14 @@
 // The app's side of the surfaces (targets/widget/_shared/Surfaces.swift). After a tap,
 // whose intent runs in this process, and whenever JavaScript writes a new snapshot, it
 // brings the Live Activity, the widgets, the controls and Siri's jelly list in line with
-// what surfaces show, and reschedules the nudge for the new entry. Installed at launch by
-// the AppDelegate (plugins/with-app-surfaces.js), which runs for background launches too.
+// what surfaces show, reschedules the nudge for the new entry, and sets the Slack status
+// (modules/system-surfaces/ios/Slack.swift). Installed at launch by the AppDelegate
+// (plugins/with-app-surfaces.js), which runs for background launches too.
 
 import ActivityKit
 import AppIntents
+internal import SystemSurfaces
+import UIKit
 import UserNotifications
 import WidgetKit
 
@@ -26,6 +29,10 @@ final class AppSurfaces: SurfacesRuntime {
   static func install() {
     SurfacesHost.runtime = shared
     NotificationCenter.default.addObserver(forName: snapshotChanged, object: nil, queue: .main) { _ in
+      Task { @MainActor in await shared.refresh() }
+    }
+    // A Slack call that failed offline gets another go.
+    NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
       Task { @MainActor in await shared.refresh() }
     }
     Task { @MainActor in await endLegacyActivities() }
@@ -53,6 +60,18 @@ final class AppSurfaces: SurfacesRuntime {
     if jellies != jelliesKey {
       jelliesKey = jellies
       HopwatchShortcuts.updateAppShortcutParameters()
+    }
+    syncSlack(state)
+  }
+
+  /// The running jelly's Slack status, or none. Network calls get background time, since
+  /// after a tap the system may suspend the app as soon as the intent returns.
+  private func syncSlack(_ state: Effective) {
+    let want = state.running?.jelly.slack.map { HopwatchSlack.Status(text: $0.text, emoji: $0.emoji) }
+    let task = UIApplication.shared.beginBackgroundTask(withName: "Slack")
+    Task {
+      await HopwatchSlack.shared.sync(want)
+      UIApplication.shared.endBackgroundTask(task)
     }
   }
 

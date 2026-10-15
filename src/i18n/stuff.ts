@@ -89,6 +89,10 @@ export const stuffText = localized({
       perWeek: (duration: string) => `${duration} a week`,
       nudge: 'Nudge',
       nudgeFooter: 'Asks whether you forgot to stop when it has run this long.',
+      slack: 'Slack status',
+      slackPlaceholder: 'Status, like "Walking the dog"',
+      slackFooter: (shown: string | null) =>
+        shown ? `Slack shows "${shown}" while this jelly runs.` : 'No Slack status while this jelly runs.',
       nudgeDefault: 'Default',
       nudgeAfter: (duration: string) => `Nudge after ${duration}`,
       nudgesAfter: 'Nudges after',
@@ -185,6 +189,10 @@ export const stuffText = localized({
       perWeek: (duration) => `${duration} pro Woche`,
       nudge: 'Erinnerung',
       nudgeFooter: 'Fragt, ob du das Stoppen vergessen hast, wenn es so lange läuft.',
+      slack: 'Slack-Status',
+      slackPlaceholder: 'Status, etwa „Mit dem Hund unterwegs“',
+      slackFooter: (shown) =>
+        shown ? `Slack zeigt „${shown}“, solange dieses Jelly läuft.` : 'Kein Slack-Status, solange dieses Jelly läuft.',
       nudgeDefault: 'Standard',
       nudgeAfter: (duration) => `Erinnern nach ${duration}`,
       nudgesAfter: 'Erinnert nach',

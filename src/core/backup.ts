@@ -3,11 +3,12 @@
 //
 // Version 1 (Stint Five) has contexts and entries. Version 2 adds the device's preferences,
 // which hold each jelly's look. Version 3 adds job hours: days off, and each jelly's work
-// days and overtime balance. Soft-deleted rows travel too, for a later sync.
+// days and overtime balance; from 1.2.0 on its jellies may carry a Slack status, which older
+// versions skip. Soft-deleted rows travel too, for a later sync.
 
 import { coreText } from '@/i18n/core';
 
-import { type Context, type ContextId, type DayOff, type DayOffId, defaultHueHex, type Entry, type EntryId, isDayOffKind, isHue } from './model';
+import { type Context, type ContextId, type DayOff, type DayOffId, defaultHueHex, type Entry, type EntryId, isDayOffKind, isHue, isSlackStatus } from './model';
 import type { Json } from './store';
 
 const text = coreText.backup;
@@ -80,6 +81,8 @@ const contextShape = {
   balanceSince: since(nullable(day), null),
   balanceStartMinutes: since(num, 0),
   nudgeAfterMinutes: nullable(num),
+  // A status this version can't read is dropped rather than failing the restore.
+  slackStatus: (v: unknown) => (isSlackStatus(v) ? v : null),
   archivedAt: nullable(num),
   createdAt: num,
   updatedAt: num,

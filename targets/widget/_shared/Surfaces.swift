@@ -110,6 +110,14 @@ struct Jelly: Codable, Identifiable, Hashable {
   let colors: Colors
   let pin: Int?
   let nudgeMinutes: Double
+  /// The Slack status while it runs, ready to send (`slack` in SnapshotJelly).
+  let slack: Slack?
+
+  struct Slack: Codable, Hashable {
+    let text: String
+    /// Slack's emoji name, ":dog:", or "" for Slack's default.
+    let emoji: String
+  }
 }
 
 struct Paint: Codable, Hashable {

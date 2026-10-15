@@ -21,6 +21,7 @@ const context = (id: string, name: string, parentId: string | null = null): Cont
   balanceSince: null,
   balanceStartMinutes: 0,
   nudgeAfterMinutes: null,
+  slackStatus: null,
   archivedAt: null,
   createdAt: 0,
   updatedAt: 0,

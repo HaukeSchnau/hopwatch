@@ -85,6 +85,7 @@ export function sampleData(
       balanceSince: s.job ? dayKey(addDays(startOfWeek(now), -14)) : null,
       balanceStartMinutes: 0,
       nudgeAfterMinutes: s.nudge ?? null,
+      slackStatus: null,
       archivedAt: s.archived ? now - 30 * 24 * HOUR : null,
       createdAt: now - 60 * 24 * HOUR,
       updatedAt: now,

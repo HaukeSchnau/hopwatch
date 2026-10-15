@@ -1,9 +1,9 @@
 // Android's headless task: a tap on the notification, the widget or the Quick Settings tile
 // queues a command and wakes the app's JavaScript without opening it (Headless.kt). This
 // loads the store, replays the queue, and brings everything that follows the store up to
-// date, since no root layout mounts here to do it.
+// date (Slack included), since no root layout mounts here to do it.
 
-import { drainRemote } from '@/core';
+import { drainRemote, syncSlack } from '@/core';
 import { syncEvening } from '@/core/evening';
 import { syncNudge } from '@/core/nudges';
 import { initStore } from '@/core/store';
@@ -17,5 +17,5 @@ export async function runSurfacesTask() {
   connectSurfaces();
   drainRemote();
   publishSnapshot();
-  await Promise.allSettled([syncRunningNotification(), syncNudge(), syncEvening(), syncShortcuts()]);
+  await Promise.allSettled([syncRunningNotification(), syncNudge(), syncEvening(), syncShortcuts(), syncSlack()]);
 }

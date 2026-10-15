@@ -10,6 +10,12 @@ import {
   type Hue,
 } from './model';
 
+/** A resolved Slack status: what Slack shows while the jelly runs. */
+export interface SlackLine {
+  text: string;
+  emoji: string | null;
+}
+
 /** A context with its inherited settings and position in the tree resolved. */
 export interface ResolvedContext extends Context {
   /** Own color, else the nearest ancestor's, else DEFAULT_HUE. */
@@ -18,6 +24,8 @@ export interface ResolvedContext extends Context {
   glyph: string | null;
   /** Own nudge threshold, else the nearest ancestor's, else DEFAULT_NUDGE_MINUTES. */
   nudgeMinutes: number;
+  /** Own Slack status (its emoji defaulting to the glyph), else the nearest ancestor's. */
+  slack: SlackLine | null;
   depth: number;
   /** Ancestors from the root down to the parent. */
   ancestors: ResolvedContext[];
@@ -50,11 +58,14 @@ export function buildTree(contexts: Iterable<Context>): ContextTree {
   const byId = new Map<ContextId, ResolvedContext>();
   const ordered: ResolvedContext[] = [];
   const visit = (c: Context, parent: ResolvedContext | null) => {
+    const glyph = c.emoji ?? parent?.glyph ?? null;
+    const own = c.slackStatus;
     const node: ResolvedContext = {
       ...c,
       hue: c.color ?? parent?.hue ?? DEFAULT_HUE,
-      glyph: c.emoji ?? parent?.glyph ?? null,
+      glyph,
       nudgeMinutes: c.nudgeAfterMinutes ?? parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES,
+      slack: own === 'none' ? null : own ? { text: own.text, emoji: own.emoji ?? glyph } : (parent?.slack ?? null),
       depth: parent ? parent.depth + 1 : 0,
       ancestors: parent ? [...parent.ancestors, parent] : [],
       childIds: (children.get(c.id) ?? []).map((child) => child.id),
@@ -114,6 +125,7 @@ export function createContext(contexts: readonly Context[], input: NewContextInp
     balanceSince: null,
     balanceStartMinutes: 0,
     nudgeAfterMinutes: null,
+    slackStatus: null,
     archivedAt: null,
     createdAt: now,
     updatedAt: now,

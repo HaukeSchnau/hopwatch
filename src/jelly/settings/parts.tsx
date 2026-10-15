@@ -1,5 +1,5 @@
 // What both platforms' Settings share: the candy header with the mascot, and the actions
-// behind the rows (copying links, export, restore, erase, opening the website's pages).
+// behind the rows (Slack, copying links, export, restore, erase, opening the website's pages).
 
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
@@ -8,14 +8,18 @@ import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 
 import {
   actions,
+  connectSlack,
+  disconnectSlack,
   eraseAllData,
   formatDayMonth,
   LAST_EXPORT,
   requestNudgePermission,
   setEveningCheck,
   shareExport,
+  slackAvailable,
   useEveningCheck,
   useHopwatch,
+  useSlackLink,
 } from '@/core';
 import { settingsText } from '@/i18n/settings';
 
@@ -26,7 +30,7 @@ import type { PreviewJelly } from '../preview';
 import { text, useTheme } from '../theme';
 import { chooseBackup } from './restore';
 
-const { data } = settingsText;
+const { data, slack } = settingsText;
 
 /** Where the evening check starts out when it's turned on: 20:30. */
 const DEFAULT_EVENING = 20 * 60 + 30;
@@ -49,6 +53,27 @@ export function useEveningSetting() {
     },
     setAt: (date: Date) => setEveningCheck(date.getHours() * 60 + date.getMinutes()),
   };
+}
+
+/** Slack's rows: the connected workspace, connecting (with a note when it fails), disconnecting. */
+export function useSlackSetting() {
+  const link = useSlackLink();
+  const [busy, setBusy] = useState(false);
+  const connect = () => {
+    buzz.tap();
+    setBusy(true);
+    connectSlack()
+      .then((result) => {
+        if (result === 'connected') buzz.success();
+        if (result === 'failed') Alert.alert(slack.failed, slack.failedMessage);
+      })
+      .finally(() => setBusy(false));
+  };
+  const disconnect = () => {
+    buzz.thud();
+    disconnectSlack();
+  };
+  return { available: slackAvailable, link, busy, connect, disconnect };
 }
 
 export function useSettingsActions() {

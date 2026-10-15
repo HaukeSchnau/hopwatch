@@ -10,7 +10,7 @@ import type { Backup } from './backup';
 import * as db from './db';
 import { initialLinkIsStale } from './launch';
 import type { LinkAction } from './links';
-import type { Context, ContextId, DayOff, DayOffId, DayOffKind, Entry, EntryId, Hue } from './model';
+import type { Context, ContextId, DayOff, DayOffId, DayOffKind, Entry, EntryId, Hue, SlackStatus } from './model';
 import { type RemoteCommand, replay } from './remote';
 import * as timeline from './timeline';
 import { formatClock, offsetAt } from './time';
@@ -192,6 +192,7 @@ export interface ContextPatch {
   balanceSince?: string | null;
   balanceStartMinutes?: number;
   nudgeAfterMinutes?: number | null;
+  slackStatus?: SlackStatus | null;
 }
 
 export const actions = {

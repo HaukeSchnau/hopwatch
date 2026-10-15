@@ -1,5 +1,5 @@
-// Strings for the Settings sheet: sounds, Apple Intelligence, Shortcuts links, data, and
-// the help and privacy pages on the website.
+// Strings for the Settings sheet: sounds, Apple Intelligence, Slack, Shortcuts links, data,
+// and the help and privacy pages on the website.
 // Android gets its own words where iOS names Shortcuts or the iPhone.
 
 import type { Availability } from '@modules/on-device-model';
@@ -65,11 +65,24 @@ export const settingsText = localized({
       } satisfies Record<Availability, string>,
       checking: 'Checking…',
     },
+    slack: {
+      title: 'Slack',
+      connect: 'Connect Slack',
+      connecting: 'Connecting…',
+      reconnect: 'Connect Again',
+      disconnect: 'Disconnect',
+      workspace: 'Workspace',
+      footer: 'Give a jelly a Slack status in its editor, and Hopwatch sets it while the jelly runs. It never touches a status you set yourself.',
+      connectedFooter: 'Jellies with a Slack status set it while they run, until midnight at the latest. A status you set yourself stays.',
+      broken: 'Slack signed Hopwatch out. Connect again to keep your status in step.',
+      failed: "Couldn't connect to Slack",
+      failedMessage: 'Check your connection and try again.',
+    },
     shortcuts: {
       title: android ? 'Links' : 'Shortcuts',
       footer: android
         ? 'Automation apps and home screen shortcuts can open these to stop or resume. Each jelly has its own start link in its editor.'
-        : 'Open these from the Shortcuts app, the Action Button or an automation. Each jelly has its own start link in its editor.',
+        : "Siri and the Shortcuts app know Hopwatch's actions: start a jelly, go back, stop. These links do the same by opening the app. Each jelly has its own start link in its editor.",
       copyStop: 'Copy Stop Link',
       copiedStop: 'Copied Stop Link',
       copyResume: 'Copy Resume Link',
@@ -149,11 +162,24 @@ export const settingsText = localized({
       },
       checking: 'Wird geprüft…',
     },
+    slack: {
+      title: 'Slack',
+      connect: 'Slack verbinden',
+      connecting: 'Verbinde…',
+      reconnect: 'Erneut verbinden',
+      disconnect: 'Trennen',
+      workspace: 'Workspace',
+      footer: 'Gib einem Jelly in seinem Editor einen Slack-Status, und Hopwatch setzt ihn, solange das Jelly läuft. Einen Status, den du selbst gesetzt hast, fasst es nicht an.',
+      connectedFooter: 'Jellys mit Slack-Status setzen ihn, solange sie laufen, längstens bis Mitternacht. Einen Status, den du selbst gesetzt hast, lässt Hopwatch stehen.',
+      broken: 'Slack hat Hopwatch abgemeldet. Verbinde erneut, damit dein Status mitläuft.',
+      failed: 'Keine Verbindung zu Slack',
+      failedMessage: 'Prüf deine Verbindung und versuch es noch mal.',
+    },
     shortcuts: {
       title: android ? 'Links' : 'Kurzbefehle',
       footer: android
         ? 'Automations-Apps und Verknüpfungen auf dem Startbildschirm können sie öffnen, um zu stoppen oder fortzusetzen. Jedes Jelly hat in seinem Editor einen eigenen Start-Link.'
-        : 'Öffne sie aus der Kurzbefehle-App, mit der Aktionstaste oder per Automation. Jedes Jelly hat in seinem Editor einen eigenen Start-Link.',
+        : 'Siri und die Kurzbefehle-App kennen die Aktionen von Hopwatch: ein Jelly starten, zurück, stoppen. Diese Links tun dasselbe, indem sie die App öffnen. Jedes Jelly hat in seinem Editor einen eigenen Start-Link.',
       copyStop: 'Stopp-Link kopieren',
       copiedStop: 'Stopp-Link kopiert',
       copyResume: 'Fortsetzen-Link kopieren',

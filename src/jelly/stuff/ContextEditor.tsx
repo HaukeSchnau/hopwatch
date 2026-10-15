@@ -1,6 +1,6 @@
 // The jelly editor: a native form under a candy header with the live jelly, then its Look
-// (the characters' own editor), name, emoji, color, place in the tree, goals, start link
-// and archive/delete. The draft and the route are shared with Android (editor.tsx);
+// (the characters' own editor), name, emoji, color, place in the tree, goals, the Slack
+// status (once Slack is connected), start link and archive/delete. The draft and the route are shared with Android (editor.tsx);
 // Android's form is ContextEditor.android.tsx.
 
 import {
@@ -55,6 +55,7 @@ import {
   startLink,
   startOfWeek,
   useNow,
+  useSlackLink,
 } from '@/core';
 import { stuffText } from '@/i18n/stuff';
 
@@ -67,7 +68,7 @@ import { HostedRow, JellyForm } from '../forms';
 import { suggestInput } from '../suggestions';
 import { pickerLocale } from '../sheets/parts';
 import { useTheme } from '../theme';
-import { type EditorTarget, Header, NUDGE_CHIPS, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
+import { type EditorTarget, Header, NUDGE_CHIPS, slackLabel, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
 import { WeekdayChips } from './WeekdayChips';
 import { confirmDelete } from './StuffScreen';
 
@@ -122,6 +123,13 @@ function Editor(props: EditorTarget) {
     changeBalanceSince,
     balanceStart,
     changeBalanceStart,
+    slackText,
+    setSlackText,
+    saveSlack,
+    slackFollows,
+    followSlack,
+    inheritedSlack,
+    slackShown,
     hue,
     suggested,
     draft,
@@ -130,7 +138,9 @@ function Editor(props: EditorTarget) {
     create,
   } = useJellyDraft(props);
   const now = useNow(60_000);
+  const slack = useSlackLink();
   const nameState = useNativeState(context?.name ?? '');
+  const slackState = useNativeState(slackText);
   const emojiState = useNativeState(context?.emoji ?? '');
   useEffect(() => {
     if (suggestedEmoji) emojiState.set(suggestedEmoji);
@@ -331,6 +341,21 @@ function Editor(props: EditorTarget) {
           </LabeledContent>
         )}
       </Section>
+
+      {slack ? (
+        <Section title={s.slack} footer={<SwiftText>{s.slackFooter(slackShown ? slackLabel(slackShown) : null)}</SwiftText>}>
+          {inheritedSlack ? <Toggle label={s.sameAs(parent?.name ?? null)} isOn={slackFollows} onIsOnChange={followSlack} /> : null}
+          {slackFollows ? null : (
+            <TextField
+              text={slackState}
+              placeholder={s.slackPlaceholder}
+              maxLength={100}
+              onTextChange={setSlackText}
+              onFocusChange={(focused) => !focused && saveSlack()}
+            />
+          )}
+        </Section>
+      ) : null}
 
       {context ? <ExistingSections context={context} /> : null}
     </JellyForm>

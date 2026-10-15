@@ -3,7 +3,18 @@
 
 import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 
-import { type Context, type ContextId, type DayOff, type DayOffId, type Entry, type EntryId, isDayOffKind, isHue } from './model';
+import {
+  type Context,
+  type ContextId,
+  type DayOff,
+  type DayOffId,
+  type Entry,
+  type EntryId,
+  isDayOffKind,
+  isHue,
+  isSlackStatus,
+  type SlackStatus,
+} from './model';
 
 /**
  * Schema steps: step i brings a database from `user_version` i to i + 1, in one
@@ -60,6 +71,10 @@ CREATE TABLE IF NOT EXISTS days_off (
 );
 CREATE INDEX IF NOT EXISTS days_off_day ON days_off (day);
 `,
+  // A Slack status per jelly, as JSON (SlackStatus).
+  `
+ALTER TABLE contexts ADD COLUMN slack_status TEXT;
+`,
 ];
 
 interface ContextRow {
@@ -75,6 +90,7 @@ interface ContextRow {
   balance_since: string | null;
   balance_start_minutes: number;
   nudge_after_minutes: number | null;
+  slack_status: string | null;
   archived_at: number | null;
   created_at: number;
   updated_at: number;
@@ -117,11 +133,22 @@ const toContext = (r: ContextRow): Context => ({
   balanceSince: r.balance_since,
   balanceStartMinutes: r.balance_start_minutes,
   nudgeAfterMinutes: r.nudge_after_minutes,
+  slackStatus: readSlackStatus(r.slack_status),
   archivedAt: r.archived_at,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
   deletedAt: r.deleted_at,
 });
+
+function readSlackStatus(json: string | null): SlackStatus | null {
+  if (json === null) return null;
+  try {
+    const value: unknown = JSON.parse(json);
+    return isSlackStatus(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 const toEntry = (r: EntryRow): Entry => ({
   id: r.id as EntryId,
@@ -201,8 +228,8 @@ export function writeRows(rows: { contexts?: readonly Context[]; entries?: reado
       d.runSync(
         `INSERT OR REPLACE INTO contexts (id, parent_id, name, color, emoji, pin_position, sort_order,
           weekly_target_minutes, work_days, balance_since, balance_start_minutes, nudge_after_minutes,
-          archived_at, created_at, updated_at, deleted_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          slack_status, archived_at, created_at, updated_at, deleted_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         c.id,
         c.parentId,
         c.name,
@@ -215,6 +242,7 @@ export function writeRows(rows: { contexts?: readonly Context[]; entries?: reado
         c.balanceSince,
         c.balanceStartMinutes,
         c.nudgeAfterMinutes,
+        c.slackStatus === null ? null : JSON.stringify(c.slackStatus),
         c.archivedAt,
         c.createdAt,
         c.updatedAt,

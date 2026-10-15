@@ -1,9 +1,9 @@
 // Settings as a native form under a candy header: the idea next to a mascot, squishy
-// sounds, the Apple Intelligence status, Shortcuts links, export, restore and erasing, and
-// links to help and the privacy policy.
+// sounds, the evening check, public holidays, Slack, the Apple Intelligence status,
+// Shortcuts links, export, restore and erasing, and links to help and the privacy policy.
 // Android: SettingsSheet.android.tsx.
 
-import { Button, DatePicker, Picker, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
+import { Button, DatePicker, LabeledContent, Picker, Section, Text as SwiftText, Toggle } from '@expo/ui/swift-ui';
 import { environment, foregroundStyle, pickerStyle, tag, tint } from '@expo/ui/swift-ui/modifiers';
 import { type Availability, availability } from '@modules/on-device-model';
 import { router } from 'expo-router';
@@ -16,11 +16,11 @@ import { setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
 import { useTheme } from '../theme';
 import { pickerLocale } from '../sheets/parts';
-import { Idea, openPage, useEveningSetting, useSettingsActions } from './parts';
+import { Idea, openPage, useEveningSetting, useSettingsActions, useSlackSetting } from './parts';
 
 /** System red, so erasing never reads like the pink actions around it. */
 const DANGER = '#FF3B30';
-const { evening, holidays, intelligence, shortcuts, data, about } = settingsText;
+const { evening, holidays, slack, intelligence, shortcuts, data, about } = settingsText;
 const NONE = 'none';
 
 export function SettingsSheet() {
@@ -62,6 +62,7 @@ export function SettingsSheet() {
           ))}
         </Picker>
       </Section>
+      <Slack />
       <AppleIntelligence />
       <Section title={shortcuts.title} footer={<SwiftText>{shortcuts.footer}</SwiftText>}>
         <Button label={copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop} systemImage="stop.circle" onPress={() => copy(stopLink)} />
@@ -83,6 +84,27 @@ export function SettingsSheet() {
         <Button label={about.privacy} systemImage="hand.raised" onPress={() => openPage(about.privacyUrl)} />
       </Section>
     </JellyForm>
+  );
+}
+
+/** Connecting Slack, so jellies can set a status while they run. */
+function Slack() {
+  const { available, link, busy, connect, disconnect } = useSlackSetting();
+  if (!available) return null;
+  return (
+    <Section title={slack.title} footer={<SwiftText>{link?.broken ? slack.broken : link ? slack.connectedFooter : slack.footer}</SwiftText>}>
+      {link ? (
+        <>
+          <LabeledContent label={slack.workspace}>
+            <SwiftText>{link.team}</SwiftText>
+          </LabeledContent>
+          {link.broken ? <Button label={busy ? slack.connecting : slack.reconnect} systemImage="arrow.clockwise" onPress={connect} /> : null}
+          <Button role="destructive" label={slack.disconnect} systemImage="xmark.circle" onPress={disconnect} />
+        </>
+      ) : (
+        <Button label={busy ? slack.connecting : slack.connect} systemImage="link" onPress={connect} />
+      )}
+    </Section>
   );
 }
 

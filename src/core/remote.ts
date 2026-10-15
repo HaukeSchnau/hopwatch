@@ -14,6 +14,7 @@
 // every change (see src/widgets/surfaces.ts).
 
 import type { ContextId, Entry, EntryId, Hue } from './model';
+import { type SlackWire, slackWire } from './slack';
 import * as timeline from './timeline';
 import type { ContextTree } from './tree';
 
@@ -124,6 +125,8 @@ export interface SnapshotJelly {
   /** The pin slot, or null when not pinned. */
   pin: number | null;
   nudgeMinutes: number;
+  /** The Slack status while it runs, ready to send (iOS sends it from Swift). */
+  slack: SlackWire | null;
 }
 
 /** What native surfaces show and need to handle a tap, as of the app's last change. */
@@ -176,6 +179,7 @@ export function snapshotOf(
         colors: colors(c.hue),
         pin: c.pinPosition,
         nudgeMinutes: c.nudgeMinutes,
+        slack: slackWire(c.slack),
       })),
     paint,
     strings,

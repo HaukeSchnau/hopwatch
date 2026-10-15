@@ -209,6 +209,16 @@ Since 1.2.0 the common switches work without opening the app, with the app suspe
 
 A tap records a command; the app replays it through the timeline the next time it runs, which on iOS is right away (the system launches the app in the background for the intent) and on Android within a second (a headless task). A command made from a stale view (something else is running by now) is dropped, so a tap can't undo a switch made in the app.
 
+### Slack status
+
+Since 1.2.0 a jelly can set the person's Slack status while it runs: "Walking the dog" for Dog, "Working remotely" for Job. Slack is connected once in Settings (Sign in with Slack, PKCE, no server of ours); the jelly editor then shows a Slack status field.
+
+- The status is the text typed in the editor with the jelly's emoji, which Hopwatch maps to Slack's emoji name. It's inherited down the tree like the color: Deep work shows Job's status unless it has its own, and "Same as Job" switched off with an empty field means none.
+- Switching sets the new jelly's status, or clears Hopwatch's own status when the new jelly has none or nothing runs. Hopwatch only ever changes a status it set itself or an empty one, so a status set by hand, or by Slack's calendar app during a meeting, stays.
+- Every status Hopwatch sets runs out at the next midnight, so a dead phone can't leave "Walking the dog" up for days.
+- Switches from the Live Activity, widgets, controls, the notification and the tile update Slack too, without opening the app.
+- Offline, the change waits for the next switch or the next time the app comes to the front. If Slack signs Hopwatch out (a revoked app, a token unused for 30 days), Settings asks to connect again.
+
 ### Export
 
 A JSON export of all contexts and entries goes through the share sheet. It serves as the backup while there is no server, and as the raw material for ad-hoc analysis.
@@ -223,6 +233,7 @@ The order below is a proposal, to be revisited after about a month of daily use.
 4. **Read-only ICS feed** served by the sync service, which any calendar app can subscribe to. It needs no OAuth and no CalDAV. Subscribed feeds refresh slowly, often every few hours, so this serves reviewing a day and not a live view.
 5. **Job hours, extended.** Days off that reduce the target, and a cumulative overtime balance. Built (see Reports).
 6. **Home screen widgets.** Built in 1.2.0, with controls and an Android tile.
+7. **Slack status per jelly.** Built in 1.2.0 (see Slack status).
 
 ### Open questions
 

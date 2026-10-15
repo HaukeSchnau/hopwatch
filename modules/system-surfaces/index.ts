@@ -1,7 +1,8 @@
 // Surfaces outside the app. On both platforms: the snapshot the app writes for widgets,
 // controls and Siri, and the queue of taps it replays (src/core/remote.ts,
-// src/widgets/surfaces.ts). On Android also the running entry's ongoing notification and
-// the launcher's shortcuts (src/widgets/running-notification.ts, shortcuts.ts).
+// src/widgets/surfaces.ts). On iOS also the Slack client; on Android the running entry's
+// ongoing notification and the launcher's shortcuts (src/widgets/running-notification.ts,
+// shortcuts.ts).
 // Swift in ios/, Kotlin in android/.
 
 import { NativeModule, requireOptionalNativeModule } from 'expo';
@@ -59,6 +60,15 @@ declare class Native extends NativeModule<Events> {
   readCommands(): string[];
   /** Removes replayed taps by their `seq`. */
   removeCommands(seqs: number[]): void;
+
+  // iOS only: the Slack client runs natively there (src/core/slack-link.ts).
+
+  /** Hands a Slack sign-in to the native client: SlackGrant plus `clientId`, as JSON. */
+  slackConnect(json: string): Promise<void>;
+  /** Clears the status Hopwatch set, signs out and forgets the tokens. */
+  slackDisconnect(): Promise<void>;
+  /** The connected workspace, `broken` when Slack refused the tokens since. */
+  slackLink(): { team: string; broken: boolean } | null;
 
   // Android only from here.
 

@@ -10,9 +10,9 @@ import { setSounds, useSounds } from '../feedback';
 import { HostedRow, JellyForm } from '../forms';
 import { PickerRow, Row, Section, sentence, SwitchRow, TimeRow } from '../material';
 import { useTheme } from '../theme';
-import { Idea, openPage, useEveningSetting, useSettingsActions } from './parts';
+import { Idea, openPage, useEveningSetting, useSettingsActions, useSlackSetting } from './parts';
 
-const { evening, holidays, shortcuts, data, about } = settingsText;
+const { evening, holidays, slack, shortcuts, data, about } = settingsText;
 const NONE = 'none';
 
 export function SettingsSheet() {
@@ -41,6 +41,7 @@ export function SettingsSheet() {
           onChange={(value) => setHolidayRegion(germanStates.find((state) => state === value) ?? null)}
         />
       </Section>
+      <Slack />
       <Section title={shortcuts.title} footer={shortcuts.footer}>
         <Row label={sentence(copied === stopLink ? shortcuts.copiedStop : shortcuts.copyStop)} icon="stop_circle" onPress={() => copy(stopLink)} />
         <Row label={sentence(copied === resumeLink ? shortcuts.copiedResume : shortcuts.copyResume)} icon="play_circle" onPress={() => copy(resumeLink)} />
@@ -55,5 +56,24 @@ export function SettingsSheet() {
         <Row label={sentence(about.privacy)} icon="privacy_tip" onPress={() => openPage(about.privacyUrl)} />
       </Section>
     </JellyForm>
+  );
+}
+
+/** Connecting Slack, so jellies can set a status while they run. */
+function Slack() {
+  const { available, link, busy, connect, disconnect } = useSlackSetting();
+  if (!available) return null;
+  return (
+    <Section title={slack.title} footer={link?.broken ? slack.broken : link ? slack.connectedFooter : slack.footer}>
+      {link ? (
+        <>
+          <Row label={slack.workspace} detail={link.team} icon="groups" />
+          {link.broken ? <Row label={sentence(busy ? slack.connecting : slack.reconnect)} icon="refresh" onPress={connect} /> : null}
+          <Row label={sentence(slack.disconnect)} icon="link_off" destructive onPress={disconnect} />
+        </>
+      ) : (
+        <Row label={sentence(busy ? slack.connecting : slack.connect)} icon="link" onPress={connect} />
+      )}
+    </Section>
   );
 }

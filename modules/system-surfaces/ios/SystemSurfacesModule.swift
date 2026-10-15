@@ -2,7 +2,8 @@
 // replays (src/core/remote.ts), in the app group next to the widget extension. The layout
 // matches targets/widget/_shared/Surfaces.swift. What happens after a write (the Live
 // Activity, widgets, controls) is the app's AppSurfaces, which this tells by notification:
-// a pod can't see the app target's code.
+// a pod can't see the app target's code. It also hands JavaScript's Slack sign-in to the
+// Slack client (Slack.swift), which AppSurfaces drives.
 
 import ExpoModulesCore
 
@@ -48,6 +49,20 @@ public class SystemSurfacesModule: Module {
       for file in Self.queued() where done.contains(file.seq) {
         try? FileManager.default.removeItem(at: file.url)
       }
+    }
+
+    AsyncFunction("slackConnect") { (json: String) in
+      try await HopwatchSlack.shared.connect(json)
+      // AppSurfaces syncs on a new snapshot; this is one as far as Slack is concerned.
+      NotificationCenter.default.post(name: Self.snapshotChanged, object: nil)
+    }
+
+    AsyncFunction("slackDisconnect") {
+      await HopwatchSlack.shared.disconnect()
+    }
+
+    Function("slackLink") { () -> [String: Any]? in
+      HopwatchSlack.link().map { ["team": $0.team, "broken": $0.broken] }
     }
 
     OnStartObserving {

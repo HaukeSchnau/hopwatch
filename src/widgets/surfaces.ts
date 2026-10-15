@@ -8,7 +8,7 @@
 import { systemSurfaces } from '@modules/system-surfaces';
 import { AppState } from 'react-native';
 
-import { connectRemoteQueue, drainRemote, type Hue, type HopwatchState, parseCommand, type RemoteCommand, snapshotOf, useHopwatch } from '@/core';
+import { connectRemoteQueue, drainRemote, type Hue, type HopwatchState, parseCommand, type RemoteCommand, snapshotOf, syncSlack, useHopwatch } from '@/core';
 import { coreText } from '@/i18n/core';
 import { widgetText } from '@/i18n/widgets';
 import { darkTheme, lightTheme, mix } from '@/jelly/theme';
@@ -76,17 +76,26 @@ export function publishSnapshot(state: HopwatchState = useHopwatch.getState()) {
 }
 
 /**
- * Starts publishing the snapshot and replaying taps. Call once from the root layout;
+ * Starts publishing the snapshot and replaying taps, and on Android syncing Slack (iOS's
+ * native client follows the snapshot itself). Call once from the root layout;
  * returns a cleanup function. Does nothing in builds without the native side.
  */
 export function startSurfaces(): () => void {
   if (!connectSurfaces() || !systemSurfaces) return () => {};
   publishSnapshot();
+  syncSlack();
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
-    if (state.entries !== prev.entries || state.tree !== prev.tree) publishSnapshot(state);
+    if (state.entries === prev.entries && state.tree === prev.tree) return;
+    publishSnapshot(state);
+    syncSlack();
   });
   const taps = systemSurfaces.addListener('onCommands', () => drainRemote());
-  const foreground = AppState.addEventListener('change', (status) => status === 'active' && drainRemote());
+  const foreground = AppState.addEventListener('change', (status) => {
+    if (status !== 'active') return;
+    drainRemote();
+    // A Slack call that failed offline gets another go.
+    syncSlack();
+  });
   return () => {
     unsubscribe();
     taps.remove();

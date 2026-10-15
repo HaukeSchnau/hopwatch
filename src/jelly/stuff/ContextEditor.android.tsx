@@ -1,7 +1,7 @@
 // The jelly editor on Android: the same draft as iOS (editor.tsx) as Material rows, with
 // Jelly's own emoji well and gummy drops from onboarding, filter chips for goals and a
-// dropdown for the place in the tree. The on-device model is iOS only, so there's no
-// Suggest button.
+// dropdown for the place in the tree, and the Slack status once Slack is connected. The
+// on-device model is iOS only, so there's no Suggest button.
 
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
@@ -22,6 +22,7 @@ import {
   startOfDay,
   startOfWeek,
   useNow,
+  useSlackLink,
 } from '@/core';
 import { stuffText } from '@/i18n/stuff';
 
@@ -32,7 +33,7 @@ import { EmojiField, HuePicker } from '../fields';
 import { HostedRow, JellyForm } from '../forms';
 import { ChoiceChips, DateRow, FieldRow, PickerRow, Row, Section, sentence, StepperRow, SwitchRow } from '../material';
 import { text, useTheme } from '../theme';
-import { type EditorTarget, Header, NUDGE_CHIPS, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
+import { type EditorTarget, Header, NUDGE_CHIPS, slackLabel, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
 import { confirmDelete } from './StuffScreen';
 import { WeekdayChips } from './WeekdayChips';
 
@@ -58,6 +59,7 @@ function Editor(props: EditorTarget) {
   const t = useTheme();
   const d = useJellyDraft(props);
   const now = useNow(60_000);
+  const slack = useSlackLink();
   const c = t.candy[d.hue];
   const { parent } = d;
 
@@ -190,6 +192,15 @@ function Editor(props: EditorTarget) {
           <Row label={s.nudgesAfter} detail={s.inheritedFrom(formatDuration(d.inheritedNudge * MINUTE), parent?.name ?? null)} />
         )}
       </Section>
+
+      {slack ? (
+        <Section title={s.slack} footer={s.slackFooter(d.slackShown ? slackLabel(d.slackShown) : null)}>
+          {d.inheritedSlack ? <SwitchRow label={s.sameAs(parent?.name ?? null)} value={d.slackFollows} onChange={d.followSlack} /> : null}
+          {d.slackFollows ? null : (
+            <FieldRow value={d.slackText} onChangeText={d.setSlackText} onBlur={d.saveSlack} placeholder={s.slackPlaceholder} maxLength={100} />
+          )}
+        </Section>
+      ) : null}
 
       {context ? <ExistingSections context={context} /> : null}
     </JellyForm>

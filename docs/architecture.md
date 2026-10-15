@@ -101,6 +101,33 @@ stays the only writer of entries:
 - The nudge has a fixed identifier (`hopwatch.nudge`) on both sides, so a native tap can
   replace it.
 
+## Slack
+
+A jelly's Slack status (`contexts.slack_status`, inherited down the tree in `tree.ts`) is
+set while it runs. `src/core/slack.ts` holds what both platforms share and is tested: Slack's
+emoji names (`slack-emoji.json`, generated from iamcal/emoji-data by
+`scripts/slack-emoji.mjs`), the sign-in URL, token answers, and `slackStep`, the rule that
+only a status Hopwatch set itself or an empty one gets changed.
+
+- **Sign-in** is OAuth with PKCE and the `hopwatch://slack-auth` redirect, no client secret
+  and no server (`connectSlack` in `slack-link.ts`, through expo-web-browser's auth
+  session). Slack issues rotating user tokens: the access token lasts 12 hours, the refresh
+  token 30 days, and every refresh brings a new pair. `+native-intent.tsx` drops the
+  redirect, which Android also delivers to the app.
+- **One client per platform, where taps run.** iOS: `HopwatchSlack` in
+  `modules/system-surfaces/ios/Slack.swift`, tokens in the Keychain, driven by AppSurfaces
+  after every snapshot change, tap and foreground; the snapshot carries each jelly's status
+  in Slack's form. Android: `syncSlack` in `slack-link.ts`, tokens in expo-secure-store,
+  run on store changes, foreground and in the headless task. Both run one call at a time,
+  since two refreshes would spend the same refresh token, and skip work when
+  `appliedKey` hasn't changed.
+- expo-secure-store's config plugin isn't used: its backup rules would include only shared
+  preferences and drop the database from Android's Auto Backup. Without it, a restored
+  phone can't decrypt the token and the library returns null, which reads as not
+  connected.
+- The Slack app ("Hopwatch", client id in `slack.ts`) belongs to Urbs' Slack workspace,
+  with user scopes `users.profile:read` and `users.profile:write` and public distribution.
+
 ## Releasing
 
 Releases build on the M1 builder from the head of `main` as manual Kiln runs (`.kiln/ci.ts`),

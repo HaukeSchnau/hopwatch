@@ -6,6 +6,17 @@ export { markBreak, setEveningCheck, useEveningCheck } from './evening';
 export * from './hooks';
 export { parseCommand, type RemoteCommand, type Snapshot, snapshotOf, tapCommand } from './remote';
 export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from './links';
+export {
+  type ConnectResult,
+  connectSlack,
+  disconnectSlack,
+  slackAvailable,
+  type SlackLink,
+  syncSlack,
+  useSlackLink,
+} from './slack-link';
+export { slackEmoji } from './slack';
+export type { SlackLine } from './tree';
 export * from './model';
 export { type GermanState, germanStates, type HolidayId } from './holidays';
 export { isJobHours } from './workdays';
