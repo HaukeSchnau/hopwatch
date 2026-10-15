@@ -147,7 +147,6 @@ h1 {
    gap keeps the clear space of a quarter of the badge height that both ask for. */
 .badge { display: block; flex: none; line-height: 0; }
 .badge img { display: block; width: auto; height: 48px; }
-.stores .soon { margin: 0; color: var(--muted); font-weight: 700; }
 
 /* Jellies (jelly.js): a character in a box of --size, its body moving inside .jelly-move
    around the floor at 90 % of the height. Napping jellies breathe slowly. */
