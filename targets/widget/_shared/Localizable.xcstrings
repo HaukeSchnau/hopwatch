@@ -1,0 +1,193 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Back": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück"
+          }
+        }
+      }
+    },
+    "Back to Previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück zum vorigen"
+          }
+        }
+      }
+    },
+    "Back to the Previous Jelly": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück zum vorigen Jelly"
+          }
+        }
+      }
+    },
+    "Nothing is running.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade läuft nichts."
+          }
+        }
+      }
+    },
+    "Open Hopwatch once first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Hopwatch zuerst einmal."
+          }
+        }
+      }
+    },
+    "Open Hopwatch once to set it up.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Hopwatch einmal, um es einzurichten."
+          }
+        }
+      }
+    },
+    "Start ${jelly}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${jelly} starten"
+          }
+        }
+      }
+    },
+    "Start a Jelly": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelly starten"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopp"
+          }
+        }
+      }
+    },
+    "Stop the Timer": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer stoppen"
+          }
+        }
+      }
+    },
+    "Stops whatever Hopwatch is tracking.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppt, was Hopwatch gerade erfasst."
+          }
+        }
+      }
+    },
+    "Switches Hopwatch to a jelly. Whatever runs stops at the same moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechselt in Hopwatch zu einem Jelly. Was gerade läuft, stoppt im selben Moment."
+          }
+        }
+      }
+    },
+    "Switches back to the jelly before the running one, or resumes the last one when nothing runs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechselt zurück zum Jelly vor dem laufenden oder setzt das letzte fort, wenn nichts läuft."
+          }
+        }
+      }
+    },
+    "Switches back to the jelly before, or resumes the last one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechselt zurück zum Jelly davor oder setzt das letzte fort."
+          }
+        }
+      }
+    },
+    "Switches to the jelly you pick.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechselt zum Jelly, das du wählst."
+          }
+        }
+      }
+    },
+    "That jelly isn't there anymore.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Jelly gibt es nicht mehr."
+          }
+        }
+      }
+    },
+    "What's running, with Stop and Back, and your pinned jellies.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was läuft, mit Stopp und Zurück, und deine angepinnten Jellys."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

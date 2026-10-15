@@ -1,0 +1,83 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "${applicationName} ${jelly}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} ${jelly}"
+          }
+        }
+      }
+    },
+    "Back to the previous jelly in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück zum vorigen Jelly in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Resume ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} fortsetzen"
+          }
+        }
+      }
+    },
+    "Start ${jelly} in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte ${jelly} in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Stop ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} stoppen"
+          }
+        }
+      }
+    },
+    "Stop the timer in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppe den Timer in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Switch to ${jelly} in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wechsle zu ${jelly} in ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

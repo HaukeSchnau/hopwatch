@@ -14,7 +14,7 @@ struct BackControl: ControlWidget {
         state.back.map { state.snapshot.text(state.running == nil ? "resume" : "back", name: $0.name) }
       }
       ControlWidgetButton(action: BackIntent()) {
-        Label(label ?? "Back", systemImage: "arrow.uturn.backward")
+        Label(label ?? String(localized: "Back"), systemImage: "arrow.uturn.backward")
       }
     }
     .displayName("Back to Previous")
@@ -27,7 +27,7 @@ struct StopControl: ControlWidget {
     StaticControlConfiguration(kind: "dev.schnau.hopwatch.stop") {
       let state = Surfaces.current()
       ControlWidgetButton(action: StopIntent()) {
-        Label(state?.running.map { state?.snapshot.text("stopName", name: $0.jelly.name) ?? $0.jelly.name } ?? "Stop", systemImage: "stop.fill")
+        Label(state?.running.map { state?.snapshot.text("stopName", name: $0.jelly.name) ?? $0.jelly.name } ?? String(localized: "Stop"), systemImage: "stop.fill")
       }
     }
     .displayName("Stop")
@@ -40,7 +40,7 @@ struct StartJellyControl: ControlWidget {
     AppIntentControlConfiguration(kind: "dev.schnau.hopwatch.start", intent: StartJellyControlConfiguration.self) { configuration in
       let jelly = configuration.jelly
       ControlWidgetButton(action: StartJellyIntent(jelly: jelly ?? JellyEntity(id: "", name: "", parents: ""))) {
-        Label(jelly?.name ?? "Start a Jelly", systemImage: "play.fill")
+        Label(jelly?.name ?? String(localized: "Start a Jelly"), systemImage: "play.fill")
       }
     }
     .displayName("Start a Jelly")

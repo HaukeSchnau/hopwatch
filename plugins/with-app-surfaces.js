@@ -1,6 +1,7 @@
-// Adds the app's side of the widgets, controls and Siri (native/ios/*.swift) to the app
-// target and calls `AppSurfaces.install()` at launch. Those files use the Swift in
-// targets/widget/_shared, which @bacons/apple-targets links into the app as well.
+// Adds the app's side of the widgets, controls and Siri (native/ios/*.swift, and the Siri
+// phrases' translations in AppShortcuts.xcstrings) to the app target and calls
+// `AppSurfaces.install()` at launch. Those files use the Swift in targets/widget/_shared,
+// which @bacons/apple-targets links into the app as well, Localizable.xcstrings included.
 //
 // It edits the AppDelegate that with-scene-lifecycle writes. Expo runs a later plugin's
 // AppDelegate change first, so this one must come before with-scene-lifecycle in app.json.
@@ -12,8 +13,10 @@ const { IOSConfig, withAppDelegate, withDangerousMod, withXcodeProject } = requi
 const SOURCE = 'native/ios';
 const ANCHOR = 'return super.application(application, didFinishLaunchingWithOptions: launchOptions)';
 
-const swiftFiles = (projectRoot) =>
-  fs.readdirSync(path.join(projectRoot, SOURCE)).filter((file) => file.endsWith('.swift'));
+const filesEndingIn = (extension) => (projectRoot) =>
+  fs.readdirSync(path.join(projectRoot, SOURCE)).filter((file) => file.endsWith(extension));
+const swiftFiles = filesEndingIn('.swift');
+const catalogs = filesEndingIn('.xcstrings');
 
 module.exports = function withAppSurfaces(config) {
   config = withAppDelegate(config, (c) => {
@@ -28,7 +31,7 @@ module.exports = function withAppSurfaces(config) {
     'ios',
     (c) => {
       const name = IOSConfig.XcodeUtils.getProjectName(c.modRequest.projectRoot);
-      for (const file of swiftFiles(c.modRequest.projectRoot)) {
+      for (const file of [...swiftFiles(c.modRequest.projectRoot), ...catalogs(c.modRequest.projectRoot)]) {
         fs.copyFileSync(path.join(c.modRequest.projectRoot, SOURCE, file), path.join(c.modRequest.platformProjectRoot, name, file));
       }
       return c;
@@ -40,6 +43,10 @@ module.exports = function withAppSurfaces(config) {
     for (const file of swiftFiles(c.modRequest.projectRoot)) {
       const filepath = `${name}/${file}`;
       if (!c.modResults.hasFile(filepath)) IOSConfig.XcodeUtils.addBuildSourceFileToGroup({ filepath, groupName: name, project: c.modResults });
+    }
+    for (const file of catalogs(c.modRequest.projectRoot)) {
+      const filepath = `${name}/${file}`;
+      if (!c.modResults.hasFile(filepath)) IOSConfig.XcodeUtils.addResourceFileToGroup({ filepath, groupName: name, isBuildFile: true, project: c.modResults });
     }
     return c;
   });
