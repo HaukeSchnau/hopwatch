@@ -4,6 +4,7 @@
 import type { AndroidSymbol, SFSymbol } from 'expo-symbols';
 
 export const menuSymbols = {
+  'play.fill': 'play_arrow',
   clock: 'schedule',
   'clock.arrow.circlepath': 'history',
   'exclamationmark.triangle': 'warning',

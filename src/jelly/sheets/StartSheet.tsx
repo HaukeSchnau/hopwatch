@@ -3,7 +3,7 @@
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import { actions, formatClock, MINUTE, useEntries, useNow, useRunning, useTree } from '@/core';
 import { sheetsText } from '@/i18n/sheets';
@@ -12,7 +12,7 @@ import { play } from '../feedback';
 import { startConsequence } from '../menus';
 import { noteSource } from '../now/choreo';
 import { JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, useSheetStyles } from './parts';
+import { AGO, AgoChips, pastAt, SheetBody, SheetHeader, useSheetStyles } from './parts';
 import { TimeWheel } from './time';
 
 const roundDown = (t: number, step: number) => Math.floor(t / step) * step;
@@ -29,9 +29,9 @@ export function StartSheet() {
 
   if (!context) {
     return (
-      <ScrollView contentContainerStyle={sheetBody}>
+      <SheetBody>
         <SheetHeader context={null} title={sheetsText.start.gone} subtitle={sheetsText.start.goneDetail} />
-      </ScrollView>
+      </SheetBody>
     );
   }
 
@@ -50,7 +50,7 @@ export function StartSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={sheetBody}>
+    <SheetBody>
       <SheetHeader
         context={context}
         title={isRunning ? sheetsText.start.correcting(context.name) : sheetsText.start.backdating(context.name)}
@@ -68,6 +68,6 @@ export function StartSheet() {
         onPress={() => start(at)}
         style={{ marginTop: 12 }}
       />
-    </ScrollView>
+    </SheetBody>
   );
 }

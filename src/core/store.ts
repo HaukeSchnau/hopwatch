@@ -12,7 +12,7 @@ import { initialLinkIsStale } from './launch';
 import type { LinkAction } from './links';
 import type { Context, ContextId, Entry, EntryId, Hue } from './model';
 import * as timeline from './timeline';
-import { offsetAt } from './time';
+import { formatClock, offsetAt } from './time';
 import * as tree from './tree';
 
 /** The most recent timeline change, for the "Switched to X · Undo" toast. */
@@ -202,11 +202,13 @@ export const actions = {
 
   /**
    * Logs a past block for [from, to] over whatever is there, trimming or replacing it
-   * (see `timeline.place`). `previewPlace` says what that will do.
+   * (see `timeline.place`). A null `contextId` leaves the block untracked. `previewPlace`
+   * says what that will do.
    */
-  place(contextId: ContextId, from: number, to: number) {
+  place(contextId: ContextId | null, from: number, to: number) {
     const rows = timeline.place(get().entries, contextId, from, to, clock());
-    commitEntries(rows, { kind: 'place', label: toast.added(nameOf(contextId)), contextId });
+    const label = contextId === null ? toast.untracked(formatClock(from), formatClock(to)) : toast.added(nameOf(contextId));
+    commitEntries(rows, { kind: 'place', label, contextId });
   },
 
   /** Hides the undo toast without undoing. */

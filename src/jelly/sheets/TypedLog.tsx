@@ -83,17 +83,23 @@ interface Scene {
   now: number;
 }
 
+/**
+ * What LogConfirm confirms: a typed plan, or a block the Day tab puts inside an entry,
+ * where a null jelly leaves the block untracked (a break cut out of a workday).
+ */
+export type Confirmable = Plan | { kind: 'place'; contextId: ContextId | null; from: number; to: number };
+
 /** A plan in Hopwatch's words: the headline, a detail line and the button. */
-function words(plan: Plan, { tree, entries, now }: Scene) {
+function words(plan: Confirmable, { tree, entries, now }: Scene) {
   const name = (id: ContextId) => tree.byId.get(id)?.name ?? s.something;
   // A start or stop before today reads "yesterday 21:00".
   const yesterday = (at: number) => !isSameDay(at, now);
   if (plan.kind === 'place') {
     const span = `${formatClock(plan.from)}–${formatClock(plan.to)}`;
     return {
-      title: `${name(plan.contextId)} ${span}`,
+      title: plan.contextId === null ? s.untracked(span) : `${name(plan.contextId)} ${span}`,
       detail: `${formatRelativeDay(plan.from, now)} · ${formatDuration(plan.to - plan.from)}`,
-      button: s.log(span),
+      button: plan.contextId === null ? s.leaveUntracked(span) : s.log(span),
     };
   }
   const open = findOpen(entries);
@@ -135,7 +141,7 @@ const toneIcon = {
 } as const;
 
 /** What a plan does to the entries already there: "Replaces Cooking 12:10–12:40". */
-function changesOf(plan: Plan, { tree, entries, now }: Scene): Change[] {
+function changesOf(plan: Confirmable, { tree, entries, now }: Scene): Change[] {
   const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? s.something;
   const span = (e: Entry) => `${formatClock(e.startUtc)}–${e.endUtc === null ? sheetsText.now : formatClock(e.endUtc)}`;
   const cut = (e: Entry, at: number): Change => ({ text: s.ends(name(e), e.endUtc === null, formatClock(at)), tone: 'cut' });
@@ -162,7 +168,7 @@ function changesOf(plan: Plan, { tree, entries, now }: Scene): Change[] {
 }
 
 /** Why a plan, maybe with edited times, can't be done right now. */
-function problemWith(plan: Plan, { tree, entries, now }: Scene): string | null {
+function problemWith(plan: Confirmable, { tree, entries, now }: Scene): string | null {
   if (plan.kind === 'place') {
     if (plan.to <= plan.from) return s.endsBeforeStart;
     if (plan.from >= now) return s.stillToCome;
@@ -248,7 +254,7 @@ function onDay(base: number, picked: Date): number {
  * The confirmation: the jelly, what will happen with times to adjust, and what that does
  * to the entries already there. Logging goes through the store, so the toast can undo it.
  */
-export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Plan; onDone: () => void; onCancel: () => void }) {
+export function LogConfirm({ plan: proposed, onDone, onCancel }: { plan: Confirmable; onDone: () => void; onCancel: () => void }) {
   const t = useTheme();
   const scene = useScene();
   const [plan, setPlan] = useState(proposed);

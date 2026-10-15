@@ -9,6 +9,9 @@
 // so the caller can persist them and derive an undo.
 
 import { type ContextId, type Entry, type EntryId, MIN_ENTRY_MS } from './model';
+import { MINUTE } from './time';
+
+const FIVE_MINUTES = 5 * MINUTE;
 
 export interface Clock {
   now: number;
@@ -261,11 +264,12 @@ export function fillGap(
  * removed, entries hanging over an edge are trimmed, and one spanning the block is split
  * around it. Both times are clamped to now. The running entry goes on after a block that
  * ends before now, and stops at `from` when the block reaches now. Blocks under 30
- * seconds change nothing.
+ * seconds change nothing. A null `contextId` leaves the block untracked, like a lunch
+ * break cut out of a workday.
  */
 export function place(
   entries: readonly Entry[],
-  contextId: ContextId,
+  contextId: ContextId | null,
   from: number,
   to: number,
   clock: Clock,
@@ -275,8 +279,26 @@ export function place(
   if (end - start < MIN_ENTRY_MS) return [];
   const d = draft(entries, clock);
   carve(d, clock, start, end >= clock.now ? null : end);
-  d.put(newEntry(clock, contextId, start, end));
+  if (contextId !== null) d.put(newEntry(clock, contextId, start, end));
   return d.result();
+}
+
+/**
+ * Where a block put inside `entry` starts out, before the user adjusts it: lunchtime
+ * (12:00–12:30) when the entry covers it, on its last day first, otherwise half an hour
+ * (or half the entry, if that's shorter) in its middle, on 5-minute marks. A running
+ * entry counts up to now.
+ */
+export function blockInside(entry: Entry, now: number): { from: number; to: number } {
+  const end = entry.endUtc ?? now;
+  for (const day of [end, entry.startUtc]) {
+    const noon = new Date(day).setHours(12, 0, 0, 0);
+    if (noon > entry.startUtc && noon + 30 * MINUTE < end) return { from: noon, to: noon + 30 * MINUTE };
+  }
+  const length = Math.max(MINUTE, Math.min(30 * MINUTE, Math.floor((end - entry.startUtc) / 2 / FIVE_MINUTES) * FIVE_MINUTES));
+  const middle = entry.startUtc + (end - entry.startUtc) / 2;
+  const from = Math.max(entry.startUtc, Math.round((middle - length / 2) / FIVE_MINUTES) * FIVE_MINUTES);
+  return { from, to: Math.min(end, from + length) };
 }
 
 /** What placing a block does to the entries already there. */
@@ -295,7 +317,7 @@ export interface PlacePreview {
  * What `place(entries, contextId, from, to, …)` would do to the other entries, without
  * doing it, so the UI can say "Replaces Cooking 12:10–12:40" first.
  */
-export function previewPlace(entries: readonly Entry[], contextId: ContextId, from: number, to: number, now: number): PlacePreview {
+export function previewPlace(entries: readonly Entry[], contextId: ContextId | null, from: number, to: number, now: number): PlacePreview {
   const before = new Map(entries.filter(isLive).map((e) => [e.id, e]));
   let ids = 0;
   const clock: Clock = { now, offsetAt: () => 0, newId: () => `preview-${ids++}` as EntryId };

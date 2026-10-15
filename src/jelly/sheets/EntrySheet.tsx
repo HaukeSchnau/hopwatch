@@ -4,14 +4,14 @@
 
 import { Button, DatePicker, HStack, Picker, Section, Spacer, Text as SwiftText, TextField, useNativeState } from '@expo/ui/swift-ui';
 import { environment, lineLimit, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { type Entry, pathLabel, useEntries } from '@/core';
 import { sheetsText } from '@/i18n/sheets';
 
 import { HostedRow, JellyForm } from '../forms';
 import { useTheme } from '../theme';
-import { EntryHeader, useEntryDraft } from './entry';
+import { EntryHeader, putInside, useEntryDraft } from './entry';
 import { pickerLocale } from './parts';
 
 const s = sheetsText.entry;
@@ -88,6 +88,10 @@ function EntryForm({ entry }: { entry: Entry }) {
       </Section>
       <Section title={s.note}>
         <TextField text={note} placeholder={s.notePlaceholder} axis="vertical" modifiers={[lineLimit(6)]} />
+      </Section>
+      <Section>
+        <Button label={s.putIn} systemImage="square.split.1x2" onPress={() => router.replace(putInside(entry))} />
+        <Button label={s.cutBreak} systemImage="scissors" onPress={() => router.replace(putInside(entry, true))} />
       </Section>
       <Section>
         <Button role="destructive" label={s.delete} systemImage="trash" onPress={remove} />

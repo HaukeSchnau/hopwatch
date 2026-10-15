@@ -26,6 +26,14 @@ import { buzz } from '../feedback';
 import { useFace, useLively } from '../Gummy';
 import { rounded, tabular, text, useTheme } from '../theme';
 
+/**
+ * The pick sheet for putting a block inside `entry`, like lunch in a workday; `untracked`
+ * goes straight to cutting out a break. The entry sheet replaces itself with it, so its
+ * draft can't write the old times back over the split.
+ */
+export const putInside = (entry: Entry, untracked = false) =>
+  ({ pathname: '/pick', params: { mode: 'place', entry: entry.id, ...(untracked ? { untracked: '1' } : {}) } }) as const;
+
 export function useEntryDraft(entry: Entry) {
   const tree = useTree();
   const pickable = usePickableContexts();

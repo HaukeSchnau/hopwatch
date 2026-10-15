@@ -1,7 +1,7 @@
 // Entry detail on Android: the same draft as iOS (entry.tsx) under the candy header, with
 // a dropdown for the jelly and calendar-style day and time pills for start and end.
 
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
 import { type Entry, pathLabel, useEntries } from '@/core';
@@ -10,7 +10,7 @@ import { sheetsText } from '@/i18n/sheets';
 import { HostedRow, JellyForm } from '../forms';
 import { DateTimeRow, FieldRow, PickerRow, Row, Section, sentence, TonalButton } from '../material';
 import { useTheme } from '../theme';
-import { EntryHeader, useEntryDraft } from './entry';
+import { EntryHeader, putInside, useEntryDraft } from './entry';
 
 const s = sheetsText.entry;
 
@@ -62,6 +62,10 @@ function EntryForm({ entry }: { entry: Entry }) {
       </Section>
       <Section title={s.note}>
         <FieldRow value={note} onChangeText={setNote} placeholder={s.notePlaceholder} multiline style={{ maxHeight: 160 }} />
+      </Section>
+      <Section>
+        <Row label={sentence(s.putIn)} icon="vertical_split" onPress={() => router.replace(putInside(entry))} />
+        <Row label={sentence(s.cutBreak)} icon="content_cut" onPress={() => router.replace(putInside(entry, true))} />
       </Section>
       <Section>
         <Row label={sentence(s.delete)} icon="delete" destructive onPress={remove} />

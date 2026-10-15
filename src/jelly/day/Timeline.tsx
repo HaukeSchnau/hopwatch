@@ -1,7 +1,8 @@
 // The day as jelly beans on a vertical track. Beans are sized by duration; gaps are
 // dotted "untracked" beans with a "+". Each bean has little round knobs on its ends:
-// drag one to move that edge in 5-minute steps (the domain trims any neighbour). The
-// bean picked on the dial wears a halo.
+// drag one to move that edge in 5-minute steps (the domain trims any neighbour). Hold a
+// bean to put something inside it, like lunch in a workday. The bean picked on the dial
+// wears a halo.
 
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,6 +24,7 @@ import { actions, type DayReport, type EntryId, formatClock, formatDuration, MIN
 import { dayText } from '@/i18n/day';
 
 import { buzz } from '../feedback';
+import { putInside } from '../sheets/entry';
 import { useShowing } from '../showing';
 import { alpha, tabular, text, useTheme } from '../theme';
 
@@ -181,6 +183,10 @@ function Bean({ seg, axis, now, width, active, selected, onActive }: BeanProps) 
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={() => router.push({ pathname: '/entry', params: { id: seg.entry.id } })}
+          onLongPress={() => {
+            buzz.thud();
+            router.push(putInside(seg.entry));
+          }}
           accessibilityRole="button"
           accessibilityLabel={dayText.beanLabel(seg.context.name, formatClock(seg.start), running ? null : formatClock(seg.end), formatDuration(seg.end - seg.start))}>
           <View

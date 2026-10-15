@@ -53,8 +53,8 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.c.bg } }}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="start" options={sheet([0.78], t.c.bg)} />
-          <Stack.Screen name="stop" options={sheet([0.84], t.c.bg)} />
+          <Stack.Screen name="start" options={sheet('fitToContents', t.c.bg)} />
+          <Stack.Screen name="stop" options={sheet('fitToContents', t.c.bg)} />
           <Stack.Screen name="pick" options={sheet([0.62, 1], t.c.bg)} />
           <Stack.Screen name="context" options={sheet([1], t.c.bg)} />
           <Stack.Screen name="entry" options={sheet([1], t.c.bg)} />

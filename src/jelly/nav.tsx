@@ -13,8 +13,11 @@ import { headerFont, useTheme } from './theme';
 import { Toast } from './Toast';
 import { useSymbolImage } from './ui';
 
-/** Stack options for a form sheet with a grabber resting at `detents` (fractions of the screen). */
-export const sheet = (detents: number[], background: string) =>
+/**
+ * Stack options for a form sheet with a grabber resting at `detents` (fractions of the
+ * screen), or as tall as its content with 'fitToContents'.
+ */
+export const sheet = (detents: number[] | 'fitToContents', background: string) =>
   ({
     presentation: 'formSheet',
     sheetAllowedDetents: detents,

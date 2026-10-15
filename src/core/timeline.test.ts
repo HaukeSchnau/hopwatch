@@ -147,7 +147,7 @@ describe('placing a block', () => {
   entries = timeline.applyRows(entries, timeline.start(entries, client, makeClock(at(180))));
   entries = entries.map((e) => (e.contextId === job ? { ...e, note: 'Standup' } : e));
 
-  const placed = (from: number, to: number, context = dog) =>
+  const placed = (from: number, to: number, context: ContextId | null = dog) =>
     timeline.applyRows(entries, timeline.place(entries, context, from, to, makeClock(now)));
   const spans = (list: readonly Entry[]) => list.map((e) => [e.contextId, e.startUtc, e.endUtc]);
   const summary = (p: timeline.PlacePreview) => ({
@@ -184,6 +184,18 @@ describe('placing a block', () => {
     ]);
     expect(after.map((e) => e.note)).toEqual(['Standup', null, 'Standup', null, null]);
     expect(summary(timeline.previewPlace(entries, dog, at(30), at(60), now))).toEqual({ ended: null, started: null, split: job, replaced: [] });
+  });
+
+  it('cuts an untracked break out of an entry, keeping both halves', () => {
+    const after = placed(at(30), at(60), null);
+    expect(spans(after)).toEqual([
+      [job, at(0), at(30)],
+      [job, at(60), at(120)],
+      [dog, at(120), at(150)],
+      [client, at(180), null],
+    ]);
+    expect(summary(timeline.previewPlace(entries, null, at(30), at(60), now))).toEqual({ ended: null, started: null, split: job, replaced: [] });
+    assertInvariants(after);
   });
 
   it('lets the running entry go on after a block inside it', () => {
@@ -238,7 +250,7 @@ type Op =
   | { kind: 'stop'; backdate: number }
   | { kind: 'update'; pick: number; startShift: number; endShift: number; context: ContextId }
   | { kind: 'fill'; offset: number; length: number; context: ContextId }
-  | { kind: 'place'; offset: number; length: number; context: ContextId }
+  | { kind: 'place'; offset: number; length: number; context: ContextId | null }
   | { kind: 'remove'; pick: number };
 
 const contextArb = fc.constantFrom(job, dog, client);
@@ -254,7 +266,7 @@ const opArb: fc.Arbitrary<Op> = fc.oneof(
     context: contextArb,
   }),
   fc.record({ kind: fc.constant('fill' as const), offset: minutesArb(600), length: minutesArb(240), context: contextArb }),
-  fc.record({ kind: fc.constant('place' as const), offset: minutesArb(600), length: minutesArb(240), context: contextArb }),
+  fc.record({ kind: fc.constant('place' as const), offset: minutesArb(600), length: minutesArb(240), context: fc.option(contextArb, { nil: null }) }),
   fc.record({ kind: fc.constant('remove' as const), pick: fc.nat() }),
 );
 const stepArb = fc.record({ op: opArb, advance: fc.integer({ min: 0, max: 240 }).map((m) => m * MIN + 7_000) });
@@ -293,6 +305,27 @@ function run(entries: Entry[], op: Op, clock: timeline.Clock): Entry[] {
 
 const shape = (entries: readonly Entry[]) =>
   entries.map((e) => [e.id, e.contextId, e.startUtc, e.endUtc, e.note]);
+
+describe('a block inside an entry', () => {
+  const day = new Date(2026, 9, 15);
+  const at = (h: number, m = 0) => new Date(day).setHours(h, m, 0, 0);
+  const entry = (start: number, end: number | null): Entry => ({ ...timeline.start([], job, makeClock(start))[0], endUtc: end });
+
+  it('starts at lunchtime when the entry covers it, on its last day first', () => {
+    expect(timeline.blockInside(entry(at(9), at(17, 30)), at(18))).toEqual({ from: at(12), to: at(12, 30) });
+    const yesterday = (h: number) => at(h) - 24 * 60 * MIN;
+    expect(timeline.blockInside(entry(yesterday(9), null), at(18))).toEqual({ from: at(12), to: at(12, 30) });
+  });
+
+  it('otherwise takes the middle half hour, on 5-minute marks', () => {
+    expect(timeline.blockInside(entry(at(14, 2), at(16, 2)), at(18))).toEqual({ from: at(14, 45), to: at(15, 15) });
+  });
+
+  it('takes half of a short entry, and counts a running one up to now', () => {
+    expect(timeline.blockInside(entry(at(14), at(14, 40)), at(18))).toEqual({ from: at(14, 10), to: at(14, 30) });
+    expect(timeline.blockInside(entry(at(15), null), at(16))).toEqual({ from: at(15, 15), to: at(15, 45) });
+  });
+});
 
 describe('invariants', () => {
   it('hold after any sequence of operations, and undo restores the previous state', () => {

@@ -3,6 +3,7 @@
 
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatClock, type Hue, MINUTE, type ResolvedContext } from '@/core';
 import { locale } from '@/i18n';
@@ -110,6 +111,16 @@ export function useSheetStyles() {
 }
 
 export const sheetBody = { paddingHorizontal: 20, paddingTop: 26 } as const;
+
+/**
+ * The body of a sheet sized to its content (detent 'fitToContents'). It doesn't scroll:
+ * a ScrollView here would compete with the time wheel's drag and with the sheet's own
+ * drag to dismiss.
+ */
+export function SheetBody({ children }: { children: ReactNode }) {
+  const { bottom } = useSafeAreaInsets();
+  return <View style={[sheetBody, { paddingBottom: Math.max(bottom, 20) }]}>{children}</View>;
+}
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },

@@ -3,18 +3,21 @@
 //   fill    "What was this?" for a gap                /jelly/pick?mode=fill&from=…&to=…[&at=…]
 //           (`at` preselects the hour around it inside a long gap)
 //   entry   change an entry's context                 /jelly/pick?mode=entry&entry=…
+//   place   put a block inside an entry, then confirm /jelly/pick?mode=place&entry=…[&untracked=1]
+//           its times (`untracked` starts at cutting out a break)
 //   parent  move a context under another one          /jelly/pick?mode=parent&id=…
 //
 // In start mode, with Apple's on-device model, the search field also takes a sentence
 // like "2h deep work this morning" and offers to log it (see TypedLog).
 
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useState } from 'react';
 import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   actions,
+  blockInside,
   type ContextId,
   formatClock,
   formatDuration,
@@ -36,9 +39,9 @@ import { tabular, text, useTheme } from '../theme';
 import { Squishy } from '../ui';
 import { sheetBody } from './parts';
 import { TimeChip } from './time';
-import { LogConfirm, LogRow, looksLikeSentence, useTypedLog } from './TypedLog';
+import { type Confirmable, LogConfirm, LogRow, looksLikeSentence, useTypedLog } from './TypedLog';
 
-type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string };
+type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string; untracked?: string };
 
 const FIVE = 5 * MINUTE;
 const s = sheetsText.pick;
@@ -51,8 +54,13 @@ export function PickSheet() {
   const entries = useEntries();
   const pickable = usePickableContexts();
   const [query, setQuery] = useState('');
-  // The typed sentence's plan, once its row is tapped.
-  const [confirming, setConfirming] = useState<Plan | null>(null);
+  const entry = entries.find((e) => e.id === params.entry) ?? null;
+  // What to confirm: the typed sentence's plan once its row is tapped, or in place mode
+  // the block with the jelly picked for it (null jelly: a break, where `untracked` starts).
+  const placing = mode === 'place' && entry !== null;
+  const blockWith = (contextId: ContextId | null): Confirmable | null =>
+    entry ? { kind: 'place', contextId, ...blockInside(entry, Date.now()) } : null;
+  const [confirming, setConfirming] = useState<Confirmable | null>(() => (placing && params.untracked ? blockWith(null) : null));
   const modelReady = useModelAvailable();
   const canType = mode === 'start' && modelReady;
 
@@ -61,7 +69,6 @@ export function PickSheet() {
   // The gap's bounds, adjustable so a long gap can be filled in part.
   const [from, setFrom] = useState(() => aroundAt(Number(params.at), gapFrom, gapTo).from);
   const [to, setTo] = useState(() => aroundAt(Number(params.at), gapFrom, gapTo).to);
-  const entry = entries.find((e) => e.id === params.entry) ?? null;
   const moving = tree.ordered.find((c) => c.id === params.id) ?? null;
   const excluded = moving ? subtreeIds(tree, moving.id) : new Set<ContextId>();
 
@@ -81,13 +88,17 @@ export function PickSheet() {
     title = s.change;
     subtitle = `${current?.name ?? s.entry} · ${formatClock(entry.startUtc)} – ${entry.endUtc ? formatClock(entry.endUtc) : sheetsText.now}`;
     onPick = (c) => c && actions.updateEntry(entry.id, { contextId: c.id });
+  } else if (placing) {
+    title = s.putIn;
+    subtitle = `${tree.byId.get(entry.contextId)?.name ?? s.entry} · ${formatClock(entry.startUtc)} – ${entry.endUtc ? formatClock(entry.endUtc) : sheetsText.now}`;
   } else if (mode === 'parent' && moving) {
     title = s.move(moving.name);
     onPick = (c) => actions.moveContext(moving.id, c?.id ?? null);
   }
 
   const q = query.trim().toLowerCase();
-  const list = pickable.filter((c) => !excluded.has(c.id) && (!q || pathLabel(c).toLowerCase().includes(q)));
+  // Putting a jelly inside its own entry would change nothing.
+  const list = pickable.filter((c) => !excluded.has(c.id) && !(placing && c.id === entry.contextId) && (!q || pathLabel(c).toLowerCase().includes(q)));
   const log = useTypedLog(query, canType && looksLikeSentence(query, list.length));
   const confirm = (plan: Plan | null) => {
     if (!plan) return;
@@ -97,6 +108,7 @@ export function PickSheet() {
   };
   const pick = (c: ResolvedContext | null) => {
     buzz.tap();
+    if (placing) return setConfirming(blockWith(c?.id ?? null));
     onPick(c);
     router.back();
   };
@@ -132,11 +144,12 @@ export function PickSheet() {
         </View>
       )}
       {confirming ? (
-        <LogConfirm plan={confirming} onDone={() => router.back()} onCancel={() => setConfirming(null)} />
+        <LogConfirm plan={confirming} onDone={() => router.back()} onCancel={() => (placing && params.untracked ? router.back() : setConfirming(null))} />
       ) : (
         <View style={styles.list}>
           <LogRow log={log} onPress={confirm} />
           {mode === 'parent' && moving && !q && <Row label={s.topLevel} context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
+          {placing && !q && <Row label={s.nothing} context={null} symbol={{ ios: 'cup.and.saucer.fill', android: 'coffee' }} depth={0} onPress={() => pick(null)} />}
           {list.map((c) => (
             <Row
               key={c.id}
@@ -170,16 +183,18 @@ function onDay(base: number, picked: Date): number {
   return d.getTime();
 }
 
-/** One jelly to pick, with its sleeping character; `context` null is "Top level". */
+/** One jelly to pick, with its sleeping character; `context` null shows `symbol` (default: a house, for "Top level"). */
 function Row({
   label,
   context,
+  symbol = { ios: 'house.fill', android: 'home' },
   depth,
   selected,
   onPress,
 }: {
   label: string;
   context: ResolvedContext | null;
+  symbol?: SymbolViewProps['name'];
   depth: number;
   selected?: boolean;
   onPress: () => void;
@@ -193,7 +208,7 @@ function Row({
           <Character context={context} size={44} shadow={false} style={styles.jelly} />
         ) : (
           <View style={[styles.home, { backgroundColor: t.c.sunken }]}>
-            <SymbolView name={{ ios: 'house.fill', android: 'home' }} size={16} tintColor={t.c.muted} />
+            <SymbolView name={symbol} size={16} tintColor={t.c.muted} />
           </View>
         )}
         <Text style={[text.body, styles.rowLabel, { color: t.c.ink }]} numberOfLines={1}>

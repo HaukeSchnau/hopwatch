@@ -1,7 +1,8 @@
 // Stuff: every jelly in a native list under a large title, with search, the settings gear
-// and "+" in the header. Tap a jelly to start it, ⓘ to edit it, swipe to pin, archive or
-// edit, hold for the native menu (backdated starts, add inside, move, delete). Archived
-// jellies hide behind a switch.
+// and "+" in the header. Tap a jelly to edit it, swipe to pin, start or archive it, hold
+// for the native menu (start, backdated starts, add inside, move, delete). Starting lives
+// on Now; here it's one menu away, so a near miss never starts anything. Archived jellies
+// hide behind a switch.
 
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
@@ -113,9 +114,11 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
     archived && stuffText.meta.archived,
   ].filter(Boolean);
   const depth = flat ? 0 : context.depth;
-  const startItems = useStartMenu(context, now, running);
+  // Tapping the row edits, so the start menu's own "Edit" item would only repeat it.
+  const startItems = useStartMenu(context, now, running).filter((item) => !('id' in item && item.id === 'edit'));
 
   const onMenu = (event: string) => {
+    if (event === 'start') return start();
     if (event === 'child') return router.push({ pathname: '/context', params: { parent: context.id } });
     if (event === 'pin') return pinned ? actions.unpin(context.id) : actions.pin(context.id);
     if (event === 'move') return router.push({ pathname: '/pick', params: { mode: 'parent', id: context.id } });
@@ -125,8 +128,7 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
   };
 
   const start = () => {
-    if (context.hidden) return edit(context.id);
-    if (running) return buzz.tap();
+    if (context.hidden || running) return buzz.tap();
     buzz.thud();
     play('pop');
     actions.start(context.id);
@@ -152,7 +154,9 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
       }
       renderRightActions={(_p, _x, swipe) => (
         <View style={styles.actions}>
-          <SwipeAction icon={{ ios: 'pencil', android: 'edit' }} label={stuffText.edit} color={t.candy.gray.fill} swipe={swipe} onPress={() => edit(context.id)} />
+          {!context.hidden && !running && (
+            <SwipeAction icon={{ ios: 'play.fill', android: 'play_arrow' }} label={stuffText.start} color={c.fill} swipe={swipe} onPress={start} />
+          )}
           <SwipeAction
             icon={archived ? { ios: 'tray.and.arrow.up.fill', android: 'unarchive' } : { ios: 'archivebox.fill', android: 'archive' }}
             label={archived ? stuffText.unarchive : stuffText.archive}
@@ -166,7 +170,8 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
         title={pathLabel(context)}
         onPress={onMenu}
         items={[
-          ...(context.hidden ? [{ id: 'edit', title: stuffText.editName(context.name), image: 'pencil' as const }] : startItems),
+          ...(context.hidden || running ? [] : [{ id: 'start', title: stuffText.startName(context.name), image: 'play.fill' as const }]),
+          ...(context.hidden ? [] : startItems),
           { id: 'child', title: stuffText.addInside, image: 'plus' },
           ...(context.hidden ? [] : [{ id: 'pin', title: pinned ? stuffText.unpinFromNow : stuffText.pinToNow, image: pinned ? ('pin.slash' as const) : ('pin' as const) }]),
           { id: 'move', title: stuffText.move, image: 'arrow.turn.down.right' },
@@ -177,9 +182,9 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
           {depth > 0 && <Guides depth={depth} color={alpha(t.c.ink, 0.08)} />}
           <Pressable
             style={({ pressed }) => [styles.main, pressed && { opacity: 0.6 }]}
-            onPress={start}
+            onPress={() => edit(context.id)}
             accessibilityRole="button"
-            accessibilityLabel={context.hidden ? stuffText.editName(context.name) : stuffText.startName(context.name)}
+            accessibilityLabel={stuffText.editName(context.name)}
             accessibilityHint={stuffText.holdHint}>
             <Character context={context} size={46} mood={running ? 'awake' : 'asleep'} shadow={false} dim={context.hidden} style={styles.jelly} />
             <View style={styles.titles}>
@@ -192,9 +197,6 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
                 </Text>
               )}
             </View>
-          </Pressable>
-          <Pressable onPress={() => edit(context.id)} hitSlop={6} accessibilityRole="button" accessibilityLabel={stuffText.editName(context.name)} style={styles.info}>
-            <Icon name={{ ios: 'info.circle', android: 'info' }} size={21} color={t.c.pinkDeep} />
           </Pressable>
           {!last && <View style={[styles.separator, { left: 16 + depth * 18 + 64, backgroundColor: t.c.line }]} />}
         </View>
@@ -269,7 +271,6 @@ const styles = StyleSheet.create({
   titles: { flex: 1 },
   // Room for the emoji sticker, which hangs out of a small jelly's box.
   jelly: { marginRight: 6 },
-  info: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   separator: { position: 'absolute', right: 0, bottom: 0, height: StyleSheet.hairlineWidth },
   guides: { flexDirection: 'row', alignSelf: 'stretch' },
   guide: { width: 18, borderLeftWidth: 2, marginLeft: 8 },

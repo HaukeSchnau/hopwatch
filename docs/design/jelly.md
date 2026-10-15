@@ -33,7 +33,7 @@ fastest way to switch.
   · 45 min ago" and a friendly time picker.
 - **Day.** The day as stacked jelly-bean pills on a vertical track, sized by duration;
   gaps as dotted "untracked" beans with a "+". Drag the little round knobs on a bean's
-  ends to adjust. Tap for detail.
+  ends to adjust. Tap for detail, hold to put something inside.
 - **Week.** Totals as bubbles sized by time (circle packing) that jiggle when touched;
   targets as candy jars filling up ("Job jar 36:40 / 40:00"); fragmentation per day as
   bead strings, one bead per block, sized by length. Day mode too. Copy totals per
@@ -98,9 +98,9 @@ bubble stretches as it slides. Switches are gummy too.
 - **Nudge intent.** The tabs layout consumes `{ kind: 'stop-sheet' }` and pushes the stop
   sheet, which reads "Still on X?" once the nudge threshold has passed.
 - **Context tree (Stuff).** Every context is a candy chip with depth guides and a meta
-  line (running, pinned, target, nudge, archived). Tap a row to start it, the pencil to
-  edit it, or hold it for a native context menu: Edit, Add inside, Pin/Unpin, Move…,
-  Archive/Unarchive, Delete. A switch shows archived jellies. The editor sheet has a
+  line (running, pinned, target, nudge, archived). Tap a row to edit it, swipe for Pin,
+  Start and Archive, or hold it for a native context menu: Start, Started earlier,
+  At a time…, Add inside, Pin/Unpin, Move…, Archive/Unarchive, Delete. A switch shows archived jellies. The editor sheet has a
   live blob preview, name, emoji well with quick picks, the gummy hue picker (children
   get a "same as parent" swatch), Inside (move), Pinned, weekly target (stepper plus
   5/10/20/30/40 h chips), nudge (inherited value shown, stepper plus chips), the start
@@ -112,7 +112,10 @@ bubble stretches as it slides. Switches are gummy too.
   bean pulses at its growing end, and a pink line marks now. Each bean has two knobs on
   its right side. Dragging one moves that edge in 5-minute steps with a time bubble and
   a haptic tick per step, and the domain trims neighbours on release. Tapping a bean
-  opens the entry. Tapping a gap opens "What was this?" with From/To pickers clamped to
+  opens the entry. Holding it (or Put Something In… / Cut Out a Break… in the entry)
+  opens "What goes in here?": a jelly or "Nothing, it was a break", then the typed-log
+  confirm card with From/To (lunchtime by default when the bean covers it) and what it
+  takes out. Tapping a gap opens "What was this?" with From/To pickers clamped to
   the gap. The header shows tracked time, beans and the median, and steps days; the
   title jumps back to today.
 - **Entry detail.** The header chip changes the context through the picker. Start and end

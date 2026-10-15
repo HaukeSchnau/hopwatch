@@ -21,7 +21,9 @@ export function TimeWheel({ value, onChange, hue }: { value: Date; onChange: (d:
         themeVariant={t.scheme}
         accentColor={t.candy[hue].ink}
         onValueChange={(_, d) => onChange(d)}
-        style={{ height: 132 }}
+        // The picker's Host only sizes itself vertically. Without a width it collapses to
+        // zero inside the centered card: the wheel still draws, but no touch reaches it.
+        style={styles.wheelHost}
       />
     </View>
   );
@@ -46,5 +48,6 @@ export function TimeChip({ value, onChange, color }: { value: Date; onChange: (d
 
 const styles = StyleSheet.create({
   wheel: { borderRadius: 24, overflow: 'hidden', alignItems: 'center' },
+  wheelHost: { height: 132, alignSelf: 'stretch' },
   chip: { width: 92, height: 38 },
 });

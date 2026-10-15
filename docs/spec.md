@@ -143,7 +143,7 @@ On first launch the app goes straight to creating the first context, not to an e
 
 ### Context tree
 
-The tree screen lists all contexts and allows adding, renaming, moving, pinning and archiving them, and setting a color or emoji. A context's settings also hold the optional weekly target and the nudge threshold. Tapping a node starts it, as on the home screen. Archived nodes are hidden behind a toggle.
+The tree screen lists all contexts and allows adding, renaming, moving, pinning and archiving them, and setting a color or emoji. A context's settings also hold the optional weekly target and the nudge threshold. Tapping a node opens its settings; starting it is one menu (or swipe) away, since starting happens on the home screen and a near miss here shouldn't start anything. Archived nodes are hidden behind a toggle.
 
 ### Day timeline
 
@@ -152,6 +152,7 @@ The timeline shows one day as vertical blocks in the contexts' colors, with gaps
 - Dragging a block's edge changes its start or end.
 - Tapping a block opens the entry detail.
 - Tapping a gap asks "what was this?" and creates an entry, clamped to that gap.
+- Holding a block, or "Put something in" in its detail, puts another context inside it (lunch in a workday) and splits the block around it. "Cut out a break" does the same and leaves the time untracked.
 
 ### Entry detail
 

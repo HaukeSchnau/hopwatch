@@ -24,6 +24,7 @@ export const coreText = localized({
       updated: 'Entry updated',
       deleted: (name: string) => `Deleted ${name}`,
       added: (name: string) => `Added ${name}`,
+      untracked: (from: string, to: string) => `${from}–${to} left untracked`,
       /** Stands in for a jelly that's gone. */
       unknown: 'a jelly',
     },
@@ -101,6 +102,7 @@ export const coreText = localized({
       updated: 'Eintrag geändert',
       deleted: (name) => `${name} gelöscht`,
       added: (name) => `${name} eingetragen`,
+      untracked: (from, to) => `${from}–${to} nicht erfasst`,
       unknown: 'Jelly',
     },
     nudge: {

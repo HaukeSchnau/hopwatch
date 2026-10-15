@@ -3,7 +3,7 @@
 
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import { actions, formatClock, formatDuration, MINUTE, useNow, useRunning } from '@/core';
 import { sheetsText } from '@/i18n/sheets';
@@ -12,7 +12,7 @@ import { play } from '../feedback';
 import { stopConsequence } from '../menus';
 import { useTheme } from '../theme';
 import { JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, sheetBody, SheetHeader, useSheetStyles } from './parts';
+import { AGO, AgoChips, pastAt, SheetBody, SheetHeader, useSheetStyles } from './parts';
 import { TimeWheel } from './time';
 
 export function StopSheet() {
@@ -30,10 +30,10 @@ export function StopSheet() {
 
   if (!running) {
     return (
-      <ScrollView contentContainerStyle={sheetBody}>
+      <SheetBody>
         <SheetHeader context={null} title={sheetsText.nothingRunning} subtitle={sheetsText.stop.allAsleep} />
         <JellyButton label={sheetsText.close} palette={t.inkCandy} onPress={() => router.back()} style={{ marginTop: 24 }} />
-      </ScrollView>
+      </SheetBody>
     );
   }
 
@@ -49,7 +49,7 @@ export function StopSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={sheetBody}>
+    <SheetBody>
       <SheetHeader
         context={context}
         mood="asleep"
@@ -70,6 +70,6 @@ export function StopSheet() {
         style={{ marginTop: 12 }}
       />
       <JellyButton label={sheetsText.stopNow} icon={{ ios: 'stop.fill', android: 'stop' }} palette={t.inkCandy} onPress={() => stop()} style={{ marginTop: 12 }} />
-    </ScrollView>
+    </SheetBody>
   );
 }
