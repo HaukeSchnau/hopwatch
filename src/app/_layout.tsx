@@ -14,7 +14,7 @@ import { useTheme } from '@/jelly/theme';
 import { devLaunchRoute } from '@/shell/dev-route';
 import { useHideSplash } from '@/shell/splash';
 import { startUpdates } from '@/shell/updates';
-import { startLiveActivity } from '@/widgets/live-activity';
+import { startSurfaces } from '@/widgets/surfaces';
 import { startRunningNotification } from '@/widgets/running-notification';
 import { startShortcuts } from '@/widgets/shortcuts';
 
@@ -38,7 +38,7 @@ export default function RootLayout() {
   useHideSplash();
   useEffect(() => startNudges(), []);
   useEffect(() => startEveningCheck(), []);
-  useEffect(() => startLiveActivity(), []);
+  useEffect(() => startSurfaces(), []);
   useEffect(() => startRunningNotification(), []);
   useEffect(() => startShortcuts(), []);
   useEffect(() => startUpdates(), []);

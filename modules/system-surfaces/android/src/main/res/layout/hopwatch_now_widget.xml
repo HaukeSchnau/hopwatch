@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home screen widget (NowWidgetProvider): what runs, Stop and Back, and four pinned jellies. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/hopwatch_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/hopwatch_widget_bg"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/hopwatch_running_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/hopwatch_running_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/hopwatch_widget_ink"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Chronometer
+                android:id="@+id/hopwatch_running_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/hopwatch_widget_muted"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/hopwatch_stop"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/hopwatch_stop_bg"
+            android:contentDescription="@string/hopwatch_stop"
+            android:padding="10dp"
+            android:src="@drawable/hopwatch_ic_stop" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/hopwatch_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/hopwatch_pill_bg"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="6dp"
+        android:textColor="@color/hopwatch_widget_ink"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/hopwatch_pin_slot_0" style="@style/HopwatchPinSlot">
+            <ImageView android:id="@+id/hopwatch_pin_0" style="@style/HopwatchPinIcon" />
+            <TextView android:id="@+id/hopwatch_pin_label_0" style="@style/HopwatchPinLabel" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/hopwatch_pin_slot_1" style="@style/HopwatchPinSlot">
+            <ImageView android:id="@+id/hopwatch_pin_1" style="@style/HopwatchPinIcon" />
+            <TextView android:id="@+id/hopwatch_pin_label_1" style="@style/HopwatchPinLabel" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/hopwatch_pin_slot_2" style="@style/HopwatchPinSlot">
+            <ImageView android:id="@+id/hopwatch_pin_2" style="@style/HopwatchPinIcon" />
+            <TextView android:id="@+id/hopwatch_pin_label_2" style="@style/HopwatchPinLabel" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/hopwatch_pin_slot_3" style="@style/HopwatchPinSlot">
+            <ImageView android:id="@+id/hopwatch_pin_3" style="@style/HopwatchPinIcon" />
+            <TextView android:id="@+id/hopwatch_pin_label_3" style="@style/HopwatchPinLabel" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

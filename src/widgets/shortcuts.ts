@@ -57,6 +57,12 @@ function describe(state: HopwatchState): Shortcut[] {
   return shortcuts.slice(0, MAX_SHORTCUTS);
 }
 
+/** Sets the shortcuts once, for the headless task (headless.ts). */
+export async function syncShortcuts() {
+  if (Platform.OS !== 'android' || !systemSurfaces) return;
+  await systemSurfaces.setShortcuts(describe(useHopwatch.getState()));
+}
+
 /**
  * Starts mirroring the store into the launcher's shortcuts. Call once from the root layout;
  * returns a cleanup function. Android only: elsewhere, and in builds without the native

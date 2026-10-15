@@ -58,15 +58,48 @@ Intelligence) have Android counterparts (`*.android.tsx`, Material via @expo/ui'
 Compose, Material Symbols) or stay hidden there.
 
 `modules/system-surfaces` (Kotlin) shows the running entry as an ongoing notification
-(channel "running", system chronometer, Stop / Back to buttons) and publishes the launcher's
-dynamic shortcuts; `src/widgets/running-notification.ts` and `shortcuts.ts` drive them from
-the store, like `live-activity.ts` does the iOS Live Activity. Buttons and shortcuts open
-hopwatch:// links in a fresh activity start, so they work after the process was killed.
-A link that cold-started the app must not run again after an over-the-air reload in the
+(channel "running", system chronometer, Stop / Back to buttons), the home screen widget and
+the Quick Settings tile, and publishes the launcher's dynamic shortcuts;
+`src/widgets/running-notification.ts` and `shortcuts.ts` drive the notification and the
+shortcuts from the store. Notification, widget and tile taps switch in place (see Switching
+from anywhere); launcher shortcuts open hopwatch:// links in a fresh activity start. A link that cold-started the app must not run again after an over-the-air reload in the
 same process: Android clears it natively (`forgetLaunchLink`), and on both platforms
 `src/core/launch.ts` skips the initial link once after an update reload. Nunito is embedded
 by expo-font; `plugins/with-android-accent.js` colors AppCompat dialogs; expo-localization
 declares en/de for the per-app language pickers.
+
+## Switching from anywhere
+
+The Live Activity, widgets, controls, Siri and Shortcuts actions (iOS), and the
+notification, widget and tile (Android) switch without bringing the app forward. JavaScript
+stays the only writer of entries:
+
+- **Snapshot.** On every store change `src/widgets/surfaces.ts` writes `snapshot.json`
+  (`Snapshot` in `src/core/remote.ts`: what runs, Back, recent entries, jellies with their
+  colors, strings) to `surfaces/` in the app group container (iOS,
+  `group.dev.schnau.hopwatch`) or the app's files (Android). Native code only reads it.
+- **Commands.** A tap appends `surfaces/queue/<seq>-<uuid>.json`, a start or stop made
+  against the snapshot it was drawn from (`expectOpen`, the entry id to use). JS replays
+  the queue (`drainRemote` in `store.ts`, `replay` in `remote.ts`) at launch, on the
+  module's `onCommands` event, on foreground and before every write. A command whose
+  `expectOpen` no longer matches is dropped, which also makes replay idempotent.
+- **iOS.** `targets/widget` is a widget extension (`@bacons/apple-targets`): the Live
+  Activity, widgets and controls. `_shared/` compiles into both the extension and the app:
+  the queue and snapshot IO, `Effective` (the snapshot plus pending taps, so surfaces update
+  before JS runs) and the App Intents. The intents are `LiveActivityIntent`s, so iOS runs
+  `perform()` in the app process, launching it in the background if needed; the
+  extension never writes. `native/ios/AppSurfaces.swift` (added to the app target by
+  `plugins/with-app-surfaces.js`, installed in `didFinishLaunching`) owns the Live
+  Activity, widget reloads, the nudge after a tap and App Shortcut parameters;
+  `AppShortcuts.swift` lists the Siri phrases.
+- **Android.** `SurfaceReceiver` appends the command baked into each PendingIntent, then
+  `Headless.kt` runs the headless JS task `HopwatchSurfaces` (registered in the root
+  `index.ts`, `src/widgets/headless.ts`), which replays the queue and syncs the
+  notification, nudge, evening check and shortcuts. If JS can't start, the command waits
+  for the next launch. The debug dev client can't run headless JS (no bundled script);
+  test this with a release build.
+- The nudge has a fixed identifier (`hopwatch.nudge`) on both sides, so a native tap can
+  replace it.
 
 ## Releasing
 

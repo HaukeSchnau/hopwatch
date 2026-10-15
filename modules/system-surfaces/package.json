@@ -1,7 +1,7 @@
 {
   "name": "system-surfaces",
   "version": "1.0.0",
-  "description": "Android surfaces outside the app: the running entry's ongoing notification and the launcher's shortcuts",
+  "description": "Surfaces outside the app: the snapshot and tap queue for widgets, controls and Siri, and Android's notification and shortcuts",
   "main": "index.ts",
   "private": true
 }

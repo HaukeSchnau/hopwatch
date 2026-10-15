@@ -94,6 +94,12 @@ async function sync(state: HopwatchState) {
   db.setMeta('evening', JSON.stringify(scheduled));
 }
 
+/** Brings the evening check in line with the store once, for the headless task. */
+export async function syncEvening() {
+  await setUpChannel();
+  await sync(useHopwatch.getState());
+}
+
 /** The day a tapped evening check is about, or null for any other notification. */
 function eveningDay(response: Notifications.NotificationResponse | null): number | null {
   const data = response?.notification.request.content.data;

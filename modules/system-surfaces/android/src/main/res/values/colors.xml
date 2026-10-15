@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Jelly's day palette (src/jelly/theme.ts); values-night has the night one. -->
+<resources>
+    <color name="hopwatch_widget_bg">#FFF4E8</color>
+    <color name="hopwatch_widget_ink">#2B1B3D</color>
+    <color name="hopwatch_widget_muted">#8C7A99</color>
+    <color name="hopwatch_widget_pill">#F8E7D5</color>
+    <color name="hopwatch_widget_stop">#3A2852</color>
+    <color name="hopwatch_widget_on_stop">#FFFFFF</color>
+</resources>

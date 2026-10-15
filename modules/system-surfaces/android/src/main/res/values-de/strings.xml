@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hopwatch_widget_name">Hopwatch</string>
+    <string name="hopwatch_widget_description">Was läuft, mit Stopp und Zurück, und deine angepinnten Jellys.</string>
+    <string name="hopwatch_widget_setup">Öffne Hopwatch einmal, um es einzurichten.</string>
+    <string name="hopwatch_tile_name">Zurück zum vorigen</string>
+    <string name="hopwatch_stop">Stopp</string>
+</resources>

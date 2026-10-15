@@ -45,7 +45,7 @@ The MVP is complete when all of the following work on the phone, offline:
 
 - Sync, a server, accounts or a web and desktop version
 - Calendar integration of any kind
-- Home screen widgets, Live Activities and native App Intents, deferred for scope and planned right after the MVP
+- Home screen widgets, Live Activities and native App Intents, deferred for scope and planned right after the MVP (built since)
 - Billable flags, hourly rates and invoice exports
 - Tags or any second dimension besides the tree
 - Pomodoro features, and automatic tracking by location or calendar
@@ -194,7 +194,20 @@ The app registers a URL scheme with three actions:
 | `tracker://stop` | Stop the running entry |
 | `tracker://resume` | Start the previous context again |
 
-The iOS Shortcuts app can open these links, which gives home screen icons for single contexts, the Action Button, Siri, and automations such as "when I arrive at the office, start Job". The app briefly comes to the foreground each time, until native App Intents replace this after the MVP. Each context's settings screen offers its link for copying.
+The iOS Shortcuts app can open these links, which gives home screen icons for single contexts and automations such as "when I arrive at the office, start Job". The app briefly comes to the foreground each time; the native actions below don't. Each context's settings screen offers its link for copying.
+
+### Switching from anywhere
+
+Since 1.2.0 the common switches work without opening the app, with the app suspended or killed:
+
+| | iOS | Android |
+| --- | --- | --- |
+| Running timer | Live Activity with Stop and Back | Ongoing notification with Stop and Back |
+| Home screen | Widgets: running + Back/Stop, and up to six pinned jellies | Widget: running, Stop, Back and four pinned jellies |
+| System | Controls for Control Center, the lock screen and the Action Button: Back or Resume, Stop, Start a jelly | Quick Settings tile: Back or Resume |
+| Voice | Siri, Spotlight and Shortcuts actions: Start a jelly, Back, Stop | (launcher shortcuts) |
+
+A tap records a command; the app replays it through the timeline the next time it runs, which on iOS is right away (the system launches the app in the background for the intent) and on Android within a second (a headless task). A command made from a stale view (something else is running by now) is dropped, so a tap can't undo a switch made in the app.
 
 ### Export
 
@@ -204,12 +217,12 @@ A JSON export of all contexts and entries goes through the share sheet. It serve
 
 The order below is a proposal, to be revisited after about a month of daily use.
 
-1. **Live Activity.** The running timer on the lock screen and in the Dynamic Island. It ranks first because seeing the timer is the best protection against forgotten switches. It needs a widget extension target, added through a config plugin, and a local Expo module that starts and updates the activity. Community libraries may already cover part of this.
-2. **Native App Intents**, so that Shortcuts and Siri can switch contexts without opening the app.
+1. **Live Activity.** The running timer on the lock screen and in the Dynamic Island. It ranks first because seeing the timer is the best protection against forgotten switches. Built, with Stop and Back acting in place since 1.2.0.
+2. **Native App Intents**, so that Shortcuts and Siri can switch contexts without opening the app. Built in 1.2.0 (see Switching from anywhere).
 3. **Sync service** on one of the NixOS VPSs, single user, last-write-wins. It also opens the way to a web and desktop version through Expo's web target.
 4. **Read-only ICS feed** served by the sync service, which any calendar app can subscribe to. It needs no OAuth and no CalDAV. Subscribed feeds refresh slowly, often every few hours, so this serves reviewing a day and not a live view.
 5. **Job hours, extended.** Days off that reduce the target, and a cumulative overtime balance. Built (see Reports).
-6. **Home screen widgets.**
+6. **Home screen widgets.** Built in 1.2.0, with controls and an Android tile.
 
 ### Open questions
 

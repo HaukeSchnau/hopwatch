@@ -22,11 +22,12 @@ private const val CHANNEL = "running"
 private const val RUNNING_ID = 1
 
 /**
- * Hopwatch's surfaces outside the app on Android: the running entry's ongoing notification
- * and the launcher's dynamic shortcuts. src/widgets/running-notification.ts and
- * src/widgets/shortcuts.ts keep them in step with the store. Every button and shortcut opens
- * a hopwatch:// link in the app, where src/app/+native-intent.tsx runs it, so nothing here
- * changes entries itself.
+ * Hopwatch's surfaces outside the app on Android. The snapshot the app writes and the taps
+ * it replays (Surfaces.kt, src/core/remote.ts) feed the home screen widget and the Quick
+ * Settings tile. The running entry's ongoing notification and the launcher's dynamic
+ * shortcuts follow the store through src/widgets/running-notification.ts and shortcuts.ts.
+ * The notification's buttons queue a tap and wake the app's JavaScript to replay it; the
+ * shortcuts open a hopwatch:// link in the app. Nothing here changes entries itself.
  */
 class SystemSurfacesModule : Module() {
   private val context: Context
@@ -34,6 +35,20 @@ class SystemSurfacesModule : Module() {
 
   override fun definition() = ModuleDefinition {
     Name("SystemSurfaces")
+
+    // iOS tells JavaScript about taps this way; Android wakes it with a headless task.
+    Events("onCommands")
+
+    // Writes the snapshot and redraws the widget and the tile from it.
+    Function("writeSnapshot") { json: String ->
+      Surfaces.writeSnapshot(context, json)
+      NowWidgetProvider.refresh(context)
+      BackTileService.refresh(context)
+    }
+
+    Function("readCommands") { Surfaces.readCommands(context) }
+
+    Function("removeCommands") { seqs: List<Long> -> Surfaces.removeCommands(context, seqs) }
 
     // Posts or updates the notification. Resolves to false when the app may not post any.
     AsyncFunction("showRunning") { running: RunningNotification -> showRunning(running) }
@@ -94,7 +109,7 @@ class SystemSurfacesModule : Module() {
       .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
       .setContentIntent(activity(0, launchIntent()))
     running.actions.forEachIndexed { index, action ->
-      builder.addAction(0, action.label, activity(index + 1, linkIntent(action.url)))
+      builder.addAction(0, action.label, SurfaceReceiver.tap(context, index + 1, action.command))
     }
     manager.notify(RUNNING_ID, builder.build())
     return true

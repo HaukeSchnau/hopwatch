@@ -2,7 +2,7 @@
   "expo": {
     "name": "Hopwatch",
     "slug": "hopwatch",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "hopwatch",
@@ -14,7 +14,12 @@
       "supportsTablet": false,
       "icon": "./assets/hopwatch.icon",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true,
+        "NSSupportsLiveActivitiesFrequentUpdates": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.dev.schnau.hopwatch"]
       },
       "buildNumber": "1",
       "deploymentTarget": "26.0"
@@ -84,14 +89,7 @@
           "enableBackgroundPlayback": false
         }
       ],
-      [
-        "expo-widgets",
-        {
-          "bundleIdentifier": "dev.schnau.hopwatch.widgets",
-          "groupIdentifier": "group.dev.schnau.hopwatch",
-          "enableAndroid": false
-        }
-      ],
+      "@bacons/apple-targets",
       [
         "expo-dev-client",
         {
@@ -148,6 +146,7 @@
           "night": "#FF8CC8"
         }
       ],
+      "./plugins/with-app-surfaces",
       "./plugins/with-scene-lifecycle"
     ],
     "experiments": {

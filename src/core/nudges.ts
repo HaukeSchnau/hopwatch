@@ -14,9 +14,14 @@ import { actions, type HopwatchState, useHopwatch } from './store';
 import { formatDuration, MINUTE } from './time';
 import { findOpen } from './timeline';
 
+/**
+ * The nudge's one notification id. Native code schedules under it too when a tap outside
+ * the app switches (remote.ts), so either side replaces the other's pending nudge.
+ */
+export const NUDGE_ID = 'hopwatch.nudge';
+
 interface Scheduled {
   key: string;
-  notificationId: string;
 }
 
 let scheduled: Scheduled | null = null;
@@ -57,16 +62,16 @@ async function sync(state: HopwatchState) {
   const want = desiredNudge(state);
   if ((want?.key ?? null) === (scheduled?.key ?? null)) return;
 
-  if (scheduled) {
-    await Notifications.cancelScheduledNotificationAsync(scheduled.notificationId).catch(() => {});
-    scheduled = null;
-    db.setMeta('nudge', null);
-  }
+  // Cancels a native one too, which the meta row doesn't know about.
+  await Notifications.cancelScheduledNotificationAsync(NUDGE_ID).catch(() => {});
+  scheduled = null;
+  db.setMeta('nudge', null);
   if (!want || want.fireAt <= Date.now()) return;
 
   if (!(await requestNudgePermission())) return;
 
-  const notificationId = await Notifications.scheduleNotificationAsync({
+  await Notifications.scheduleNotificationAsync({
+    identifier: NUDGE_ID,
     content: {
       title: want.title,
       body: want.body,
@@ -74,8 +79,14 @@ async function sync(state: HopwatchState) {
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(want.fireAt), channelId: CHANNEL },
   });
-  scheduled = { key: want.key, notificationId };
+  scheduled = { key: want.key };
   db.setMeta('nudge', JSON.stringify(scheduled));
+}
+
+/** Brings the nudge in line with the store once, for the headless task (headless.ts). */
+export async function syncNudge() {
+  await setUpChannel();
+  await sync(useHopwatch.getState());
 }
 
 function isNudge(response: Notifications.NotificationResponse | null) {
@@ -97,7 +108,11 @@ export function startNudges(): () => void {
   });
 
   const saved = db.getMeta('nudge');
-  scheduled = saved ? (JSON.parse(saved) as Scheduled) : null;
+  const parsed = saved ? (JSON.parse(saved) as Scheduled & { notificationId?: string }) : null;
+  // TODO: drop once 1.2.0 has been out a while. Versions up to 1.1.x scheduled the nudge
+  // under a random id; cancel that one so it can't fire next to the NUDGE_ID one.
+  if (parsed?.notificationId) Notifications.cancelScheduledNotificationAsync(parsed.notificationId).catch(() => {});
+  scheduled = parsed && { key: parsed.key };
 
   // Nudges wait for their channel.
   queue = setUpChannel().catch((error) => console.warn('nudge channel failed', error));

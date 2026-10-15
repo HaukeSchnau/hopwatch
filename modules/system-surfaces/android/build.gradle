@@ -13,3 +13,8 @@ android {
     versionName "1.0.0"
   }
 }
+
+dependencies {
+  // Headless.kt starts the app's JavaScript task through React Native's ReactHost.
+  implementation 'com.facebook.react:react-android'
+}

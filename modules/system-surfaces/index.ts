@@ -1,8 +1,10 @@
-// Android surfaces outside the app: the running entry's ongoing notification and the
-// launcher's shortcuts (Kotlin in android/). src/widgets/running-notification.ts and
-// src/widgets/shortcuts.ts drive them from the store.
+// Surfaces outside the app. On both platforms: the snapshot the app writes for widgets,
+// controls and Siri, and the queue of taps it replays (src/core/remote.ts,
+// src/widgets/surfaces.ts). On Android also the running entry's ongoing notification and
+// the launcher's shortcuts (src/widgets/running-notification.ts, shortcuts.ts).
+// Swift in ios/, Kotlin in android/.
 
-import { requireOptionalNativeModule } from 'expo';
+import { NativeModule, requireOptionalNativeModule } from 'expo';
 
 /** A jelly drawn as an icon. Colors are hex strings like "#FF6FB5". */
 export interface Icon {
@@ -16,10 +18,10 @@ export interface Icon {
   on: string;
 }
 
-/** A button that opens a hopwatch:// link in the app. */
-export interface LinkAction {
+/** A button that queues a tap for the app to replay (a RemoteCommand without seq and at, as JSON). */
+export interface TapAction {
   label: string;
-  url: string;
+  command: string;
 }
 
 export interface RunningNotification {
@@ -30,7 +32,7 @@ export interface RunningNotification {
   /** The entry's start in epoch ms. The system chronometer counts up from it. */
   since: number;
   icon: Icon;
-  actions: LinkAction[];
+  actions: TapAction[];
   /** The notification channel's name and description in the app's language. */
   channelName: string;
   channelDescription: string;
@@ -45,7 +47,21 @@ export interface Shortcut {
   icon: Icon;
 }
 
-interface Native {
+type Events = {
+  /** A tap queued a command while the app runs: replay it now. */
+  onCommands: () => void;
+};
+
+declare class Native extends NativeModule<Events> {
+  /** Writes the snapshot (JSON) where surfaces read it, and lets them catch up. */
+  writeSnapshot(json: string): void;
+  /** Queued taps (JSON each), oldest first. */
+  readCommands(): string[];
+  /** Removes replayed taps by their `seq`. */
+  removeCommands(seqs: number[]): void;
+
+  // Android only from here.
+
   /** Posts or updates the notification; false when the app may not post notifications. */
   showRunning(notification: RunningNotification): Promise<boolean>;
   hideRunning(): Promise<void>;
@@ -59,5 +75,5 @@ interface Native {
   forgetLaunchLink(): void;
 }
 
-/** Null on iOS, and in Android builds from before this module. */
+/** Null in builds from before this module (iOS before 1.2.0, Android before 1.1.0). */
 export const systemSurfaces = requireOptionalNativeModule<Native>('SystemSurfaces');

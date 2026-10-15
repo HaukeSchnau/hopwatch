@@ -11,6 +11,7 @@ import * as db from './db';
 import { initialLinkIsStale } from './launch';
 import type { LinkAction } from './links';
 import type { Context, ContextId, DayOff, DayOffId, DayOffKind, Entry, EntryId, Hue } from './model';
+import { type RemoteCommand, replay } from './remote';
 import * as timeline from './timeline';
 import { formatClock, offsetAt } from './time';
 import * as tree from './tree';
@@ -105,6 +106,51 @@ export function initStore() {
   links.forEach(actions.handleLink);
 }
 
+/** Where taps from outside the app wait (remote.ts): the app group on iOS, files on Android. */
+export interface RemoteQueue {
+  /** Waiting commands, oldest first. */
+  read(): RemoteCommand[];
+  remove(seqs: number[]): void;
+}
+
+let remoteQueue: RemoteQueue | null = null;
+
+/** Lets the platform's surfaces feed their taps into the store, and replays what waits. */
+export function connectRemoteQueue(queue: RemoteQueue) {
+  remoteQueue = queue;
+  drainRemote();
+}
+
+/**
+ * Replays taps from outside the app (remote.ts) through the timeline. Runs before every
+ * change to entries, so an in-app edit always comes after them; a replay clears the undo
+ * toast, since undoing would reach back across the remote switch.
+ */
+export function drainRemote() {
+  if (!remoteQueue || !get().ready) return;
+  const commands = remoteQueue.read();
+  if (commands.length === 0) return;
+  let entries = get().entries;
+  const written: Entry[] = [];
+  for (const command of commands) {
+    const rows = replay(entries, get().tree, command, clock());
+    if (!rows?.length) continue;
+    entries = timeline.applyRows(entries, rows);
+    written.push(...rows);
+  }
+  if (written.length > 0) {
+    db.writeRows({ entries: written });
+    set({ entries, lastAction: null });
+  }
+  remoteQueue.remove(commands.map((c) => c.seq));
+}
+
+/** The entries after replaying taps from outside the app; every entry change starts here. */
+function entriesNow() {
+  drainRemote();
+  return get().entries;
+}
+
 function commitEntries(rows: Entry[], action: Omit<LastAction, 'at' | 'undoRows'> | null) {
   if (rows.length === 0) return;
   const now = Date.now();
@@ -151,14 +197,15 @@ export interface ContextPatch {
 export const actions = {
   /** Switches to a context. `at` backdates the start. */
   start(contextId: ContextId, opts: { at?: number } = {}) {
-    const rows = timeline.start(get().entries, contextId, clock(), opts.at);
+    const rows = timeline.start(entriesNow(), contextId, clock(), opts.at);
     commitEntries(rows, { kind: 'start', label: toast.switched(nameOf(contextId)), contextId });
   },
 
   /** Stops the running entry. `at` backdates the stop. */
   stop(opts: { at?: number } = {}) {
-    const open = timeline.findOpen(get().entries);
-    const rows = timeline.stop(get().entries, clock(), opts.at);
+    const entries = entriesNow();
+    const open = timeline.findOpen(entries);
+    const rows = timeline.stop(entries, clock(), opts.at);
     commitEntries(rows, { kind: 'stop', label: toast.stopped(nameOf(open?.contextId ?? null)), contextId: open?.contextId ?? null });
   },
 
@@ -167,10 +214,11 @@ export const actions = {
    * the same one `useSwitchTarget` shows.
    */
   back(opts: { at?: number } = {}) {
-    const id = timeline.previousContextId(get().entries);
+    const entries = entriesNow();
+    const id = timeline.previousContextId(entries);
     if (!id || get().tree.byId.get(id)?.hidden) return;
-    const running = timeline.findOpen(get().entries) !== null;
-    const rows = timeline.start(get().entries, id, clock(), opts.at);
+    const running = timeline.findOpen(entries) !== null;
+    const rows = timeline.start(entries, id, clock(), opts.at);
     commitEntries(rows, {
       kind: running ? 'back' : 'resume',
       label: (running ? toast.back : toast.resumed)(nameOf(id)),
@@ -180,6 +228,7 @@ export const actions = {
 
   /** Reverts the last timeline change. */
   undo() {
+    drainRemote();
     const last = get().lastAction;
     if (!last) return;
     const now = Date.now();
@@ -191,20 +240,21 @@ export const actions = {
 
   /** Edits an entry. `label` replaces the toast's generic "Entry updated". */
   updateEntry(id: EntryId, patch: timeline.EntryPatch, label = toast.updated) {
-    const rows = timeline.update(get().entries, id, patch, clock());
+    const rows = timeline.update(entriesNow(), id, patch, clock());
     const entry = rows.find((r) => r.id === id);
     commitEntries(rows, { kind: 'edit', label, contextId: entry?.contextId ?? null });
   },
 
   deleteEntry(id: EntryId) {
-    const entry = get().entries.find((e) => e.id === id);
-    const rows = timeline.remove(get().entries, id, clock());
+    const entries = entriesNow();
+    const entry = entries.find((e) => e.id === id);
+    const rows = timeline.remove(entries, id, clock());
     commitEntries(rows, { kind: 'delete', label: toast.deleted(nameOf(entry?.contextId ?? null)), contextId: entry?.contextId ?? null });
   },
 
   /** Creates an entry for [from, to], clamped to the gap it falls into. */
   fillGap(contextId: ContextId, from: number, to: number) {
-    const rows = timeline.fillGap(get().entries, contextId, from, to, clock());
+    const rows = timeline.fillGap(entriesNow(), contextId, from, to, clock());
     commitEntries(rows, { kind: 'fill', label: toast.added(nameOf(contextId)), contextId });
   },
 
@@ -214,7 +264,7 @@ export const actions = {
    * says what that will do.
    */
   place(contextId: ContextId | null, from: number, to: number) {
-    const rows = timeline.place(get().entries, contextId, from, to, clock());
+    const rows = timeline.place(entriesNow(), contextId, from, to, clock());
     const label = contextId === null ? toast.untracked(formatClock(from), formatClock(to)) : toast.added(nameOf(contextId));
     commitEntries(rows, { kind: 'place', label, contextId });
   },

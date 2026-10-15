@@ -1,6 +1,9 @@
 {
-  "platforms": ["android"],
+  "platforms": ["android", "apple"],
   "android": {
     "modules": ["expo.modules.systemsurfaces.SystemSurfacesModule"]
+  },
+  "apple": {
+    "modules": ["SystemSurfacesModule"]
   }
 }

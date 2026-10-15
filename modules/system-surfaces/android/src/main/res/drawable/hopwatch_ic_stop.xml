@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="16dp" android:height="16dp" android:viewportWidth="16" android:viewportHeight="16">
+    <path android:fillColor="@color/hopwatch_widget_on_stop" android:pathData="M3,3h10v10h-10z" />
+</vector>

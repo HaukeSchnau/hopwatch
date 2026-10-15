@@ -5,11 +5,12 @@
 // and on every return to the foreground. That brings it back after a force stop, a swipe
 // (Android 14 and later let people dismiss it) or a newly granted permission.
 //
-// The buttons open the app on a link instead of acting in the background, like the Live
-// Activity's pills: entries only change through the store's actions in JavaScript, and a
-// link reaches them the same way whether the app was open, in the background or killed.
+// The buttons switch without opening the app: each carries a tap made when the notification
+// was posted, which Android queues and the app replays in a headless task (src/core/remote.ts,
+// src/widgets/headless.ts).
 
 import { systemSurfaces, type Icon, type RunningNotification } from '@modules/system-surfaces';
+import { randomUUID } from 'expo-crypto';
 import { AppState, Platform } from 'react-native';
 
 import {
@@ -19,8 +20,7 @@ import {
   pathLabel,
   previousContextId,
   type ResolvedContext,
-  resumeLink,
-  stopLink,
+  tapCommand,
   useHopwatch,
 } from '@/core';
 import { androidText } from '@/i18n/android';
@@ -31,6 +31,13 @@ export function jellyIcon(context: ResolvedContext): Icon {
   const { light, fill, deep, on } = lightTheme.candy[context.hue];
   return { mark: context.glyph ?? context.name.slice(0, 1).toUpperCase(), light, fill, deep, on };
 }
+
+/** The id "Back" starts its entry with, one per running entry so reposts stay the same. */
+let backEntry: { open: string; id: string } | null = null;
+const backEntryId = (open: string) => {
+  if (backEntry?.open !== open) backEntry = { open, id: randomUUID() };
+  return backEntry.id;
+};
 
 /** The notification for the running entry, or null when nothing runs. */
 function describe(state: HopwatchState): RunningNotification | null {
@@ -46,12 +53,20 @@ function describe(state: HopwatchState): RunningNotification | null {
     since: open.startUtc,
     icon: jellyIcon(context),
     actions: [
-      { label: text.stop, url: stopLink },
-      ...(back && !back.hidden ? [{ label: text.back(back.name), url: resumeLink }] : []),
+      { label: text.stop, command: JSON.stringify(tapCommand(open.id, null, randomUUID)) },
+      ...(back && !back.hidden ? [{ label: text.back(back.name), command: JSON.stringify(tapCommand(open.id, back.id, () => backEntryId(open.id))) }] : []),
     ],
     channelName: text.channel,
     channelDescription: text.channelDescription,
   };
+}
+
+/** Posts, updates or removes the notification once, for the headless task (headless.ts). */
+export async function syncRunningNotification() {
+  if (Platform.OS !== 'android' || !systemSurfaces) return;
+  const want = describe(useHopwatch.getState());
+  if (want) await systemSurfaces.showRunning(want);
+  else await systemSurfaces.hideRunning();
 }
 
 /**

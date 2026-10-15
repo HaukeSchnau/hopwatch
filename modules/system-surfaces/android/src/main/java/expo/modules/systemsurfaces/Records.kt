@@ -6,23 +6,21 @@ import expo.modules.kotlin.records.Record
 // What JavaScript passes in; the matching types are in modules/system-surfaces/index.ts.
 
 /** A jelly drawn as an icon by `drawIcon`. Colors are hex strings like "#FF6FB5". */
-class Icon : Record {
+class Icon(
   /** The emoji or initial. Null draws a stop square. */
-  @Field val mark: String? = null
-
+  @Field val mark: String? = null,
   /** The candy gradient from top to bottom. `fill` is also the notification's accent. */
-  @Field val light: String = "#000000"
-  @Field val fill: String = "#000000"
-  @Field val deep: String = "#000000"
-
+  @Field val light: String = "#000000",
+  @Field val fill: String = "#000000",
+  @Field val deep: String = "#000000",
   /** The mark's color on the candy. */
-  @Field val on: String = "#FFFFFF"
-}
+  @Field val on: String = "#FFFFFF",
+) : Record
 
-/** A button that opens a hopwatch:// link. */
-class LinkAction : Record {
+/** A button that queues a tap (a command, as JSON) for the app to replay. */
+class TapAction : Record {
   @Field val label: String = ""
-  @Field val url: String = ""
+  @Field val command: String = ""
 }
 
 class RunningNotification : Record {
@@ -35,7 +33,7 @@ class RunningNotification : Record {
   /** The entry's start in epoch milliseconds. */
   @Field val since: Double = 0.0
   @Field val icon: Icon = Icon()
-  @Field val actions: List<LinkAction> = emptyList()
+  @Field val actions: List<TapAction> = emptyList()
 
   /** The notification channel's name and description in the app's language. */
   @Field val channelName: String = ""

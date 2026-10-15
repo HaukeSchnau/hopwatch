@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="hopwatch_widget_bg">#150F1D</color>
+    <color name="hopwatch_widget_ink">#FBF3FF</color>
+    <color name="hopwatch_widget_muted">#A99BB8</color>
+    <color name="hopwatch_widget_pill">#241B2F</color>
+    <color name="hopwatch_widget_stop">#F3E8FA</color>
+    <color name="hopwatch_widget_on_stop">#2B1B3D</color>
+</resources>

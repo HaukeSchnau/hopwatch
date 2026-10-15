@@ -7,9 +7,15 @@ export const widgetText = localized({
   en: {
     stop: 'Stop',
     back: (name: string) => `Back to ${name}`,
+    resume: (name: string) => `Resume ${name}`,
+    stopName: (name: string) => `Stop ${name}`,
+    nothing: 'Nothing running',
   },
   de: {
     stop: 'Stopp',
     back: (name) => `Zurück zu ${name}`,
+    resume: (name) => `${name} fortsetzen`,
+    stopName: (name) => `${name} stoppen`,
+    nothing: 'Nichts läuft',
   },
 });

@@ -4,6 +4,7 @@
 
 export { markBreak, setEveningCheck, useEveningCheck } from './evening';
 export * from './hooks';
+export { parseCommand, type RemoteCommand, type Snapshot, snapshotOf, tapCommand } from './remote';
 export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from './links';
 export * from './model';
 export { type GermanState, germanStates, type HolidayId } from './holidays';
@@ -23,7 +24,9 @@ export {
 } from './reports';
 export {
   actions,
+  connectRemoteQueue,
   type ContextPatch,
+  drainRemote,
   type Intent,
   type Json,
   type LastAction,

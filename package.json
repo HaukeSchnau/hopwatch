@@ -1,8 +1,9 @@
 {
   "name": "hopwatch",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "version": "1.0.0",
   "dependencies": {
+    "@bacons/apple-targets": "^5.0.0",
     "@expo/ui": "~57.0.21",
     "@shopify/react-native-skia": "2.6.2",
     "expo": "~57.0.26",
@@ -28,7 +29,6 @@
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
     "expo-updates": "~57.0.24",
-    "expo-widgets": "~57.0.22",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
