@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "hopwatch",
+    "platforms": ["ios", "android"],
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "dev.schnau.hopwatch",
