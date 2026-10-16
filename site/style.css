@@ -580,6 +580,7 @@ html.will-pop .pop.is-in { animation: pop-in 0.9s var(--delay, 0ms) both; transf
   cursor: default;
 }
 .credit [data-jelly] { flex: none; }
+.credit a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

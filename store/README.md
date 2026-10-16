@@ -37,7 +37,8 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   running notification and the launcher shortcuts instead.
 - `play/graphics/feature-graphic.html` draws the 1024 x 500 feature graphic from the
   website's jellies (`site/jelly.js`), with no text, so all languages share it. The render
-  command is in its header. The 512 px icon is `assets/images/android-icon.png`.
+  command in its header writes `site/img/feature-graphic.png`, which is also the website's
+  link preview image. The 512 px icon is `assets/images/android-icon.png`.
 - There's no push script yet, and `gplay` has the same catch: managed publishing is off, so
   the Play API refuses `changesNotSentForReview` ("Changes are sent for review
   automatically"), and committing any API edit sends every change queued in the console for
