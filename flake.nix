@@ -1,19 +1,31 @@
 {
-  description = "Hopwatch website";
+  description = "Hopwatch's CI toolchain";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix-infra-modules = {
-      url = "github:HaukeSchnau/nix-infra-modules/c08469c9ed76a0e2223cb6bf1ac624580be6f98c";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs =
-    { nixpkgs, nix-infra-modules, ... }:
-    nix-infra-modules.lib.projectFlake {
-      inherit nixpkgs;
-      modules = [ ./project.nix ];
-      release = _: { root = ./site; };
+    { nixpkgs, ... }:
+    {
+      devShells =
+        nixpkgs.lib.genAttrs
+          [
+            "aarch64-linux"
+            "x86_64-linux"
+          ]
+          (
+            system:
+            let
+              pkgs = nixpkgs.legacyPackages.${system};
+              tools = import ./nix/toolchain.nix { inherit pkgs; };
+            in
+            {
+              ci = pkgs.mkShellNoCC {
+                packages = [
+                  tools.nodejs
+                  tools.pnpm
+                ];
+              };
+            }
+          );
     };
 }

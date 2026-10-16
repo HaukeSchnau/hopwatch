@@ -1,0 +1,5 @@
+allowBuilds:
+  # Copies the prebuilt Skia libraries for iOS and Android into the package.
+  '@shopify/react-native-skia': true
+  unrs-resolver: false
+  workerd: false

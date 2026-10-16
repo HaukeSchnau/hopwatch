@@ -8,7 +8,7 @@ before the rename (app: 'stint') still restore. Start with `notes/progress.md` f
 current state, then `docs/architecture.md`.
 
 - `src/core`: data model, timeline domain module (the only writer of entries), store,
-  hooks, reports, nudges, deep links, export and import. Tests: `npm test`.
+  hooks, reports, nudges, deep links, export and import. Tests: `pnpm test`.
 - `src/jelly`: the UI. `src/app`: expo-router routes.
 - `modules/on-device-model`: Apple Foundation Models bridge.
 - `scripts/m1.sh`: native development builds on the M1 builder (`ssh m1`). Releases
@@ -16,7 +16,9 @@ current state, then `docs/architecture.md`.
   `docs/architecture.md`.
 - `asc` and `gplay`: App Store Connect and Google Play Console CLIs, already signed in to
   Urbs UG (see the `app-stores` skill).
-- Node comes from `devenv.nix`.
+- Node and pnpm come from `devenv.nix` (`nix/toolchain.nix`, shared with Kiln's dev shell).
+- `site/`: the website at hopwatch.schnau.dev, on Cloudflare through `alchemy.run.ts`; Kiln
+  deploys it on push to `main` and previews pull requests.
 
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
@@ -30,15 +32,15 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+The project uses pnpm.
 
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+pnpm expo install <package>  # ALWAYS use instead of pnpm add — resolves SDK-compatible versions
+pnpm start                   # start the dev server
+pnpm lint                    # lint
+pnpm typecheck               # typecheck
+pnpm dlx expo-doctor         # diagnose dependency and config issues
+pnpm expo install --fix      # fix incompatible package versions
 ```
 
 Run lint and typecheck before declaring any task done.
@@ -49,13 +51,15 @@ Run lint and typecheck before declaring any task done.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
 - Docs: https://docs.expo.dev/router/introduction.md
 
-## Building with EAS
+## Building and EAS
 
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
+Store builds don't use EAS Build: they run on the M1 builder as manual Kiln runs (Releasing in
+`docs/architecture.md`). EAS hosts the over-the-air updates (`eas update`). Run EAS CLI as
+`pnpm dlx eas-cli@latest <command>`; substitute that for bare `eas` in docs examples.
 Docs: https://docs.expo.dev/eas/index.md
 
 ## Rules
 
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
+- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `scripts/m1.sh sim` or `scripts/m1.sh android-dev` on the M1 builder.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md

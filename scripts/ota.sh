@@ -9,6 +9,6 @@ cd "$(dirname "$0")/.."
 EXPO_TOKEN=$(<"$EXPO_TOKEN_FILE")
 export EXPO_TOKEN
 
-npm ci --no-audit --no-fund
-npx --yes eas-cli@latest update --channel production --environment production --platform all \
+pnpm install --frozen-lockfile
+pnpm dlx eas-cli@latest update --channel production --environment production --platform all \
   --message "$(git log -1 --format=%s)" --non-interactive

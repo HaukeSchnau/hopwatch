@@ -2,7 +2,7 @@
 import { Flake } from "@kiln/core"
 
 export const flake = Flake.make({
-  packages: ["projectRelease"],
-  checks: ["projectRelease"],
-  devShells: [],
+  packages: [],
+  checks: [],
+  devShells: ["ci"],
 })

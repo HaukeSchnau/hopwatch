@@ -51,3 +51,6 @@ example
 
 # Raw store captures; the framed finals in store/screenshots/<store>/ are kept.
 store/screenshots/raw/
+
+# Alchemy state of local runs
+.alchemy/

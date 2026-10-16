@@ -15,8 +15,8 @@
 #                                    install the last debug APK on a running emulator or device
 #                                    (default emulator-5584, the hopwatch-pixel AVD; scripts/emu.sh)
 #
-# Android builds use their own checkout, m1:~/Developer/hopwatch-android, so their npm ci never
-# pulls node_modules out from under an iOS build in hopwatch-ios. The Android SDK and JDK on m1
+# Android builds use their own checkout, m1:~/Developer/hopwatch-android, so an install for one
+# never changes node_modules under a running build of the other in hopwatch-ios. The Android SDK and JDK on m1
 # come from ~/infra (JAVA_HOME, ANDROID_HOME).
 set -euo pipefail
 
@@ -32,7 +32,7 @@ cd "$(dirname "$0")/.."
 sync() {
   nix run nixpkgs#rsync -- -a --delete \
     --exclude node_modules --exclude /ios --exclude /android --exclude .git --exclude .jj \
-    --exclude .devenv --exclude "devenv.*" --exclude .expo --exclude dist --exclude .shots \
+    --exclude .devenv --exclude "devenv.*" --exclude .expo --exclude .alchemy --exclude dist --exclude .shots \
     ./ "m1:$REMOTE_DIR/"
 }
 
@@ -52,7 +52,7 @@ ANDROID_APK=android/app/build/outputs/apk/debug/app-debug.apk
 # The init script works around the read-only SDK (see scripts/android-sdk.gradle).
 gradlew='./gradlew --no-daemon --console=plain --init-script ../scripts/android-sdk.gradle'
 
-prepare='export LANG=en_US.UTF-8; npm ci --no-audit --no-fund && npx expo prebuild --platform ios --no-install && (cd ios && pod install)'
+prepare='export LANG=en_US.UTF-8; pnpm install --frozen-lockfile && pnpm exec expo prebuild --platform ios --no-install && (cd ios && pod install)'
 auth="-allowProvisioningUpdates -authenticationKeyPath $ASC_KEY_PATH -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
 archive="xcodebuild -workspace ios/$SCHEME.xcworkspace -scheme $SCHEME -configuration Release \
   -destination 'generic/platform=iOS' -archivePath ios/build/$SCHEME.xcarchive \
@@ -81,12 +81,10 @@ case "${1:-}" in
     REMOTE_DIR=$ANDROID_DIR
     ssh m1 "mkdir -p ~/$REMOTE_DIR"
     sync
-    # npm ci only when the lockfile changed: it wipes node_modules and with it the native
-    # build outputs (~3 instead of ~6 minutes on an idle m1). arm64 only, which covers the
-    # emulator and current phones; Play builds get every ABI.
+    # arm64 only, which covers the emulator and current phones; Play builds get every ABI.
     remote "set -o pipefail; export LANG=en_US.UTF-8; \
-      { [ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --no-audit --no-fund; } && \
-      npx expo prebuild --platform android --no-install && \
+      pnpm install --frozen-lockfile && \
+      pnpm exec expo prebuild --platform android --no-install && \
       cd android && $gradlew -PreactNativeArchitectures=arm64-v8a :app:assembleDebug | tail -40"
     ;;
   android-install)

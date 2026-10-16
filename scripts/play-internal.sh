@@ -12,8 +12,8 @@ HOPWATCH_BUILD_NUMBER=$(date -u +%Y%m%d%H%M)
 export HOPWATCH_BUILD_NUMBER LANG=en_US.UTF-8
 echo "build $HOPWATCH_BUILD_NUMBER"
 
-npm ci --no-audit --no-fund
-npx expo prebuild --platform android --no-install --clean
+pnpm install --frozen-lockfile
+pnpm exec expo prebuild --platform android --no-install --clean
 
 # Gradle takes the upload key from android.injected.signing.* properties. They go in the
 # generated, private gradle.properties rather than on a command line, and leave with the key.

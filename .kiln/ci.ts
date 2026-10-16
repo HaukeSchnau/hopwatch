@@ -1,12 +1,26 @@
 import { Kiln, On, Secret, Step, Task, cmd } from "@kiln/core"
-import { Project } from "@kiln/std"
+import { Pnpm, Project } from "@kiln/std"
 import { Schema } from "effect"
 import { flake } from "./flake.ts"
 
+const shell = flake.devShells.ci
+const install = Pnpm.install({ shell })
+const checks = (["typecheck", "test", "lint"] as const).map((script) =>
+  Task.make(script, { shell, setup: install, run: cmd`pnpm ${script}` })
+)
+
+/** The website under site/ on Cloudflare (alchemy.run.ts): production on push, previews per pull request. */
+const website = Project.alchemy({
+  flake,
+  stack: { shell, setup: install, env: "cloudflare" },
+  checks,
+  previews: { url: (pr) => `https://pr-${pr}-hopwatch.hauke-911.workers.dev` },
+})
+
 /**
  * The app releases build on the Apple builder (m1) in Hauke's GUI session, where Xcode and the
- * signing keychain work. Pushes only deploy the website; a person starts each release with
- * `kiln trigger hopwatch --inputs '{"release":"testflight"}'` ("play", "ota").
+ * signing keychain work. Pushes only check the app and deploy the website; a person starts each
+ * release with `kiln trigger hopwatch --inputs '{"release":"testflight"}'` ("play", "ota").
  */
 const testflight = Task.make("testflight", {
   platform: "aarch64-darwin",
@@ -32,7 +46,7 @@ const release = (name: string) => ({ inputs: { release: Schema.Literal(name) } }
 
 export default Kiln.project({
   rules: [
-    ...Project.standard({ flake }).rules,
+    ...website.rules,
     On.manual(release("testflight"), [testflight]),
     On.manual(release("play"), [play]),
     On.manual(release("ota"), [ota]),

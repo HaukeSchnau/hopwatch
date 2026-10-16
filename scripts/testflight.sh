@@ -12,8 +12,8 @@ HOPWATCH_BUILD_NUMBER=$(date -u +%Y%m%d%H%M)
 export HOPWATCH_BUILD_NUMBER LANG=en_US.UTF-8
 echo "build $HOPWATCH_BUILD_NUMBER"
 
-npm ci --no-audit --no-fund
-npx expo prebuild --platform ios --no-install
+pnpm install --frozen-lockfile
+pnpm exec expo prebuild --platform ios --no-install
 (cd ios && pod install)
 
 auth=(

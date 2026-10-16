@@ -38,8 +38,9 @@ the migration steps in `db.ts`.
 
 ## Development
 
-- Node comes from `devenv.nix`. `npm test` runs the domain tests, `npx tsc --noEmit`
-  type-checks, `npx expo lint` lints.
+- Node and pnpm come from `devenv.nix`, which shares `nix/toolchain.nix` with the dev shell
+  Kiln checks in. `pnpm test` runs the domain tests, `pnpm typecheck` type-checks, `pnpm lint`
+  lints. Kiln runs all three on every pull request and push.
 - Metro runs as the agent-service `metro-all` (port 3100, published on the Tailnet).
 - Native development builds run on the M1 builder (`ssh m1`) via `scripts/m1.sh`: `sim`
   for the simulator dev client, `device` for a development-signed IPA. `scripts/sim.sh`
@@ -131,7 +132,8 @@ only a status Hopwatch set itself or an empty one gets changed.
 ## Releasing
 
 Releases build on the M1 builder from the head of `main` as manual Kiln runs (`.kiln/ci.ts`),
-one step each, so a push to `main` only deploys the website. Follow a run with `kiln status`
+one step each. A push to `main` runs the checks and deploys the website (`site/`) to Cloudflare
+with `alchemy.run.ts`; a pull request gets a preview of it that's destroyed when it closes. Follow a run with `kiln status`
 and `kiln logs`, or at https://kiln.schnau.dev.
 
 - JavaScript and asset changes: `kiln trigger hopwatch --inputs '{"release":"ota"}'`
@@ -155,7 +157,8 @@ and `kiln logs`, or at https://kiln.schnau.dev.
 
 Kiln hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
 base64, and `play-upload-password`) and the developer-role Expo robot's token
-(`expo-token`). ~/infra maps them in hosts/srv-2/kiln.nix to the SOPS keys
+(`expo-token`), and the website deploys the Cloudflare credentials (`cloudflare`). ~/infra
+maps them in hosts/srv-2/kiln.nix to the SOPS keys
 `projects/hopwatch/*`, copies of the Bitwarden items "Hopwatch Play upload key"
 (***REMOVED***) and ***REMOVED***. The App
 Store Connect key comes with the M1's Kiln agent, the Play service account with the M1's

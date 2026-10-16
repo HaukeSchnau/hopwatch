@@ -1,15 +1,11 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
+let
+  tools = import ./nix/toolchain.nix { inherit pkgs; };
+in
 {
-  imports = [
-    (inputs.projectSdk + "/modules/devenv/project.nix")
-    ./project.nix
+  # Node and pnpm for Expo/Metro, the checks and Alchemy. Native builds run on the M1 builder.
+  packages = [
+    tools.nodejs
+    tools.pnpm
   ];
-  project.enable = true;
-
-  # Node for Expo/Metro and the domain tests. Native iOS builds run on the M1 builder.
-  languages.javascript = {
-    enable = true;
-    package = pkgs.nodejs_22;
-    npm.enable = true;
-  };
 }

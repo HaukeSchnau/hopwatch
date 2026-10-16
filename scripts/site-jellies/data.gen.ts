@@ -1,5 +1,5 @@
 // Exports the app's jelly geometry for the website (site/jelly-data.js). Run from the repo root:
-//   npx vitest run --config scripts/site-jellies/vitest.config.mts
+//   pnpm exec vitest run --config scripts/site-jellies/vitest.config.mts
 // Rerun it when the characters change. It exports outlines, anchors, a width profile and
 // seeded coat spots per cast member, straight from src/jelly/character (bodies.ts, derive.ts).
 import { writeFileSync } from 'node:fs';
