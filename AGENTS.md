@@ -18,7 +18,8 @@ current state, then `docs/architecture.md`.
   Urbs UG (see the `app-stores` skill).
 - Node and pnpm come from `devenv.nix` (`nix/toolchain.nix`, shared with Kiln's dev shell).
 - `site/`: the website at hopwatch.schnau.dev, on Cloudflare through `alchemy.run.ts`; Kiln
-  deploys it on push to `main` and previews pull requests.
+  deploys it on push to `main` and previews pull requests. `project dev up` serves it with
+  `alchemy dev`, one instance per checkout.
 
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 

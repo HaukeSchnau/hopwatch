@@ -34,10 +34,28 @@
         "type": "github"
       }
     },
+    "projectSdk": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790115917,
+        "narHash": "sha256-Y/hfCjK9o8xThCCLZt09NbGRv+tVwF9v1+a2GzG7BgU=",
+        "owner": "HaukeSchnau",
+        "repo": "nix-infra-modules",
+        "rev": "c08469c9ed76a0e2223cb6bf1ac624580be6f98c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "HaukeSchnau",
+        "repo": "nix-infra-modules",
+        "rev": "c08469c9ed76a0e2223cb6bf1ac624580be6f98c",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "devenv": "devenv",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "projectSdk": "projectSdk"
       }
     }
   },

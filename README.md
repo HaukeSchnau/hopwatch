@@ -36,4 +36,6 @@ kiln trigger hopwatch --inputs '{"release":"ota"}'         # JS and assets to in
 `site/` is the website at https://hopwatch.schnau.dev, which the stores link for privacy and
 support. `alchemy.run.ts` serves it from Cloudflare. Kiln deploys it on every push to `main`,
 and each pull request gets a preview at `https://pr-<number>-hopwatch.hauke-911.workers.dev`
-that closes with it. Open `site/index.html` in a browser to work on it locally.
+that closes with it. `devenv up` serves it locally with `alchemy dev` on port 3000 (workerd,
+production's headers, edits show up on reload); `project dev up` gives a checkout or workspace
+its own instance and URL.
