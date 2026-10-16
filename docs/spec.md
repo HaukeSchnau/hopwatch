@@ -213,7 +213,7 @@ A tap records a command; the app replays it through the timeline the next time i
 
 Since 1.2.0 a jelly can set the person's Slack status while it runs: "Walking the dog" for Dog, "Working remotely" for Job. Slack is connected once in Settings (Sign in with Slack, PKCE, no server of ours); the jelly editor then shows a Slack status field.
 
-- The status is the text typed in the editor with the jelly's emoji, which Hopwatch maps to Slack's emoji name. It's inherited down the tree like the color: Deep work shows Job's status unless it has its own, and "Same as Job" switched off with an empty field means none.
+- Only jellies picked for it set a status: the text typed in their editor, with the jelly's emoji, which Hopwatch maps to Slack's emoji name. It isn't inherited: Deep work inside Job sets nothing unless it has a status of its own. Most jellies never touch Slack.
 - Switching sets the new jelly's status, or clears Hopwatch's own status when the new jelly has none or nothing runs. Hopwatch only ever changes a status it set itself or an empty one, so a status set by hand, or by Slack's calendar app during a meeting, stays.
 - Every status Hopwatch sets runs out at the next midnight, so a dead phone can't leave "Walking the dog" up for days.
 - Switches from the Live Activity, widgets, controls, the notification and the tile update Slack too, without opening the app.

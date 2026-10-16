@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Context, ContextId, SlackStatus } from './model';
+import type { Context, ContextId } from './model';
 import { appliedKey, readGrant, redirectParams, slackEmoji, slackStep } from './slack';
 import { buildTree } from './tree';
 
@@ -25,28 +25,21 @@ const context = (id: string, extra: Partial<Context> = {}): Context => ({
   ...extra,
 });
 
-describe('slack status down the tree', () => {
-  const remote: SlackStatus = { text: 'Working remotely', emoji: null };
+describe('slack status in the tree', () => {
   const tree = buildTree([
-    context('job', { emoji: '🏡', slackStatus: remote }),
+    context('job', { emoji: '🏡', slackStatus: { text: 'Working remotely', emoji: null } }),
     context('meetings', { parentId: 'job' as ContextId, emoji: '📅', slackStatus: { text: 'In a meeting', emoji: '🗓️' } }),
     context('deep', { parentId: 'job' as ContextId, emoji: '🎧' }),
-    context('commute', { parentId: 'job' as ContextId, slackStatus: 'none' }),
-    context('dog', { emoji: '🐕', slackStatus: { text: 'Walking the dog', emoji: null } }),
-    context('home'),
   ]);
   const slack = (id: string) => tree.byId.get(id as ContextId)!.slack;
 
-  it("defaults the emoji to the jelly's own, where the status is set", () => {
+  it("defaults the emoji to the jelly's own", () => {
     expect(slack('job')).toEqual({ text: 'Working remotely', emoji: '🏡' });
-    expect(slack('dog')).toEqual({ text: 'Walking the dog', emoji: '🐕' });
+    expect(slack('meetings')).toEqual({ text: 'In a meeting', emoji: '🗓️' });
   });
 
-  it('inherits a parent status as the parent shows it, unless a child sets its own or none', () => {
-    expect(slack('deep')).toEqual({ text: 'Working remotely', emoji: '🏡' });
-    expect(slack('meetings')).toEqual({ text: 'In a meeting', emoji: '🗓️' });
-    expect(slack('commute')).toBeNull();
-    expect(slack('home')).toBeNull();
+  it('belongs only to the jelly it was given to, not to the ones inside it', () => {
+    expect(slack('deep')).toBeNull();
   });
 });
 

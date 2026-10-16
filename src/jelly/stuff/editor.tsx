@@ -85,9 +85,7 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const [balanceSince, setBalanceSince] = useState<string | null>(context?.balanceSince ?? null);
   const [balanceStart, setBalanceStart] = useState(context?.balanceStartMinutes ?? 0);
   const ownSlack = context?.slackStatus ?? null;
-  const [slackText, setSlackText] = useState(ownSlack && ownSlack !== 'none' ? ownSlack.text : '');
-  // Inside a jelly with a Slack status: whether this one has its own (or none) instead.
-  const [slackOwn, setSlackOwn] = useState(ownSlack !== null);
+  const [slackText, setSlackText] = useState(ownSlack?.text ?? '');
   // Only a status someone edited gets saved, so opening the editor never rewrites one.
   const slackTouched = useRef(false);
 
@@ -102,20 +100,12 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const hue: Hue = shownColor ?? parent?.hue ?? DEFAULT_HUE;
   const glyph = shownEmoji ?? parent?.glyph ?? null;
   const inheritedNudge = parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES;
-  const inheritedSlack = parent?.slack ?? null;
 
-  /** The status to store: none of its own while it follows the parent, 'none' to stop following. */
-  const slackStatusOf = (own: boolean, typed: string): SlackStatus | null => {
-    if (inheritedSlack && !own) return null;
-    const text = typed.trim();
-    // Keeps an emoji set elsewhere (a backup); the editor only edits the text.
-    if (text) return { text, emoji: ownSlack && ownSlack !== 'none' ? ownSlack.emoji : null };
-    return inheritedSlack ? 'none' : null;
-  };
-  const slackStatus = slackStatusOf(slackOwn, slackText);
+  // An empty field is no status. An emoji set elsewhere (a backup) stays; the editor only
+  // edits the text.
+  const slackStatus: SlackStatus | null = slackText.trim() ? { text: slackText.trim(), emoji: ownSlack?.emoji ?? null } : null;
   /** What Slack shows while it runs, for the footer. */
-  const slackShown: SlackLine | null =
-    slackStatus === null ? inheritedSlack : slackStatus === 'none' ? null : { text: slackStatus.text, emoji: slackStatus.emoji ?? glyph };
+  const slackShown: SlackLine | null = slackStatus ? { text: slackStatus.text, emoji: slackStatus.emoji ?? glyph } : null;
   const excluded = context ? subtreeIds(tree, context.id) : new Set<ContextId>();
   const parents = tree.ordered.filter((p) => !p.hidden && !excluded.has(p.id));
 
@@ -219,12 +209,6 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     if (context && slackTouched.current) saveSlackStatus(context.id, slackStatus);
   };
 
-  /** Follows the parent's Slack status, or has its own (none until something's typed). */
-  const followSlack = (on: boolean) => {
-    slackTouched.current = true;
-    setSlackOwn(!on);
-    if (context) saveSlackStatus(context.id, slackStatusOf(!on, slackText));
-  };
 
   const create = () => {
     const typed = name.trim();
@@ -290,9 +274,6 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     slackText,
     setSlackText: typeSlack,
     saveSlack,
-    slackFollows: inheritedSlack !== null && !slackOwn,
-    followSlack,
-    inheritedSlack,
     slackShown,
     hue,
     suggested,

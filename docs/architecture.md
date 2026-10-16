@@ -103,8 +103,8 @@ stays the only writer of entries:
 
 ## Slack
 
-A jelly's Slack status (`contexts.slack_status`, inherited down the tree in `tree.ts`) is
-set while it runs. `src/core/slack.ts` holds what both platforms share and is tested: Slack's
+A jelly's Slack status (`contexts.slack_status`, resolved with the jelly's emoji in
+`tree.ts`, not inherited) is set while it runs. `src/core/slack.ts` holds what both platforms share and is tested: Slack's
 emoji names (`slack-emoji.json`, generated from iamcal/emoji-data by
 `scripts/slack-emoji.mjs`), the sign-in URL, token answers, and `slackStep`, the rule that
 only a status Hopwatch set itself or an empty one gets changed.

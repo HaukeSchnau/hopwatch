@@ -195,10 +195,7 @@ function Editor(props: EditorTarget) {
 
       {slack ? (
         <Section title={s.slack} footer={s.slackFooter(d.slackShown ? slackLabel(d.slackShown) : null)}>
-          {d.inheritedSlack ? <SwitchRow label={s.sameAs(parent?.name ?? null)} value={d.slackFollows} onChange={d.followSlack} /> : null}
-          {d.slackFollows ? null : (
-            <FieldRow value={d.slackText} onChangeText={d.setSlackText} onBlur={d.saveSlack} placeholder={s.slackPlaceholder} maxLength={100} />
-          )}
+          <FieldRow value={d.slackText} onChangeText={d.setSlackText} onBlur={d.saveSlack} placeholder={s.slackPlaceholder} maxLength={100} />
         </Section>
       ) : null}
 

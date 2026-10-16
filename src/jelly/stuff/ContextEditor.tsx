@@ -126,9 +126,6 @@ function Editor(props: EditorTarget) {
     slackText,
     setSlackText,
     saveSlack,
-    slackFollows,
-    followSlack,
-    inheritedSlack,
     slackShown,
     hue,
     suggested,
@@ -344,16 +341,13 @@ function Editor(props: EditorTarget) {
 
       {slack ? (
         <Section title={s.slack} footer={<SwiftText>{s.slackFooter(slackShown ? slackLabel(slackShown) : null)}</SwiftText>}>
-          {inheritedSlack ? <Toggle label={s.sameAs(parent?.name ?? null)} isOn={slackFollows} onIsOnChange={followSlack} /> : null}
-          {slackFollows ? null : (
-            <TextField
-              text={slackState}
-              placeholder={s.slackPlaceholder}
-              maxLength={100}
-              onTextChange={setSlackText}
-              onFocusChange={(focused) => !focused && saveSlack()}
-            />
-          )}
+          <TextField
+            text={slackState}
+            placeholder={s.slackPlaceholder}
+            maxLength={100}
+            onTextChange={setSlackText}
+            onFocusChange={(focused) => !focused && saveSlack()}
+          />
         </Section>
       ) : null}
 

@@ -24,7 +24,7 @@ export interface ResolvedContext extends Context {
   glyph: string | null;
   /** Own nudge threshold, else the nearest ancestor's, else DEFAULT_NUDGE_MINUTES. */
   nudgeMinutes: number;
-  /** Own Slack status (its emoji defaulting to the glyph), else the nearest ancestor's. */
+  /** Its own Slack status, the emoji defaulting to the glyph. Not inherited. */
   slack: SlackLine | null;
   depth: number;
   /** Ancestors from the root down to the parent. */
@@ -59,13 +59,12 @@ export function buildTree(contexts: Iterable<Context>): ContextTree {
   const ordered: ResolvedContext[] = [];
   const visit = (c: Context, parent: ResolvedContext | null) => {
     const glyph = c.emoji ?? parent?.glyph ?? null;
-    const own = c.slackStatus;
     const node: ResolvedContext = {
       ...c,
       hue: c.color ?? parent?.hue ?? DEFAULT_HUE,
       glyph,
       nudgeMinutes: c.nudgeAfterMinutes ?? parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES,
-      slack: own === 'none' ? null : own ? { text: own.text, emoji: own.emoji ?? glyph } : (parent?.slack ?? null),
+      slack: c.slackStatus ? { text: c.slackStatus.text, emoji: c.slackStatus.emoji ?? glyph } : null,
       depth: parent ? parent.depth + 1 : 0,
       ancestors: parent ? [...parent.ancestors, parent] : [],
       childIds: (children.get(c.id) ?? []).map((child) => child.id),

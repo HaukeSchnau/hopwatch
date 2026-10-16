@@ -81,7 +81,7 @@ export interface Context extends SyncFields {
   balanceStartMinutes: number;
   /** Inherited from the parent, then from DEFAULT_NUDGE_MINUTES. */
   nudgeAfterMinutes: number | null;
-  /** The Slack status while it runs. Inherited from the parent when null. */
+  /** The Slack status while it runs; null sets none. Not inherited: only jellies picked for Slack set one. */
   slackStatus: SlackStatus | null;
   /** Archived nodes leave the pickers and stay in history and reports. */
   archivedAt: number | null;
@@ -99,21 +99,20 @@ export interface Entry extends SyncFields {
   note: string | null;
 }
 
-/**
- * A Slack status a jelly sets while it runs. A null emoji is the jelly's own emoji; `'none'`
- * keeps a parent's status from applying.
- */
-export type SlackStatus = { text: string; emoji: string | null } | 'none';
+/** A Slack status a jelly sets while it runs. A null emoji is the jelly's own emoji. */
+export interface SlackStatus {
+  text: string;
+  emoji: string | null;
+}
 
 export const isSlackStatus = (value: unknown): value is SlackStatus =>
-  value === 'none' ||
-  (typeof value === 'object' &&
-    value !== null &&
-    'text' in value &&
-    typeof value.text === 'string' &&
-    value.text.trim() !== '' &&
-    'emoji' in value &&
-    (value.emoji === null || typeof value.emoji === 'string'));
+  typeof value === 'object' &&
+  value !== null &&
+  'text' in value &&
+  typeof value.text === 'string' &&
+  value.text.trim() !== '' &&
+  'emoji' in value &&
+  (value.emoji === null || typeof value.emoji === 'string');
 
 /** Why a day is off. Public holidays aren't stored; they're computed (holidays.ts). */
 export const dayOffKinds = ['vacation', 'sick', 'other'] as const;
