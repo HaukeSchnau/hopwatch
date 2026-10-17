@@ -134,7 +134,7 @@ only a status Hopwatch set itself or an empty one gets changed.
 Releases build on the M1 builder from the head of `main` as manual Calder runs (`.calder/ci.ts`),
 one step each. A push to `main` runs the checks and deploys the website (`site/`) to Cloudflare
 with `alchemy.run.ts`; a pull request gets a preview of it that's destroyed when it closes. Follow a run with `calder status`
-and `calder logs`, or at https://calder.schnau.dev.
+and `calder logs`, or at https://calder.schnau.dev/app/.
 
 - JavaScript and asset changes: `calder trigger hopwatch --inputs '{"release":"ota"}'`
   (`scripts/ota.sh`) publishes an EAS Update for iOS and Android to the `production` channel
