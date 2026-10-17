@@ -6,8 +6,10 @@ Store name "Hopwatch: Time Tracker", publisher Urbs UG on both the App Store and
 @haukeschnau/hopwatch. The app was called Stint before its launch, and exports from then
 (app: 'stint') still restore. Open source under the MIT license (`LICENSE`): the repository
 is public at git.schnau.dev/schnau/hopwatch, mirrored to github.com/HaukeSchnau/hopwatch, so
-nothing secret goes in it. Start with `notes/progress.md` for the current state, then
-`docs/architecture.md`.
+nothing secret or internal goes in it. The working notes (current state, decisions, the
+build and store setup, the plan for the next version) are private, on srv-2 in
+`~/infra/docs/agent-notes/hopwatch.md` and `hopwatch-next-version.md`; start there, then
+with `docs/architecture.md`, and keep account, credential and host details in those notes.
 
 - `src/core`: data model, timeline domain module (the only writer of entries), store,
   hooks, reports, nudges, deep links, export and import. Tests: `pnpm test`.

@@ -68,7 +68,7 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   go in one `<en-US>…</en-US><de-DE>…</de-DE>` block; check that both languages survive "Save
   as draft" before publishing (the German one got dropped once).
 - Internal testing: first release 1.1.0 (versionCode 29849538) rolled out 2026-10-02, no
-  review needed. Testers: the email list "Hauke" (***REMOVED***). Opt-in link:
+  review needed. Testers: the email list "Hauke". Opt-in link:
   https://play.google.com/apps/internaltest/4701468743687124341. Until the app has passed a
   first review, testers see it as "dev.schnau.hopwatch (unreviewed)".
 - Production: all 178 countries and regions Play lists, Rest of World included. Release

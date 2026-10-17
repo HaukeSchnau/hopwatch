@@ -158,8 +158,5 @@ and `kiln logs`, or at https://kiln.schnau.dev.
 Kiln hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
 base64, and `play-upload-password`) and the developer-role Expo robot's token
 (`expo-token`), and the website deploys the Cloudflare credentials (`cloudflare`). ~/infra
-maps them in hosts/srv-2/kiln.nix to the SOPS keys
-`projects/hopwatch/*`, copies of the Bitwarden items "Hopwatch Play upload key"
-(***REMOVED***) and ***REMOVED***. The App
-Store Connect key comes with the M1's Kiln agent, the Play service account with the M1's
-`gplay`.
+provides them. The App Store Connect key comes with the M1's Kiln agent, the Play service
+account with the M1's `gplay`.
