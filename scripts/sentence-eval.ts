@@ -47,7 +47,7 @@ const cases: [phrase: string, expected: Expected | Expected[]][] = [
   ['heute morgen 30 min gassi mit dem hund', { kind: 'place', jelly: 'Dog', minutes: 30, within: ['06:00', '12:00'] }],
   ['walked the dog 7:30-8', { kind: 'place', jelly: 'Dog', from: '07:30', to: '08:00' }],
   ['groceries for 45 minutes yesterday afternoon', { kind: 'place', jelly: 'Groceries', minutes: 45, day: 'yesterday', within: ['12:00', '18:00'] }],
-  ['yesterday evening 1.5 hours on stint', { kind: 'place', jelly: 'Stint', minutes: 90, day: 'yesterday', within: ['17:00', '23:00'] }],
+  ['yesterday evening 1.5 hours on the podcast', { kind: 'place', jelly: 'Podcast', minutes: 90, day: 'yesterday', within: ['17:00', '23:00'] }],
   ['deeep wrok since 9:30', { kind: 'start', jelly: 'Deep work', at: '09:30' }],
   ['lnuch 12-1', { kind: 'place', jelly: 'Lunch', from: '12:00', to: '13:00' }],
   ['acme website from 13:00 to 14:30', { kind: 'place', jelly: 'Website', from: '13:00', to: '14:30' }],

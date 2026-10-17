@@ -1,7 +1,7 @@
 // The JSON backup format, written by the export and read back by the restore. Pure, so
 // the parser is tested without React Native.
 //
-// Version 1 (Stint Five) has contexts and entries. Version 2 adds the device's preferences,
+// Version 1 has contexts and entries. Version 2 adds the device's preferences,
 // which hold each jelly's look. Version 3 adds job hours: days off, and each jelly's work
 // days and overtime balance; from 1.2.0 on its jellies may carry a Slack status, which older
 // versions skip. Soft-deleted rows travel too, for a later sync.

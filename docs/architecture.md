@@ -1,6 +1,6 @@
 # Architecture
 
-Hopwatch (formerly Stint) is a personal time tracker (spec: [spec.md](spec.md)) with one design, Jelly
+Hopwatch is a personal time tracker (spec: [spec.md](spec.md)) with one design, Jelly
 ([design/](design/)). Expo SDK 57, React Native, expo-router, Skia, `@expo/ui`.
 
 ## Layers

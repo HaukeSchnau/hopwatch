@@ -32,8 +32,8 @@ const tree = buildTree([
   context('lunch', 'Lunch'),
   context('acme', 'Acme'),
   context('acme-web', 'Website', 'acme'),
-  context('stint', 'Stint'),
-  context('stint-web', 'Website', 'stint'),
+  context('hopwatch', 'Hopwatch'),
+  context('hopwatch-web', 'Website', 'hopwatch'),
 ]);
 
 const entry = (id: string, contextId: string, start: number, end: number | null): Entry => ({
@@ -126,7 +126,7 @@ describe('reading the sentence itself', () => {
 
   it('takes a jelly the sentence names over the model', () => {
     expect(read({ jelly: 'Lunch', from: '10:00', to: '11:00' }, NOW, entries, 'meeting with Acme 10-11')).toEqual(block('acme', at(10), at(11)));
-    expect(read({ jelly: 'Acme › Website', minutes: '60' }, NOW, entries, 'stint website 1h')).toEqual(block('stint-web', at(14, 10), NOW));
+    expect(read({ jelly: 'Acme › Website', minutes: '60' }, NOW, entries, 'hopwatch website 1h')).toEqual(block('hopwatch-web', at(14, 10), NOW));
     expect(read({ jelly: 'Acme › Website', minutes: '60' }, NOW, entries, 'acme website 1h')).toEqual(block('acme-web', at(14, 10), NOW));
   });
 
@@ -149,6 +149,6 @@ describe('reading the sentence itself', () => {
 
 describe('jelly choices', () => {
   it('uses names, and paths where a name repeats', () => {
-    expect([...jellyChoices(tree).keys()]).toEqual(['Acme', 'Acme › Website', 'Deep work', 'Lunch', 'Stint', 'Stint › Website']);
+    expect([...jellyChoices(tree).keys()]).toEqual(['Acme', 'Acme › Website', 'Deep work', 'Hopwatch', 'Hopwatch › Website', 'Lunch']);
   });
 });

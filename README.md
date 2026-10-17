@@ -39,3 +39,9 @@ and each pull request gets a preview at `https://pr-<number>-hopwatch.hauke-911.
 that closes with it. `devenv up` serves it locally with `alchemy dev` on port 3000 (workerd,
 production's headers, edits show up on reload); `project dev up` gives a checkout or workspace
 its own instance and URL.
+
+## License
+
+[MIT](LICENSE), © Urbs UG (haftungsbeschränkt). The Nunito font in `assets/fonts` has its own
+license ([OFL](assets/fonts/Nunito-OFL.txt)), and the store badges in `site/img/badges`
+belong to Apple and Google.

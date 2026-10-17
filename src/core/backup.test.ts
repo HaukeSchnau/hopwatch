@@ -75,7 +75,7 @@ describe('parseBackup', () => {
     expect(parseBackup({ ...file(work, []), app: 'stint' }).ok).toBe(true);
   });
 
-  it('accepts the Stint Five format without prefs', () => {
+  it('accepts version 1 without prefs', () => {
     const { prefs: _, ...v1 } = { ...file(work, []), schemaVersion: 1 };
     const result = parseBackup(v1);
     expect(result.ok && result.backup.prefs).toEqual({});

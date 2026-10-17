@@ -25,8 +25,7 @@
 # routes are passed as a -hopwatchRoute launch argument that the app reads in development.
 set -euo pipefail
 
-# Dev clients built before the rename carry dev.schnau.stint; SIM_BUNDLE overrides.
-BUNDLE=${SIM_BUNDLE:-dev.schnau.hopwatch}
+BUNDLE=dev.schnau.hopwatch
 AD='~/.t3/device/tools/agent-device@0.21.7/node_modules/.bin/agent-device'
 
 # The development Metro (agent-service metro-all) and its Tailnet URL.

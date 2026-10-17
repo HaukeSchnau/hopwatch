@@ -185,7 +185,7 @@ function writtenAgo(sentence: string): number | null {
 /**
  * The jelly whose name the sentence spells out, over the model's pick: "meeting with Acme"
  * is Acme, not Meetings. With several, the one with more of its path spelled out wins, so
- * "stint website" is Stint › Website.
+ * "hopwatch website" is Hopwatch › Website.
  */
 function namedJelly(sentence: string, picked: ContextId | undefined, tree: ContextTree): ContextId | undefined {
   const score = (c: ResolvedContext) => [...c.ancestors, c].filter((a) => sentence.includes(plain(a.name))).length;
