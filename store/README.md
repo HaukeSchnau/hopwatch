@@ -58,9 +58,9 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
 - Signing: Play App Signing with a Google-generated app signing key (the console's default;
   Play signs what it delivers). Our Bitwarden key ("Hopwatch Play upload key", CN=Hopwatch,
   O=Urbs UG, SHA-256 92:A8:D2:2E:…:B6:DC) is the upload key, registered by the first upload.
-  Kiln signs release builds with a copy of it (`docs/architecture.md`, Releasing).
+  Calder signs release builds with a copy of it (`docs/architecture.md`, Releasing).
   Fingerprints of both are under Protected with Play › App signing.
-- Releases: the manual Kiln run `kiln trigger hopwatch --inputs '{"release":"play"}'` builds
+- Releases: the manual Calder run `calder trigger hopwatch --inputs '{"release":"play"}'` builds
   the signed AAB on the M1 and releases it to internal testing with `gplay release`, without
   release notes. Managed publishing is off, so that API commit also sends every change queued
   in the console for review: check Publishing overview first, and don't start the run while

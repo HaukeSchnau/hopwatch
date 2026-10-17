@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Publishes this commit's JavaScript and assets over the air (EAS Update, channel production) to
-# installed release builds whose runtime version, the app version, matches. Kiln's ota step runs
+# installed release builds whose runtime version, the app version, matches. Calder's ota step runs
 # this on the M1 builder, since hermesc, which compiles the bundle, has no Linux arm64 build.
 # EXPO_TOKEN_FILE names a file with the token of the developer-role Expo robot.
 set -euo pipefail

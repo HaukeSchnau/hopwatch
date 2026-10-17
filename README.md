@@ -22,19 +22,19 @@ scripts/m1.sh sim      # Debug dev client for simulators, built on the M1
 
 ## Release
 
-Releases build on the M1 from the head of `main`, started by hand in Kiln. Pushes to `main`
+Releases build on the M1 from the head of `main`, started by hand in Calder. Pushes to `main`
 run the checks and deploy the website.
 
 ```sh
-kiln trigger hopwatch --inputs '{"release":"testflight"}'  # iOS build to TestFlight
-kiln trigger hopwatch --inputs '{"release":"play"}'        # Android build to Play internal testing
-kiln trigger hopwatch --inputs '{"release":"ota"}'         # JS and assets to installed builds
+calder trigger hopwatch --inputs '{"release":"testflight"}'  # iOS build to TestFlight
+calder trigger hopwatch --inputs '{"release":"play"}'        # Android build to Play internal testing
+calder trigger hopwatch --inputs '{"release":"ota"}'         # JS and assets to installed builds
 ```
 
 ## Website
 
 `site/` is the website at https://hopwatch.schnau.dev, which the stores link for privacy and
-support. `alchemy.run.ts` serves it from Cloudflare. Kiln deploys it on every push to `main`,
+support. `alchemy.run.ts` serves it from Cloudflare. Calder deploys it on every push to `main`,
 and each pull request gets a preview at `https://pr-<number>-hopwatch.hauke-911.workers.dev`
 that closes with it. `devenv up` serves it locally with `alchemy dev` on port 3000 (workerd,
 production's headers, edits show up on reload); `project dev up` gives a checkout or workspace

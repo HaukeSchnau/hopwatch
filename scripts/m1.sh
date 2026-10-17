@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Development builds of Hopwatch on the M1 builder (`ssh m1`) from the local working copy. The
 # ios/ and android/ folders are generated there by `expo prebuild` and never checked in. Releases
-# (TestFlight, Play internal testing, OTA updates) run in Kiln instead; see docs/architecture.md.
+# (TestFlight, Play internal testing, OTA updates) run in Calder instead; see docs/architecture.md.
 #
 #   scripts/m1.sh sync               copy the source to the builder
 #   scripts/m1.sh sim                sync, then build a Debug dev client for simulators

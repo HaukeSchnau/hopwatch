@@ -39,8 +39,8 @@ the migration steps in `db.ts`.
 ## Development
 
 - Node and pnpm come from `devenv.nix`, which shares `nix/toolchain.nix` with the dev shell
-  Kiln checks in. `pnpm test` runs the domain tests, `pnpm typecheck` type-checks, `pnpm lint`
-  lints. Kiln runs all three on every pull request and push.
+  Calder checks in. `pnpm test` runs the domain tests, `pnpm typecheck` type-checks, `pnpm lint`
+  lints. Calder runs all three on every pull request and push.
 - Metro runs as the agent-service `metro-all` (port 3100, published on the Tailnet).
 - Native development builds run on the M1 builder (`ssh m1`) via `scripts/m1.sh`: `sim`
   for the simulator dev client, `device` for a development-signed IPA. `scripts/sim.sh`
@@ -52,7 +52,7 @@ the migration steps in `db.ts`.
 Package dev.schnau.hopwatch. Builds run on the M1 in ~/Developer/hopwatch-android:
 `scripts/m1.sh android-dev` + `android-install` put a dev client on the `hopwatch-pixel`
 emulator, which `scripts/emu.sh` drives (launch into a route, screenshots, taps; read its
-header). Release builds run in Kiln (see Releasing), signed with the upload key ("Hopwatch
+header). Release builds run in Calder (see Releasing), signed with the upload key ("Hopwatch
 Play upload key" in Bitwarden; Play App Signing holds the app signing key).
 iOS-only pieces (SwiftUI views from @expo/ui, SF Symbols, the Live Activity, Apple
 Intelligence) have Android counterparts (`*.android.tsx`, Material via @expo/ui's Jetpack
@@ -131,12 +131,12 @@ only a status Hopwatch set itself or an empty one gets changed.
 
 ## Releasing
 
-Releases build on the M1 builder from the head of `main` as manual Kiln runs (`.kiln/ci.ts`),
+Releases build on the M1 builder from the head of `main` as manual Calder runs (`.calder/ci.ts`),
 one step each. A push to `main` runs the checks and deploys the website (`site/`) to Cloudflare
-with `alchemy.run.ts`; a pull request gets a preview of it that's destroyed when it closes. Follow a run with `kiln status`
-and `kiln logs`, or at https://kiln.schnau.dev.
+with `alchemy.run.ts`; a pull request gets a preview of it that's destroyed when it closes. Follow a run with `calder status`
+and `calder logs`, or at https://calder.schnau.dev.
 
-- JavaScript and asset changes: `kiln trigger hopwatch --inputs '{"release":"ota"}'`
+- JavaScript and asset changes: `calder trigger hopwatch --inputs '{"release":"ota"}'`
   (`scripts/ota.sh`) publishes an EAS Update for iOS and Android to the `production` channel
   of @haukeschnau/hopwatch, with the commit subject as its message. Release builds download
   it when they come to the foreground and switch to it the next time they go to the
@@ -145,18 +145,18 @@ and `kiln logs`, or at https://kiln.schnau.dev.
 - Native changes (a new native package, a config plugin, native settings in app.json) need
   new store builds: bump `version` in app.json (otherwise JS that expects the new native
   code would reach older builds over the air), push, then
-  - iOS: `kiln trigger hopwatch --inputs '{"release":"testflight"}'`
+  - iOS: `calder trigger hopwatch --inputs '{"release":"testflight"}'`
     (`scripts/testflight.sh`). The build reaches Hauke's internal TestFlight group on its
     own; for the App Store, create the new version in App Store Connect, push the listing
     with `scripts/app-store.mjs` (release notes now apply), attach the build and submit it.
-  - Android: `kiln trigger hopwatch --inputs '{"release":"play"}'`
+  - Android: `calder trigger hopwatch --inputs '{"release":"play"}'`
     (`scripts/play-internal.sh`) builds a signed AAB and releases it to the internal testing
     track. Managed publishing is off, so that commit also sends every change queued in the
     Play Console for review; check Publishing overview first (`store/README.md`). Promote
     the release to production in the Console.
 
-Kiln hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
+Calder hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
 base64, and `play-upload-password`) and the developer-role Expo robot's token
 (`expo-token`), and the website deploys the Cloudflare credentials (`cloudflare`). ~/infra
-provides them. The App Store Connect key comes with the M1's Kiln agent, the Play service
+provides them. The App Store Connect key comes with the M1's Calder agent, the Play service
 account with the M1's `gplay`.

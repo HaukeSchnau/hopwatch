@@ -1,5 +1,5 @@
-import { Kiln, On, Secret, Step, Task, cmd } from "@kiln/core"
-import { Pnpm, Project } from "@kiln/std"
+import { Calder, On, Secret, Step, Task, cmd } from "@calder-ci/core"
+import { Pnpm, Project } from "@calder-ci/std"
 import { Schema } from "effect"
 import { flake } from "./flake.ts"
 
@@ -20,7 +20,7 @@ const website = Project.alchemy({
 /**
  * The app releases build on the Apple builder (m1) in Hauke's GUI session, where Xcode and the
  * signing keychain work. Pushes only check the app and deploy the website; a person starts each
- * release with `kiln trigger hopwatch --inputs '{"release":"testflight"}'` ("play", "ota").
+ * release with `calder trigger hopwatch --inputs '{"release":"testflight"}'` ("play", "ota").
  */
 const testflight = Task.make("testflight", {
   platform: "aarch64-darwin",
@@ -44,7 +44,7 @@ const ota = Task.make("ota", {
 
 const release = (name: string) => ({ inputs: { release: Schema.Literal(name) } })
 
-export default Kiln.project({
+export default Calder.project({
   rules: [
     ...website.rules,
     On.manual(release("testflight"), [testflight]),

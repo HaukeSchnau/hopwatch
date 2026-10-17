@@ -16,12 +16,12 @@ with `docs/architecture.md`, and keep account, credential and host details in th
 - `src/jelly`: the UI. `src/app`: expo-router routes.
 - `modules/on-device-model`: Apple Foundation Models bridge.
 - `scripts/m1.sh`: native development builds on the M1 builder (`ssh m1`). Releases
-  (TestFlight, Play internal testing, OTA updates) are manual Kiln runs on the M1, see
+  (TestFlight, Play internal testing, OTA updates) are manual Calder runs on the M1, see
   `docs/architecture.md`.
 - `asc` and `gplay`: App Store Connect and Google Play Console CLIs, already signed in to
   Urbs UG (see the `app-stores` skill).
-- Node and pnpm come from `devenv.nix` (`nix/toolchain.nix`, shared with Kiln's dev shell).
-- `site/`: the website at hopwatch.schnau.dev, on Cloudflare through `alchemy.run.ts`; Kiln
+- Node and pnpm come from `devenv.nix` (`nix/toolchain.nix`, shared with Calder's dev shell).
+- `site/`: the website at hopwatch.schnau.dev, on Cloudflare through `alchemy.run.ts`; Calder
   deploys it on push to `main` and previews pull requests. `project dev up` serves it with
   `alchemy dev`, one instance per checkout.
 
@@ -58,7 +58,7 @@ Run lint and typecheck before declaring any task done.
 
 ## Building and EAS
 
-Store builds don't use EAS Build: they run on the M1 builder as manual Kiln runs (Releasing in
+Store builds don't use EAS Build: they run on the M1 builder as manual Calder runs (Releasing in
 `docs/architecture.md`). EAS hosts the over-the-air updates (`eas update`). Run EAS CLI as
 `pnpm dlx eas-cli@latest <command>`; substitute that for bare `eas` in docs examples.
 Docs: https://docs.expo.dev/eas/index.md
