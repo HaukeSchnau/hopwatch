@@ -51,7 +51,7 @@ body {
   position: relative;
   background: var(--bg);
   color: var(--ink);
-  /* SF Pro Rounded Black, the site's headline face; render.sh makes it from the M1's copy
+  /* SF Pro Rounded Black, the site's headline face; render.sh makes it from macOS's copy
      and hands it to Chromium through fontconfig. */
   font-family: "Hopwatch Rounded Black", ui-rounded, sans-serif;
   -webkit-font-smoothing: antialiased;

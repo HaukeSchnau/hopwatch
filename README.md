@@ -17,12 +17,13 @@ pnpm test              # domain tests
 pnpm typecheck
 pnpm lint
 pnpm start --dev-client
-scripts/m1.sh sim      # Debug dev client for simulators, built on the M1
+pnpm expo run:ios      # development build on a Mac with Xcode
+pnpm expo run:android  # development build with the Android SDK
 ```
 
 ## Release
 
-Releases build on the M1 from the head of `main`, started by hand in Calder. Pushes to `main`
+Releases build on a Mac Calder agent from the head of `main`, started by hand in Calder. Pushes to `main`
 run the checks and deploy the website.
 
 ```sh

@@ -68,7 +68,7 @@ export default function RootLayout() {
   );
 }
 
-/** Development only: opens the route passed as `-hopwatchRoute` (see scripts/sim.sh). */
+/** Development only: opens the route passed as `-hopwatchRoute` (an `xcrun simctl launch` argument). */
 function useDevLaunchRoute() {
   useEffect(() => {
     const route = devLaunchRoute();

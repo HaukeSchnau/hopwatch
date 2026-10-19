@@ -1,5 +1,5 @@
 # Makes the caption fonts for frame.html: static Heavy and Black cuts of SF Pro Rounded
-# (fonts/SFNSRounded.ttf, copied from the M1 by render.sh) named "Hopwatch Rounded Heavy"
+# (fonts/SFNSRounded.ttf, copied from macOS by render.sh) named "Hopwatch Rounded Heavy"
 # and "Hopwatch Rounded Black". Chromium rejects Apple's variable font in @font-face, so
 # render.sh hands these to it through fontconfig instead. Needs fontTools.
 from pathlib import Path

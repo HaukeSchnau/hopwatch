@@ -1,11 +1,11 @@
-// Gradle init script for Android builds on m1 (scripts/m1.sh and scripts/play-internal.sh pass it
-// with --init-script).
-// m1's Android SDK comes read-only from ~/infra and holds only the NDK and build tools React
+// Gradle init script for Android builds on a builder with a read-only Android SDK
+// (scripts/play-internal.sh passes it with --init-script).
+// Such an SDK holds only the NDK and build tools React
 // Native asks for (rootProject.ext.ndkVersion and buildToolsVersion). Modules that don't pin
 // them, such as expo and expo-updates, would get AGP's defaults instead, which Gradle then
 // fails to install. This points every Android module at React Native's versions.
 //
-// TODO: drop once ~/infra's SDK also ships AGP's default NDK and build tools.
+// TODO: drop once the builder's SDK also ships AGP's default NDK and build tools.
 allprojects {
   ['com.android.library', 'com.android.application'].each { id ->
     plugins.withId(id) {

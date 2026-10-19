@@ -12,7 +12,7 @@ Shapes and colors follow src/jelly: the blob body and tuft from character/bodies
 toppers.tsx, the shiny eyes from face.tsx, candy hues and the cream/plum backgrounds from
 theme.ts. The system adds the Liquid Glass look to the body and the dial beans.
 
-Preview a rendition on the M1 builder with Icon Composer's ictool, e.g.:
+Preview a rendition on a Mac with Icon Composer's ictool, e.g.:
     ictool assets/hopwatch.icon --export-image --output-file out.png --platform iOS \\
       --rendition Dark --width 1024 --height 1024 --scale 1
 (ictool lives in Xcode.app/Contents/Applications/Icon Composer.app/Contents/Executables.)

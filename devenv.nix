@@ -8,7 +8,7 @@ in
     ./project.nix
   ];
 
-  # Node and pnpm for Expo/Metro, the checks and Alchemy. Native builds run on the M1 builder.
+  # Node and pnpm for Expo/Metro, the checks and Alchemy. Native builds need a Mac (iOS) or the Android SDK.
   packages = [
     tools.nodejs
     tools.pnpm

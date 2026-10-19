@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Builds a release AAB with a fresh versionCode, signed with the Play upload key, and releases it
-# to Google Play's internal testing track. Calder's play step runs this on the M1 builder. The upload
+# to Google Play's internal testing track. Calder's play step runs this on a Mac agent. The upload
 # key comes from the project's Calder secrets: UPLOAD_KEYSTORE names a file with the PKCS12 keystore
 # in base64, UPLOAD_KEYSTORE_PASSWORD one with its password (store and key share it, alias
-# "upload"). The M1's gplay brings the Urbs UG service account itself (~/infra, app-stores).
+# "upload"). The agent's gplay brings the Urbs UG service account itself.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

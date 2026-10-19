@@ -1,5 +1,5 @@
 /// <reference types="node" />
-// Evaluates typed logging (src/core/sentence.ts) against Apple's on-device model on the M1:
+// Evaluates typed logging (src/core/sentence.ts) against Apple's on-device model (scripts/model.sh, or the command in HOPWATCH_MODEL_COMMAND):
 // each phrase goes through the app's own request and resolver, against the sample data's
 // jellies, at a fixed "now" (Wednesday 30 September 2026, 15:10, Berlin). Prints a Markdown
 // table of phrase, model answer, plan, verdict and latency. Run from the repo root, with
@@ -109,7 +109,7 @@ for (const [phrase, expected] of cases) {
   let latency = '';
   let reading: ReturnType<typeof readSentence> = null;
   let failure = '';
-  const run = spawnSync('scripts/model.sh', { input: JSON.stringify(request), encoding: 'utf8' });
+  const run = spawnSync(process.env.HOPWATCH_MODEL_COMMAND ?? 'scripts/model.sh', { input: JSON.stringify(request), encoding: 'utf8' });
   const notes = run.stderr.split('\n').filter((l) => l && !l.includes('step-agent'));
   latency = notes.find((l) => /^\d+\.\d+s$/.test(l)) ?? '';
   if (latency) latencies.push(Number.parseFloat(latency));

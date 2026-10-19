@@ -55,5 +55,5 @@ store/screenshots/raw/
 # Alchemy state of local runs
 .alchemy/
 
-# Working notes are private, in ~/infra/docs/agent-notes/hopwatch*.md (AGENTS.md).
+# Working notes are private (AGENTS.md).
 /notes/

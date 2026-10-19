@@ -1,6 +1,6 @@
 // Development-only gallery of the characters: every trait, sample contexts asleep and
-// awake, several sizes, light and dark, and a check of the on-device model. Open it with
-// `scripts/sim.sh view UDID "/looks?s=grid" OUT.png`; `s` picks one section.
+// awake, several sizes, light and dark, and a check of the on-device model. Open it at
+// `/looks?s=grid` in a development build; `s` picks one section.
 
 import { availability, lastFailure } from '@modules/on-device-model';
 import { useLocalSearchParams } from 'expo-router';

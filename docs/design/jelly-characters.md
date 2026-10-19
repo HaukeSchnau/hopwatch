@@ -113,7 +113,7 @@ hobbies, family, health, vague ones; same request as the app):
   meditation), with a lean toward orange, lime and teal. Gray was its pick for dull names
   until it was taken off the list. Color words ("yellow", "purple") work better than the
   palette's keys.
-- Latency, median model time per request on the shared M1: 2.5 s for a jelly being named
+- Latency, median model time per request on the shared Mac builder: 2.5 s for a jelly being named
   (emoji, topic, mood, color) against 1.8 s for the old emoji and topic (p90 4.1 s
   against 3.4 s). Under heavy load (load average 40 to 65): 2.8 s against 2.3 s, and
   dress-up (topic and mood) 2.6 s against 2.3 s. A cold "Try a Suggestion" in the
@@ -139,7 +139,7 @@ What else I learned tuning the prompt:
 `useDressUp()` (mounted once in Jelly's layout) walks the tree when the model is
 available and asks about every context without current picks (latest version, made for
 its name and emoji), one request at a time. Each context, name and emoji is tried once
-per launch. A failed answer isn't stored, so the next launch asks again: while the M1's
+per launch. A failed answer isn't stored, so the next launch asks again: while the Mac builder's
 model was stuck mid-update, the simulator still reported it available and every request
 failed. A rename or a new emoji asks again; until the answer comes, the heuristic topic
 applies. Archived contexts and contexts with every trait picked by hand are skipped. It
@@ -250,7 +250,7 @@ In `.shots/`: `j2c-grid-asleep.png`, `j2c-grid-awake.png`, `j2c-grid-dark.png` a
 - Derivation looks at one context at a time, so neighbours can share traits by chance
   (in an older sample data set, Stint and Garden planner are both one-eyed onigiri, told apart by
   antenna, sprout and color).
-- Checked on the simulator only. The model answered from the simulator through the M1's
+- Checked on the simulator only. The model answered from the simulator through the Mac builder's
   Apple Intelligence; an iPhone 16 Pro should behave the same but hasn't been tried.
 
 ## Core requests

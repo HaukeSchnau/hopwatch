@@ -18,7 +18,7 @@ const website = Project.alchemy({
 })
 
 /**
- * The app releases build on the Apple builder (m1) in Hauke's GUI session, where Xcode and the
+ * The app releases build on a Mac agent in a GUI session, where Xcode and the
  * signing keychain work. Pushes only check the app and deploy the website; a person starts each
  * release with `calder trigger hopwatch --inputs '{"release":"testflight"}'` ("play", "ota").
  */

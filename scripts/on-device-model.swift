@@ -1,6 +1,6 @@
 // macOS twin of modules/on-device-model: reads the same request JSON from stdin
 // ({ instructions, prompt, fields: [{ name, description, choices? }] }), runs it against
-// Apple's on-device model on the M1 builder and prints the answer as JSON, with timing on
+// Apple's on-device model on a Mac with Apple Intelligence and prints the answer as JSON, with timing on
 // stderr. Used by scripts/model.sh to tune prompts without a phone.
 
 import Foundation

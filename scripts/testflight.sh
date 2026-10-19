@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Archives a Release build with a fresh build number and uploads it to App Store Connect, where
-# Hauke's internal TestFlight group gets it. Calder's testflight step runs this on the M1 builder in
+# Hauke's internal TestFlight group gets it. Calder's testflight step runs this on a Mac agent in
 # Hauke's GUI session, where the keychain can sign. The Calder agent there provides the App Store
 # Connect key as APP_STORE_CONNECT_API_KEY_PATH, _KEY_ID and _ISSUER_ID.
 set -euo pipefail

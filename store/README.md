@@ -56,12 +56,12 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   blank. Revisit it when the app gains a network call or an SDK that sends data, and keep it
   in line with the privacy policy.
 - Signing: Play App Signing with a Google-generated app signing key (the console's default;
-  Play signs what it delivers). Our Bitwarden key ("Hopwatch Play upload key", CN=Hopwatch,
+  Play signs what it delivers). Our upload key (CN=Hopwatch,
   O=Urbs UG, SHA-256 92:A8:D2:2E:…:B6:DC) is the upload key, registered by the first upload.
   Calder signs release builds with a copy of it (`docs/architecture.md`, Releasing).
   Fingerprints of both are under Protected with Play › App signing.
 - Releases: the manual Calder run `calder trigger hopwatch --inputs '{"release":"play"}'` builds
-  the signed AAB on the M1 and releases it to internal testing with `gplay release`, without
+  the signed AAB on a Mac agent and releases it to internal testing with `gplay release`, without
   release notes. Managed publishing is off, so that API commit also sends every change queued
   in the console for review: check Publishing overview first, and don't start the run while
   anything there should wait. Promote the release to production in the console. Release notes
@@ -89,7 +89,7 @@ from the simulator captures in `screenshots/raw/<locale>/` (not checked in) by
 `screenshots/render.sh`: `frame.html` and `frame.css` draw one frame, `shots.js` lists the
 shots, their captions and order.
 
-The captures come from a Release build on the M1's "Hopwatch Screens" simulator (iPhone 18
+The captures come from a Release build on a "Hopwatch Screens" simulator (iPhone 18
 Pro Max, iOS 27, region en_US so the status bar reads 9:41) with sample data loaded in
 onboarding, a status bar override (`xcrun simctl status_bar … override --time 9:41
 --batteryState discharging --batteryLevel 100`) and, for German, the app launched with
@@ -104,7 +104,7 @@ least 1080 px a side there), all 9:16. Both languages are on the listing: en-US 
 de-DE replacing the inherited English images in the translation.
 
 The captures come from the release AAB, turned into a universal APK with bundletool from the
-M1's Gradle cache and installed on three emulators from the android-36 Google APIs image:
+builder's Gradle cache and installed on three emulators from the android-36 Google APIs image:
 `hopwatch-pixel` (Pixel 9, 1080 x 2424) for phones, `hopwatch-tablet-7` (Nexus 7 2013 profile,
 1200 x 1920) and `hopwatch-tablet-10` (Pixel Tablet profile, rotated to portrait, 1600 x 2560).
 Before capturing: clock set to Friday 15:08 (`adb root`, `date`), SystemUI demo mode for a

@@ -12,14 +12,14 @@
 #                                             (tablet-10: 1440 x 2560)
 #
 # Uses nixpkgs' Chromium (or $CHROME). The caption font, SF Pro Rounded, isn't checked in
-# (Apple's license): the first run copies it from the M1 into fonts/ and fonts.py makes the
-# static cuts that Chromium gets through fontconfig.
+# (Apple's license): the first run copies macOS's copy (or $SF_ROUNDED_FONT) into fonts/ and
+# fonts.py makes the static cuts that Chromium gets through fontconfig.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 if [ ! -f fonts/hopwatch-rounded-black.ttf ]; then
   mkdir -p fonts
-  [ -f fonts/SFNSRounded.ttf ] || scp -q m1:/System/Library/Fonts/SFNSRounded.ttf fonts/
+  [ -f fonts/SFNSRounded.ttf ] || cp "${SF_ROUNDED_FONT:-/System/Library/Fonts/SFNSRounded.ttf}" fonts/
   nix shell --impure --expr 'with import <nixpkgs> {}; python3.withPackages (p: [ p.fonttools ])' -c python3 fonts.py
 fi
 

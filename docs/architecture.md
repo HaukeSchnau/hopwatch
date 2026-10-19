@@ -41,19 +41,15 @@ the migration steps in `db.ts`.
 - Node and pnpm come from `devenv.nix`, which shares `nix/toolchain.nix` with the dev shell
   Calder checks in. `pnpm test` runs the domain tests, `pnpm typecheck` type-checks, `pnpm lint`
   lints. Calder runs all three on every pull request and push.
-- Metro runs as the agent-service `metro-all` (port 3100, published on the Tailnet).
-- Native development builds run on the M1 builder (`ssh m1`) via `scripts/m1.sh`: `sim`
-  for the simulator dev client, `device` for a development-signed IPA. `scripts/sim.sh`
-  drives the simulators (launch into a route, screenshots, taps). `scripts/model.sh`
-  runs on-device model prompts on the M1.
+- `pnpm start --dev-client` runs Metro for development builds, which `pnpm expo run:ios`
+  (a Mac with Xcode) and `pnpm expo run:android` make. `scripts/model.sh` runs on-device
+  model prompts on a Mac with Apple Intelligence.
 
 ## Android
 
-Package dev.schnau.hopwatch. Builds run on the M1 in ~/Developer/hopwatch-android:
-`scripts/m1.sh android-dev` + `android-install` put a dev client on the `hopwatch-pixel`
-emulator, which `scripts/emu.sh` drives (launch into a route, screenshots, taps; read its
-header). Release builds run in Calder (see Releasing), signed with the upload key ("Hopwatch
-Play upload key" in Bitwarden; Play App Signing holds the app signing key).
+Package dev.schnau.hopwatch. `pnpm expo run:android` puts a dev client on an emulator or
+device. Release builds run in Calder (see Releasing), signed with the upload key; Play App
+Signing holds the app signing key.
 iOS-only pieces (SwiftUI views from @expo/ui, SF Symbols, the Live Activity, Apple
 Intelligence) have Android counterparts (`*.android.tsx`, Material via @expo/ui's Jetpack
 Compose, Material Symbols) or stay hidden there.
@@ -131,7 +127,7 @@ only a status Hopwatch set itself or an empty one gets changed.
 
 ## Releasing
 
-Releases build on the M1 builder from the head of `main` as manual Calder runs (`.calder/ci.ts`),
+Releases build on a Mac Calder agent from the head of `main` as manual Calder runs (`.calder/ci.ts`),
 one step each. A push to `main` runs the checks and deploys the website (`site/`) to Cloudflare
 with `alchemy.run.ts`; a pull request gets a preview of it that's destroyed when it closes. Follow a run with `calder status`
 and `calder logs`, or at https://calder.schnau.dev/app/.
@@ -157,6 +153,5 @@ and `calder logs`, or at https://calder.schnau.dev/app/.
 
 Calder hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
 base64, and `play-upload-password`) and the developer-role Expo robot's token
-(`expo-token`), and the website deploys the Cloudflare credentials (`cloudflare`). ~/infra
-provides them. The App Store Connect key comes with the M1's Calder agent, the Play service
-account with the M1's `gplay`.
+(`expo-token`), and the website deploys the Cloudflare credentials (`cloudflare`). The App
+Store Connect key comes with the Mac agent, the Play service account with its `gplay`.
