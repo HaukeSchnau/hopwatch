@@ -12,9 +12,14 @@ const checks = (["typecheck", "test", "lint"] as const).map((script) =>
 /** The website under site/ on Cloudflare (alchemy.run.ts): production on push, previews per pull request. */
 const website = Project.alchemy({
   flake,
-  stack: { shell, setup: install, env: "cloudflare" },
+  stack: {
+    shell,
+    setup: install,
+    env: "cloudflare",
+    outputs: { name: "Hopwatch", schema: Schema.Struct({ url: Schema.String }) },
+  },
   checks,
-  previews: { url: (pr) => `https://pr-${pr}-hopwatch.hauke-911.workers.dev` },
+  previews: { url: (_pr, outputs) => outputs.url },
 })
 
 /**
