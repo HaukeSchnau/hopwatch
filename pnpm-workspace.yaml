@@ -3,3 +3,8 @@ allowBuilds:
   '@shopify/react-native-skia': true
   unrs-resolver: false
   workerd: false
+patchedDependencies:
+  # Finds the presenting window through the foreground scene, so Slack's sign-in sheet opens
+  # under the UIScene life cycle (expo/expo#50368).
+  # TODO: drop with expo-web-browser 58.0.1 or later, which has the fix (SDK 58).
+  expo-web-browser@57.0.3: patches/expo-web-browser@57.0.3.patch

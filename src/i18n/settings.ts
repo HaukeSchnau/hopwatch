@@ -76,7 +76,7 @@ export const settingsText = localized({
       connectedFooter: 'Jellies with a Slack status set it while they run, until midnight at the latest. A status you set yourself stays.',
       broken: 'Slack signed Hopwatch out. Connect again to keep your status in step.',
       failed: "Couldn't connect to Slack",
-      failedMessage: 'Check your connection and try again.',
+      failedMessage: "Check your connection and try again. If Slack's page doesn't open at all, restart Hopwatch.",
     },
     shortcuts: {
       title: android ? 'Links' : 'Shortcuts',
@@ -173,7 +173,7 @@ export const settingsText = localized({
       connectedFooter: 'Jellys mit Slack-Status setzen ihn, solange sie laufen, längstens bis Mitternacht. Einen Status, den du selbst gesetzt hast, lässt Hopwatch stehen.',
       broken: 'Slack hat Hopwatch abgemeldet. Verbinde erneut, damit dein Status mitläuft.',
       failed: 'Keine Verbindung zu Slack',
-      failedMessage: 'Prüf deine Verbindung und versuch es noch mal.',
+      failedMessage: 'Prüf deine Verbindung und versuch es noch mal. Öffnet sich die Seite von Slack gar nicht, starte Hopwatch neu.',
     },
     shortcuts: {
       title: android ? 'Links' : 'Kurzbefehle',

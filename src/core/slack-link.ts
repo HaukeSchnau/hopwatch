@@ -91,7 +91,15 @@ export async function connectSlack(): Promise<ConnectResult> {
     await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, { encoding: Crypto.CryptoEncoding.BASE64 }),
   );
   const state = Crypto.randomUUID();
-  const result = await WebBrowser.openAuthSessionAsync(authorizeUrl(client, challenge, state), SLACK_REDIRECT);
+  let result: WebBrowser.WebBrowserAuthSessionResult;
+  try {
+    result = await WebBrowser.openAuthSessionAsync(authorizeUrl(client, challenge, state), SLACK_REDIRECT);
+  } catch {
+    // The sign-in sheet didn't open. Say so, rather than leave the button looking dead.
+    return 'failed';
+  }
+  // 'locked': an earlier sheet never finished, so this one can't open either.
+  if (result.type === 'locked') return 'failed';
   if (result.type !== 'success') return 'cancelled';
   const params = redirectParams(result.url);
   if (params.state !== state) return 'failed';
