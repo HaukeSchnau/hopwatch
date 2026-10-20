@@ -16,9 +16,9 @@ import {
   requestNudgePermission,
   setEveningCheck,
   shareExport,
-  slackAvailable,
   useEveningCheck,
   useHopwatch,
+  useSlackAvailable,
   useSlackLink,
 } from '@/core';
 import { settingsText } from '@/i18n/settings';
@@ -57,6 +57,7 @@ export function useEveningSetting() {
 
 /** Slack's rows: the connected workspace, connecting (with a note when it fails), disconnecting. */
 export function useSlackSetting() {
+  const available = useSlackAvailable();
   const link = useSlackLink();
   const [busy, setBusy] = useState(false);
   const connect = () => {
@@ -73,7 +74,7 @@ export function useSlackSetting() {
     buzz.thud();
     disconnectSlack();
   };
-  return { available: slackAvailable, link, busy, connect, disconnect };
+  return { available, link, busy, connect, disconnect };
 }
 
 export function useSettingsActions() {

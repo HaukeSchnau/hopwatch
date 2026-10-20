@@ -19,6 +19,7 @@ import {
   readGrant,
   redirectParams,
   SIGNED_OUT,
+  SLACK_APP_PREF,
   SLACK_CLIENT_ID,
   SLACK_REDIRECT,
   type SlackGrant,
@@ -28,7 +29,7 @@ import {
   type SlackWire,
   slackWire,
 } from './slack';
-import { useHopwatch } from './store';
+import { type HopwatchState, useHopwatch } from './store';
 import { findOpen } from './timeline';
 
 /** The connected workspace; `broken` once Slack refused the tokens, until signing in again. */
@@ -40,8 +41,18 @@ export interface SlackLink {
 /** iOS's native client, in builds that have it. */
 const native = Platform.OS === 'ios' && typeof systemSurfaces?.slackLink === 'function' ? systemSurfaces : null;
 
-/** Whether this build can connect Slack at all. */
-export const slackAvailable = SLACK_CLIENT_ID !== '' && (native !== null || Platform.OS === 'android');
+/** The Slack app to sign in with: Hopwatch's, or a personal one set by hopwatch://slack-app. */
+const clientIdOf = (prefs: HopwatchState['prefs']) => {
+  const own = prefs[SLACK_APP_PREF];
+  return typeof own === 'string' && own !== '' ? own : SLACK_CLIENT_ID;
+};
+const clientId = () => clientIdOf(useHopwatch.getState().prefs);
+
+/** Whether this build has a Slack client, and there's a Slack app to sign in with. */
+const canConnect = (id: string) => id !== '' && (native !== null || Platform.OS === 'android');
+
+/** Whether Settings offers Slack. */
+export const useSlackAvailable = () => useHopwatch((s) => canConnect(clientIdOf(s.prefs)));
 
 let link: SlackLink | null = null;
 const listeners = new Set<() => void>();
@@ -65,7 +76,7 @@ export async function refreshSlackLink() {
 /** The connected workspace, or null. Reads it again whenever a screen using it shows. */
 export function useSlackLink(): SlackLink | null {
   useEffect(() => {
-    if (slackAvailable) refreshSlackLink();
+    if (canConnect(clientId())) refreshSlackLink();
   }, []);
   return useSyncExternalStore(subscribe, () => link);
 }
@@ -74,25 +85,26 @@ export type ConnectResult = 'connected' | 'cancelled' | 'failed';
 
 /** Signs in to Slack in the system's browser sheet; the tokens stay on this phone. */
 export async function connectSlack(): Promise<ConnectResult> {
+  const client = clientId();
   const verifier = (Crypto.randomUUID() + Crypto.randomUUID()).replace(/-/g, '');
   const challenge = base64url(
     await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, { encoding: Crypto.CryptoEncoding.BASE64 }),
   );
   const state = Crypto.randomUUID();
-  const result = await WebBrowser.openAuthSessionAsync(authorizeUrl(challenge, state), SLACK_REDIRECT);
+  const result = await WebBrowser.openAuthSessionAsync(authorizeUrl(client, challenge, state), SLACK_REDIRECT);
   if (result.type !== 'success') return 'cancelled';
   const params = redirectParams(result.url);
   if (params.state !== state) return 'failed';
   if (!params.code) return params.error === 'access_denied' ? 'cancelled' : 'failed';
   try {
     const answer = await api('oauth.v2.access', {
-      form: { client_id: SLACK_CLIENT_ID, code: params.code, code_verifier: verifier, redirect_uri: SLACK_REDIRECT },
+      form: { client_id: client, code: params.code, code_verifier: verifier, redirect_uri: SLACK_REDIRECT },
     });
     const read = readGrant(answer, Date.now());
     if (!read.ok) return 'failed';
-    if (native) await native.slackConnect(JSON.stringify({ ...read.grant, clientId: SLACK_CLIENT_ID }));
+    if (native) await native.slackConnect(JSON.stringify({ ...read.grant, clientId: client }));
     else {
-      await serially(() => save({ ...read.grant, clientId: SLACK_CLIENT_ID, broken: false, ours: null, applied: null }));
+      await serially(() => save({ ...read.grant, clientId: client, broken: false, ours: null, applied: null }));
       syncSlack();
     }
     await refreshSlackLink();
@@ -170,7 +182,7 @@ function wanted(): SlackWire | null {
  * failed call the next sync tries again. iOS's native client syncs on its own.
  */
 export function syncSlack(): Promise<void> {
-  if (Platform.OS !== 'android' || !slackAvailable) return Promise.resolve();
+  if (Platform.OS !== 'android' || !canConnect(clientId())) return Promise.resolve();
   const now = Date.now();
   const want = wanted();
   const key = appliedKey(want, now);

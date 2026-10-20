@@ -9,9 +9,15 @@ import names from './slack-emoji.json';
 import { addDays, dayKey, startOfDay } from './time';
 import type { SlackLine } from './tree';
 
-/** The Hopwatch app in Urbs' Slack workspace. Public: the sign-in uses PKCE, no secret. */
+/** Hopwatch's Slack app. Public: the sign-in uses PKCE, no secret. */
 // TODO: the real client id once the Slack app exists.
 export const SLACK_CLIENT_ID = '';
+/**
+ * Another Slack app's client id to sign in with instead, set by a hopwatch://slack-app link
+ * (links.ts): a personal Slack app with its own name, for a workspace that should list that
+ * one. Device-local; a connection keeps the app it was made with.
+ */
+export const SLACK_APP_PREF = 'slack.app';
 /** Slack only takes a custom scheme with PKCE, as a "desktop" redirect. */
 export const SLACK_REDIRECT = 'hopwatch://slack-auth';
 const USER_SCOPES = 'users.profile:read,users.profile:write';
@@ -81,9 +87,9 @@ const query = (params: Record<string, string>) =>
     .join('&');
 
 /** Slack's sign-in page, asking to read and set the person's profile (their status). */
-export const authorizeUrl = (challenge: string, state: string) =>
+export const authorizeUrl = (clientId: string, challenge: string, state: string) =>
   `https://slack.com/oauth/v2/authorize?${query({
-    client_id: SLACK_CLIENT_ID,
+    client_id: clientId,
     user_scope: USER_SCOPES,
     redirect_uri: SLACK_REDIRECT,
     code_challenge: challenge,

@@ -12,6 +12,7 @@ import { initialLinkIsStale } from './launch';
 import type { LinkAction } from './links';
 import type { Context, ContextId, DayOff, DayOffId, DayOffKind, Entry, EntryId, Hue, SlackStatus } from './model';
 import { type RemoteCommand, replay } from './remote';
+import { SLACK_APP_PREF } from './slack';
 import * as timeline from './timeline';
 import { formatClock, offsetAt } from './time';
 import * as tree from './tree';
@@ -344,6 +345,7 @@ export const actions = {
     if (link.kind === 'start') {
       if (get().tree.byId.get(link.contextId)) actions.start(link.contextId);
     } else if (link.kind === 'stop') actions.stop();
+    else if (link.kind === 'slack-app') actions.setPref(SLACK_APP_PREF, link.clientId);
     else actions.back();
   },
 

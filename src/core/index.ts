@@ -10,9 +10,9 @@ export {
   type ConnectResult,
   connectSlack,
   disconnectSlack,
-  slackAvailable,
   type SlackLink,
   syncSlack,
+  useSlackAvailable,
   useSlackLink,
 } from './slack-link';
 export { slackEmoji } from './slack';

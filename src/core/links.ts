@@ -2,12 +2,18 @@
 //   hopwatch://start?context=<id>   switch to that context
 //   hopwatch://stop                 stop the running entry
 //   hopwatch://resume               start the previous context again
+//   hopwatch://slack-app?client=<id> sign in to Slack with another Slack app than Hopwatch's
+//                                   (a personal one); without `client`, back to Hopwatch's
 
 import type { ContextId } from './model';
 
 export const SCHEME = 'hopwatch';
 
-export type LinkAction = { kind: 'start'; contextId: ContextId } | { kind: 'stop' } | { kind: 'resume' };
+export type LinkAction =
+  | { kind: 'start'; contextId: ContextId }
+  | { kind: 'stop' }
+  | { kind: 'resume' }
+  | { kind: 'slack-app'; clientId: string | null };
 
 /** Parses a URL or router path such as "hopwatch://start?context=…" or "/stop". */
 export function parseLink(pathOrUrl: string): LinkAction | null {
@@ -31,6 +37,8 @@ export function parseLink(pathOrUrl: string): LinkAction | null {
       return { kind: 'stop' };
     case 'resume':
       return { kind: 'resume' };
+    case 'slack-app':
+      return { kind: 'slack-app', clientId: params.get('client') || null };
     default:
       return null;
   }

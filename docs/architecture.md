@@ -122,8 +122,12 @@ only a status Hopwatch set itself or an empty one gets changed.
   preferences and drop the database from Android's Auto Backup. Without it, a restored
   phone can't decrypt the token and the library returns null, which reads as not
   connected.
-- The Slack app ("Hopwatch", client id in `slack.ts`) belongs to Urbs' Slack workspace,
-  with user scopes `users.profile:read` and `users.profile:write` and public distribution.
+- The Slack app "Hopwatch" (client id in `slack.ts`) has user scopes `users.profile:read`
+  and `users.profile:write`, PKCE, the `hopwatch://slack-auth` redirect and public
+  distribution. A `hopwatch://slack-app?client=…` link makes one phone sign in with another
+  Slack app set up the same way (pref `slack.app`), such as a personal one with its own
+  name; the link without `client` goes back. A connection keeps the app it was made with,
+  since refreshing needs that app's client id.
 
 ## Releasing
 
