@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Context, ContextId } from './model';
-import { appliedKey, readGrant, redirectParams, slackEmoji, slackStep } from './slack';
+import { appliedKey, readGrant, redirectParams, slackStep } from './slack';
 import { buildTree } from './tree';
 
 const context = (id: string, extra: Partial<Context> = {}): Context => ({
@@ -40,21 +40,6 @@ describe('slack status in the tree', () => {
 
   it('belongs only to the jelly it was given to, not to the ones inside it', () => {
     expect(slack('deep')).toBeNull();
-  });
-});
-
-describe('slackEmoji', () => {
-  it("finds Slack's name, ignoring variation selectors and skin tones", () => {
-    expect(slackEmoji('🐶')).toBe(':dog:');
-    expect(slackEmoji('🗓️')).toBe(':spiral_calendar_pad:');
-    expect(slackEmoji('☕')).toBe(':coffee:');
-    expect(slackEmoji('👋🏽')).toBe(':wave:');
-    expect(slackEmoji('🏃🏽‍♀️')).toBe(':woman-running:');
-  });
-
-  it("is empty when Slack has no name, so Slack shows its default", () => {
-    expect(slackEmoji(null)).toBe('');
-    expect(slackEmoji('J')).toBe('');
   });
 });
 

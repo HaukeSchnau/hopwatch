@@ -1,17 +1,15 @@
-// Slack status sync, the parts both platforms share: Slack's names for emoji, the sign-in
-// URL and token answers, and the rule for what to do with someone's status. The client
+// Slack status sync, the parts both platforms share: the status as Slack takes it, the
+// sign-in URL and token answers, and the rule for what to do with someone's status. The client
 // itself runs where taps run: in Swift on iOS (modules/system-surfaces/ios/Slack.swift),
 // so a tap on the Live Activity reaches Slack while JavaScript sleeps, and in JavaScript
 // on Android (slack-link.ts), headless after a tap. The Swift client mirrors `slackStep`
 // and `appliedKey`. Pure, so it's tested without React Native.
 
-import names from './slack-emoji.json';
 import { addDays, dayKey, startOfDay } from './time';
 import type { SlackLine } from './tree';
 
 /** Hopwatch's Slack app. Public: the sign-in uses PKCE, no secret. */
-// TODO: the real client id once the Slack app exists.
-export const SLACK_CLIENT_ID = '';
+export const SLACK_CLIENT_ID = '12359272740515.12360250962741';
 /**
  * Another Slack app's client id to sign in with instead, set by a hopwatch://slack-app link
  * (links.ts): a personal Slack app with its own name, for a workspace that should list that
@@ -22,31 +20,19 @@ export const SLACK_APP_PREF = 'slack.app';
 export const SLACK_REDIRECT = 'hopwatch://slack-auth';
 const USER_SCOPES = 'users.profile:read,users.profile:write';
 
-/** A status the way Slack takes it: an emoji name like ":dog:", or '' for Slack's default. */
+/**
+ * A status the way Slack takes it. The emoji is the jelly's own, like 🐕, or '' for Slack's
+ * default: Slack turns an emoji into its name itself (":dog:", ":wave::skin-tone-4:"), and
+ * refuses one it doesn't know, which the clients then send without.
+ */
 export interface SlackWire {
   text: string;
   emoji: string;
 }
 
-const emojiNames: Record<string, string> = names;
-const SKIN_TONE = /^1f3f[b-f]$/;
-
-/**
- * Slack's name for an emoji, ":dog:", or '' when Slack has none. Skin tones go, since the
- * names are keyed by the base emoji.
- */
-export function slackEmoji(emoji: string | null): string {
-  if (!emoji) return '';
-  const key = Array.from(emoji, (c) => c.codePointAt(0)!.toString(16))
-    .filter((cp) => cp !== 'fe0f' && !SKIN_TONE.test(cp))
-    .join('-');
-  const name = emojiNames[key];
-  return name ? `:${name}:` : '';
-}
-
 /** A jelly's resolved status as Slack takes it. Slack allows 100 characters. */
 export const slackWire = (line: SlackLine | null): SlackWire | null =>
-  line ? { text: line.text.trim().slice(0, 100), emoji: slackEmoji(line.emoji) } : null;
+  line ? { text: line.text.trim().slice(0, 100), emoji: line.emoji ?? '' } : null;
 
 /**
  * When a status Hopwatch sets runs out on its own: the next local midnight, so a phone that

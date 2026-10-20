@@ -11,7 +11,7 @@ import Security
 public actor HopwatchSlack {
   public static let shared = HopwatchSlack()
 
-  /// A status as Slack takes it, with an emoji name like ":dog:" (SlackWire in slack.ts).
+  /// A status as Slack takes it, with the jelly's emoji or "" (SlackWire in slack.ts).
   public struct Status: Equatable, Sendable {
     public let text: String
     public let emoji: String

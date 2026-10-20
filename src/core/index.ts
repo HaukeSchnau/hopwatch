@@ -15,7 +15,6 @@ export {
   useSlackAvailable,
   useSlackLink,
 } from './slack-link';
-export { slackEmoji } from './slack';
 export type { SlackLine } from './tree';
 export * from './model';
 export { type GermanState, germanStates, type HolidayId } from './holidays';

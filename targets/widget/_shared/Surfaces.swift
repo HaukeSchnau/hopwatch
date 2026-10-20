@@ -115,7 +115,7 @@ struct Jelly: Codable, Identifiable, Hashable {
 
   struct Slack: Codable, Hashable {
     let text: String
-    /// Slack's emoji name, ":dog:", or "" for Slack's default.
+    /// The jelly's emoji, which Slack names itself, or "" for Slack's default.
     let emoji: String
   }
 }
