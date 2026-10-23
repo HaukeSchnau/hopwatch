@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 # Builds a release AAB with a fresh versionCode, signed with the Play upload key, and releases it
-# to Google Play's internal testing track. Calder's play step runs this on a Mac agent. The upload
-# key comes from the project's Calder secrets: UPLOAD_KEYSTORE names a file with the PKCS12 keystore
-# in base64, UPLOAD_KEYSTORE_PASSWORD one with its password (store and key share it, alias
-# "upload"). The agent's gplay brings the Urbs UG service account itself.
+# to Google Play's internal testing track once Play has processed it. Calder's play step runs this
+# on a Mac agent when a push changes the Android runtime version (.calder/ci.ts). The upload key
+# comes from the project's Calder secrets: UPLOAD_KEYSTORE names a file with the PKCS12 keystore in
+# base64, UPLOAD_KEYSTORE_PASSWORD one with its password (store and key share it, alias "upload").
+# The agent's gplay brings the Urbs UG service account itself.
+#
+#   scripts/play-internal.sh RUNTIME_VERSION    the Android runtime version CI computed for this commit
 set -euo pipefail
 cd "$(dirname "$0")/.."
+expected=${1:?the runtime version CI computed}
 
 # A versionCode Play hasn't seen: app.config.ts turns this UTC timestamp into minutes.
 HOPWATCH_BUILD_NUMBER=$(date -u +%Y%m%d%H%M)
 export HOPWATCH_BUILD_NUMBER LANG=en_US.UTF-8
-echo "build $HOPWATCH_BUILD_NUMBER"
+echo "build $HOPWATCH_BUILD_NUMBER, runtime $expected"
 
 pnpm install --frozen-lockfile
 pnpm exec expo prebuild --platform android --no-install --clean
@@ -36,4 +40,13 @@ chmod 600 android/gradle.properties
 (cd android && ./gradlew --no-daemon --console=plain --quiet --init-script ../scripts/android-sdk.gradle :app:bundleRelease)
 aab=android/app/build/outputs/bundle/release/app-release.aab
 "$JAVA_HOME/bin/keytool" -printcert -jarfile "$aab" | grep -E 'Owner|SHA256:'
-gplay release --package dev.schnau.hopwatch --track internal --bundle "$aab"
+
+# Over-the-air updates for this commit go to the runtime version CI computed, so the build must
+# report the same one, or it would never receive them.
+embedded=$(unzip -p "$aab" base/assets/fingerprint)
+if [ "$embedded" != "$expected" ]; then
+  echo "the build's runtime version $embedded differs from CI's $expected" >&2
+  exit 1
+fi
+
+gplay release --package dev.schnau.hopwatch --track internal --bundle "$aab" --wait

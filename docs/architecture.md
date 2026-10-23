@@ -137,29 +137,46 @@ minute. Each look returns when to look next: the other status's end, or half an 
 
 ## Releasing
 
-Releases build on a Mac Calder agent from the head of `main` as manual Calder runs (`.calder/ci.ts`),
-one step each. A push to `main` runs the checks and deploys the website (`site/`) to Cloudflare
-with `alchemy.run.ts`; a pull request gets a preview of it that's destroyed when it closes. Follow a run with `calder status`
-and `calder logs`, or at https://calder.schnau.dev/app/.
+Every push to `main` releases what it changed, once typecheck, test and lint pass
+(`.calder/ci.ts`); the same push deploys the website (`site/`) to Cloudflare with
+`alchemy.run.ts`, and a pull request gets a preview of it that's destroyed when it closes.
+Follow a run with `calder status` and `calder logs`, or at https://calder.schnau.dev/app/.
 
-- JavaScript and asset changes: `calder trigger hopwatch --inputs '{"release":"ota"}'`
-  (`scripts/ota.sh`) publishes an EAS Update for iOS and Android to the `production` channel
-  of @haukeschnau/hopwatch, with the commit subject as its message. Release builds download
-  it when they come to the foreground and switch to it the next time they go to the
-  background (`src/shell/updates.ts`). Updates only reach builds whose runtime version (the
-  app `version`) matches.
-- Native changes (a new native package, a config plugin, native settings in app.json) need
-  new store builds: bump `version` in app.json (otherwise JS that expects the new native
-  code would reach older builds over the air), push, then
-  - iOS: `calder trigger hopwatch --inputs '{"release":"testflight"}'`
-    (`scripts/testflight.sh`). The build reaches Hauke's internal TestFlight group on its
-    own; for the App Store, create the new version in App Store Connect, push the listing
-    with `scripts/app-store.mjs` (release notes now apply), attach the build and submit it.
-  - Android: `calder trigger hopwatch --inputs '{"release":"play"}'`
-    (`scripts/play-internal.sh`) builds a signed AAB and releases it to the internal testing
-    track. Managed publishing is off, so that commit also sends every change queued in the
-    Play Console for review; check Publishing overview first (`store/README.md`). Promote
-    the release to production in the Console.
+The app's runtime version on each platform is Expo's fingerprint of its native code
+(`runtimeVersion` policy `fingerprint`, tuned in `fingerprint.config.js`): native modules,
+config plugins and what they copy in, the widget extension, native assets, patched packages
+and the app `version`, but not the build number. An over-the-air update only reaches builds
+with the same runtime version, so JavaScript never reaches a binary without the native code
+it expects. Calder computes it on Linux (`runtime-ios`, `runtime-android`,
+`scripts/runtime-version.sh`) and decides with it:
+
+- **JavaScript and assets** go out with every push: `scripts/ota.sh` publishes an EAS Update
+  for both platforms to the `production` channel of @haukeschnau/hopwatch, with the commit
+  subject as its message. Release builds download it when they come to the foreground and
+  switch to it the next time they go to the background (`src/shell/updates.ts`). A revert
+  ships the same way; `ota` never reuses an earlier result.
+- **Native changes** change the runtime version, and the store builds are keyed by it, so
+  only a push with a runtime version not built before builds again. The others reuse the
+  last build's result in Calder. On the Mac agent:
+  - iOS: `scripts/testflight.sh` archives, uploads and waits until App Store Connect has
+    processed the build, which reaches Hauke's internal TestFlight group on its own. It
+    fails before building when app.json's `version` already passed App Store review; raise
+    it then.
+  - Android: `scripts/play-internal.sh` builds a signed AAB and releases it to the internal
+    testing track. Managed publishing is off, so that commit also sends every change queued
+    in the Play Console for review (`store/README.md`): don't leave changes queued there.
+  - Both check that the binary embeds the runtime version CI computed, and `ota.sh` checks
+    that eas resolves the same one on the Mac. A mismatch fails the step rather than
+    shipping updates no build would take.
+- **To the stores**: `calder trigger hopwatch --inputs '{"release":"store"}'`
+  (`scripts/store.sh`) pushes the App Store listing in `store/app-store/` with
+  `scripts/app-store.mjs`, submits app.json's version with its newest TestFlight build for
+  review, and promotes the Play internal testing release to production with the notes in
+  `store/play/<locale>/release_notes.txt`. Both stores publish on approval. Update the release
+  notes for both stores first.
+- `calder trigger hopwatch --inputs '{"release":"native"}'` builds for both stores although
+  the runtime version was built before, such as after a revert to it, since TestFlight
+  testers are on the newest build.
 
 Calder hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
 base64, and `play-upload-password`) and the developer-role Expo robot's token

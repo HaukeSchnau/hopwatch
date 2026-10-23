@@ -1,4 +1,4 @@
-import { Calder, On, Secret, Step, Task, cmd } from "@calder-ci/core"
+import { Calder, Files, On, Secret, Step, Task, cmd } from "@calder-ci/core"
 import { Pnpm, Project } from "@calder-ci/std"
 import { Schema } from "effect"
 import { flake } from "./flake.ts"
@@ -23,18 +23,36 @@ const website = Project.alchemy({
 })
 
 /**
- * The app releases build on a Mac agent in a GUI session, where Xcode and the
- * signing keychain work. Pushes only check the app and deploy the website; a person starts each
- * release with `calder trigger hopwatch --inputs '{"release":"testflight"}'` ("play", "ota").
+ * The native app's runtime version on one platform: Expo's fingerprint (fingerprint.config.js).
+ * The store builds interpolate it, so Calder keys them by it: a push whose runtime version was
+ * built before reuses that build and ships as an over-the-air update alone.
  */
+const runtimeVersion = (platform: "ios" | "android") =>
+  Task.make(`runtime-${platform}`, {
+    shell,
+    setup: install,
+    run: cmd`scripts/runtime-version.sh ${platform} .calder-runtime-version.json`,
+    value: { path: ".calder-runtime-version.json", schema: Schema.String },
+  })
+const ios = runtimeVersion("ios")
+const android = runtimeVersion("android")
+
+/** Releases run on the Mac agent, in Hauke's GUI session, where Xcode, the signing keychain and hermesc work. */
+const mac = { platform: "aarch64-darwin" } as const
+
 const testflight = Task.make("testflight", {
-  platform: "aarch64-darwin",
-  run: cmd`scripts/testflight.sh`,
+  ...mac,
+  after: checks,
+  // With the runtime version in the command, these are all a build reads that it doesn't cover.
+  inputs: Files.of("scripts/testflight.sh", "scripts/export-testflight.plist"),
+  run: cmd`scripts/testflight.sh ${ios}`,
 }).pipe(Step.timeout("90 minutes"))
 
 const play = Task.make("play", {
-  platform: "aarch64-darwin",
-  run: cmd`scripts/play-internal.sh`,
+  ...mac,
+  after: checks,
+  inputs: Files.of("scripts/play-internal.sh", "scripts/android-sdk.gradle"),
+  run: cmd`scripts/play-internal.sh ${android}`,
   secrets: {
     UPLOAD_KEYSTORE: Secret.file("play-upload-keystore"),
     UPLOAD_KEYSTORE_PASSWORD: Secret.file("play-upload-password"),
@@ -42,18 +60,28 @@ const play = Task.make("play", {
 }).pipe(Step.timeout("90 minutes"))
 
 const ota = Task.make("ota", {
-  platform: "aarch64-darwin",
-  run: cmd`scripts/ota.sh`,
+  ...mac,
+  after: checks,
+  // A revert has to ship as well, though its files match an update published before.
+  reuse: "never",
+  run: cmd`scripts/ota.sh ${ios} ${android}`,
   secrets: { EXPO_TOKEN_FILE: Secret.file("expo-token") },
 }).pipe(Step.timeout("30 minutes"))
+
+/** Sends the newest store build to users once Apple or Google approves it. */
+const store = (platform: "ios" | "android") =>
+  Task.make(`store-${platform}`, { ...mac, run: cmd`scripts/store.sh ${platform}` }).pipe(Step.timeout("60 minutes"))
 
 const release = (name: string) => ({ inputs: { release: Schema.Literal(name) } })
 
 export default Calder.project({
   rules: [
     ...website.rules,
-    On.manual(release("testflight"), [testflight]),
-    On.manual(release("play"), [play]),
-    On.manual(release("ota"), [ota]),
+    // Every push to main that passes the checks: the JavaScript over the air to installed builds
+    // with the same runtime version, and new TestFlight and Play internal builds where it changed.
+    On.push("main", [testflight, play, ota]),
+    // New store builds although the runtime version was built before, such as after a revert to it.
+    On.manual(release("native"), [testflight, play]),
+    On.manual(release("store"), [store("ios"), store("android")]),
   ],
 })

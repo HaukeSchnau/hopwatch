@@ -162,7 +162,7 @@
     },
     "owner": "haukeschnau",
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "fingerprint"
     },
     "updates": {
       "url": "https://u.expo.dev/7e0183d8-3743-41ea-a29a-7188f5dd5cf5",

@@ -1,0 +1,1 @@
+Wechseln von überall: Stopp und Zurück in der Benachrichtigung wirken jetzt direkt, dazu ein Widget und eine Kachel in den Schnelleinstellungen. Außerdem neu: Arbeitszeit mit freien Tagen und Überstundenkonto, ein Abendcheck und deine Woche als Karte.

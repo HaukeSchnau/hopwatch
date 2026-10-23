@@ -23,13 +23,14 @@ pnpm expo run:android  # development build with the Android SDK
 
 ## Release
 
-Releases build on a Mac Calder agent from the head of `main`, started by hand in Calder. Pushes to `main`
-run the checks and deploy the website.
+Every push to `main` that passes the checks releases itself from a Mac Calder agent: its
+JavaScript and assets over the air to installed builds with the same native code, and new
+TestFlight and Play internal testing builds when the native code changed (Expo's fingerprint,
+`fingerprint.config.js`). It also deploys the website. See `docs/architecture.md`, Releasing.
 
 ```sh
-calder trigger hopwatch --inputs '{"release":"testflight"}'  # iOS build to TestFlight
-calder trigger hopwatch --inputs '{"release":"play"}'        # Android build to Play internal testing
-calder trigger hopwatch --inputs '{"release":"ota"}'         # JS and assets to installed builds
+calder trigger hopwatch --inputs '{"release":"store"}'   # newest builds to App Store review and Play production
+calder trigger hopwatch --inputs '{"release":"native"}'  # new store builds although the native code was built before
 ```
 
 ## Website
