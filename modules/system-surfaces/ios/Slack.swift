@@ -1,9 +1,10 @@
 // Hopwatch's Slack client on iOS: keeps the person's Slack status in line with the running
 // jelly. It runs in the app process without JavaScript, so a tap on the Live Activity, a
 // widget or a control reaches Slack while JavaScript sleeps: AppSurfaces calls `sync`
-// after every change, JavaScript connects and disconnects through SystemSurfacesModule.
-// The rules mirror src/core/slack.ts (`slackStep`, `appliedKey`, `slackExpiry`); the
-// sign-in itself happens in JavaScript (src/core/slack-link.ts), which hands over the tokens.
+// after every change and schedules a background refresh for the next look, JavaScript connects
+// and disconnects through SystemSurfacesModule. The rules mirror src/core/slack.ts (`slackDue`,
+// `slackPlan`, `appliedKey`, `slackExpiry`) and its tests; the sign-in itself happens in
+// JavaScript (src/core/slack-link.ts), which hands over the tokens.
 
 import Foundation
 import Security
@@ -22,7 +23,24 @@ public actor HopwatchSlack {
     }
   }
 
-  /// The sign-in (SlackGrant in slack.ts) and what this client last did, in the Keychain.
+  /// What Slack shows now (SlackShown in slack.ts).
+  struct Shown {
+    let text: String
+    let emoji: String
+    /// When it runs out (status_expiration), or nil for never.
+    let until: Date?
+  }
+
+  /// When to look at Slack again without a switch.
+  public enum Wake: Sendable {
+    /// Nothing was decided (not connected, or nothing to do): leave any scheduled look.
+    case keep
+    /// No need to look until the next switch: cancel a scheduled look.
+    case cancel
+    case at(Date)
+  }
+
+  /// The sign-in (SlackGrant in slack.ts) and what this client last did (SlackMemory), in the Keychain.
   struct Link: Codable {
     var access: String
     var refresh: String
@@ -34,10 +52,13 @@ public actor HopwatchSlack {
     var clientId: String
     /// Slack refused the tokens; only signing in again helps.
     var broken: Bool?
-    /// The text of the status this client set, so it never touches one set by hand.
+    /// The text of the status this client last set. Kept while another status covers it: a
+    /// calendar app may put it back when its meeting ends.
     var ours: String?
-    /// What Slack was last brought in line with (`appliedKey`).
+    /// What Slack was last checked against (`appliedKey`).
     var applied: String?
+    /// When Slack was last checked, epoch milliseconds.
+    var checkedAt: Double?
   }
 
   enum Failure: Error {
@@ -48,14 +69,14 @@ public actor HopwatchSlack {
   /// One call at a time: overlapping refreshes would spend the same rotating token twice.
   private var last: Task<Void, Never>?
 
-  private func serially(_ work: @escaping @Sendable () async -> Void) async {
+  private func serially<T: Sendable>(_ work: @escaping @Sendable () async -> T) async -> T {
     let previous = last
-    let task = Task {
+    let task = Task { () -> T in
       await previous?.value
-      await work()
+      return await work()
     }
-    last = task
-    await task.value
+    last = Task { _ = await task.value }
+    return await task.value
   }
 
   /// The workspace this phone is connected to, for Settings.
@@ -82,36 +103,49 @@ public actor HopwatchSlack {
     }
   }
 
-  /// Brings Slack in line with `want`, the running jelly's status, or none. Does nothing
-  /// when not connected or nothing changed since the last sync; after a failed call the
-  /// next sync tries again.
-  public func sync(_ want: Status?) async {
-    await serially {
-      guard var link = Self.load(), link.broken != true else { return }
+  /// Brings Slack in line with `want`, the running jelly's status, or none, and says when to
+  /// look again (`slackDue` and `slackPlan` in slack.ts). Another status (a meeting from a
+  /// calendar app, one set by hand) wins; Hopwatch looks again when it runs out. `eager` (the
+  /// app came to the front, a background refresh) looks after a minute even without a switch.
+  public func sync(_ want: Status?, eager: Bool) async -> Wake {
+    await serially { () -> Wake in
+      guard var link = Self.load(), link.broken != true else { return .keep }
       let now = Date()
       let key = Self.appliedKey(want, now)
-      guard key != link.applied else { return }
+      guard Self.due(link, key: key, now: now, eager: eager) else { return .keep }
       do {
         if try await Self.freshen(&link) { Self.save(link) }
         let shown = try await Self.shown(link)
         let mine = link.ours != nil && shown.text == link.ours
         let empty = shown.text.isEmpty && shown.emoji.isEmpty
-        if mine || empty, let want {
-          try await Self.set(want, expiration: Self.expiry(now), link)
+        let wake: Wake
+        if !mine && !empty {
+          // Keep `ours`: the calendar app may put Hopwatch's status back after the meeting.
+          let pending = want != nil || link.ours != nil
+          let end = shown.until.flatMap { $0 > now ? $0.addingTimeInterval(Self.afterOthers) : nil }
+          wake = pending ? .at(end ?? now.addingTimeInterval(Self.recheck)) : .cancel
+        } else if let want {
+          let showing = mine && shown.text == want.text && link.applied == key
+          if !showing { try await Self.set(want, expiration: Self.expiry(now), link) }
           link.ours = want.text
-        } else if mine {
-          try await Self.set(Status(text: "", emoji: ""), expiration: 0, link)
-          link.ours = nil
+          wake = .at(now.addingTimeInterval(Self.recheck))
         } else {
-          // Someone's own status, or nothing to clear.
+          if mine { try await Self.set(Status(text: "", emoji: ""), expiration: 0, link) }
           link.ours = nil
+          wake = .cancel
         }
         link.applied = key
+        link.checkedAt = now.timeIntervalSince1970 * 1000
         Self.save(link)
+        return wake
       } catch Failure.signedOut {
         link.broken = true
         Self.save(link)
-      } catch {}
+        return .cancel
+      } catch {
+        // Offline or Slack hiccuped: try again in a while.
+        return want == nil ? .keep : .at(now.addingTimeInterval(Self.recheck))
+      }
     }
   }
 
@@ -120,6 +154,20 @@ public actor HopwatchSlack {
   private static func dayKey(_ date: Date) -> String {
     let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
     return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+  }
+
+  /// While there's a status to show, how often to look again without a switch.
+  static let recheck: TimeInterval = 30 * 60
+  /// A look on demand waits at least this long after the last one.
+  static let eagerAfter: TimeInterval = 60
+  /// How long after another status runs out to look, so a calendar app is done with it.
+  static let afterOthers: TimeInterval = 2 * 60
+
+  static func due(_ link: Link, key: String, now: Date, eager: Bool) -> Bool {
+    if link.applied != key { return true }
+    if key == appliedKey(nil, now) && link.ours == nil { return false }
+    let checked = Date(timeIntervalSince1970: (link.checkedAt ?? 0) / 1000)
+    return now.timeIntervalSince(checked) >= (eager ? eagerAfter : recheck)
   }
 
   static func appliedKey(_ want: Status?, _ now: Date) -> String {
@@ -151,10 +199,15 @@ public actor HopwatchSlack {
     return true
   }
 
-  private static func shown(_ link: Link) async throws -> Status {
+  private static func shown(_ link: Link) async throws -> Shown {
     let answer = try await call("users.profile.get", token: link.access)
     let profile = answer["profile"] as? [String: Any] ?? [:]
-    return Status(text: profile["status_text"] as? String ?? "", emoji: profile["status_emoji"] as? String ?? "")
+    let until = (profile["status_expiration"] as? NSNumber)?.doubleValue ?? 0
+    return Shown(
+      text: profile["status_text"] as? String ?? "",
+      emoji: profile["status_emoji"] as? String ?? "",
+      until: until > 0 ? Date(timeIntervalSince1970: until) : nil
+    )
   }
 
   private static func set(_ status: Status, expiration: Int, _ link: Link) async throws {

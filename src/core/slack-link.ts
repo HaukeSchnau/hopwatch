@@ -24,8 +24,11 @@ import {
   SLACK_REDIRECT,
   type SlackGrant,
   slackExpiry,
+  SLACK_RECHECK_MS,
+  slackDue,
+  type SlackMemory,
+  slackPlan,
   type SlackShown,
-  slackStep,
   type SlackWire,
   slackWire,
 } from './slack';
@@ -112,7 +115,7 @@ export async function connectSlack(): Promise<ConnectResult> {
     if (!read.ok) return 'failed';
     if (native) await native.slackConnect(JSON.stringify({ ...read.grant, clientId: client }));
     else {
-      await serially(() => save({ ...read.grant, clientId: client, broken: false, ours: null, applied: null }));
+      await serially(() => save({ ...read.grant, clientId: client, broken: false, ours: null, applied: null, checkedAt: 0 }));
       syncSlack();
     }
     await refreshSlackLink();
@@ -129,6 +132,7 @@ export async function disconnectSlack() {
     await serially(async () => {
       const saved = await load();
       await save(null);
+      systemSurfaces?.scheduleWake?.(null);
       if (!saved || saved.broken) return;
       try {
         const fresh = await freshen(saved);
@@ -143,18 +147,18 @@ export async function disconnectSlack() {
 
 // Android's client from here.
 
-interface Saved extends SlackGrant {
+/** The sign-in and what this client remembers between syncs (SlackMemory). */
+interface Saved extends SlackGrant, SlackMemory {
   clientId: string;
   broken: boolean;
-  /** The text of the status this client set, so it never touches one set by hand. */
-  ours: string | null;
-  /** What Slack was last brought in line with (`appliedKey`). */
-  applied: string | null;
 }
 
 const KEY = 'slack.link';
-/** The last `applied` saved by this process, so a store change that doesn't matter costs nothing. */
-let appliedHere: string | null = null;
+/** What this process last saved, so a store change that doesn't matter costs nothing. */
+let memoryHere: SlackMemory | null = null;
+
+/** Reads the memory from a saved link; links from before `checkedAt` existed lack it. */
+const memoryOf = (saved: Saved): SlackMemory => ({ ours: saved.ours, applied: saved.applied, checkedAt: saved.checkedAt ?? 0 });
 
 async function load(): Promise<Saved | null> {
   try {
@@ -166,7 +170,7 @@ async function load(): Promise<Saved | null> {
 }
 
 async function save(saved: Saved | null) {
-  appliedHere = saved?.applied ?? null;
+  memoryHere = saved ? memoryOf(saved) : null;
   if (saved) await SecureStore.setItemAsync(KEY, JSON.stringify(saved));
   else await SecureStore.deleteItemAsync(KEY);
 }
@@ -186,33 +190,41 @@ function wanted(): SlackWire | null {
 }
 
 /**
- * Android: brings Slack in line with the running jelly. Cheap when nothing changed; after a
- * failed call the next sync tries again. iOS's native client syncs on its own.
+ * Android: brings Slack in line with the running jelly (slackDue, slackPlan). Cheap when
+ * nothing changed. `eager` (the app came to the front, a scheduled wake) looks again after a
+ * minute even without a switch, so a meeting's status that ended gets replaced. Each look
+ * schedules the next wake; a failed call is tried again then or on the next switch. iOS's
+ * native client syncs on its own.
  */
-export function syncSlack(): Promise<void> {
+export function syncSlack({ eager = false }: { eager?: boolean } = {}): Promise<void> {
   if (Platform.OS !== 'android' || !canConnect(clientId())) return Promise.resolve();
   const now = Date.now();
   const want = wanted();
   const key = appliedKey(want, now);
-  if (key === appliedHere) return Promise.resolve();
+  if (memoryHere && !slackDue(memoryHere, key, now, eager)) return Promise.resolve();
   return serially(async () => {
     let saved = await load();
-    if (!saved || saved.broken || saved.applied === key) {
-      appliedHere = saved?.applied ?? null;
+    if (!saved || saved.broken || !slackDue(memoryOf(saved), key, now, eager)) {
+      memoryHere = saved && !saved.broken ? memoryOf(saved) : null;
       return;
     }
     try {
       const fresh = await freshen(saved);
       // A refresh spent the old refresh token: keep the new one before anything else.
       if (fresh !== saved) await save((saved = fresh));
-      const step = slackStep(want, await shown(saved.access), saved.ours);
-      if (step.kind === 'set') await setStatus(saved.access, step.status, slackExpiry(now));
-      if (step.kind === 'clear') await setStatus(saved.access, { text: '', emoji: '' }, 0);
-      await save({ ...saved, ours: step.kind === 'set' ? step.status.text : null, applied: key });
+      const plan = slackPlan(want, await shown(saved.access), memoryOf(saved), key, now);
+      if (plan.step.kind === 'set') await setStatus(saved.access, plan.step.status, slackExpiry(now));
+      if (plan.step.kind === 'clear') await setStatus(saved.access, { text: '', emoji: '' }, 0);
+      await save({ ...saved, ...plan.memory });
+      systemSurfaces?.scheduleWake?.(plan.wakeAt);
     } catch (error) {
       if (error instanceof SlackError && SIGNED_OUT.has(error.code)) {
         await save({ ...saved, broken: true });
         await refreshSlackLink();
+        systemSurfaces?.scheduleWake?.(null);
+      } else if (want) {
+        // Offline or Slack hiccuped: try again in a while.
+        systemSurfaces?.scheduleWake?.(now + SLACK_RECHECK_MS);
       }
     }
   });
@@ -234,6 +246,7 @@ async function shown(token: string): Promise<SlackShown> {
   return {
     text: typeof profile.status_text === 'string' ? profile.status_text : '',
     emoji: typeof profile.status_emoji === 'string' ? profile.status_emoji : '',
+    until: typeof profile.status_expiration === 'number' ? profile.status_expiration * 1000 : 0,
   };
 }
 

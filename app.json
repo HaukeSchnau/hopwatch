@@ -16,7 +16,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true,
-        "NSSupportsLiveActivitiesFrequentUpdates": false
+        "NSSupportsLiveActivitiesFrequentUpdates": false,
+        "UIBackgroundModes": ["fetch"],
+        "BGTaskSchedulerPermittedIdentifiers": ["dev.schnau.hopwatch.slack"]
       },
       "entitlements": {
         "com.apple.security.application-groups": ["group.dev.schnau.hopwatch"]

@@ -83,7 +83,7 @@ export function publishSnapshot(state: HopwatchState = useHopwatch.getState()) {
 export function startSurfaces(): () => void {
   if (!connectSurfaces() || !systemSurfaces) return () => {};
   publishSnapshot();
-  syncSlack();
+  syncSlack({ eager: true });
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries === prev.entries && state.tree === prev.tree) return;
     publishSnapshot(state);
@@ -93,8 +93,8 @@ export function startSurfaces(): () => void {
   const foreground = AppState.addEventListener('change', (status) => {
     if (status !== 'active') return;
     drainRemote();
-    // A Slack call that failed offline gets another go.
-    syncSlack();
+    // Another look at Slack: a meeting's status may have ended, or a call failed offline.
+    syncSlack({ eager: true });
   });
   return () => {
     unsubscribe();

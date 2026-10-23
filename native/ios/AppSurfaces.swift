@@ -2,11 +2,13 @@
 // whose intent runs in this process, and whenever JavaScript writes a new snapshot, it
 // brings the Live Activity, the widgets, the controls and Siri's jelly list in line with
 // what surfaces show, reschedules the nudge for the new entry, and sets the Slack status
-// (modules/system-surfaces/ios/Slack.swift). Installed at launch by the AppDelegate
-// (plugins/with-app-surfaces.js), which runs for background launches too.
+// (modules/system-surfaces/ios/Slack.swift), looking at Slack again later from a background
+// refresh, e.g. when a calendar app's meeting status ends. Installed at launch by the
+// AppDelegate (plugins/with-app-surfaces.js), which runs for background launches too.
 
 import ActivityKit
 import AppIntents
+import BackgroundTasks
 internal import SystemSurfaces
 import UIKit
 import UserNotifications
@@ -21,6 +23,8 @@ final class AppSurfaces: SurfacesRuntime {
   static let commandsQueued = Notification.Name("HopwatchCommandsQueued")
   /// The nudge's notification id, shared with src/core/nudges.ts.
   static let nudgeId = "hopwatch.nudge"
+  /// The background refresh that looks at Slack again (BGTaskSchedulerPermittedIdentifiers in app.json).
+  static let slackRefresh = "dev.schnau.hopwatch.slack"
 
   /// What widgets and controls last showed, and the jellies Siri last knew.
   private var shown: String?
@@ -31,9 +35,18 @@ final class AppSurfaces: SurfacesRuntime {
     NotificationCenter.default.addObserver(forName: snapshotChanged, object: nil, queue: .main) { _ in
       Task { @MainActor in await shared.refresh() }
     }
-    // A Slack call that failed offline gets another go.
+    // Another look at Slack: a meeting's status may have ended, or a call failed offline.
     NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
-      Task { @MainActor in await shared.refresh() }
+      Task { @MainActor in await shared.refresh(eagerSlack: true) }
+    }
+    // Must be registered before launching ends. iOS runs it some time after the date the last
+    // sync asked for, as it sees fit.
+    BGTaskScheduler.shared.register(forTaskWithIdentifier: slackRefresh, using: nil) { task in
+      let work = Task { @MainActor in
+        if let state = Surfaces.current() { await shared.syncSlack(state, eager: true) }
+        task.setTaskCompleted(success: true)
+      }
+      task.expirationHandler = { work.cancel() }
     }
     Task { @MainActor in await endLegacyActivities() }
   }
@@ -44,7 +57,7 @@ final class AppSurfaces: SurfacesRuntime {
     NotificationCenter.default.post(name: Self.commandsQueued, object: nil)
   }
 
-  func refresh() async {
+  func refresh(eagerSlack: Bool = false) async {
     guard let state = Surfaces.current() else { return }
     await syncActivity(state)
     // Reload widgets and controls only when what they show changed: reloads from the
@@ -61,17 +74,27 @@ final class AppSurfaces: SurfacesRuntime {
       jelliesKey = jellies
       HopwatchShortcuts.updateAppShortcutParameters()
     }
-    syncSlack(state)
+    let background = UIApplication.shared.beginBackgroundTask(withName: "Slack")
+    Task {
+      await syncSlack(state, eager: eagerSlack)
+      UIApplication.shared.endBackgroundTask(background)
+    }
   }
 
-  /// The running jelly's Slack status, or none. Network calls get background time, since
-  /// after a tap the system may suspend the app as soon as the intent returns.
-  private func syncSlack(_ state: Effective) {
+  /// The running jelly's Slack status, or none, then the next look as the sync asks. Callers
+  /// give it background time, since after a tap the system may suspend the app as soon as
+  /// the intent returns.
+  private func syncSlack(_ state: Effective, eager: Bool) async {
     let want = state.running?.jelly.slack.map { HopwatchSlack.Status(text: $0.text, emoji: $0.emoji) }
-    let task = UIApplication.shared.beginBackgroundTask(withName: "Slack")
-    Task {
-      await HopwatchSlack.shared.sync(want)
-      UIApplication.shared.endBackgroundTask(task)
+    switch await HopwatchSlack.shared.sync(want, eager: eager) {
+    case .keep:
+      break
+    case .cancel:
+      BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.slackRefresh)
+    case .at(let date):
+      let request = BGAppRefreshTaskRequest(identifier: Self.slackRefresh)
+      request.earliestBeginDate = date
+      try? BGTaskScheduler.shared.submit(request)
     }
   }
 

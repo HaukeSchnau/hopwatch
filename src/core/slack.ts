@@ -2,10 +2,10 @@
 // sign-in URL and token answers, and the rule for what to do with someone's status. The client
 // itself runs where taps run: in Swift on iOS (modules/system-surfaces/ios/Slack.swift),
 // so a tap on the Live Activity reaches Slack while JavaScript sleeps, and in JavaScript
-// on Android (slack-link.ts), headless after a tap. The Swift client mirrors `slackStep`
-// and `appliedKey`. Pure, so it's tested without React Native.
+// on Android (slack-link.ts), headless after a tap. The Swift client mirrors `slackDue`,
+// `slackPlan` and `appliedKey`. Pure, so it's tested without React Native.
 
-import { addDays, dayKey, startOfDay } from './time';
+import { addDays, dayKey, MINUTE, startOfDay } from './time';
 import type { SlackLine } from './tree';
 
 /** Hopwatch's Slack app. Public: the sign-in uses PKCE, no secret. */
@@ -51,20 +51,77 @@ export const appliedKey = (want: SlackWire | null, now: number) => (want ? `${wa
 export interface SlackShown {
   text: string;
   emoji: string;
+  /** When it runs out (status_expiration), epoch ms; 0 for never. */
+  until: number;
+}
+
+/** What a client remembers between syncs. */
+export interface SlackMemory {
+  /**
+   * The text of the status Hopwatch last set. Kept while another status covers it: a calendar
+   * app may put it back when its meeting ends, and then it's still Hopwatch's to change.
+   */
+  ours: string | null;
+  /** What Slack was last checked against (`appliedKey`). */
+  applied: string | null;
+  /** When Slack was last checked, epoch ms. */
+  checkedAt: number;
+}
+
+/**
+ * While Hopwatch has a status to show, it looks again this often without a switch, so a status
+ * a calendar app cleared after a meeting comes back.
+ */
+export const SLACK_RECHECK_MS = 30 * MINUTE;
+/** A look on demand (the app comes to the front, a background wake) waits at least this long. */
+const EAGER_MS = MINUTE;
+/** How long after another status runs out to look, so a calendar app is done with it. */
+const AFTER_OTHERS_MS = 2 * MINUTE;
+
+/**
+ * Whether to ask Slack now. Always after a switch (a new key); otherwise every half hour while
+ * there's a status to show or Hopwatch's own is covered, or after a minute when `eager`.
+ */
+export function slackDue(memory: SlackMemory, key: string, now: number, eager: boolean): boolean {
+  if (memory.applied !== key) return true;
+  if (key === appliedKey(null, now) && memory.ours === null) return false;
+  return now - memory.checkedAt >= (eager ? EAGER_MS : SLACK_RECHECK_MS);
 }
 
 export type SlackStep = { kind: 'set'; status: SlackWire } | { kind: 'clear' } | { kind: 'leave' };
 
+export interface SlackPlan {
+  step: SlackStep;
+  /** To save once the step went through. */
+  memory: SlackMemory;
+  /** When to look again without a switch, epoch ms, or null for not until the next one. */
+  wakeAt: number | null;
+}
+
 /**
- * What to do so Slack shows `want`. Hopwatch only changes a status it set itself (`ours`,
- * the text it last set) or an empty one, so a status someone set by hand stays.
+ * What to do so Slack shows `want` (the running jelly's status, or none), given what it shows.
+ * Hopwatch only changes a status it set itself or an empty one. Any other (a meeting from a
+ * calendar app, one set by hand) wins, and Hopwatch looks again when it runs out.
  */
-export function slackStep(want: SlackWire | null, shown: SlackShown, ours: string | null): SlackStep {
-  const mine = ours !== null && shown.text === ours;
+export function slackPlan(want: SlackWire | null, shown: SlackShown, memory: SlackMemory, key: string, now: number): SlackPlan {
+  const mine = memory.ours !== null && shown.text === memory.ours;
   const empty = shown.text === '' && shown.emoji === '';
-  if (!mine && !empty) return { kind: 'leave' };
-  if (want) return { kind: 'set', status: want };
-  return mine ? { kind: 'clear' } : { kind: 'leave' };
+  const checked: SlackMemory = { ...memory, applied: key, checkedAt: now };
+  if (!mine && !empty) {
+    const pending = want !== null || memory.ours !== null;
+    const wakeAt = !pending ? null : shown.until > now ? shown.until + AFTER_OTHERS_MS : now + SLACK_RECHECK_MS;
+    return { step: { kind: 'leave' }, memory: checked, wakeAt };
+  }
+  if (want) {
+    // Already showing this, from before: a key from the same switch and day.
+    const showing = mine && shown.text === want.text && memory.applied === key;
+    return {
+      step: showing ? { kind: 'leave' } : { kind: 'set', status: want },
+      memory: { ...checked, ours: want.text },
+      wakeAt: now + SLACK_RECHECK_MS,
+    };
+  }
+  return { step: mine ? { kind: 'clear' } : { kind: 'leave' }, memory: { ...checked, ours: null }, wakeAt: null };
 }
 
 const query = (params: Record<string, string>) =>

@@ -103,8 +103,12 @@ stays the only writer of entries:
 A jelly's Slack status (`contexts.slack_status`, resolved with the jelly's emoji in
 `tree.ts`, not inherited) is set while it runs. `src/core/slack.ts` holds what both
 platforms share and is tested: the status as Slack takes it (the jelly's emoji as is,
-since Slack names it itself), the sign-in URL, token answers, and `slackStep`, the rule
-that only a status Hopwatch set itself or an empty one gets changed.
+since Slack names it itself), the sign-in URL, token answers, and the sync rule.
+`slackPlan` changes only a status Hopwatch set itself or an empty one; any other (a
+calendar app's meeting, one set by hand) wins, and Hopwatch remembers its own text
+meanwhile, since a calendar app may put it back afterwards. `slackDue` decides when to ask
+Slack: after every switch, every half hour while a status matters, and on demand after a
+minute. Each look returns when to look next: the other status's end, or half an hour.
 
 - **Sign-in** is OAuth with PKCE and the `hopwatch://slack-auth` redirect, no client secret
   and no server (`connectSlack` in `slack-link.ts`, through expo-web-browser's auth
@@ -113,11 +117,13 @@ that only a status Hopwatch set itself or an empty one gets changed.
   redirect, which Android also delivers to the app.
 - **One client per platform, where taps run.** iOS: `HopwatchSlack` in
   `modules/system-surfaces/ios/Slack.swift`, tokens in the Keychain, driven by AppSurfaces
-  after every snapshot change, tap and foreground; the snapshot carries each jelly's status
-  in Slack's form. Android: `syncSlack` in `slack-link.ts`, tokens in expo-secure-store,
-  run on store changes, foreground and in the headless task. Both run one call at a time,
-  since two refreshes would spend the same refresh token, and skip work when
-  `appliedKey` hasn't changed.
+  after every snapshot change, tap and foreground, and by a background refresh
+  (`BGAppRefreshTask` "dev.schnau.hopwatch.slack", which iOS runs some time after the
+  requested date); the snapshot carries each jelly's status in Slack's form. Android:
+  `syncSlack` in `slack-link.ts`, tokens in expo-secure-store, run on store changes,
+  foreground and in the headless task, which an inexact alarm
+  (`SurfaceReceiver.scheduleWake`) also starts. Both run one call at a time, since two
+  refreshes would spend the same refresh token.
 - expo-secure-store's config plugin isn't used: its backup rules would include only shared
   preferences and drop the database from Android's Auto Backup. Without it, a restored
   phone can't decrypt the token and the library returns null, which reads as not

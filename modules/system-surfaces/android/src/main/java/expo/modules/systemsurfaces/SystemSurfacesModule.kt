@@ -50,6 +50,8 @@ class SystemSurfacesModule : Module() {
 
     Function("removeCommands") { seqs: List<Long> -> Surfaces.removeCommands(context, seqs) }
 
+    Function("scheduleWake") { at: Double? -> SurfaceReceiver.scheduleWake(context, at?.toLong()) }
+
     // Posts or updates the notification. Resolves to false when the app may not post any.
     AsyncFunction("showRunning") { running: RunningNotification -> showRunning(running) }
 

@@ -72,6 +72,12 @@ declare class Native extends NativeModule<Events> {
 
   // Android only from here.
 
+  /**
+   * Runs the headless task at `at` (epoch ms) to bring Slack up to date without a tap, or
+   * cancels that when null. Missing in the first 1.2.0 test builds.
+   */
+  scheduleWake?(at: number | null): void;
+
   /** Posts or updates the notification; false when the app may not post notifications. */
   showRunning(notification: RunningNotification): Promise<boolean>;
   hideRunning(): Promise<void>;
