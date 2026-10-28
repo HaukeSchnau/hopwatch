@@ -181,8 +181,11 @@ it. The release steps come from Calder's `@calder-ci/std/Expo`:
 - `calder trigger hopwatch --inputs '{"release":"dry-run"}'` computes both runtime versions
   and exports an update, and publishes and uploads nothing.
 
-Calder hands each step only the secrets it uses: `testflight` the App Store Connect key
-(`app-store-connect`), `play` the Play upload key (`play-upload-keystore`, the keystore in
-base64, and `play-upload-password`) and the Play service account (`play-service-account`),
-`ota-production` the developer-role Expo robot's token (`expo-token`), and the website deploy
-the Cloudflare credentials (`cloudflare`).
+Calder hands each step only the secrets it uses: `testflight` and `store-ios` the App Store
+Connect key (`app-store-connect`), `play` the Play upload key (`play-upload-keystore`, the
+keystore in base64, and `play-upload-password`), `play` and `store-android` the Play service
+account (`play-service-account`), `ota-production` the developer-role Expo robot's token
+(`expo-token`), and the website deploy the Cloudflare credentials (`cloudflare`). The Mac agent
+has `asc` and `gplay` without credentials of their own. `ota-production` publishes with the
+eas-cli of the lockfile, and the publish and the store builds hold the deploy lease, so a run
+whose `main` moved on ships nothing.

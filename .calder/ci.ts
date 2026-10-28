@@ -1,4 +1,4 @@
-import { Calder, On, Step, Task, cmd } from "@calder-ci/core"
+import { Calder, On, Secret, Step, Task, cmd } from "@calder-ci/core"
 import { Expo, Pnpm, Project } from "@calder-ci/std"
 import { Schema } from "effect"
 import { flake } from "./flake.ts"
@@ -30,14 +30,13 @@ const website = Project.alchemy({
 const ios = Expo.runtimeVersion("ios", { shell, setup: install })
 const android = Expo.runtimeVersion("android", { shell, setup: install })
 
-/** The tower, x86_64 Linux, where React Native's hermesc runs. The Mac is the fallback. */
-const tower = { platform: "x86_64-linux", shell } as const
 /** The Mac agent, in Hauke's GUI session, where Xcode and the signing keychain work. */
 const mac = { platform: "aarch64-darwin" } as const
 
+/** Exports on the tower, x86_64 Linux, where React Native's hermesc runs. */
 const update = Expo.exportUpdate({
-  ...tower,
-  setup: Pnpm.install({ ...tower, name: "install-tower" }),
+  shell,
+  setup: Pnpm.install({ platform: "x86_64-linux", shell, name: "install-tower" }),
   after: checks,
 }).pipe(Step.timeout("30 minutes"))
 
@@ -50,11 +49,13 @@ const ota = Expo.publishUpdate({
   runtimes: { ios, android },
 }).pipe(Step.timeout("15 minutes"))
 
+/** Urbs UG's App Store Connect key: the project's secret, and its identifiers. */
+const appStoreConnect = { key: "app-store-connect", keyId: "85N8Y9CZC4", issuerId: "e4b59e5f-0f40-4b1b-996e-b7a01664676a" }
+
 const testflight = Expo.testflight({
-  ...mac,
   runtime: ios,
   appId: "6818526671",
-  appStoreConnect: { key: "app-store-connect", keyId: "85N8Y9CZC4", issuerId: "e4b59e5f-0f40-4b1b-996e-b7a01664676a" },
+  appStoreConnect,
   after: checks,
 }).pipe(Step.timeout("90 minutes"))
 
@@ -68,9 +69,18 @@ const play = Expo.playInternal({
   after: checks,
 }).pipe(Step.timeout("90 minutes"))
 
-/** Sends the newest store build to users once Apple or Google approves it. */
+/** Sends the newest store build to users once Apple or Google approves it, each with its store's key. */
 const store = (platform: "ios" | "android") =>
-  Task.make(`store-${platform}`, { ...mac, run: cmd`scripts/store.sh ${platform}` }).pipe(Step.timeout("60 minutes"))
+  Task.make(`store-${platform}`, {
+    ...mac,
+    run: cmd`scripts/store.sh ${platform}`,
+    ...(platform === "ios"
+      ? {
+        env: { ASC_KEY_ID: appStoreConnect.keyId, ASC_ISSUER_ID: appStoreConnect.issuerId },
+        secrets: { ASC_PRIVATE_KEY_PATH: Secret.file(appStoreConnect.key) },
+      }
+      : { secrets: { GPLAY_SERVICE_ACCOUNT_JSON: Secret.file("play-service-account") } }),
+  }).pipe(Step.timeout("60 minutes"))
 
 const release = (name: string) => ({ inputs: { release: Schema.Literal(name) } })
 

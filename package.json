@@ -47,6 +47,7 @@
     "@types/react": "~19.2.2",
     "alchemy": "2.0.0-beta.83",
     "canvaskit-wasm": "0.41.0",
+    "eas-cli": "25.3.0",
     "effect": "4.0.5",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
