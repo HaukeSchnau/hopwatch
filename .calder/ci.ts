@@ -1,5 +1,5 @@
-import { Calder, Files, On, Secret, Step, Task, cmd } from "@calder-ci/core"
-import { Pnpm, Project } from "@calder-ci/std"
+import { Calder, On, Step, Task, cmd } from "@calder-ci/core"
+import { Expo, Pnpm, Project } from "@calder-ci/std"
 import { Schema } from "effect"
 import { flake } from "./flake.ts"
 
@@ -23,50 +23,50 @@ const website = Project.alchemy({
 })
 
 /**
- * The native app's runtime version on one platform: Expo's fingerprint (fingerprint.config.js).
- * The store builds interpolate it, so Calder keys them by it: a push whose runtime version was
- * built before reuses that build and ships as an over-the-air update alone.
+ * The native app's runtime version on each platform: Expo's fingerprint (fingerprint.config.js).
+ * The store builds are keyed by it, so a push whose runtime version was built before reuses that
+ * build and ships as an over-the-air update alone.
  */
-const runtimeVersion = (platform: "ios" | "android") =>
-  Task.make(`runtime-${platform}`, {
-    shell,
-    setup: install,
-    run: cmd`scripts/runtime-version.sh ${platform} .calder-runtime-version.json`,
-    value: { path: ".calder-runtime-version.json", schema: Schema.String },
-  })
-const ios = runtimeVersion("ios")
-const android = runtimeVersion("android")
+const ios = Expo.runtimeVersion("ios", { shell, setup: install })
+const android = Expo.runtimeVersion("android", { shell, setup: install })
 
-/** Releases run on the Mac agent, in Hauke's GUI session, where Xcode, the signing keychain and hermesc work. */
+/** The tower, x86_64 Linux, where React Native's hermesc runs. The Mac is the fallback. */
+const tower = { platform: "x86_64-linux", shell } as const
+/** The Mac agent, in Hauke's GUI session, where Xcode and the signing keychain work. */
 const mac = { platform: "aarch64-darwin" } as const
 
-const testflight = Task.make("testflight", {
-  ...mac,
+const update = Expo.exportUpdate({
+  ...tower,
+  setup: Pnpm.install({ ...tower, name: "install-tower" }),
   after: checks,
-  // With the runtime version in the command, these are all a build reads that it doesn't cover.
-  inputs: Files.of("scripts/testflight.sh", "scripts/export-testflight.plist"),
-  run: cmd`scripts/testflight.sh ${ios}`,
-}).pipe(Step.timeout("90 minutes"))
-
-const play = Task.make("play", {
-  ...mac,
-  after: checks,
-  inputs: Files.of("scripts/play-internal.sh", "scripts/android-sdk.gradle"),
-  run: cmd`scripts/play-internal.sh ${android}`,
-  secrets: {
-    UPLOAD_KEYSTORE: Secret.file("play-upload-keystore"),
-    UPLOAD_KEYSTORE_PASSWORD: Secret.file("play-upload-password"),
-  },
-}).pipe(Step.timeout("90 minutes"))
-
-const ota = Task.make("ota", {
-  ...mac,
-  after: checks,
-  // A revert has to ship as well, though its files match an update published before.
-  reuse: "never",
-  run: cmd`scripts/ota.sh ${ios} ${android}`,
-  secrets: { EXPO_TOKEN_FILE: Secret.file("expo-token") },
 }).pipe(Step.timeout("30 minutes"))
+
+const ota = Expo.publishUpdate({
+  shell,
+  setup: install,
+  update,
+  channel: "production",
+  token: "expo-token",
+  runtimes: { ios, android },
+}).pipe(Step.timeout("15 minutes"))
+
+const testflight = Expo.testflight({
+  ...mac,
+  runtime: ios,
+  appId: "6818526671",
+  appStoreConnect: { key: "app-store-connect", keyId: "85N8Y9CZC4", issuerId: "e4b59e5f-0f40-4b1b-996e-b7a01664676a" },
+  after: checks,
+}).pipe(Step.timeout("90 minutes"))
+
+/** On the Mac until the tower has an Android SDK, a JDK and gplay. */
+const play = Expo.playInternal({
+  ...mac,
+  runtime: android,
+  keystore: "play-upload-keystore",
+  password: "play-upload-password",
+  serviceAccount: "play-service-account",
+  after: checks,
+}).pipe(Step.timeout("90 minutes"))
 
 /** Sends the newest store build to users once Apple or Google approves it. */
 const store = (platform: "ios" | "android") =>
@@ -79,9 +79,11 @@ export default Calder.project({
     ...website.rules,
     // Every push to main that passes the checks: the JavaScript over the air to installed builds
     // with the same runtime version, and new TestFlight and Play internal builds where it changed.
-    On.push("main", [testflight, play, ota]),
+    On.push("main", [ota, testflight, play]),
     // New store builds although the runtime version was built before, such as after a revert to it.
     On.manual(release("native"), [testflight, play]),
     On.manual(release("store"), [store("ios"), store("android")]),
+    // The release path without shipping: both runtime versions and an exported update.
+    On.manual(release("dry-run"), [ios, android, update]),
   ],
 })

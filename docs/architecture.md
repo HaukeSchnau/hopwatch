@@ -147,27 +147,28 @@ The app's runtime version on each platform is Expo's fingerprint of its native c
 config plugins and what they copy in, the widget extension, native assets, patched packages
 and the app `version`, but not the build number. An over-the-air update only reaches builds
 with the same runtime version, so JavaScript never reaches a binary without the native code
-it expects. Calder computes it on Linux (`runtime-ios`, `runtime-android`,
-`scripts/runtime-version.sh`) and decides with it:
+it expects. Calder computes it on Linux (`runtime-ios`, `runtime-android`) and decides with
+it. The release steps come from Calder's `@calder-ci/std/Expo`:
 
-- **JavaScript and assets** go out with every push: `scripts/ota.sh` publishes an EAS Update
-  for both platforms to the `production` channel of @haukeschnau/hopwatch, with the commit
-  subject as its message. Release builds download it when they come to the foreground and
+- **JavaScript and assets** go out with every push: `ota-export` exports them for both
+  platforms on the tower, where React Native's hermesc runs on x86_64 Linux, and
+  `ota-production` publishes that export as an EAS Update to the `production` channel of
+  @haukeschnau/hopwatch, with the commit subject as its message. Release builds download it when they come to the foreground and
   switch to it the next time they go to the background (`src/shell/updates.ts`). A revert
-  ships the same way; `ota` never reuses an earlier result.
+  ships the same way; `ota-production` never reuses an earlier result.
 - **Native changes** change the runtime version, and the store builds are keyed by it, so
   only a push with a runtime version not built before builds again. The others reuse the
   last build's result in Calder. On the Mac agent:
-  - iOS: `scripts/testflight.sh` archives, uploads and waits until App Store Connect has
+  - iOS: `testflight` archives, uploads and waits until App Store Connect has
     processed the build, which reaches Hauke's internal TestFlight group on its own. It
     fails before building when app.json's `version` already passed App Store review; raise
     it then.
-  - Android: `scripts/play-internal.sh` builds a signed AAB and releases it to the internal
-    testing track. Managed publishing is off, so that commit also sends every change queued
+  - Android: `play` builds a signed AAB and releases it to the internal testing track. It
+    moves to the tower once that has an Android SDK, a JDK and `gplay`. Managed publishing is off, so that commit also sends every change queued
     in the Play Console for review (`store/README.md`): don't leave changes queued there.
-  - Both check that the binary embeds the runtime version CI computed, and `ota.sh` checks
-    that eas resolves the same one on the Mac. A mismatch fails the step rather than
-    shipping updates no build would take.
+  - Both stamp a build number that `app.config.ts` reads and check that the binary embeds
+    the runtime version CI computed, and `ota-production` checks that eas resolves the same
+    one. A mismatch fails the step rather than shipping updates no build would take.
 - **To the stores**: `calder trigger hopwatch --inputs '{"release":"store"}'`
   (`scripts/store.sh`) pushes the App Store listing in `store/app-store/` with
   `scripts/app-store.mjs`, submits app.json's version with its newest TestFlight build for
@@ -177,8 +178,11 @@ it expects. Calder computes it on Linux (`runtime-ios`, `runtime-android`,
 - `calder trigger hopwatch --inputs '{"release":"native"}'` builds for both stores although
   the runtime version was built before, such as after a revert to it, since TestFlight
   testers are on the newest build.
+- `calder trigger hopwatch --inputs '{"release":"dry-run"}'` computes both runtime versions
+  and exports an update, and publishes and uploads nothing.
 
-Calder hands the steps the Play upload key (secrets `play-upload-keystore`, the keystore in
-base64, and `play-upload-password`) and the developer-role Expo robot's token
-(`expo-token`), and the website deploys the Cloudflare credentials (`cloudflare`). The App
-Store Connect key comes with the Mac agent, the Play service account with its `gplay`.
+Calder hands each step only the secrets it uses: `testflight` the App Store Connect key
+(`app-store-connect`), `play` the Play upload key (`play-upload-keystore`, the keystore in
+base64, and `play-upload-password`) and the Play service account (`play-service-account`),
+`ota-production` the developer-role Expo robot's token (`expo-token`), and the website deploy
+the Cloudflare credentials (`cloudflare`).
