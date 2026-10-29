@@ -15,6 +15,8 @@ Play title 30, short description 80, full description 4000.
 `node scripts/app-store.mjs` pushes everything in `app-store/` plus the screenshots to the
 version being prepared in App Store Connect, and never submits. `text` or `screenshots`
 pushes one half. It finds the app by app.json's bundle ID (or `--app ID`) and is safe to rerun.
+`calder trigger hopwatch --inputs '{"release":"store"}'` runs it, then submits the version
+with its newest TestFlight build for review (`scripts/store.sh`).
 
 - Per locale: name, subtitle, description, keywords, promotional text, release notes (sent
   from the second version on; App Store Connect rejects "What's New" on a first release),
@@ -60,13 +62,13 @@ the Urbs UG developer account. Default listing en-US, plus a de-DE translation.
   O=Urbs UG, SHA-256 92:A8:D2:2E:…:B6:DC) is the upload key, registered by the first upload.
   Calder signs release builds with a copy of it (`docs/architecture.md`, Releasing).
   Fingerprints of both are under Protected with Play › App signing.
-- Releases: the manual Calder run `calder trigger hopwatch --inputs '{"release":"play"}'` builds
-  the signed AAB on a Mac agent and releases it to internal testing with `gplay release`, without
-  release notes. Managed publishing is off, so that API commit also sends every change queued
-  in the console for review: check Publishing overview first, and don't start the run while
-  anything there should wait. Promote the release to production in the console. Release notes
-  go in one `<en-US>…</en-US><de-DE>…</de-DE>` block; check that both languages survive "Save
-  as draft" before publishing (the German one got dropped once).
+- Releases: a push to `main` that changes the Android native code builds the signed AAB on a
+  Mac agent and releases it to internal testing with `gplay release`, without release notes.
+  Managed publishing is off, so that API commit also sends every change queued in the console
+  for review: don't leave anything queued in Publishing overview that should wait.
+  `calder trigger hopwatch --inputs '{"release":"store"}'` promotes the internal testing release
+  to production with `play/<locale>/release_notes.txt` (500 characters at most, and without
+  what only iOS has), which `scripts/store.sh` sends as one note per language.
 - Internal testing: first release 1.1.0 (versionCode 29849538) rolled out 2026-10-02, no
   review needed. Testers: the email list "Hauke". Opt-in link:
   https://play.google.com/apps/internaltest/4701468743687124341. Until the app has passed a

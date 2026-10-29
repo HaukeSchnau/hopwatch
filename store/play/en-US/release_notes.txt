@@ -1,0 +1,1 @@
+Switch from anywhere: Stop and Back in the notification now work right there, plus a home screen widget and a Quick Settings tile. Also new: job hours with days off and an overtime balance, an evening check, and your week as a card.

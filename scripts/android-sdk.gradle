@@ -1,5 +1,6 @@
-// Gradle init script for Android builds on a builder with a read-only Android SDK
-// (scripts/play-internal.sh passes it with --init-script).
+// Gradle init script for Android builds on a builder with a read-only Android SDK: the
+// development builds on m1 pass it with --init-script. Calder's play step (@calder-ci/std/Expo)
+// brings its own copy.
 // Such an SDK holds only the NDK and build tools React
 // Native asks for (rootProject.ext.ndkVersion and buildToolsVersion). Modules that don't pin
 // them, such as expo and expo-updates, would get AGP's defaults instead, which Gradle then

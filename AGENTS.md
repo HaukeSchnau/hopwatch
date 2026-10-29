@@ -16,8 +16,9 @@ details there.
   hooks, reports, nudges, deep links, export and import. Tests: `pnpm test`.
 - `src/jelly`: the UI. `src/app`: expo-router routes.
 - `modules/on-device-model`: Apple Foundation Models bridge.
-- Releases (TestFlight, Play internal testing, OTA updates) are manual Calder runs on a Mac
-  agent (`scripts/testflight.sh`, `play-internal.sh`, `ota.sh`), see `docs/architecture.md`.
+- Releases run through Calder (`@calder-ci/std/Expo`) for every push to `main`: an OTA update
+  exported on the tower, plus TestFlight and Play internal builds on the Mac when Expo's
+  fingerprint of the native code changed (`fingerprint.config.js`). Store submission is a manual Calder run. See `docs/architecture.md`.
 - `scripts/app-store.mjs`: pushes the App Store listing in `store/` through the `asc` CLI.
 - Node and pnpm come from `devenv.nix` (`nix/toolchain.nix`, shared with Calder's dev shell).
 - `site/`: the website at hopwatch.schnau.dev, on Cloudflare through `alchemy.run.ts`; Calder

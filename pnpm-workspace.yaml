@@ -1,6 +1,9 @@
 allowBuilds:
   # Copies the prebuilt Skia libraries for iOS and Android into the package.
   '@shopify/react-native-skia': true
+  # eas-cli's: bunyan's optional DTrace probes, and a notice after protobufjs installs.
+  dtrace-provider: false
+  protobufjs: false
   unrs-resolver: false
   workerd: false
 patchedDependencies:
