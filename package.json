@@ -42,13 +42,14 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@effect/platform-node": "4.0.5",
+    "@alchemy.run/cloudflare": "2.0.0-beta.85",
+    "@effect/platform-node": "4.1.2",
     "@types/node": "^24.19.2",
     "@types/react": "~19.2.2",
-    "alchemy": "2.0.0-beta.83",
+    "alchemy": "2.0.0-beta.85",
     "canvaskit-wasm": "0.41.0",
     "eas-cli": "25.3.0",
-    "effect": "4.0.5",
+    "effect": "4.1.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
     "fast-check": "^4.10.2",
