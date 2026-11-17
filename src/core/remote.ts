@@ -5,8 +5,9 @@
 // that was open then. The app replays the queue here through timeline.ts, which stays the
 // only writer of entries.
 //
-// A command applies only while the open entry is still the one it saw. Anything else means
-// the app moved on since, or already replayed it before a crash, and the app wins. A start
+// A command applies only while the open entry is still the one it saw and nothing was
+// recorded after the tap. Anything else means the app moved on since, or already replayed
+// it before a crash, and the app wins. A start
 // keeps the entry id native code made for it, so the Live Activity, the nudge and Slack
 // stay keyed to the same entry, and a second replay finds it open and drops itself.
 //
@@ -42,7 +43,8 @@ export const tapCommand = (open: EntryId | null, contextId: ContextId | null, ne
     ? { kind: 'stop', contextId: null, entryId: null, expectOpen: open }
     : { kind: 'start', contextId, entryId: newId() as EntryId, expectOpen: open };
 
-const idOrNull = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : v === null ? null : undefined);
+// Swift's JSONEncoder leaves out nil fields, so a missing id is null too.
+const idOrNull = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : v === null || v === undefined ? null : undefined);
 
 /** Reads a queued command, or null when it isn't one. */
 export function parseCommand(json: string): RemoteCommand | null {
@@ -68,13 +70,16 @@ export function parseCommand(json: string): RemoteCommand | null {
 
 /**
  * The rows one command writes, or null when it no longer applies: the open entry changed,
- * or its jelly is gone or archived. `clock.newId` makes ids for anything but the started
- * entry, which keeps the command's.
+ * the timeline already reaches past the tap, or its jelly is gone or archived.
+ * `clock.newId` makes ids for anything but the started entry, which keeps the command's.
  */
 export function replay(entries: readonly Entry[], tree: ContextTree, command: RemoteCommand, clock: timeline.Clock): Entry[] | null {
   const open = timeline.findOpen(entries);
   if ((open?.id ?? null) !== command.expectOpen) return null;
   const at = Math.min(command.at, clock.now);
+  // Time recorded after the tap means the app moved on without it. Replaying it then would
+  // cut that time away: a start carves everything after it.
+  if (entries.some((e) => timeline.isLive(e) && (e.endUtc ?? e.startUtc) > at)) return null;
   if (command.kind === 'stop') return open ? timeline.stop(entries, clock, at) : null;
   const context = command.contextId ? tree.byId.get(command.contextId) : undefined;
   if (!context || context.hidden || !command.entryId) return null;

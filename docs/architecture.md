@@ -79,7 +79,10 @@ stays the only writer of entries:
   against the snapshot it was drawn from (`expectOpen`, the entry id to use). JS replays
   the queue (`drainRemote` in `store.ts`, `replay` in `remote.ts`) at launch, on the
   module's `onCommands` event, on foreground and before every write. A command whose
-  `expectOpen` no longer matches is dropped, which also makes replay idempotent.
+  `expectOpen` no longer matches is dropped, which also makes replay idempotent, and so is
+  one from before the end of the recorded timeline. Swift leaves nil fields out of a
+  command, which the parser reads as null. Each replay writes the snapshot again, since
+  surfaces show the snapshot plus the queue and change when the queue empties.
 - **iOS.** `targets/widget` is a widget extension (`@bacons/apple-targets`): the Live
   Activity, widgets and controls. `_shared/` compiles into both the extension and the app:
   the queue and snapshot IO, `Effective` (the snapshot plus pending taps, so surfaces update
