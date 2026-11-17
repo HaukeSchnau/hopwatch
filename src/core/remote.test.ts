@@ -80,6 +80,26 @@ describe('replaying taps from outside the app', () => {
     expect(replay(running, tree, start(old, 'tap1', jobEntry, T0 + 30 * MIN), clock(T0 + 40 * MIN))).toBeNull();
   });
 
+  it('drops a tap the app has recorded time past, rather than cutting that time away', () => {
+    // A Resume tapped at 08:00 that the app never replayed, then Dog tracked in the app until 09:00.
+    const stopped = apply(running, timeline.stop(running, clock(T0 + 30 * MIN)));
+    const dogLater = apply(stopped, timeline.place(stopped, dog, T0 + 50 * MIN, T0 + 120 * MIN, clock(T0 + 120 * MIN)));
+    expect(replay(dogLater, tree, start(job, 'tap1', null, T0 + 60 * MIN), clock(T0 + 130 * MIN))).toBeNull();
+  });
+
+  it('reads the commands Swift writes, which leave out nil fields', () => {
+    // JSONEncoder's output for a Stop and a Resume tap from the Live Activity.
+    expect(parseCommand('{"expectOpen":"e1","at":1794940191910.605,"kind":"stop","seq":1794940191910}')).toEqual({
+      seq: 1794940191910,
+      kind: 'stop',
+      contextId: null,
+      entryId: null,
+      expectOpen: 'e1',
+      at: 1794940191910.605,
+    });
+    expect(parseCommand('{"at":1,"seq":1,"kind":"start","contextId":"dog","entryId":"tap1"}')).toEqual(start(dog, 'tap1', null, 1));
+  });
+
   it('reads only well-formed commands', () => {
     expect(parseCommand(JSON.stringify(start(dog, 'tap1', null, T0)))).toEqual(start(dog, 'tap1', null, T0));
     expect(parseCommand('{"seq":1,"kind":"start","contextId":null,"entryId":"x","expectOpen":null,"at":1}')).toBeNull();

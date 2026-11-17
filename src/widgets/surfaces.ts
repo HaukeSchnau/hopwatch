@@ -54,23 +54,46 @@ const strings = {
 export function connectSurfaces(): boolean {
   const native = systemSurfaces;
   if (!native || typeof native.writeSnapshot !== 'function') return false;
+  const remove = (seqs: number[]) => {
+    native.removeCommands(seqs);
+    // Surfaces show the snapshot plus the queue, so they change with the queue even when
+    // a replay changed nothing: write the snapshot again to make them catch up.
+    publishSnapshot(useHopwatch.getState(), { force: true });
+  };
   connectRemoteQueue({
-    read: () =>
-      native.readCommands().flatMap((json): RemoteCommand[] => {
+    read: () => {
+      const unreadable: number[] = [];
+      const commands = native.readCommands().flatMap((json): RemoteCommand[] => {
         const command = parseCommand(json);
-        return command ? [command] : [];
-      }),
-    remove: (seqs) => native.removeCommands(seqs),
+        if (command) return [command];
+        // Native code may still read it and keep showing its tap: drop it.
+        const seq = seqOf(json);
+        if (seq !== null) unreadable.push(seq);
+        return [];
+      });
+      if (unreadable.length > 0) remove(unreadable);
+      return commands;
+    },
+    remove,
   });
   return true;
+}
+
+function seqOf(json: string): number | null {
+  try {
+    const seq: unknown = (JSON.parse(json) as { seq?: unknown } | null)?.seq;
+    return typeof seq === 'number' ? seq : null;
+  } catch {
+    return null;
+  }
 }
 
 let written: string | null = null;
 
 /** Writes the snapshot of `state` for the native surfaces, unless it's what they have. */
-export function publishSnapshot(state: HopwatchState = useHopwatch.getState()) {
+export function publishSnapshot(state: HopwatchState = useHopwatch.getState(), { force = false } = {}) {
   const json = JSON.stringify(snapshotOf(state.entries, state.tree, colors, paint, strings));
-  if (json === written) return;
+  if (json === written && !force) return;
   written = json;
   systemSurfaces?.writeSnapshot(json);
 }
