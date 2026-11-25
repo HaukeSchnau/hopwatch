@@ -51,9 +51,11 @@ export interface Axis {
 export function axisFor(report: DayReport, now: number): Axis {
   const hour = (t: number) => (t - report.start) / (60 * MINUTE);
   const times = report.segments.flatMap((s) => [s.start, s.end]);
+
   if (now >= report.start && now < report.end) times.push(now);
   const first = Math.min(6, ...times.map((t) => Math.floor(hour(t))));
   const last = Math.max(22, ...times.map((t) => Math.ceil(hour(t) + 0.25)));
+
   return {
     start: report.start + Math.max(0, first) * 60 * MINUTE,
     end: Math.min(report.end, report.start + Math.min(24, last) * 60 * MINUTE),
@@ -77,6 +79,7 @@ export function Timeline({ report, axis, now, width, selected, onSelect }: Timel
   const height = yOf(axis.end, axis);
   const trackWidth = width - GUTTER - RIGHT;
   const hours: number[] = [];
+
   for (let t = axis.start; t <= axis.end; t += 60 * MINUTE) hours.push(t);
   const [active, setActive] = useState<string | null>(null);
   const isToday = now >= report.start && now < report.end;
@@ -98,7 +101,9 @@ export function Timeline({ report, axis, now, width, selected, onSelect }: Timel
       {report.gaps.map((g) => {
         const start = Math.max(g.start, axis.start);
         const end = Math.min(g.end, axis.end);
+
         if (end - start < 2 * MINUTE) return null;
+
         return (
           <GapBean key={`gap-${g.start}`} start={start} end={end} axis={axis} width={trackWidth} />
         );
@@ -114,6 +119,7 @@ export function Timeline({ report, axis, now, width, selected, onSelect }: Timel
           selected={selected === s.entry.id}
           onActive={(on) => {
             setActive(on ? s.entry.id : null);
+
             if (on) onSelect(null);
           }}
         />
@@ -138,6 +144,7 @@ function GapBean({
   const top = yOf(start, axis);
   const h = yOf(end, axis) - top;
   const pad = h > 14 ? 3 : 1;
+
   return (
     <Pressable
       onPress={() => {
@@ -195,10 +202,12 @@ function Bean({ seg, axis, now, width, active, selected, onActive }: BeanProps) 
   }, [dragEnd, seg.end]);
 
   const axisStart = axis.start;
+
   const frame = useAnimatedStyle(() => {
     const s = Number.isNaN(dragStart.get()) ? seg.start : dragStart.get();
     const e = Number.isNaN(dragEnd.get()) ? seg.end : dragEnd.get();
     const top = ((s - axisStart) / MINUTE) * PX_PER_MIN;
+
     return { top, height: Math.max(4, ((e - s) / MINUTE) * PX_PER_MIN - 2) };
   });
 
@@ -343,12 +352,14 @@ function RunningDrip({ color }: { color: string }) {
     pulse.set(
       withRepeat(withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.sin) }), -1, true),
     );
+
     return () => {
       cancelAnimation(pulse);
       pulse.set(0);
     };
   }, [pulse, showing]);
   const style = useAnimatedStyle(() => ({ opacity: 0.25 + pulse.get() * 0.55 }));
+
   return <Animated.View style={[styles.drip, { backgroundColor: color }, style]} />;
 }
 
@@ -376,6 +387,7 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
   const commit = (t: number) => {
     setLabel(null);
     onActive(false);
+
     if (t === origin) return;
     actions.updateEntry(
       seg.entry.id,
@@ -383,10 +395,12 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
       dayText.moved(seg.context.name, edge, formatClock(t)),
     );
   };
+
   const moved = (t: number) => {
     buzz.tick();
     setLabel(formatClock(t));
   };
+
   const begin = () => {
     buzz.squish();
     onActive(true);
@@ -403,6 +417,7 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
     .onUpdate((e) => {
       const raw = origin + (e.translationY / PX_PER_MIN) * MINUTE;
       let t = Math.abs(raw - origin) < STEP / 2 ? origin : Math.round(raw / STEP) * STEP;
+
       if (edge === "start") {
         const otherEnd = Number.isNaN(other.get()) ? segEnd : other.get();
         t = Math.min(t, otherEnd - STEP, now);
@@ -410,7 +425,9 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
         const otherStart = Number.isNaN(other.get()) ? segStart : other.get();
         t = Math.min(Math.max(t, otherStart + STEP), now);
       }
+
       const current = Number.isNaN(drag.get()) ? origin : drag.get();
+
       if (t !== current) {
         drag.set(t);
         scheduleOnRN(moved, t);
@@ -426,6 +443,7 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
   const style = useAnimatedStyle(() => {
     const t = Number.isNaN(drag.get()) ? origin : drag.get();
     const s = 1 + lift.get() * 0.35;
+
     return { top: ((t - axisStart) / MINUTE) * PX_PER_MIN - KNOB / 2, transform: [{ scale: s }] };
   });
 
@@ -449,6 +467,7 @@ function Knob({ edge, seg, axis, now, drag, other, x, onActive }: KnobProps) {
 
 function NowLine({ y }: { y: number }) {
   const t = useTheme();
+
   return (
     <View pointerEvents="none" style={[styles.nowRow, { top: y - 9 }]}>
       <View style={[styles.nowPill, { backgroundColor: t.c.pinkDeep }]}>

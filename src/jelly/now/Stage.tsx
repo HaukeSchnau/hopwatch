@@ -86,6 +86,7 @@ export function Stage({ running }: { running: Running | null }) {
 
   // Lights the new running bean up as its jelly lands in the ring.
   const ignite = useSharedValue(1);
+
   const light = () => {
     if (reduced) return;
     ignite.set(0);
@@ -164,6 +165,7 @@ function BlobSpot({
     breath.set(
       withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }), -1, true),
     );
+
     return () => {
       cancelAnimation(breath);
       breath.set(0);
@@ -176,6 +178,7 @@ function BlobSpot({
   useEffect(() => {
     if (shownId === lastShown.current) return;
     lastShown.current = shownId;
+
     if (!shownId) return;
     squash.set(withSequence(withTiming(0.26, { duration: 70 }), withSpring(0, springs.wobble)));
     wake(face);
@@ -188,6 +191,7 @@ function BlobSpot({
   useEffect(() => {
     if (!shownId || reduced || !showing) return;
     let timer: ReturnType<typeof setTimeout>;
+
     const schedule = () => {
       timer = setTimeout(
         () => {
@@ -208,13 +212,16 @@ function BlobSpot({
         6000 + Math.random() * 6000,
       );
     };
+
     schedule();
+
     return () => clearTimeout(timer);
   }, [hop, reduced, showing, shownId, squash]);
 
   const body = useAnimatedStyle(() => {
     const b = breath.get() * 0.035;
     const s = squash.get();
+
     return {
       transform: [
         { translateY: -hop.get() * 14 },
@@ -223,6 +230,7 @@ function BlobSpot({
       ],
     };
   });
+
   const floor = useAnimatedStyle(() => ({
     opacity: (t.dark ? 0.5 : 0.2) - hop.get() * 0.1,
     transform: [{ scaleX: 1 - hop.get() * 0.25 + squash.get() * 0.5 }],
@@ -266,6 +274,7 @@ function BlobSpot({
 function Readout({ context, since }: { context: ResolvedContext; since: number }) {
   const t = useTheme();
   const path = context.ancestors.map((a) => a.name).join(" › ");
+
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/start", params: { context: context.id } })}
@@ -297,6 +306,7 @@ function Readout({ context, since }: { context: ResolvedContext; since: number }
 
 function Idle() {
   const t = useTheme();
+
   return (
     <View style={styles.readout}>
       <Text style={[text.title3, { color: t.c.ink }]}>{nowText.nothingRunning}</Text>
@@ -308,6 +318,7 @@ function Idle() {
 /** "since 09:12": tap to correct when it really started. */
 function Since({ context, since }: { context: ResolvedContext; since: number }) {
   const t = useTheme();
+
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/start", params: { context: context.id } })}
@@ -329,6 +340,7 @@ function Since({ context, since }: { context: ResolvedContext; since: number }) 
 function Stop({ context, since }: { context: ResolvedContext; since: number }) {
   const t = useTheme();
   const now = useNow(60_000);
+
   return (
     <View style={[styles.corner, styles.bottomRight]}>
       <Menu

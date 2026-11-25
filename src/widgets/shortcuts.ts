@@ -45,8 +45,10 @@ function describe(state: HopwatchState): Shortcut[] {
       icon: { mark: null, light, fill, deep, on },
     });
   }
+
   // Hidden jellies can't be resumed (see `actions.back`).
   const target = back && !back.hidden ? back : undefined;
+
   if (target) {
     shortcuts.push({
       id: "resume",
@@ -56,11 +58,13 @@ function describe(state: HopwatchState): Shortcut[] {
       icon: jellyIcon(target),
     });
   }
+
   const pinned = state.tree.ordered
     .filter(
       (c) => c.pinPosition !== null && !c.hidden && c.id !== running?.id && c.id !== target?.id,
     )
     .sort((a, b) => (a.pinPosition ?? 0) - (b.pinPosition ?? 0));
+
   for (const c of pinned) {
     shortcuts.push({
       id: `start:${c.id}`,
@@ -70,6 +74,7 @@ function describe(state: HopwatchState): Shortcut[] {
       icon: jellyIcon(c),
     });
   }
+
   return shortcuts.slice(0, MAX_SHORTCUTS);
 }
 
@@ -86,10 +91,12 @@ export async function syncShortcuts() {
  */
 export function startShortcuts(): () => void {
   const native = systemSurfaces;
+
   if (Platform.OS !== "android" || !native) return () => {};
 
   let shown: string | undefined;
   let queue = Promise.resolve();
+
   const enqueue = () => {
     const want = describe(useHopwatch.getState());
     const json = JSON.stringify(want);
@@ -103,6 +110,7 @@ export function startShortcuts(): () => void {
   };
 
   enqueue();
+
   return useHopwatch.subscribe((state, prev) => {
     if (state.entries !== prev.entries || state.tree !== prev.tree) enqueue();
   });

@@ -77,6 +77,7 @@ export function useFace(mood: "awake" | "asleep" = "asleep"): Face {
   const puff = useSharedValue(0);
   const shiver = useSharedValue(0);
   const motion = useSharedValue<Motion>("bouncy");
+
   // Stable identity, so effects keyed on the face don't restart.
   return useMemo(
     () => ({ awake, blink, lookX, lookY, yawn, hop, squash, tilt, puff, shiver, motion }),
@@ -133,13 +134,17 @@ export function useLively(face: Face, enabled: boolean) {
     let alive = true;
     let busyUntil = 0;
     const timers = new Set<ReturnType<typeof setTimeout>>();
+
     const later = (ms: number, fn: () => void) => {
       const timer = setTimeout(() => {
         timers.delete(timer);
+
         if (alive) fn();
       }, ms);
+
       timers.add(timer);
     };
+
     const who = () => personalities[face.motion.get()];
     const pause = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min);
     const free = () => Date.now() > busyUntil;
@@ -150,12 +155,15 @@ export function useLively(face: Face, enabled: boolean) {
           withTiming(0, { duration: 70 }),
           withTiming(1, { duration: 110 }),
         );
+
         face.blink.set(
           Math.random() < who().twice ? withSequence(shut, withDelay(90, shut)) : shut,
         );
       }
+
       later(pause(who().blink), blink);
     };
+
     const glance = () => {
       if (free()) {
         const centre = Math.random() < 0.35;
@@ -164,15 +172,20 @@ export function useLively(face: Face, enabled: boolean) {
         face.lookX.set(withSpring(centre ? 0 : (Math.random() * 2 - 1) * reach, spring));
         face.lookY.set(withSpring(centre ? 0 : (Math.random() * 1.2 - 0.6) * reach, spring));
       }
+
       later(pause(who().glance), glance);
     };
+
     const move = () => {
       if (free()) busyUntil = Date.now() + who().move(face);
       later(pause(who().every), move);
     };
+
     later(1200 + Math.random() * 1500, blink);
     later(900 + Math.random() * 2000, glance);
+
     if (!reduceMotion) later(pause(who().every) * 0.5, move);
+
     return () => {
       alive = false;
       timers.forEach(clearTimeout);
@@ -222,11 +235,13 @@ export function Gummy({
   const px = 1 / unit;
   // Small characters get a bigger face, so it still reads at 28 pt.
   const faceScale = geo.face.s * (size < 44 ? 1.22 : size < 64 ? 1.08 : 1);
+
   const faceTransform = [
     { translateX: geo.face.x },
     { translateY: geo.face.y },
     { scale: faceScale },
   ];
+
   const facePx = px / faceScale;
   const topper = { topper: look.topper, geo, tones: c, accent, lod, px };
   const dress = useDress(look.topper, seed);
@@ -294,6 +309,7 @@ export function Gummy({
 function BodyFill({ geo, c }: { geo: BodyGeo; c: Candy }) {
   const h = geo.bottom - geo.top;
   const w = geo.right - geo.left;
+
   return (
     <>
       <Path path={geo.path}>
@@ -319,6 +335,7 @@ function BodyFill({ geo, c }: { geo: BodyGeo; c: Candy }) {
 
 function Gloss({ geo }: { geo: BodyGeo }) {
   const { x, y, angle, w } = geo.gloss;
+
   return (
     <>
       <Group
@@ -349,11 +366,13 @@ function useDress(topper: Topper, seed: string) {
   useEffect(() => {
     const before = last.current;
     last.current = { topper, seed };
+
     if (before.seed !== seed || before.topper === topper) return;
     dress.set(
       withSequence(withTiming(0, { duration: 0 }), withSpring(1, { damping: 9, stiffness: 150 })),
     );
   }, [dress, seed, topper]);
+
   return dress;
 }
 
@@ -363,14 +382,17 @@ const SPARKLE = "M 0 -1 Q 0.16 -0.16 1 0 Q 0.16 0.16 0 1 Q -0.16 0.16 -1 0 Q -0.
 function Sparkles({ dress, geo }: { dress: SharedValue<number>; geo: BodyGeo }) {
   const pop = useDerivedValue(() => {
     const t = dress.get();
+
     return t >= 0.999 ? 0 : Math.sin(Math.PI * Math.min(1, t));
   });
+
   const spots = [
     { x: geo.crown.x - geo.crown.w * 0.62, y: geo.crown.y - 3, s: 4.4 },
     { x: geo.crown.x + geo.crown.w * 0.66, y: geo.crown.y - 7, s: 5.2 },
     { x: geo.crown.x - geo.crown.w * 0.3, y: geo.crown.y - 16, s: 3.4 },
     { x: geo.crown.x + geo.crown.w * 0.24, y: geo.crown.y - 19, s: 3 },
   ];
+
   return (
     <Group opacity={pop}>
       {spots.map((spot, i) => (
@@ -387,6 +409,7 @@ function Sparkle({ x, y, s, pop }: { x: number; y: number; s: number; pop: Share
     { scale: s * (0.4 + pop.get() * 0.8) },
     { rotate: pop.get() },
   ]);
+
   return (
     <Group transform={transform}>
       <Path path={SPARKLE} color="#FFF6B8" />

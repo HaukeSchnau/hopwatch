@@ -14,12 +14,14 @@ export function BeadString({ day, width }: { day: DayReport; width: number }) {
   const sizes = day.segments.map((s) => beadSize(s.end - s.start));
   const natural = sizes.reduce((sum, s) => sum + s + 2, 0);
   const scale = natural > width ? width / natural : 1;
+
   return (
     <View style={[styles.string, { width }]}>
       <View style={[styles.thread, { backgroundColor: alpha(t.c.ink, 0.12) }]} />
       {day.segments.map((s, i) => {
         const size = sizes[i] * scale;
         const c = t.candy[s.context.hue];
+
         return (
           <View
             key={s.entry.id}
@@ -52,10 +54,12 @@ export function BeadString({ day, width }: { day: DayReport; width: number }) {
 export function WeekBeads({ days, width, now }: { days: DayReport[]; width: number; now: number }) {
   const t = useTheme();
   const stringWidth = width - 44 - 76;
+
   return (
     <View style={styles.week}>
       {days.map((d) => {
         const future = d.start > now;
+
         return (
           <View key={d.start} style={[styles.row, future && { opacity: 0.35 }]}>
             <Text style={[text.subhead, styles.weekday, { color: t.c.ink }]}>

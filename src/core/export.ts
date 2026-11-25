@@ -17,14 +17,17 @@ export const LAST_EXPORT = "data.lastExport";
 
 export async function shareExport(): Promise<void> {
   const exportedAt = new Date();
+
   const payload = backupPayload(
     { ...db.dumpAll(), prefs: { ...useHopwatch.getState().prefs } },
     exportedAt,
   );
+
   const file = new File(
     Paths.cache,
     `hopwatch-export-${exportedAt.toISOString().slice(0, 10)}.json`,
   );
+
   if (file.exists) file.delete();
   file.create();
   file.write(JSON.stringify(payload, null, 2));
@@ -43,8 +46,10 @@ export async function shareExport(): Promise<void> {
  */
 export async function pickBackup(): Promise<ParseResult | null> {
   const picked = await getDocumentAsync({ type: "application/json", copyToCacheDirectory: true });
+
   if (picked.canceled) return null;
   const file = new File(picked.assets[0].uri);
+
   try {
     return parseBackup(JSON.parse(await file.text()));
   } catch {

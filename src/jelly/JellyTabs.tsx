@@ -82,6 +82,7 @@ export function JellyTabs() {
  */
 function materialBar(t: Theme, tint: string, wash: string | null) {
   const label = { ...rounded("700"), fontSize: 12 };
+
   return {
     backgroundColor: t.c.card,
     iconColor: { default: t.c.muted, selected: tint },
@@ -98,6 +99,7 @@ function useDayGapsIntent() {
   useEffect(() => {
     if (intent?.kind !== "day-gaps") return;
     actions.consumeIntent();
+
     // Close any sheet in front first; navigating to a tab leaves it open.
     if (router.canDismiss()) router.dismissAll();
     router.navigate({
@@ -113,6 +115,7 @@ function useStopSheetIntent() {
   useEffect(() => {
     if (intent?.kind !== "stop-sheet") return;
     actions.consumeIntent();
+
     if (!useHopwatch.getState().entries.some((e) => e.endUtc === null)) return;
     router.navigate("/");
     router.push("/stop");

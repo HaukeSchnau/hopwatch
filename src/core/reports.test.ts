@@ -44,6 +44,7 @@ const context = (id: string, parentId: string | null, extra: Partial<Context> = 
 });
 
 let n = 0;
+
 const entry = (contextId: string, start: number, end: number | null): Entry => ({
   id: `e${n++}` as EntryId,
   contextId: contextId as ContextId,
@@ -59,6 +60,7 @@ const entry = (contextId: string, start: number, end: number | null): Entry => (
 
 // A Monday at local midnight, whatever the test machine's time zone.
 const monday = startOfWeek(new Date(2026, 8, 23, 12).getTime());
+
 const tree = buildTree([
   context("job", null, { weeklyTargetMinutes: 40 * 60 }),
   context("meetings", "job"),
@@ -82,6 +84,7 @@ describe("reports", () => {
       entry("meetings", monday + 11 * HOUR, monday + 12 * HOUR),
       entry("acme", monday + 13 * HOUR, monday + 14 * HOUR),
     ];
+
     const day = dayReport(entries, tree, monday, addDays(monday, 1));
     expect(day.totals.byId.get("job" as ContextId)?.total).toBe(3 * HOUR);
     expect(day.totals.byId.get("job" as ContextId)?.own).toBe(2 * HOUR);
@@ -96,10 +99,12 @@ describe("reports", () => {
 
   it("clips a running entry to now and reports targets for the week", () => {
     const now = monday + 2 * 24 * HOUR + 10 * HOUR;
+
     const entries = [
       entry("job", monday + 8 * HOUR, monday + 17 * HOUR),
       entry("job", now - 2 * HOUR - 20 * MINUTE, null),
     ];
+
     const week = weekReport(entries, tree, monday, now);
     const job = week.targets.find((t) => t.context.id === "job")!;
     expect(formatTargetLine(job)).toBe("job 11:20 / 40:00 (−28:40)");
@@ -107,6 +112,7 @@ describe("reports", () => {
 
   it("writes plain-text totals for one subtree", () => {
     const entries = [entry("meetings", monday + 9 * HOUR, monday + 10 * HOUR + 30 * MINUTE)];
+
     const text = totalsText(
       entries,
       tree,
@@ -114,6 +120,7 @@ describe("reports", () => {
       { start: monday, end: addDays(monday, 7) },
       addDays(monday, 7),
     );
+
     expect(text.split("\n")[0]).toMatch(/^job · .* · 1:30$/);
     expect(text).toContain("  meetings  1:30");
   });
@@ -123,13 +130,16 @@ describe("sample data", () => {
   it("never overlaps and has at most one running entry", () => {
     const now = new Date(2026, 8, 24, 15, 7).getTime();
     let id = 0;
+
     const { entries, contexts } = sampleData(
       now,
       () => `s${id++}`,
       () => 120,
     );
+
     const sorted = [...entries].sort((a, b) => a.startUtc - b.startUtc);
     expect(sorted.filter((e) => e.endUtc === null).length).toBeLessThanOrEqual(1);
+
     for (let i = 1; i < sorted.length; i++)
       expect(sorted[i - 1].endUtc!).toBeLessThanOrEqual(sorted[i].startUtc);
     expect(sorted.every((e) => e.startUtc < now)).toBe(true);
@@ -140,6 +150,7 @@ describe("sample data", () => {
 
 describe("the evening review", () => {
   const at = (h: number, m = 0) => monday + h * HOUR + m * MINUTE;
+
   const spans = (gaps: { start: number; end: number }[]) =>
     gaps.map((g) => [g.start - monday, g.end - monday]);
 
@@ -149,6 +160,7 @@ describe("the evening review", () => {
       entry("job", at(13), at(17)),
       entry("meetings", at(17, 10), at(18)),
     ];
+
     // 12–13 counts; the 10 minutes at 17:00 are too short; before 9 and after 18 don't count.
     expect(spans(reviewGaps(entries, tree, monday, at(21), []))).toEqual([[12 * HOUR, 13 * HOUR]]);
   });
@@ -168,6 +180,7 @@ describe("the evening review", () => {
 
 describe("job hours", () => {
   const day = (n: number) => addDays(monday, n);
+
   const off = (n: number): DayOff => ({
     id: `o${n}` as DayOffId,
     day: dayKey(day(n)),
@@ -177,6 +190,7 @@ describe("job hours", () => {
     updatedAt: 0,
     deletedAt: null,
   });
+
   const jobTree = buildTree([
     context("job", null, {
       weeklyTargetMinutes: 40 * 60,
@@ -187,7 +201,9 @@ describe("job hours", () => {
     context("meetings", "job"),
     context("side", null, { weeklyTargetMinutes: 6 * 60 }),
   ]);
+
   const job = jobTree.byId.get("job" as ContextId)!;
+
   const workday = (n: number, hours: number, id = "job") =>
     entry(id, day(n) + 9 * HOUR, day(n) + 9 * HOUR + hours * HOUR);
 
@@ -209,6 +225,7 @@ describe("job hours", () => {
       workday(3, 8),
       workday(4, 3),
     ];
+
     // Wednesday (day 2) is off; now is Friday 12:00.
     const result = overtimeBalance(
       entries,
@@ -217,6 +234,7 @@ describe("job hours", () => {
       offDaysOf([off(2)], null),
       day(4) + 12 * HOUR,
     );
+
     // +2:00 start; Mon 9 − 8; Tue 7 + 1 (meetings) − 8; Wed off; Thu 8 − 8.
     expect(result?.balance).toBe(3 * HOUR);
     expect(result?.today).toEqual({ actual: 3 * HOUR, target: 8 * HOUR });
@@ -230,6 +248,7 @@ describe("job hours", () => {
       offDaysOf([off(2)], null),
       day(3),
     );
+
     // Mon and Tue untracked (−16), Wednesday off but worked (+2), +2 start.
     expect(result?.balance).toBe(-12 * HOUR);
     expect(

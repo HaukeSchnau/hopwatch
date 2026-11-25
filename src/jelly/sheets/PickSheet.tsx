@@ -67,11 +67,14 @@ export function PickSheet() {
   // What to confirm: the typed sentence's plan once its row is tapped, or in place mode
   // the block with the jelly picked for it (null jelly: a break, where `untracked` starts).
   const placing = mode === "place" && entry !== null;
+
   const blockWith = (contextId: ContextId | null): Confirmable | null =>
     entry ? { kind: "place", contextId, ...blockInside(entry, Date.now()) } : null;
+
   const [confirming, setConfirming] = useState<Confirmable | null>(() =>
     placing && params.untracked ? blockWith(null) : null,
   );
+
   const modelReady = useModelAvailable();
   const canType = mode === "start" && modelReady;
 
@@ -85,11 +88,13 @@ export function PickSheet() {
 
   let title = s.title;
   let subtitle: string | null = null;
+
   let onPick: (c: ResolvedContext | null) => void = (c) => {
     if (!c) return;
     actions.start(c.id);
     play("pop");
   };
+
   if (mode === "fill" && Number.isFinite(from) && Number.isFinite(to)) {
     title = s.fill;
     subtitle = `${formatClock(from)} – ${formatClock(to)} · ${formatDuration(to - from)}`;
@@ -109,6 +114,7 @@ export function PickSheet() {
   }
 
   const q = query.trim().toLowerCase();
+
   // Putting a jelly inside its own entry would change nothing.
   const list = pickable.filter(
     (c) =>
@@ -116,15 +122,19 @@ export function PickSheet() {
       !(placing && c.id === entry.contextId) &&
       (!q || pathLabel(c).toLowerCase().includes(q)),
   );
+
   const log = useTypedLog(query, canType && looksLikeSentence(query, list.length));
+
   const confirm = (plan: Plan | null) => {
     if (!plan) return;
     buzz.tap();
     Keyboard.dismiss();
     setConfirming(plan);
   };
+
   const pick = (c: ResolvedContext | null) => {
     buzz.tap();
+
     if (placing) return setConfirming(blockWith(c?.id ?? null));
     onPick(c);
     router.back();
@@ -236,6 +246,7 @@ const clamp = (t: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, t
 function aroundAt(at: number, gapFrom: number, gapTo: number) {
   if (!Number.isFinite(at) || gapTo - gapFrom <= 90 * MINUTE) return { from: gapFrom, to: gapTo };
   const from = clamp(Math.round((at - 30 * MINUTE) / FIVE) * FIVE, gapFrom, gapTo - 60 * MINUTE);
+
   return { from, to: Math.min(gapTo, from + 60 * MINUTE) };
 }
 
@@ -243,6 +254,7 @@ function aroundAt(at: number, gapFrom: number, gapTo: number) {
 function onDay(base: number, picked: Date): number {
   const d = new Date(base);
   d.setHours(picked.getHours(), picked.getMinutes(), 0, 0);
+
   return d.getTime();
 }
 
@@ -264,6 +276,7 @@ function Row({
 }) {
   const t = useTheme();
   const c = t.candy[context?.hue ?? "gray"];
+
   return (
     <Squishy
       amount={0.06}

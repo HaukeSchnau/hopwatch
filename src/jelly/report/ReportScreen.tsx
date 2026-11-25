@@ -41,6 +41,7 @@ import { TotalsTree } from "./TotalsTree";
 import { WeekSummary } from "./WeekSummary";
 
 type Mode = "day" | "week";
+
 const modes: Mode[] = ["day", "week"];
 
 export function ReportScreen() {
@@ -56,9 +57,11 @@ export function ReportScreen() {
 
   const step = (dir: 1 | -1) => {
     buzz.tick();
+
     if (mode === "day") setDay(addDays(day, dir));
     else setWeek(addDays(week, 7 * dir));
   };
+
   const current = mode === "day" ? day === startOfDay(now) : week === startOfWeek(now);
   const jump = () => (mode === "day" ? setDay(startOfDay(now)) : setWeek(startOfWeek(now)));
   const { title, subtitle } = mode === "day" ? dayTitles(day, now) : weekTitles(week, now);
@@ -115,6 +118,7 @@ function WeekBody({ week, now }: { week: number; now: number }) {
   const report = useWeekReport(week);
   const { width } = useWindowDimensions();
   const targets = new Map(report.targets.map((line) => [line.context.id, line]));
+
   return (
     <>
       <Overview
@@ -156,6 +160,7 @@ function WeekBody({ week, now }: { week: number; now: number }) {
 function DayBody({ day, now }: { day: number; now: number }) {
   const report = useDayReport(day);
   const { width } = useWindowDimensions();
+
   return (
     <>
       <Overview
@@ -178,6 +183,7 @@ function DayBody({ day, now }: { day: number; now: number }) {
 function DayBeads({ report, width }: { report: DayReport; width: number }) {
   const t = useTheme();
   const { blocks, median } = report.fragmentation;
+
   return (
     <View style={[styles.card, { backgroundColor: t.c.card }]}>
       {blocks ? (
@@ -218,11 +224,14 @@ function Overview({
   const entries = useEntries();
   const tree = useTree();
   const [expanded, setExpanded] = useState<ReadonlySet<ContextId>>(() => new Set());
+
   const toggle = (id: ContextId) =>
     setExpanded((prev) => {
       const next = new Set(prev);
+
       if (next.has(id)) next.delete(id);
       else next.add(id);
+
       return next;
     });
 

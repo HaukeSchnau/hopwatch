@@ -66,6 +66,7 @@ describe("parseBackup", () => {
         balanceStartMinutes: 150,
       },
     ];
+
     const daysOff: DayOff[] = [
       {
         id: "o1" as DayOffId,
@@ -77,12 +78,14 @@ describe("parseBackup", () => {
         deletedAt: null,
       },
     ];
+
     const result = parseBackup(file(job, [], {}, daysOff));
     expect(result.ok && [result.backup.contexts, result.backup.daysOff]).toEqual([job, daysOff]);
   });
 
   it("reads version 2 files as having no job hours", () => {
     const v2 = { ...file(work, []), schemaVersion: 2 };
+
     for (const c of v2.contexts)
       for (const key of ["workDays", "balanceSince", "balanceStartMinutes"]) delete c[key];
     delete v2.daysOff;
@@ -106,6 +109,7 @@ describe("parseBackup", () => {
       entry("a", "work", T0, T0 + HOUR),
       entry("b", "deep", T0 + HOUR / 2, null),
     ];
+
     expect(parseBackup(file(work, overlapping))).toEqual({ ok: false, reason: "Entries overlap." });
     const twoOpen = [entry("a", "work", T0, null), entry("b", "deep", T0 + HOUR, null)];
     expect(parseBackup(file(work, twoOpen)).ok).toBe(false);
@@ -118,6 +122,7 @@ describe("parseBackup", () => {
       entry("a", "work", T0, T0 + HOUR),
       { ...entry("b", "work", T0, null), deletedAt: T0 },
     ];
+
     expect(parseBackup(file(work, entries)).ok).toBe(true);
   });
 

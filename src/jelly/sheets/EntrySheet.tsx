@@ -30,6 +30,7 @@ const clock24 = environment("locale", pickerLocale);
 export function EntrySheet() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const entry = useEntries().find((e) => e.id === id) ?? null;
+
   if (!entry) {
     return (
       <JellyForm title={s.title}>
@@ -39,12 +40,14 @@ export function EntrySheet() {
       </JellyForm>
     );
   }
+
   // Keyed so the draft resets when a different entry opens.
   return <EntryForm key={entry.id} entry={entry} />;
 }
 
 function EntryForm({ entry }: { entry: Entry }) {
   const t = useTheme();
+
   const {
     contextId,
     setContextId,
@@ -59,6 +62,7 @@ function EntryForm({ entry }: { entry: Entry }) {
     save,
     remove,
   } = useEntryDraft(entry);
+
   const note = useNativeState(entry.note ?? "");
   const running = end === null;
 
@@ -82,6 +86,7 @@ function EntryForm({ entry }: { entry: Entry }) {
           selection={contextId}
           onSelectionChange={(value: string) => {
             const next = options.find((c) => c.id === value);
+
             if (next) setContextId(next.id);
           }}
           modifiers={[pickerStyle("menu")]}

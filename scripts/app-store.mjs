@@ -21,8 +21,10 @@ import { join } from "node:path";
 const root = new URL("..", import.meta.url).pathname;
 const store = join(root, "store/app-store");
 const frames = join(root, "store/screenshots/app-store");
+
 /** The 6.9" iPhone slot (1320 x 2868), the only size required for an iPhone-only app. */
 const DISPLAY_TYPE = "APP_IPHONE_67";
+
 /** Version states in which the listing can still be edited. */
 const EDITABLE = [
   "PREPARE_FOR_SUBMISSION",
@@ -36,6 +38,7 @@ const args = process.argv.slice(2);
 const appFlag = args.indexOf("--app");
 const appArg = appFlag >= 0 ? args.splice(appFlag, 2)[1] : null;
 const only = args[0] ?? "all";
+
 if (!["all", "text", "screenshots"].includes(only)) {
   console.error("usage: node scripts/app-store.mjs [text|screenshots] [--app ID]");
   process.exit(2);
@@ -45,7 +48,9 @@ if (!["all", "text", "screenshots"].includes(only)) {
 function asc(method, path, body) {
   const writes =
     method === "GET" ? [] : ["--confirm", ...(body ? ["--body", JSON.stringify(body)] : [])];
+
   let out;
+
   try {
     // asc prints Apple's error on stderr, which goes straight to the terminal.
     out = execFileSync("asc", ["api", method, path, ...writes], {
@@ -55,6 +60,7 @@ function asc(method, path, body) {
   } catch {
     throw new Error(`${method} ${path} failed`);
   }
+
   return out.trim().startsWith("{") ? JSON.parse(out) : null;
 }
 
@@ -66,11 +72,13 @@ const data = (type, id, attributes, relationships) => ({
     ...(relationships ? { relationships } : {}),
   },
 });
+
 const rel = (type, id) => ({ data: { type, id } });
 
 /** A field file's text without the trailing newline, or undefined when there's no file. */
 function field(...parts) {
   const file = join(store, ...parts);
+
   return existsSync(file) ? readFileSync(file, "utf8").trim() : undefined;
 }
 
@@ -79,10 +87,13 @@ const locales = readdirSync(store, { withFileTypes: true })
   .map((entry) => entry.name);
 
 const appJson = JSON.parse(readFileSync(join(root, "app.json"), "utf8")).expo;
+
 const appId =
   appArg ?? asc("GET", `/v1/apps?filter[bundleId]=${appJson.ios.bundleIdentifier}`).data[0]?.id;
+
 if (!appId)
   throw new Error(`No App Store Connect app for ${appJson.ios.bundleIdentifier}; pass --app ID`);
+
 console.log(`app ${appId}`);
 
 /** The version being prepared; creates one for app.json's version if there is none. */
@@ -91,8 +102,11 @@ function editableVersion() {
     "GET",
     `/v1/apps/${appId}/appStoreVersions?filter[platform]=IOS&limit=50`,
   ).data;
+
   const editable = versions.find((v) => EDITABLE.includes(v.attributes.appVersionState));
+
   if (editable) return { version: editable, firstRelease: versions.length === 1 };
+
   const created = asc(
     "POST",
     "/v1/appStoreVersions",
@@ -103,11 +117,14 @@ function editableVersion() {
       { app: rel("apps", appId) },
     ),
   ).data;
+
   return { version: created, firstRelease: false };
 }
 
 const { version, firstRelease } = editableVersion();
+
 console.log(`version ${version.attributes.versionString} (${version.id})`);
+
 const versionLocalizations = () =>
   new Map(
     asc("GET", `/v1/appStoreVersions/${version.id}/appStoreVersionLocalizations?limit=50`).data.map(
@@ -133,6 +150,7 @@ function pushText() {
   );
 
   const existing = versionLocalizations();
+
   for (const locale of locales) {
     const attributes = {
       description: field(locale, "description.txt"),
@@ -143,7 +161,9 @@ function pushText() {
       // App Store Connect only takes "What's New" from the second version on.
       ...(firstRelease ? {} : { whatsNew: field(locale, "release_notes.txt") }),
     };
+
     const id = existing.get(locale);
+
     if (id)
       asc(
         "PATCH",
@@ -167,10 +187,13 @@ function pushText() {
   // The app info being edited alongside the version (a live app also has a read-only one).
   const infos = asc("GET", `/v1/apps/${appId}/appInfos`).data;
   const info = infos.find((i) => i.attributes.state !== "READY_FOR_DISTRIBUTION") ?? infos[0];
+
   const category = (file) => {
     const id = field(file);
+
     return { data: id ? { type: "appCategories", id } : null };
   };
+
   asc("PATCH", `/v1/appInfos/${info.id}`, {
     data: {
       type: "appInfos",
@@ -188,6 +211,7 @@ function pushText() {
       l.id,
     ]),
   );
+
   for (const locale of locales) {
     // A name someone else uses answers 409.
     const attributes = {
@@ -195,7 +219,9 @@ function pushText() {
       subtitle: field(locale, "subtitle.txt"),
       privacyPolicyUrl: field(locale, "privacy_url.txt"),
     };
+
     const id = infoLocalizations.get(locale);
+
     if (id)
       asc("PATCH", `/v1/appInfoLocalizations/${id}`, data("appInfoLocalizations", id, attributes));
     else
@@ -221,6 +247,7 @@ function pushText() {
   console.log("age rating");
 
   const demoUser = field("review_information", "demo_user.txt");
+
   const review = {
     contactFirstName: field("review_information", "first_name.txt"),
     contactLastName: field("review_information", "last_name.txt"),
@@ -231,7 +258,9 @@ function pushText() {
     demoAccountPassword: field("review_information", "demo_password.txt") ?? null,
     notes: field("review_information", "notes.txt"),
   };
+
   const detail = asc("GET", `/v1/appStoreVersions/${version.id}/appStoreReviewDetail`)?.data;
+
   if (detail)
     asc(
       "PATCH",
@@ -255,6 +284,7 @@ const md5 = (bytes) => createHash("md5").update(bytes).digest("hex");
 async function upload(setId, file) {
   const bytes = readFileSync(file);
   const fileName = file.split("/").pop();
+
   const reserved = asc(
     "POST",
     "/v1/appScreenshots",
@@ -265,31 +295,38 @@ async function upload(setId, file) {
       { appScreenshotSet: rel("appScreenshotSets", setId) },
     ),
   ).data;
+
   for (const op of reserved.attributes.uploadOperations) {
     const response = await fetch(op.url, {
       method: op.method,
       headers: Object.fromEntries(op.requestHeaders.map((h) => [h.name, h.value])),
       body: bytes.subarray(op.offset, op.offset + op.length),
     });
+
     if (!response.ok)
       throw new Error(`upload of ${fileName} failed: ${response.status} ${await response.text()}`);
   }
+
   asc(
     "PATCH",
     `/v1/appScreenshots/${reserved.id}`,
     data("appScreenshots", reserved.id, { uploaded: true, sourceFileChecksum: md5(bytes) }),
   );
+
   return reserved.id;
 }
 
 async function pushScreenshots() {
   const localizations = versionLocalizations();
+
   for (const locale of readdirSync(frames).sort()) {
     const files = readdirSync(join(frames, locale))
       .filter((name) => name.endsWith(".png"))
       .sort()
       .map((name) => join(frames, locale, name));
+
     const localizationId = localizations.get(locale);
+
     if (!localizationId)
       throw new Error(`${locale} has no version localization yet; run the text step first`);
 
@@ -297,6 +334,7 @@ async function pushScreenshots() {
       "GET",
       `/v1/appStoreVersionLocalizations/${localizationId}/appScreenshotSets`,
     ).data;
+
     const setId =
       sets.find((s) => s.attributes.screenshotDisplayType === DISPLAY_TYPE)?.id ??
       asc(
@@ -311,6 +349,7 @@ async function pushScreenshots() {
       ).data.id;
 
     const existing = asc("GET", `/v1/appScreenshotSets/${setId}/appScreenshots?limit=10`).data;
+
     const same =
       existing.length === files.length &&
       existing.every(
@@ -318,12 +357,15 @@ async function pushScreenshots() {
           s.attributes.sourceFileChecksum === md5(readFileSync(files[i])) &&
           s.attributes.assetDeliveryState?.state === "COMPLETE",
       );
+
     if (same) {
       console.log(`${locale}: screenshots unchanged`);
       continue;
     }
+
     for (const shot of existing) asc("DELETE", `/v1/appScreenshots/${shot.id}`);
     const ids = [];
+
     for (const file of files) ids.push(await upload(setId, file));
     asc("PATCH", `/v1/appScreenshotSets/${setId}/relationships/appScreenshots`, {
       data: ids.map((id) => ({ type: "appScreenshots", id })),
@@ -334,16 +376,22 @@ async function pushScreenshots() {
       const states = asc("GET", `/v1/appScreenshotSets/${setId}/appScreenshots?limit=10`).data.map(
         (s) => s.attributes.assetDeliveryState,
       );
+
       const failed = states.filter((s) => s?.state === "FAILED");
+
       if (failed.length)
         throw new Error(`${locale}: screenshot processing failed: ${JSON.stringify(failed)}`);
+
       if (states.every((s) => s?.state === "COMPLETE")) break;
+
       if (attempt >= 30) throw new Error(`${locale}: screenshots still processing after 5 minutes`);
       await new Promise((resolve) => setTimeout(resolve, 10_000));
     }
+
     console.log(`${locale}: ${files.length} screenshots uploaded`);
   }
 }
 
 if (only !== "screenshots") pushText();
+
 if (only !== "text") await pushScreenshots();

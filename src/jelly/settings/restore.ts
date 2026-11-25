@@ -17,15 +17,20 @@ export async function chooseBackup(replacing: boolean): Promise<Backup | null> {
     ok: false as const,
     reason: String(e),
   }));
+
   if (!result) return null;
+
   if (!result.ok) {
     Alert.alert(data.cantRestore, result.reason);
+
     return null;
   }
+
   const { backup } = result;
   const jellies = backup.contexts.filter((c) => c.deletedAt === null).length;
   const entries = backup.entries.filter((e) => e.deletedAt === null).length;
   const day = backup.exportedAt ? formatLongDay(backup.exportedAt) : null;
+
   const confirmed = await new Promise<boolean>((resolve) =>
     Alert.alert(
       data.restoreTitle,
@@ -42,5 +47,6 @@ export async function chooseBackup(replacing: boolean): Promise<Backup | null> {
       { cancelable: true, onDismiss: () => resolve(false) },
     ),
   );
+
   return confirmed ? backup : null;
 }

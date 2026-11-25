@@ -97,6 +97,7 @@ export function initStore() {
   initialLinkIsStale();
   const { contexts, entries, daysOff } = db.loadAll();
   const prefs: Record<string, Json> = {};
+
   for (const row of db.metaWithPrefix(PREF_PREFIX)) {
     try {
       prefs[row.key.slice(PREF_PREFIX.length)] = JSON.parse(row.value) as Json;
@@ -104,6 +105,7 @@ export function initStore() {
       // A corrupt preference falls back to its default.
     }
   }
+
   set({
     prefs,
     ready: true,
@@ -140,25 +142,31 @@ export function connectRemoteQueue(queue: RemoteQueue) {
 export function drainRemote() {
   if (!remoteQueue || !get().ready) return;
   const commands = remoteQueue.read();
+
   if (commands.length === 0) return;
   let entries = get().entries;
   const written: Entry[] = [];
+
   for (const command of commands) {
     const rows = replay(entries, get().tree, command, clock());
+
     if (!rows?.length) continue;
     entries = timeline.applyRows(entries, rows);
     written.push(...rows);
   }
+
   if (written.length > 0) {
     db.writeRows({ entries: written });
     set({ entries, lastAction: null });
   }
+
   remoteQueue.remove(commands.map((c) => c.seq));
 }
 
 /** The entries after replaying taps from outside the app; every entry change starts here. */
 function entriesNow() {
   drainRemote();
+
   return get().entries;
 }
 
@@ -177,10 +185,12 @@ function commitContexts(rows: Context[]) {
   if (rows.length === 0) return;
   db.writeRows({ contexts: rows });
   const byId = new Map(get().contexts.map((c) => [c.id, c]));
+
   for (const row of rows) {
     if (row.deletedAt === null) byId.set(row.id, row);
     else byId.delete(row.id);
   }
+
   const contexts = [...byId.values()];
   set({ contexts, tree: tree.buildTree(contexts) });
 }
@@ -191,6 +201,7 @@ const findContext = (id: ContextId) => get().contexts.find((c) => c.id === id);
 
 function updateContextRow(id: ContextId, change: (c: Context, now: number) => Context) {
   const c = findContext(id);
+
   if (c) commitContexts([change(c, Date.now())]);
 }
 
@@ -232,6 +243,7 @@ export const actions = {
   back(opts: { at?: number } = {}) {
     const entries = entriesNow();
     const id = timeline.previousContextId(entries);
+
     if (!id || get().tree.byId.get(id)?.hidden) return;
     const running = timeline.findOpen(entries) !== null;
     const rows = timeline.start(entries, id, clock(), opts.at);
@@ -246,6 +258,7 @@ export const actions = {
   undo() {
     drainRemote();
     const last = get().lastAction;
+
     if (!last) return;
     const now = Date.now();
     commitEntries(
@@ -285,10 +298,12 @@ export const actions = {
    */
   place(contextId: ContextId | null, from: number, to: number) {
     const rows = timeline.place(entriesNow(), contextId, from, to, clock());
+
     const label =
       contextId === null
         ? toast.untracked(formatClock(from), formatClock(to))
         : toast.added(nameOf(contextId));
+
     commitEntries(rows, { kind: "place", label, contextId });
   },
 
@@ -304,6 +319,7 @@ export const actions = {
   createContext(input: Omit<tree.NewContextInput, "id"> & { id?: ContextId }): ContextId {
     const id = input.id ?? newContextId();
     commitContexts(tree.createContext(get().contexts, { ...input, id }, Date.now()));
+
     return id;
   },
 
@@ -354,9 +370,12 @@ export const actions = {
         pinPosition: null,
         updatedAt: now,
       }));
+
       return "deleted";
     }
+
     updateContextRow(id, tree.archive);
+
     return "archived";
   },
 
@@ -364,6 +383,7 @@ export const actions = {
   setPref(key: string, value: Json) {
     db.setMeta(`${PREF_PREFIX}${key}`, value === null ? null : JSON.stringify(value));
     const prefs = { ...get().prefs };
+
     if (value === null) delete prefs[key];
     else prefs[key] = value;
     set({ prefs });
@@ -373,8 +393,10 @@ export const actions = {
   handleLink(link: LinkAction) {
     if (!get().ready) {
       pendingLinks.push(link);
+
       return;
     }
+
     if (link.kind === "start") {
       if (get().tree.byId.get(link.contextId)) actions.start(link.contextId);
     } else if (link.kind === "stop") actions.stop();
@@ -389,7 +411,9 @@ export const actions = {
   /** Returns the pending intent and clears it, so only one screen reacts. */
   consumeIntent(): Intent | null {
     const intent = get().intent;
+
     if (intent) set({ intent: null });
+
     return intent;
   },
 
@@ -401,6 +425,7 @@ export const actions = {
     const now = Date.now();
     const existing = get().daysOff.find((o) => o.day === day);
     let row: DayOff;
+
     if (kind === null) {
       if (!existing) return;
       row = { ...existing, updatedAt: now, deletedAt: now };
@@ -418,6 +443,7 @@ export const actions = {
         deletedAt: null,
       };
     }
+
     db.writeRows({ daysOff: [row] });
     const others = get().daysOff.filter((o) => o.id !== row.id);
     set({
@@ -431,6 +457,7 @@ export const actions = {
   /** Replaces all data with a checked backup (see `pickBackup`) and merges its preferences. */
   restore({ contexts, entries, daysOff, prefs }: Backup) {
     actions.replaceAll({ contexts, entries, daysOff });
+
     for (const [key, value] of Object.entries(prefs))
       db.setMeta(`${PREF_PREFIX}${key}`, JSON.stringify(value));
     set({ prefs: { ...get().prefs, ...prefs } });

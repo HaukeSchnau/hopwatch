@@ -45,6 +45,7 @@ const plain: Look = {
   surface: "plain",
   motion: "bouncy",
 };
+
 const hues: Hue[] = [
   "pink",
   "blue",
@@ -76,6 +77,7 @@ function Cell({
   dark?: boolean;
 }) {
   const theme = useTheme();
+
   return (
     <View style={[styles.cell, { width: Math.max(size + 8, 96) }]}>
       <Character context={source} size={size} look={look} mood={mood} />
@@ -96,6 +98,7 @@ function Section({
   dark?: boolean;
 }) {
   const theme = useTheme();
+
   return (
     <View style={[styles.section, dark && styles.dark]}>
       <Text style={[styles.title, { color: dark ? "#FBF3FF" : theme.c.ink }]}>{title}</Text>
@@ -116,6 +119,7 @@ function TraitSection<K extends keyof Look>({
   size?: number;
 }) {
   const options = traitOptions[trait];
+
   return (
     <Section title={`${trait} · ${mood}`}>
       {options.map((option, i) => (
@@ -137,6 +141,7 @@ function LiveCell({ source, size }: { source: Sample; size: number }) {
   const face = useFace("awake");
   useLively(face, true);
   useEffect(() => wake(face), [face]);
+
   return (
     <View style={[styles.cell, { width: size + 8 }]}>
       <Character context={source} size={size} face={face} />
@@ -149,17 +154,20 @@ function LiveCell({ source, size }: { source: Sample; size: number }) {
 function DressUp({ contexts }: { contexts: Sample[] }) {
   useDressUp();
   const prefs = useHopwatch((state) => state.prefs);
+
   return (
     <Section title="Dress-up">
       {contexts.slice(0, 9).map((c) => {
         const stored = prefs[suggestedKey(c.id)];
         const picked = stored === undefined ? undefined : parseSuggestion(stored);
+
         const label = picked
           ? [
               picked.version < SUGGESTION_VERSION ? "old" : (picked.topic ?? "–"),
               ...Object.values(picked.traits),
             ].join(" ")
           : "…";
+
         return <Cell key={c.id} source={c} size={84} mood="asleep" label={`${c.name}: ${label}`} />;
       })}
       <Pressable
@@ -181,10 +189,12 @@ function ModelCheck() {
     let live = true;
     (async () => {
       const status = await availability();
+
       if (!live) return;
       setState(status);
       const started = Date.now();
       const results = [];
+
       for (const input of [
         { name: "Piano practice", ancestors: [], siblings: [], wantEmoji: true, wantHue: true },
         {
@@ -205,12 +215,15 @@ function ModelCheck() {
           `${input.name}: ${suggestion ? JSON.stringify(suggestion) : `failed, ${lastFailure() ?? "no answer"}`}`,
         );
       }
+
       if (live) setAnswer(`${results.join("\n")}\nin ${Date.now() - started} ms`);
     })();
+
     return () => {
       live = false;
     };
   }, []);
+
   return (
     <Section title="On-device model">
       <Text style={styles.mono}>availability: {state}</Text>
@@ -227,19 +240,23 @@ export function Gallery() {
     b,
     g,
   } = useLocalSearchParams<{ s?: string; m?: string; b?: string; g?: string }>();
+
   const body = member(bodies, b) ?? "blob";
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const tree = useTree();
   const real = tree.ordered.filter((c) => !c.hidden);
+
   // `g=1` paints everyone gray, to check they're told apart without color.
   const contexts: Sample[] = (
     real.length >= 9
       ? real.slice(0, 18).map((c) => ({ id: c.id, name: c.name, glyph: c.glyph, hue: c.hue }))
       : samples
   ).map((c) => (g ? { ...c, hue: "gray" } : c));
+
   const mood = m === "awake" ? "awake" : "asleep";
   const show = (section: string) => s === "all" || s.split(",").includes(section);
+
   if (!__DEV__) return null;
 
   return (

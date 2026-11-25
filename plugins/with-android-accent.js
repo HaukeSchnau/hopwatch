@@ -17,6 +17,7 @@ module.exports = function withAndroidAccent(config, { day, night }) {
       name: "colorPrimary",
       value: night,
     });
+
     return c;
   });
 
@@ -27,6 +28,7 @@ module.exports = function withAndroidAccent(config, { day, night }) {
       name: "colorAccent",
       value: "@color/colorPrimary",
     });
+
     return c;
   });
 };

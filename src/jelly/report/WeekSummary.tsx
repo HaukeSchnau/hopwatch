@@ -30,6 +30,7 @@ const mascot: PreviewJelly = { id: "settings-mascot", hue: "pink", glyph: "🍬"
 
 export function WeekSummary({ weekStart }: { weekStart: number }) {
   const summary = useWeekSummary(weekStart);
+
   return summary ? <Bubble summary={summary} /> : null;
 }
 
@@ -81,12 +82,14 @@ function Writing({ color }: { color: string }) {
   useEffect(() => {
     if (!showing) return;
     pulse.set(withRepeat(withTiming(1, { duration: 750 }), -1, true));
+
     return () => {
       cancelAnimation(pulse);
       pulse.set(0.45);
     };
   }, [pulse, showing]);
   const style = useAnimatedStyle(() => ({ opacity: pulse.get() }));
+
   return (
     <Animated.View style={[styles.lines, style]}>
       {(["100%", "88%", "56%"] as const).map((width) => (
@@ -99,6 +102,7 @@ function Writing({ color }: { color: string }) {
 /** The bubble pops in like a gummy. */
 function popIn() {
   "worklet";
+
   return {
     initialValues: { opacity: 0, transform: [{ scaleX: 0.86 }, { scaleY: 1.1 }] },
     animations: {

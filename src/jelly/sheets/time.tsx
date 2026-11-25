@@ -19,6 +19,7 @@ export function TimeWheel({
   hue: Hue;
 }) {
   const t = useTheme();
+
   return (
     <View style={[styles.wheel, { backgroundColor: t.c.card }]}>
       <DateTimePicker
@@ -48,6 +49,7 @@ export function TimeChip({
   color: string;
 }) {
   const t = useTheme();
+
   return (
     <DateTimePicker
       value={value}

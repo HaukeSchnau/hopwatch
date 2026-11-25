@@ -25,5 +25,6 @@ export const ScreenTab = createContext<string | null>(null);
 /** Whether the screen this renders in can be seen right now. */
 export function useShowing(): boolean {
   const tab = use(ScreenTab);
+
   return useShown((s) => s.foreground && (tab === null || s.tab === tab));
 }

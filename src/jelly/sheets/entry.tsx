@@ -45,23 +45,31 @@ export function useEntryDraft(entry: Entry) {
   const [end, setEnd] = useState(entry.endUtc);
   const now = useNow(60_000);
   const context = tree.byId.get(contextId) ?? null;
+
   const options =
     pickable.some((c) => c.id === contextId) || !context ? pickable : [context, ...pickable];
+
   const invalid = end !== null && end <= start;
 
   /** Saves what changed, with the note as typed, and closes the sheet. */
   const save = (typedNote: string) => {
     if (invalid) return buzz.warn();
     const patch: EntryPatch = {};
+
     if (contextId !== entry.contextId) patch.contextId = contextId;
+
     if (start !== entry.startUtc) patch.startUtc = start;
+
     if (end !== entry.endUtc) patch.endUtc = end;
     const typed = typedNote.trim() || null;
+
     if (typed !== entry.note) patch.note = typed;
+
     if (Object.keys(patch).length) {
       buzz.success();
       actions.updateEntry(entry.id, patch);
     }
+
     router.back();
   };
 
@@ -104,6 +112,7 @@ export function EntryHeader({
   const face = useFace(end === null ? "awake" : "asleep");
   useLively(face, end === null);
   const now = useNow(end === null ? 1000 : null);
+
   return (
     <View style={[styles.header, { width }]}>
       <Character context={context} size={76} face={face} />

@@ -41,21 +41,27 @@ export const EMOJI_SUGGESTIONS = [
 /** The first user-perceived character of a string, so "🧑‍💻x" keeps the whole emoji. */
 export function firstGrapheme(value: string): string {
   const trimmed = value.trim();
+
   if (!trimmed) return "";
+
   if ("Segmenter" in Intl) {
     const [first] = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(trimmed);
+
     return first?.segment ?? "";
   }
+
   return Array.from(trimmed)[0] ?? "";
 }
 
 /** A row of gummy drops, one per hue. */
 export function HuePicker({ value, onChange }: { value: Hue; onChange: (hue: Hue) => void }) {
   const t = useTheme();
+
   return (
     <View style={styles.hues}>
       {hues.map((hue) => {
         const selected = value === hue;
+
         return (
           <Squishy
             key={hue}
@@ -112,6 +118,7 @@ export function EmojiField({
 }) {
   const t = useTheme();
   const input = useRef<TextInput>(null);
+
   return (
     <View style={styles.emojiRow}>
       <Squishy
@@ -144,6 +151,7 @@ export function EmojiField({
             value=""
             onChangeText={(typed) => {
               const emoji = firstGrapheme(typed);
+
               if (emoji) {
                 onChange(emoji);
                 input.current?.blur();
@@ -167,6 +175,7 @@ export function EmojiField({
             amount={0.16}
             onPress={() => {
               buzz.tick();
+
               if (onClear && value === e && !suggested) onClear();
               else onChange(e);
             }}

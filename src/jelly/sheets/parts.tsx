@@ -28,6 +28,7 @@ export function SheetHeader({
   const t = useTheme();
   const face = useFace(mood);
   useLively(face, mood === "awake");
+
   return (
     <View style={styles.header}>
       {context && <Character context={context} size={72} face={face} />}
@@ -63,11 +64,13 @@ export function AgoChips({
 }) {
   const t = useTheme();
   const c = t.candy[hue];
+
   return (
     <View style={styles.chips}>
       {options.map((m) => {
         const at = now - m * MINUTE;
         const disabled = earliest !== undefined && at < earliest;
+
         return (
           <Squishy
             key={m}
@@ -103,12 +106,14 @@ export function pastAt(picked: Date, now: number): number {
   const d = new Date(now);
   d.setHours(picked.getHours(), picked.getMinutes(), 0, 0);
   const at = d.getTime();
+
   return at > now ? at - 24 * 60 * MINUTE : at;
 }
 
 /** Styles shared by the RN sheets. */
 export function useSheetStyles() {
   const t = useTheme();
+
   return {
     label: [text.headline, styles.label, { color: t.c.ink }],
     hint: [text.footnote, styles.hint, { color: t.c.muted }],
@@ -124,6 +129,7 @@ export const sheetBody = { paddingHorizontal: 20, paddingTop: 26 } as const;
  */
 export function SheetBody({ children }: { children: ReactNode }) {
   const { bottom } = useSafeAreaInsets();
+
   return <View style={[sheetBody, { paddingBottom: Math.max(bottom, 20) }]}>{children}</View>;
 }
 

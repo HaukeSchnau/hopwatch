@@ -40,6 +40,7 @@ export function TabStack() {
   const tab = useRoute().name;
   const running = useRunning();
   const tint = running ? t.candy[running.context.hue].ink : t.c.pinkDeep;
+
   const stack = (
     <Stack
       screenOptions={{
@@ -59,6 +60,7 @@ export function TabStack() {
       }}
     />
   );
+
   if (Platform.OS === "android") {
     return (
       <ScreenTab value={tab}>
@@ -72,6 +74,7 @@ export function TabStack() {
       </ScreenTab>
     );
   }
+
   return (
     <ScreenTab value={tab}>
       <View style={{ flex: 1 }}>
@@ -92,5 +95,6 @@ export function useHeaderIcon(
   md: AndroidSymbol,
 ): SFSymbol | ImageSourcePropType | undefined {
   const image = useSymbolImage(Platform.OS === "android" ? md : undefined);
+
   return Platform.OS === "android" ? (image ?? undefined) : sf;
 }

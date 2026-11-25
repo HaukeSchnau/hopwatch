@@ -60,6 +60,7 @@ const ROOT = "root";
 
 export function ContextEditor() {
   const target = useEditorTarget();
+
   if (!target) {
     return (
       <JellyForm title={s.title}>
@@ -69,6 +70,7 @@ export function ContextEditor() {
       </JellyForm>
     );
   }
+
   return <Editor key={target.context?.id ?? "new"} {...target} />;
 }
 
@@ -314,6 +316,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
   const t = useTheme();
   const [copied, setCopied] = useState(false);
   const link = startLink(context.id);
+
   return (
     <>
       <Section title={s.startLink} footer={s.startLinkFooter}>
@@ -343,6 +346,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
           icon={context.archivedAt ? "unarchive" : "archive"}
           onPress={() => {
             buzz.thud();
+
             if (context.archivedAt) actions.unarchive(context.id);
             else {
               actions.archive(context.id);

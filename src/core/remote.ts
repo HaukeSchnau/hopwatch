@@ -54,18 +54,23 @@ const idOrNull = (v: unknown) =>
 /** Reads a queued command, or null when it isn't one. */
 export function parseCommand(json: string): RemoteCommand | null {
   let raw: unknown;
+
   try {
     raw = JSON.parse(json);
   } catch {
     return null;
   }
+
   if (typeof raw !== "object" || raw === null) return null;
   const c = raw as Record<string, unknown>;
   const contextId = idOrNull(c.contextId);
   const entryId = idOrNull(c.entryId);
   const expectOpen = idOrNull(c.expectOpen);
+
   if (typeof c.seq !== "number" || typeof c.at !== "number" || !Number.isFinite(c.at)) return null;
+
   if (contextId === undefined || entryId === undefined || expectOpen === undefined) return null;
+
   if (c.kind === "start" && contextId !== null && entryId !== null) {
     return {
       seq: c.seq,
@@ -76,6 +81,7 @@ export function parseCommand(json: string): RemoteCommand | null {
       at: c.at,
     };
   }
+
   if (c.kind === "stop")
     return {
       seq: c.seq,
@@ -85,6 +91,7 @@ export function parseCommand(json: string): RemoteCommand | null {
       expectOpen: expectOpen as EntryId | null,
       at: c.at,
     };
+
   return null;
 }
 
@@ -100,20 +107,27 @@ export function replay(
   clock: timeline.Clock,
 ): Entry[] | null {
   const open = timeline.findOpen(entries);
+
   if ((open?.id ?? null) !== command.expectOpen) return null;
   const at = Math.min(command.at, clock.now);
+
   // Time recorded after the tap means the app moved on without it. Replaying it then would
   // cut that time away: a start carves everything after it.
   if (entries.some((e) => timeline.isLive(e) && (e.endUtc ?? e.startUtc) > at)) return null;
+
   if (command.kind === "stop") return open ? timeline.stop(entries, clock, at) : null;
   const context = command.contextId ? tree.byId.get(command.contextId) : undefined;
+
   if (!context || context.hidden || !command.entryId) return null;
   let keepId: EntryId | null = command.entryId;
+
   const newId = () => {
     const id = keepId ?? clock.newId();
     keepId = null;
+
     return id;
   };
+
   return timeline.start(entries, context.id, { ...clock, newId }, at);
 }
 
@@ -190,6 +204,7 @@ export function snapshotOf(
   const open = timeline.findOpen(entries);
   const back = timeline.previousContextId(entries);
   const live = entries.filter(timeline.isLive);
+
   return {
     version: 1,
     running: open ? { entryId: open.id, contextId: open.contextId, since: open.startUtc } : null,

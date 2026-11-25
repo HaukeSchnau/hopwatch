@@ -22,10 +22,12 @@ export function FlyerLayer() {
   const ref = useAnchor("layer");
   const flights = useChoreo((s) => s.flights);
   const tree = useTree();
+
   return (
     <View ref={ref} pointerEvents="none" style={StyleSheet.absoluteFill}>
       {flights.map((f) => {
         const context = tree.byId.get(f.contextId);
+
         return context ? <Flyer key={f.key} flight={f} context={context} /> : null;
       })}
     </View>
@@ -42,15 +44,18 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
   // Invisible for a few frames until the canvas has drawn, then report ready.
   useEffect(() => {
     let frame = 0;
+
     let handle = requestAnimationFrame(function tick() {
       if (++frame >= 3) warmed(flight);
       else handle = requestAnimationFrame(tick);
     });
+
     return () => cancelAnimationFrame(handle);
   }, [flight.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!go) return;
+
     if (kind === "in") wake(face);
     else sleep(face);
     progress.set(
@@ -72,6 +77,7 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
     const width = from.width + (to.width - from.width) * t;
     const stretch = Math.sin(Math.PI * t) * 0.18;
     const spin = (kind === "in" ? -1 : 1) * 16 * Math.sin(Math.PI * t);
+
     return {
       transform: [
         { translateX: x - size / 2 },

@@ -23,6 +23,7 @@ export function TimeWheel({
   const c = t.candy[hue];
   const [open, setOpen] = useState(false);
   const clock = formatClock(value.getTime());
+
   return (
     <Pressable
       onPress={() => setOpen(true)}
@@ -52,6 +53,7 @@ export function TimeChip({
 }) {
   const [open, setOpen] = useState(false);
   const clock = formatClock(value.getTime());
+
   return (
     <View>
       <Pill

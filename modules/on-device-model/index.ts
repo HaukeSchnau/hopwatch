@@ -55,35 +55,47 @@ export async function generate<const F extends readonly Field[]>(request: {
   fields: F;
 }): Promise<{ [K in F[number]["name"]]: string } | null> {
   const state = native ? await native.availability() : "unsupported";
+
   if (!native || state !== "available") {
     failure = `model unavailable: ${state}`;
+
     return null;
   }
+
   try {
     let timer: ReturnType<typeof setTimeout> | undefined;
+
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(
         () => reject(new Error(`no answer within ${TIMEOUT_MS / 1000} s`)),
         TIMEOUT_MS,
       );
     });
+
     const answer = await Promise.race([
       native.generate({ ...request, fields: [...request.fields] }),
       timeout,
     ]).finally(() => clearTimeout(timer));
+
     // Trust the native schema, but verify at the boundary: every field present, choices kept.
     for (const field of request.fields) {
       const value = answer[field.name];
+
       if (typeof value !== "string" || (field.choices && !field.choices.includes(value))) {
         failure = `answer didn't fit: ${field.name} = ${JSON.stringify(value)}`;
+
         return null;
       }
     }
+
     failure = null;
+
     return answer as { [K in F[number]["name"]]: string };
   } catch (error) {
     failure = error instanceof Error ? error.message : String(error);
+
     if (__DEV__) console.warn("on-device model failed", error);
+
     return null;
   }
 }

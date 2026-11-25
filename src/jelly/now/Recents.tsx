@@ -19,6 +19,7 @@ export function Recents() {
   const t = useTheme();
   const recents = useRecents(8);
   const now = useNow(60_000);
+
   return (
     <ScrollView
       horizontal
@@ -53,6 +54,7 @@ function Bean({ context, now }: { context: ResolvedContext; now: number }) {
   const anchor = useAnchor(beanKey(context.id));
   const c = t.candy[context.hue];
   const menu = useStartMenu(context, now, false);
+
   return (
     <Menu
       title={context.name}

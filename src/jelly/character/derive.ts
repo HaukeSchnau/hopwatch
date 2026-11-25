@@ -19,10 +19,13 @@ type Weighted<T> = readonly (readonly [T, number])[];
 function weighted<T>(next: () => number, options: Weighted<T>): T {
   const total = options.reduce((sum, [, weight]) => sum + weight, 0);
   let roll = next() * total;
+
   for (const [value, weight] of options) {
     roll -= weight;
+
     if (roll < 0) return value;
   }
+
   return options[options.length - 1][0];
 }
 
@@ -39,6 +42,7 @@ const randomBodies: Weighted<Body> = [
   ["star", 1],
   ["ghost", 1],
 ];
+
 const randomEyes: Weighted<Eyes> = [
   ["dot", 3],
   ["shiny", 3],
@@ -49,6 +53,7 @@ const randomEyes: Weighted<Eyes> = [
   ["glasses", 0.5],
   ["shades", 0.4],
 ];
+
 const randomMouths: Weighted<Mouth> = [
   ["smile", 3],
   ["cat", 2],
@@ -60,6 +65,7 @@ const randomMouths: Weighted<Mouth> = [
   ["flat", 0.8],
   ["buck", 0.5],
 ];
+
 const randomToppers: Weighted<Topper> = [
   ["none", 2.5],
   ["tuft", 3],
@@ -77,11 +83,13 @@ const randomToppers: Weighted<Topper> = [
   ["partyHat", 0.4],
   ["propeller", 0.5],
 ];
+
 const randomNecks: Weighted<Neck> = [
   ["none", 7],
   ["bowtie", 1],
   ["scarf", 1],
 ];
+
 const randomSurfaces: Weighted<Surface> = [
   ["plain", 2],
   ["freckles", 2],
@@ -92,6 +100,7 @@ const randomSurfaces: Weighted<Surface> = [
   ["belly", 1.5],
   ["sparkle", 1],
 ];
+
 const randomMotions: Weighted<Motion> = [
   ["bouncy", 1],
   ["dozy", 1],
@@ -125,6 +134,7 @@ export function lookFor(source: LookSource, picked?: Picked | null): Look {
 /** A fresh random look for "Surprise me", including the meaningful options now and then. */
 export function surpriseLook(): Look {
   const look = seededLook(Math.random);
+
   if (Math.random() < 0.3)
     look.topper = weighted<Topper>(Math.random, [
       ["dogEars", 1],
@@ -133,6 +143,7 @@ export function surpriseLook(): Look {
       ["sweatband", 1],
       ["gradCap", 1],
     ]);
+
   if (Math.random() < 0.25)
     look.neck = weighted<Neck>(Math.random, [
       ["tie", 1],
@@ -140,5 +151,6 @@ export function surpriseLook(): Look {
       ["bib", 1],
       ["medal", 1],
     ]);
+
   return look;
 }

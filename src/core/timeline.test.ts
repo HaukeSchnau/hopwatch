@@ -10,6 +10,7 @@ const ctx = (name: string) => name as ContextId;
 const [job, dog, client] = [ctx("job"), ctx("dog"), ctx("client")];
 
 let idCounter = 0;
+
 function makeClock(now: number) {
   return {
     now,
@@ -21,11 +22,14 @@ function makeClock(now: number) {
 function assertInvariants(entries: readonly Entry[]) {
   const live = entries.filter(timeline.isLive).sort((a, b) => a.startUtc - b.startUtc);
   expect(live.filter((e) => e.endUtc === null).length).toBeLessThanOrEqual(1);
+
   for (const [i, e] of live.entries()) {
     if (e.endUtc !== null) {
       expect(e.endUtc - e.startUtc).toBeGreaterThanOrEqual(MIN_ENTRY_MS);
     }
+
     const next = live[i + 1];
+
     if (next) {
       // An open entry must be the last one, and closed entries must not overlap.
       expect(e.endUtc).not.toBeNull();
@@ -83,6 +87,7 @@ describe("previewing a backdated start", () => {
   const now = T0 + 60 * MIN;
   let entries = timeline.applyRows([], timeline.start([], job, makeClock(T0)));
   entries = timeline.applyRows(entries, timeline.start(entries, client, makeClock(T0 + 30 * MIN)));
+
   const summary = (p: timeline.StartPreview) => ({
     cut: p.cut && [p.cut.entry.contextId, p.cut.at],
     replaced: p.replaced.map((e) => e.contextId),
@@ -154,6 +159,7 @@ describe("editing", () => {
       entries,
       timeline.start(entries, client, makeClock(T0 + 120 * MIN)),
     );
+
     const rows = timeline.fillGap(
       entries,
       dog,
@@ -161,6 +167,7 @@ describe("editing", () => {
       T0 + 200 * MIN,
       makeClock(T0 + 150 * MIN),
     );
+
     expect(rows.map((e) => [e.startUtc, e.endUtc])).toEqual([[T0 + 60 * MIN, T0 + 120 * MIN]]);
   });
 });
@@ -178,7 +185,9 @@ describe("placing a block", () => {
 
   const placed = (from: number, to: number, context: ContextId | null = dog) =>
     timeline.applyRows(entries, timeline.place(entries, context, from, to, makeClock(now)));
+
   const spans = (list: readonly Entry[]) => list.map((e) => [e.contextId, e.startUtc, e.endUtc]);
+
   const summary = (p: timeline.PlacePreview) => ({
     ended: p.ended && [p.ended.entry.contextId, p.ended.at],
     started: p.started && [p.started.entry.contextId, p.started.at],
@@ -299,6 +308,7 @@ type Op =
 
 const contextArb = fc.constantFrom(job, dog, client);
 const minutesArb = (max: number) => fc.integer({ min: 0, max }).map((m) => m * MIN);
+
 const opArb: fc.Arbitrary<Op> = fc.oneof(
   fc.record({
     kind: fc.constant("start" as const),
@@ -327,6 +337,7 @@ const opArb: fc.Arbitrary<Op> = fc.oneof(
   }),
   fc.record({ kind: fc.constant("remove" as const), pick: fc.nat() }),
 );
+
 const stepArb = fc.record({
   op: opArb,
   advance: fc.integer({ min: 0, max: 240 }).map((m) => m * MIN + 7_000),
@@ -334,6 +345,7 @@ const stepArb = fc.record({
 
 function run(entries: Entry[], op: Op, clock: timeline.Clock): Entry[] {
   const pick = (i: number) => entries[i % Math.max(entries.length, 1)];
+
   switch (op.kind) {
     case "start":
       return timeline.start(entries, op.context, clock, clock.now - op.backdate);
@@ -341,7 +353,9 @@ function run(entries: Entry[], op: Op, clock: timeline.Clock): Entry[] {
       return timeline.stop(entries, clock, clock.now - op.backdate);
     case "update": {
       const e = pick(op.pick);
+
       if (!e) return [];
+
       return timeline.update(
         entries,
         e.id,
@@ -353,6 +367,7 @@ function run(entries: Entry[], op: Op, clock: timeline.Clock): Entry[] {
         clock,
       );
     }
+
     case "fill":
       return timeline.fillGap(
         entries,
@@ -371,6 +386,7 @@ function run(entries: Entry[], op: Op, clock: timeline.Clock): Entry[] {
       );
     case "remove": {
       const e = pick(op.pick);
+
       return e ? timeline.remove(entries, e.id, clock) : [];
     }
   }
@@ -382,6 +398,7 @@ const shape = (entries: readonly Entry[]) =>
 describe("a block inside an entry", () => {
   const day = new Date(2026, 9, 15);
   const at = (h: number, m = 0) => new Date(day).setHours(h, m, 0, 0);
+
   const entry = (start: number, end: number | null): Entry => ({
     ...timeline.start([], job, makeClock(start))[0],
     endUtc: end,
@@ -424,6 +441,7 @@ describe("invariants", () => {
       fc.property(fc.array(stepArb, { minLength: 1, maxLength: 40 }), (steps) => {
         let entries: Entry[] = [];
         let now = T0;
+
         for (const { op, advance } of steps) {
           now += advance;
           const clock = makeClock(now);
@@ -443,9 +461,11 @@ describe("invariants", () => {
               now - op.offset + op.length,
               now,
             );
+
             const named = [p.ended?.entry, p.started?.entry, p.split, ...p.replaced].flatMap((e) =>
               e ? [e.id] : [],
             );
+
             const touched = rows.filter((r) => entries.some((e) => e.id === r.id)).map((r) => r.id);
             expect(named.sort()).toEqual(touched.sort());
           }

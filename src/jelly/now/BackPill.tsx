@@ -16,6 +16,7 @@ import { noteSource, useAnchor } from "./choreo";
 
 export function BackPill() {
   const target = useSwitchTarget();
+
   return target ? <Pill kind={target.kind} context={target.context} /> : null;
 }
 
@@ -28,6 +29,7 @@ function Pill({ kind, context }: { kind: "back" | "resume"; context: ResolvedCon
   const c = t.candy[context.hue];
   const { before, after } = nowText.pill(kind);
   const label = `${before}${context.name}${after}`;
+
   return (
     <View style={styles.wrap}>
       <Menu title={label} items={menu} onPress={(id) => onStartMenu(context.id, id, "back")}>

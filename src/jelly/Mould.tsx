@@ -24,10 +24,12 @@ export function Mould({ seed, size, color, fill, context }: MouldProps) {
   const known = useHopwatch((s) =>
     context ? null : (s.tree.ordered.find((c) => c.id === seed) ?? null),
   );
+
   const look = useLook(context ?? known ?? { id: seed, glyph: null });
   const geo = bodyGeo(look.body, seed);
   const unit = size / UNIT;
   const stroke = Math.max(2, size * 0.028) / unit;
+
   return (
     <Canvas style={{ width: size, height: size }}>
       <Group transform={[{ scale: unit }]}>

@@ -42,6 +42,7 @@ describe("slack status in the tree", () => {
     }),
     context("deep", { parentId: "job" as ContextId, emoji: "🎧" }),
   ]);
+
   const slack = (id: string) => tree.byId.get(id as ContextId)!.slack;
 
   it("defaults the emoji to the jelly's own", () => {
@@ -61,12 +62,15 @@ describe("slack sync with a calendar app", () => {
   const remote = { text: "Working remotely", emoji: "🏡" };
   const nothing = { text: "", emoji: "", until: 0 };
   const showing = (status: { text: string; emoji: string }, until = 0) => ({ ...status, until });
+
   const meeting = (end: number) => ({
     text: "In a meeting",
     emoji: ":spiral_calendar_pad:",
     until: end,
   });
+
   const fresh = { ours: null, applied: null, checkedAt: 0 };
+
   const after = (memory: typeof fresh, want: typeof walk | null, key: string) => ({
     ...memory,
     ours: want?.text ?? null,
@@ -178,6 +182,7 @@ describe("readGrant", () => {
       },
       team: { id: "T1", name: "Urbs" },
     };
+
     expect(readGrant(answer, now)).toEqual({
       ok: true,
       grant: {
@@ -200,6 +205,7 @@ describe("readGrant", () => {
       teamId: "T1",
       userId: "U1",
     };
+
     const answer = { ok: true, access_token: "new", refresh_token: "new-r", expires_in: 43200 };
     expect(readGrant(answer, now, before)).toEqual({
       ok: true,

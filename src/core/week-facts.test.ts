@@ -27,6 +27,7 @@ const context = (id: string, parentId: string | null, extra: Partial<Context> = 
 });
 
 let n = 0;
+
 const entry = (contextId: string, start: number, minutes: number): Entry => ({
   id: `e${n++}` as EntryId,
   contextId: contextId as ContextId,
@@ -92,6 +93,7 @@ describe("weekFacts", () => {
       ...workweek(monday, [7, 10, 7, 6, 6]),
       entry("Side projects", at(5, 10), 120),
     ];
+
     expect(weekFacts(entries, tree, monday, addDays(monday, 9))).toEqual({
       over: true,
       span: null,
@@ -108,6 +110,7 @@ describe("weekFacts", () => {
       ...workweek(addDays(monday, -7), [8, 8, 8, 8, 8]),
       ...workweek(monday, [9, 9, 9]),
     ];
+
     // Wednesday evening: last week had 27 hours by now, this week 30.
     expect(weekFacts(entries, tree, monday, at(2, 20))).toEqual({
       over: false,
@@ -128,6 +131,7 @@ describe("weekFacts", () => {
       ...workweek(addDays(monday, -7), [8, 8, 8, 8, 8]),
       ...workweek(monday, [9, 9, 9]),
     ];
+
     expect(weekFacts(entries, tree, monday, at(2, 20), "de")).toEqual({
       over: false,
       span: "Montag bis Mittwoch",
@@ -145,6 +149,7 @@ describe("weekFacts", () => {
       entry("Side projects", at(1, 21.5), 90),
       entry("Side projects", at(3, 22), 60),
     ];
+
     expect(weekFacts(entries, tree, monday, addDays(monday, 7))?.facts).toContain(
       "You tracked time after 10 pm on 2 days (Tuesday and Thursday), all Side projects.",
     );
@@ -196,6 +201,7 @@ describe("checkSummary", () => {
         "Nebenprojekte kam auf 6,5 Stunden, hinter dem Plan zum Ziel von 21 Stunden.",
       ],
     };
+
     const check = (summary: string) => checkSummary(summary, woche, "de");
 
     it("accepts numbers from the facts, in digits, words or with a decimal comma", () => {

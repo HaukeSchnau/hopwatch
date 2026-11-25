@@ -57,6 +57,7 @@ function Band({
 }) {
   const clip = useBand(geo, y, 1.05);
   const curve = `M ${geo.left - 4} ${y - 1.2} Q ${geo.face.x} ${y + 3.4} ${geo.right + 4} ${y - 1.2}`;
+
   return (
     <Group clip={clip}>
       <Path path={curve} style="stroke" strokeWidth={thickness}>
@@ -79,11 +80,13 @@ function Band({
 export function NeckPart({ neck, geo, accent, lod }: NeckProps) {
   const x = geo.face.x;
   const y = geo.neck.y;
+
   // Squat bodies have little room under the mouth, so their neckwear shrinks.
   const s =
     Math.min(1, Math.max(0.72, geo.neck.w / 56)) *
     geo.face.s *
     Math.min(1.3, Math.max(0.75, geo.neck.room / 11));
+
   switch (neck) {
     case "none":
       return null;
@@ -113,6 +116,7 @@ export function NeckPart({ neck, geo, accent, lod }: NeckProps) {
       );
     case "tie": {
       const blade = "M -2 2.2 L 2 2.2 L 3.9 12.4 L 0 16.2 L -3.9 12.4 Z";
+
       return (
         <Group clip={geo.path}>
           <Group transform={[{ translateX: x }, { translateY: y - 2.4 }, { scale: s }]}>
@@ -138,6 +142,7 @@ export function NeckPart({ neck, geo, accent, lod }: NeckProps) {
         </Group>
       );
     }
+
     case "scarf":
       return (
         <>
@@ -268,11 +273,13 @@ function scatter(
   spotCache.set(geo, cached);
   const key = `${seed}:${count}:${gap}:${size.join(",")}`;
   const hit = cached.get(key);
+
   if (hit) return hit;
   const next = random(hashSeed(`coat:${seed}`));
   const out: Spot[] = [];
   const width = geo.right - geo.left;
   const height = geo.bottom - geo.top;
+
   for (let tries = 0; tries < count * 14 && out.length < count; tries++) {
     const x = geo.left + next() * width;
     const y = geo.top + next() * height;
@@ -282,12 +289,17 @@ function scatter(
     const opacity = 0.55 + next() * 0.4;
     const fx = (x - geo.face.x) / (faceRx * geo.face.s);
     const fy = (y - geo.face.y - 2) / (faceRy * geo.face.s);
+
     if (fx * fx + fy * fy < 1) continue;
+
     if (!geo.path.contains(x, y)) continue;
+
     if (out.some((o) => Math.hypot(o.x - x, o.y - y) < gap)) continue;
     out.push({ x, y, r, turn, color: SPRINKLES[Math.floor(pick * SPRINKLES.length)], opacity });
   }
+
   cached.set(key, out);
+
   return out;
 }
 
@@ -384,6 +396,7 @@ export function CoatPart({ surface, geo, tones, seed, lod }: CoatProps) {
       );
     case "belly": {
       const h = geo.bottom - geo.top;
+
       return (
         <Oval
           x={geo.face.x - geo.neck.w * 0.36}
@@ -396,6 +409,7 @@ export function CoatPart({ surface, geo, tones, seed, lod }: CoatProps) {
         </Oval>
       );
     }
+
     case "sparkle":
       return (
         <>

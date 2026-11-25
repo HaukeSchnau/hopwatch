@@ -34,8 +34,10 @@ const NONE = "none";
 export function SettingsSheet() {
   const t = useTheme();
   const sounds = useSounds();
+
   const { contexts, entries, lastExport, copied, copy, erase, restore, exportData } =
     useSettingsActions();
+
   const check = useEveningSetting();
   const region = useHolidayRegion();
 
@@ -135,7 +137,9 @@ export function SettingsSheet() {
 /** Connecting Slack, so jellies can set a status while they run. */
 function Slack() {
   const { available, link, busy, connect, disconnect } = useSlackSetting();
+
   if (!available) return null;
+
   return (
     <Section
       title={slack.title}
@@ -184,6 +188,7 @@ function AppleIntelligence() {
     availability()
       .catch((): Availability => "unsupported")
       .then((next) => live && setState(next));
+
     return () => {
       live = false;
     };

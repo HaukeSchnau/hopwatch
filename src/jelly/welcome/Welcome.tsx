@@ -67,14 +67,17 @@ export function Welcome() {
   const shownHue = suggestedHue ?? hue;
 
   const jiggle = useSharedValue(0);
+
   const bounce = () =>
     jiggle.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
+
   const blob = useAnimatedStyle(() => ({
     transform: [{ scaleY: 1 - jiggle.get() }, { scaleX: 1 + jiggle.get() * 0.8 }],
   }));
 
   const create = () => {
     const trimmed = name.trim();
+
     if (!trimmed) return;
     buzz.success();
     play("pop");
@@ -86,6 +89,7 @@ export function Welcome() {
         color: shownHue,
         pinned: true,
       });
+
       if (suggested && suggested.forName === trimmed)
         saveSuggestedLook(id, suggested.suggestion, trimmed, shownEmoji);
     });
@@ -93,6 +97,7 @@ export function Welcome() {
 
   const restore = async () => {
     const backup = await chooseBackup(false);
+
     if (!backup) return;
     buzz.success();
     begin(() => actions.restore(backup));

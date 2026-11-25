@@ -20,11 +20,13 @@ export function StopSheet() {
   const now = useNow(15_000);
   const t = useTheme();
   const ss = useSheetStyles();
+
   // Ten minutes ago on the 5-minute grid, but never before the entry started.
   const [picked, setPicked] = useState(() => {
     const step = 5 * MINUTE;
     const guess = Math.floor((Date.now() - 10 * MINUTE) / step) * step;
     const start = running ? Math.ceil(running.entry.startUtc / step) * step : guess;
+
     return new Date(Math.min(Date.now(), Math.max(guess, start)));
   });
 
@@ -51,6 +53,7 @@ export function StopSheet() {
   const overdue = elapsed >= context.nudgeMinutes * MINUTE;
   const at = pastAt(picked, now);
   const tooEarly = at < entry.startUtc;
+
   const stop = (t?: number) => {
     actions.stop(t === undefined ? {} : { at: t });
     play("boop");

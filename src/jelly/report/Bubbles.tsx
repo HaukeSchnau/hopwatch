@@ -33,6 +33,7 @@ export function Bubbles({
     width,
     height,
   );
+
   return (
     <View style={{ width, height }}>
       {nodes.map((n, i) => (
@@ -65,11 +66,14 @@ function Bubble({
   const t = useTheme();
   const c = t.candy[node.context.hue];
   const jiggle = useSharedValue(0);
+
   const style = useAnimatedStyle(() => ({
     transform: [{ scaleX: 1 + jiggle.get() }, { scaleY: 1 - jiggle.get() }],
   }));
+
   const big = r >= 44;
   const medium = r >= 28;
+
   return (
     <Animated.View
       style={[styles.bubble, { left: x - r, top: y - r, width: r * 2, height: r * 2 }, style]}

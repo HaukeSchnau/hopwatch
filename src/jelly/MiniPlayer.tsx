@@ -22,6 +22,7 @@ import { Icon } from "./ui";
 /** iOS: the bar renders its accessory twice (regular and inline), so it keeps no state of its own. */
 export function MiniPlayer({ running }: { running: Running }) {
   const placement = NativeTabs.BottomAccessory.usePlacement();
+
   return <Player running={running} inline={placement === "inline"} />;
 }
 
@@ -29,7 +30,9 @@ export function MiniPlayer({ running }: { running: Running }) {
 export function MiniPlayerCard() {
   const t = useTheme();
   const running = useRunning();
+
   if (!running) return null;
+
   return (
     <View
       style={[
@@ -47,6 +50,7 @@ function Player({ running, inline }: { running: Running; inline: boolean }) {
   const face = useFace("awake");
   useLively(face, true);
   const { context, entry } = running;
+
   return (
     <View style={styles.bar}>
       <Pressable
@@ -85,6 +89,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 function LiveTime({ since, color }: { since: number; color: string }) {
   const now = useNow(1000);
   const { hours, minutes, seconds } = durationParts(now - since);
+
   return (
     <Text style={[text.headline, tabular, styles.time, { color }]}>
       {hours}:{pad(minutes)}
@@ -95,6 +100,7 @@ function LiveTime({ since, color }: { since: number; color: string }) {
 
 function StopButton({ since, name, color }: { since: number; name: string; color: string }) {
   const now = useNow(60_000);
+
   return (
     <Menu title={menuText.stop(name)} items={stopMenu(name, since, now)} onPress={onStopMenu}>
       <Pressable

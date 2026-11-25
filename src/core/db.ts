@@ -142,8 +142,10 @@ const toContext = (r: ContextRow): Context => ({
 
 function readSlackStatus(json: string | null): SlackStatus | null {
   if (json === null) return null;
+
   try {
     const value: unknown = JSON.parse(json);
+
     return isSlackStatus(value) ? value : null;
   } catch {
     return null;
@@ -181,6 +183,7 @@ function open(): SQLiteDatabase {
   db = openDatabaseSync("hopwatch.db");
   db.execSync("PRAGMA journal_mode = WAL;");
   migrate(db);
+
   return db;
 }
 
@@ -188,6 +191,7 @@ function migrate(d: SQLiteDatabase) {
   const { user_version } = d.getFirstSync<{ user_version: number }>("PRAGMA user_version") ?? {
     user_version: 0,
   };
+
   for (let version = user_version; version < migrations.length; version++) {
     d.withTransactionSync(() => {
       d.execSync(migrations[version]);
@@ -205,21 +209,26 @@ export interface Rows {
 /** Every live context, entry and day off, entries sorted by start. */
 export function loadAll(): Rows {
   const d = open();
+
   const contexts = d
     .getAllSync<ContextRow>("SELECT * FROM contexts WHERE deleted_at IS NULL")
     .map(toContext);
+
   const entries = d
     .getAllSync<EntryRow>("SELECT * FROM entries WHERE deleted_at IS NULL ORDER BY start_utc")
     .map(toEntry);
+
   const daysOff = d
     .getAllSync<DayOffRow>("SELECT * FROM days_off WHERE deleted_at IS NULL ORDER BY day")
     .map(toDayOff);
+
   return { contexts, entries, daysOff };
 }
 
 /** Everything, soft-deleted rows included, for the JSON export. */
 export function dumpAll(): Rows {
   const d = open();
+
   return {
     contexts: d.getAllSync<ContextRow>("SELECT * FROM contexts").map(toContext),
     entries: d.getAllSync<EntryRow>("SELECT * FROM entries ORDER BY start_utc").map(toEntry),
@@ -259,6 +268,7 @@ export function writeRows(rows: {
         c.deletedAt,
       );
     }
+
     for (const e of rows.entries ?? []) {
       d.runSync(
         `INSERT OR REPLACE INTO entries (id, context_id, start_utc, start_offset_minutes, end_utc,
@@ -276,6 +286,7 @@ export function writeRows(rows: {
         e.deletedAt,
       );
     }
+
     for (const o of rows.daysOff ?? []) {
       d.runSync(
         `INSERT OR REPLACE INTO days_off (id, day, kind, note, created_at, updated_at, deleted_at)

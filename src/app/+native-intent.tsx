@@ -15,11 +15,14 @@ export function redirectSystemPath({ path, initial }: { path: string; initial: b
   try {
     if (path.includes("slack-auth")) return initial ? "/" : null;
     const link = parseLink(path);
+
     if (!link) return path;
+
     if (initial && initialLinkIsStale()) return "/";
     actions.handleLink(link);
     // Android: a link from the notification or a shortcut stays the activity's intent; run it once.
     systemSurfaces?.forgetLaunchLink();
+
     return "/";
   } catch {
     return "/";

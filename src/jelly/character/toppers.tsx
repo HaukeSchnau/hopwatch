@@ -54,6 +54,7 @@ const PINK_EAR: Tones = { light: "#FFD0E2", fill: "#FFA6C8", deep: "#F07AA8" };
 /** Where the forehead is: between the crown and the top of the eyes. */
 function forehead(geo: BodyGeo, t: number) {
   const eyesTop = geo.face.y - 7 * geo.face.s;
+
   return geo.crown.y + (eyesTop - geo.crown.y) * t;
 }
 
@@ -148,6 +149,7 @@ function BearEars({ geo, tones, lod }: TopperProps) {
 
 function BunnyEars({ geo, tones, lod }: TopperProps) {
   const s = Math.min(1.3, (geo.crown.y + 4) / 23.4);
+
   const ear = (side: number, lean: number) => (
     <Group
       key={side}
@@ -175,6 +177,7 @@ function BunnyEars({ geo, tones, lod }: TopperProps) {
       )}
     </Group>
   );
+
   return (
     <>
       {ear(-1, 9)}
@@ -185,6 +188,7 @@ function BunnyEars({ geo, tones, lod }: TopperProps) {
 
 function DogEars({ geo, tones }: TopperProps) {
   const ear: Tones = { light: tones.fill, fill: tones.deep, deep: mix(tones.deep, INK, 0.35) };
+
   return (
     <Pair
       geo={geo}
@@ -224,6 +228,7 @@ function Horns({ geo }: TopperProps) {
 
 function Tuft({ geo, tones, px }: TopperProps) {
   const s = hatScale(geo, 11, 2.6);
+
   return (
     <Group
       transform={[{ translateX: geo.crown.x + 1 }, { translateY: geo.crown.y + 2.6 }, { scale: s }]}
@@ -242,6 +247,7 @@ function Tuft({ geo, tones, px }: TopperProps) {
 
 function Sprout({ geo, lod, px }: TopperProps) {
   const s = hatScale(geo, 17.6, 2.4);
+
   return (
     <Group
       transform={[{ translateX: geo.crown.x }, { translateY: geo.crown.y + 2.4 }, { scale: s }]}
@@ -282,10 +288,13 @@ function Sprout({ geo, lod, px }: TopperProps) {
 
 function Flower({ geo, accent, lod }: TopperProps) {
   const s = hatScale(geo, 9, 3.4);
+
   const petals = [0, 1, 2, 3, 4].map((i) => {
     const a = rad(i * 72 - 90);
+
     return [Math.cos(a) * 4.5, Math.sin(a) * 4.5];
   });
+
   return (
     <Group
       transform={[
@@ -310,6 +319,7 @@ function Flower({ geo, accent, lod }: TopperProps) {
 
 function Antenna({ geo, accent, lod, px }: TopperProps) {
   const s = hatScale(geo, 18.6, 2.6);
+
   return (
     <Group
       transform={[
@@ -339,6 +349,7 @@ function Antenna({ geo, accent, lod, px }: TopperProps) {
 
 function Bow({ geo, accent, lod }: TopperProps) {
   const s = hatScale(geo, 7, 3.6);
+
   return (
     <Group
       transform={[
@@ -379,6 +390,7 @@ function Bow({ geo, accent, lod }: TopperProps) {
 function PartyHat({ geo, accent, lod }: TopperProps) {
   const s = hatScale(geo, 26, 4.6);
   const cone = "M -9 1 L -0.9 -21.4 Q 0 -22.8 0.9 -21.4 L 9 1 Q 0 3.8 -9 1 Z";
+
   return (
     <Group
       transform={[
@@ -423,6 +435,7 @@ function PartyHat({ geo, accent, lod }: TopperProps) {
 
 function ChefHat({ geo, lod }: TopperProps) {
   const s = hatScale(geo, 24.6, 6.4);
+
   return (
     <Group
       transform={[{ translateX: geo.crown.x }, { translateY: geo.crown.y + 6.4 }, { scale: s }]}
@@ -459,6 +472,7 @@ function ChefHat({ geo, lod }: TopperProps) {
 
 function Crown({ geo, lod }: TopperProps) {
   const s = hatScale(geo, 14, 4);
+
   return (
     <Group
       transform={[
@@ -506,6 +520,7 @@ function Headphones({ geo, accent, lod, px }: TopperProps) {
   const peak = Math.max(3, geo.top - 3.4);
   const ctrl = (peak - 0.25 * endY) / 0.75;
   const band = `M ${x - dx} ${endY} C ${x - dx} ${ctrl} ${x + dx} ${ctrl} ${x + dx} ${endY}`;
+
   return (
     <>
       <Path
@@ -552,6 +567,7 @@ function Headphones({ geo, accent, lod, px }: TopperProps) {
 
 function Halo({ geo, lod, px }: TopperProps) {
   const y = Math.max(5, geo.top - 5);
+
   return (
     <Group transform={[{ translateX: geo.crown.x }, { translateY: y }]}>
       {lod > 0 && (
@@ -588,8 +604,10 @@ function Halo({ geo, lod, px }: TopperProps) {
 function Sweatband({ geo, accent, lod }: TopperProps) {
   const y = forehead(geo, 0.52);
   const clip = useSwollen(geo, y, 1.05);
+
   const curve = (dy: number) =>
     `M ${geo.left - 3} ${y + dy} Q ${geo.crown.x} ${y + dy + 5} ${geo.right + 3} ${y + dy}`;
+
   return (
     <>
       <Group clip={clip}>
@@ -626,6 +644,7 @@ function Sweatband({ geo, accent, lod }: TopperProps) {
 
 function GradCap({ geo, accent, lod, px }: TopperProps) {
   const s = hatScale(geo, 12.4, 4.4);
+
   return (
     <Group
       transform={[
@@ -670,11 +689,13 @@ function Beanie({ geo, accent, lod }: TopperProps) {
   const rimTop = `M ${x - hw - 1.2} ${cut - 6} Q ${x} ${cut - 2.6} ${x + hw + 1.2} ${cut - 6}`;
   const rim = `${rimTop} L ${x + hw + 1.2} ${cut + 0.4} Q ${x} ${cut + 4} ${x - hw - 1.2} ${cut + 0.4} Z`;
   const rib = `M ${x - hw - 1.2} ${cut - 2.8} Q ${x} ${cut + 0.7} ${x + hw + 1.2} ${cut - 2.8}`;
+
   const knit: Tones = {
     light: mix(accent.light, "#FFFFFF", 0.25),
     fill: accent.light,
     deep: accent.fill,
   };
+
   return (
     <>
       <CandyPath path={dome} tones={accent} top={top} bottom={cut} />
@@ -711,6 +732,7 @@ function Beanie({ geo, accent, lod }: TopperProps) {
 function Propeller({ geo, accent, px }: TopperProps) {
   const s = hatScale(geo, 14.4, 4.2);
   const dome = "M -9.5 1 C -9.5 -5.4 -5 -8.6 0 -8.6 C 5 -8.6 9.5 -5.4 9.5 1 Q 0 3 -9.5 1 Z";
+
   return (
     <Group
       transform={[

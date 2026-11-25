@@ -54,6 +54,7 @@ interface CandyPathProps {
 /** A path filled like glossy candy: a light-to-deep gradient and a soft inner shade. */
 export function CandyPath({ path, tones, top, bottom, inner = true }: CandyPathProps) {
   const h = bottom - top;
+
   return (
     <Path path={path}>
       <LinearGradient

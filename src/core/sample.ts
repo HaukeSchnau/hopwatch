@@ -53,11 +53,13 @@ const seeds: Seed[] = [
 /** Small deterministic PRNG (mulberry32). */
 function rng(seed: number) {
   let a = seed >>> 0;
+
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
     let t = a;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
@@ -75,10 +77,12 @@ export function sampleData(
 
   const ids = new Map(seeds.map((s) => [s.key, newId() as ContextId]));
   const sortOrders = new Map<Seed["key"] | null, number>();
+
   const contexts: Context[] = seeds.map((s) => {
     const parentKey = s.parent ?? null;
     const sortOrder = sortOrders.get(parentKey) ?? 0;
     sortOrders.set(parentKey, sortOrder + 1);
+
     return {
       id: ids.get(s.key)!,
       parentId: s.parent ? ids.get(s.parent)! : null,
@@ -107,7 +111,9 @@ export function sampleData(
     plan.push(["meetings", between(15, 30)], ["deep", morning - 30]);
     jobLeft -= morning;
     plan.push(["lunch", between(30, 50)]);
+
     if (random() < 0.7) plan.push(["dog", between(12, 25)]);
+
     while (jobLeft > 20) {
       const block = Math.min(jobLeft, between(30, 110));
       plan.push([
@@ -117,13 +123,16 @@ export function sampleData(
       ]);
       jobLeft -= block;
     }
+
     plan.push(
       ["dog", between(25, 45), between(10, 30)],
       ["cooking", between(25, 50), between(15, 60)],
     );
     const evening = random();
+
     if (evening < 0.45) plan.push([pick(["website", "app", "nordlicht"]), between(50, 130)]);
     else if (evening < 0.75) plan.push(["podcast", between(40, 100)]);
+
     return plan;
   };
 
@@ -139,13 +148,16 @@ export function sampleData(
 
   const entries: Entry[] = [];
   const today = startOfDay(now);
+
   for (let dayIndex = -20; dayIndex <= 0; dayIndex++) {
     const day = addDays(today, dayIndex);
     const weekday = (new Date(day).getDay() + 6) % 7;
     const plan = weekday < 5 ? workday() : weekend();
+
     let cursor =
       day +
       (weekday < 5 ? between(7 * 60 + 15, 8 * 60) : between(8 * 60 + 30, 9 * 60 + 30)) * MINUTE;
+
     for (const [key, minutes, gapAfter = 0] of plan) {
       if (cursor >= now) break;
       const start = cursor;
@@ -163,9 +175,11 @@ export function sampleData(
         updatedAt: end,
         deletedAt: null,
       });
+
       if (running) break;
       cursor = end + gapAfter * MINUTE;
     }
   }
+
   return { contexts, entries };
 }

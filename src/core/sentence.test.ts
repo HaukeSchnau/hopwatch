@@ -27,6 +27,7 @@ const context = (id: string, name: string, parentId: string | null = null): Cont
   updatedAt: 0,
   deletedAt: null,
 });
+
 const tree = buildTree([
   context("deep", "Deep work"),
   context("lunch", "Lunch"),
@@ -48,6 +49,7 @@ const entry = (id: string, contextId: string, start: number, end: number | null)
   updatedAt: 0,
   deletedAt: null,
 });
+
 // Lunch 07:00–09:00 and 09:30–10:00, then Deep work running since 13:00.
 const entries = [
   entry("a", "lunch", at(7), at(9)),
@@ -107,6 +109,7 @@ describe("reading a sentence", () => {
     const block = (from: number, to: number) => ({
       plan: { kind: "place", contextId: "deep", from, to },
     });
+
     expect(read({ from: "12:30", to: "1:15" })).toEqual(block(at(12, 30), at(13, 15)));
     expect(read({ from: "2:00", to: "4:00" }, at(17))).toEqual(block(at(14), at(16)));
     expect(read({ day: "yesterday", from: "22:00", to: "01:00" })).toEqual(

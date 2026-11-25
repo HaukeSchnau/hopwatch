@@ -8,5 +8,6 @@ import { Settings } from "react-native";
 export function devLaunchRoute(): string | null {
   if (!__DEV__) return null;
   const route: unknown = Settings.get("hopwatchRoute");
+
   return typeof route === "string" && route.startsWith("/") ? route : null;
 }

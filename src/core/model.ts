@@ -3,10 +3,13 @@
 // deletes. All timestamps are epoch milliseconds (UTC); days are local YYYY-MM-DD keys.
 
 declare const brand: unique symbol;
+
 type Brand<T, B extends string> = T & { readonly [brand]: B };
 
 export type ContextId = Brand<string, "ContextId">;
+
 export type EntryId = Brand<string, "EntryId">;
+
 export type DayOffId = Brand<string, "DayOffId">;
 
 /**
@@ -28,6 +31,7 @@ export const hues = [
   "pink",
   "gray",
 ] as const;
+
 export type Hue = (typeof hues)[number];
 
 export const defaultHueHex = {
@@ -116,7 +120,9 @@ export const isSlackStatus = (value: unknown): value is SlackStatus =>
 
 /** Why a day is off. Public holidays aren't stored; they're computed (holidays.ts). */
 export const dayOffKinds = ["vacation", "sick", "other"] as const;
+
 export type DayOffKind = (typeof dayOffKinds)[number];
+
 export const isDayOffKind = (value: unknown): value is DayOffKind =>
   typeof value === "string" && (dayOffKinds as readonly string[]).includes(value);
 
@@ -136,6 +142,7 @@ export const MONDAY_TO_FRIDAY = 0b0011111;
 export const isWorkday = (workDays: number, weekday: number) => (workDays & (1 << weekday)) !== 0;
 
 export const DEFAULT_NUDGE_MINUTES = 180;
+
 /** Entries shorter than this are discarded on stop, switch and trim. */
 export const MIN_ENTRY_MS = 30_000;
 export const DEFAULT_HUE: Hue = "gray";

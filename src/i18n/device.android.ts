@@ -10,5 +10,6 @@ import { I18nManager } from "react-native";
  */
 export function preferredLanguages(): string[] {
   const locale = I18nManager.getConstants().localeIdentifier;
+
   return locale ? [locale] : [];
 }

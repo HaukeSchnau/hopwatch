@@ -43,6 +43,7 @@ export function Grid({ runningId }: { runningId: ContextId | null }) {
   const now = useNow(60_000);
   const cell = Math.floor((width - SIDE * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
   const showNew = slots.length < 6;
+
   return (
     <View style={styles.grid}>
       {slots.map((context, i) =>
@@ -97,6 +98,7 @@ function Tile({
         withRepeat(withTiming(1, { duration: 2300, easing: Easing.inOut(Easing.sin) }), -1, true),
       ),
     );
+
     return () => {
       cancelAnimation(breath);
       breath.set(0);
@@ -110,17 +112,20 @@ function Tile({
       land.set(withSequence(withTiming(0.22, { duration: 60 }), withSpring(0, springs.wobble)));
       face.awake.set(0);
     }
+
     wasHidden.current = hidden;
   }, [face, hidden, land]);
 
   const body = useAnimatedStyle(() => {
     const b = breath.get() * 0.028;
     const l = land.get();
+
     return { transform: [{ scaleY: 1 + b - l }, { scaleX: 1 - b * 0.4 + l * 0.7 }] };
   });
 
   const c = t.candy[context.hue];
   const menu = useStartMenu(context, now, running);
+
   return (
     <Menu
       title={context.name}
@@ -174,6 +179,7 @@ function Tile({
 function NewTile({ width }: { width: number }) {
   const t = useTheme();
   const size = Math.min(width - 22, 84);
+
   return (
     <Squishy
       grounded

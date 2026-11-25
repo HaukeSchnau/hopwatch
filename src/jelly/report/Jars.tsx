@@ -78,6 +78,7 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
     phase.set(
       withRepeat(withTiming(Math.PI * 2, { duration: 2600, easing: Easing.linear }), -1, false),
     );
+
     return () => {
       cancelAnimation(phase);
       phase.set(0);
@@ -88,25 +89,31 @@ function Jar({ line, weekStart, delay }: { line: TargetLine; weekStart: number; 
   useEffect(() => {
     if (!full || celebrated.has(key)) return;
     celebrated.add(key);
+
     const timer = setTimeout(() => {
       setBurst(Date.now());
       buzz.success();
       play("plink");
     }, delay + 700);
+
     return () => clearTimeout(timer);
   }, [delay, full, key]);
 
   const inner = { x: BODY.x + 5, y: BODY.y + 5, w: BODY.w - 10, h: BODY.h - 10 };
   const clip = rrect(rect(inner.x, inner.y, inner.w, inner.h), BODY.r - 5, BODY.r - 5);
+
   const jelly = useDerivedValue(() => {
     const top = inner.y + inner.h * (1 - Math.min(1.08, level.get()));
     const b = Skia.PathBuilder.Make();
     b.moveTo(inner.x - 2, inner.y + inner.h + 2);
+
     for (let x = 0; x <= inner.w + 4; x += 4) {
       b.lineTo(inner.x - 2 + x, top + Math.sin(phase.get() + x / 11) * 2.4);
     }
+
     b.lineTo(inner.x + inner.w + 2, inner.y + inner.h + 2);
     b.close();
+
     return b.detach();
   });
 

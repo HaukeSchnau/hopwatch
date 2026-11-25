@@ -9,6 +9,7 @@
   "use strict";
 
   const J = window.Jelly;
+
   if (!J) return;
   const { T, S, W, C, ease, springs, reduceMotion } = J;
   const calm = () => reduceMotion.matches;
@@ -39,9 +40,11 @@
     document.body.append(canvas);
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
+
     const bits = Array.from({ length: count }, () => {
       const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.9;
       const speed = 420 + Math.random() * 520;
+
       return {
         x,
         y,
@@ -55,6 +58,7 @@
         color: CONFETTI[Math.floor(Math.random() * CONFETTI.length)],
       };
     });
+
     const start = performance.now();
     let last = start;
     J.onFrame((now) => {
@@ -63,6 +67,7 @@
       const age = (now - start) / 1000;
       ctx.clearRect(0, 0, innerWidth, innerHeight);
       ctx.globalAlpha = Math.max(0, Math.min(1, (2.6 - age) / 0.6));
+
       for (const b of bits) {
         b.vy += 1300 * dt;
         b.vx *= 1 - 1.6 * dt;
@@ -75,14 +80,17 @@
         ctx.rotate(b.r);
         ctx.fillStyle = b.color;
         ctx.beginPath();
+
         if (b.shape === 0) ctx.arc(0, 0, b.h / 1.6, 0, Math.PI * 2);
         else if (b.shape === 1) ctx.roundRect(-b.w / 2, -b.h / 2, b.w, b.h, b.h / 2);
         else ctx.roundRect(-b.w * 0.7, -1.6, b.w * 1.4, 3.2, 1.6);
         ctx.fill();
         ctx.restore();
       }
+
       if (age > 2.6) {
         canvas.remove();
+
         return false;
       }
     });
@@ -91,6 +99,7 @@
   /* ---------- The hero: dial, stage and cast ---------- */
 
   const demo = document.querySelector("[data-demo]");
+
   if (demo) hero(demo);
 
   function hero(demo) {
@@ -98,6 +107,7 @@
     const RADIUS = 158;
     const beansEl = demo.querySelector(".beans");
     const liveLayer = demo.querySelector(".dial-live");
+
     const [flashEl, liveBean, liveGloss, headEl, headDot] = [
       ".flash",
       ".live-bean",
@@ -105,6 +115,7 @@
       ".head",
       ".head-dot",
     ].map((q) => liveLayer.querySelector(q));
+
     const stageSlot = demo.querySelector(".stage-slot");
     const stageFloor = demo.querySelector(".stage-floor");
     const nameEl = demo.querySelector(".center .name");
@@ -112,6 +123,7 @@
     const sinceEl = demo.querySelector(".since");
     const status = demo.querySelector('[role="status"]');
     const hint = demo.querySelector(".hint");
+
     const clock = new Intl.DateTimeFormat(lang, {
       hour: "2-digit",
       minute: "2-digit",
@@ -120,6 +132,7 @@
 
     // The cast, as the markup lists it: each tile holds a napping jelly and its dimple.
     const tiles = new Map();
+
     for (const button of demo.querySelectorAll(".cast button")) {
       const key = button.dataset.cast;
       const spec = J.spec(key);
@@ -139,6 +152,7 @@
         name: button.querySelector(".label").textContent.trim(),
       });
     }
+
     const firstRunning =
       [...tiles.values()].find((t) => t.button.getAttribute("aria-pressed") === "true") ??
       tiles.values().next().value;
@@ -148,6 +162,7 @@
       mood: "awake",
       shadow: false,
     });
+
     stage.el.classList.add("breathe", "breathe-stage");
     stageSlot.append(stage.el);
     stage.lively(true);
@@ -156,6 +171,7 @@
     function showTile(tile, away) {
       tile.slot.classList.toggle("is-away", away);
     }
+
     showTile(firstRunning, true);
 
     // The day so far, made up relative to the visitor's clock. Switching fast-forwards the
@@ -166,12 +182,14 @@
     /** Where the demo clock's offset is heading once every pour so far has landed. */
     let offsetTarget = 0;
     const demoNow = () => Date.now() + offset.v;
+
     const entries = [
       { key: "dog", start: realNow - 9.6 * HOUR, end: realNow - 9.05 * HOUR },
       { key: "job", start: realNow - 8.8 * HOUR, end: realNow - 5.3 * HOUR },
       { key: "cooking", start: realNow - 5.1 * HOUR, end: realNow - 4.45 * HOUR },
       { key: "deep", start: realNow - 4.2 * HOUR, end: realNow - 0.95 * HOUR },
     ].filter((e) => tiles.has(e.key));
+
     let running = { key: firstRunning.key, start: realNow - 47 * MIN - 12e3 };
     const ignite = new J.Value(1);
     /** How far the demo day fast-forwards per switch, so the new bean pours in visibly. */
@@ -183,21 +201,28 @@
     /** Clock angle for a timestamp: midnight at the bottom, noon at the top. */
     function angle(t) {
       const d = new Date(t);
+
       return ((d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600 - 12) / 24) * 2 * Math.PI;
     }
+
     const point = (a, r) =>
       `${(CENTER + r * Math.sin(a)).toFixed(2)} ${(CENTER - r * Math.cos(a)).toFixed(2)}`;
+
     function arc(start, end, r, trim = 0) {
       const a1 = angle(start) + trim;
       const span = Math.max(0, ((end - start) / (24 * HOUR)) * 2 * Math.PI - 2 * trim);
+
       if (span < 0.004) return `M${point(a1, r)}L${point(a1, r)}`;
+
       return `M${point(a1, r)}A${r} ${r} 0 ${span > Math.PI ? 1 : 0} 1 ${point(a1 + span, r)}`;
     }
+
     function bean(e, end) {
       const gloss =
         end - e.start > 25 * MIN
           ? `<path class="bean-gloss" d="${arc(e.start, end, RADIUS - 4, 0.035)}"/>`
           : "";
+
       return `<path class="bean" stroke="${color(e.key)}" d="${arc(e.start, end, RADIUS)}"/>${gloss}`;
     }
 
@@ -220,10 +245,12 @@
       );
       liveLayer.style.setProperty("--head", c);
       const glow = g >= 1 ? 20 : 20 + Math.sin(Math.min(1, g * 1.3) * Math.PI) * 18;
+
       for (const el of [headEl, headDot]) {
         el.setAttribute("cx", hx);
         el.setAttribute("cy", hy);
       }
+
       headEl.setAttribute("r", glow.toFixed(1));
       headDot.setAttribute("r", "3.2");
       flashEl.setAttribute("stroke", c);
@@ -234,9 +261,11 @@
     }
 
     let lastTimer = "";
+
     function drawTimer() {
       const s = Math.max(0, Math.floor((demoNow() - running.start) / 1000));
       const text = `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}<small>:${String(s % 60).padStart(2, "0")}</small>`;
+
       if (text !== lastTimer) {
         timerEl.innerHTML = text;
         lastTimer = text;
@@ -255,10 +284,12 @@
       nameEl.textContent = tiles.get(running.key).name;
       sinceEl.textContent = `${sinceEl.dataset.label} ${clock.format(running.start)}`;
       drawTimer();
+
       if (bounce) {
         boing(nameEl);
         boing(timerEl);
       }
+
       live?.update(bounce);
     }
 
@@ -267,13 +298,16 @@
       if (calm()) return drawDial();
       ignite.set(0);
       ignite.go(T(1, 950, ease.outCubic));
+
       if (offsetTarget !== offset.v) offset.go(T(offsetTarget, 900, ease.outCubic));
       J.onFrame(() => {
         drawDial();
         drawTimer();
         live?.update(false);
+
         return ignite.busy || offset.busy;
       });
+
       if (!dayFull && Date.now() + offsetTarget >= dayEnd - MIN) {
         // Someone tapped their way through the whole day.
         dayFull = true;
@@ -295,10 +329,12 @@
       const toRect = toEl.getBoundingClientRect();
       const size = Math.max(fromRect.width, toRect.width);
       const ch = new J.Character(source.spec, { size, mood: "awake", shadow: false });
+
       for (const k of ["awake", "blink", "lookX", "lookY", "yawn"]) ch.v[k].set(source.v[k].v);
       ch.el.classList.add("flyer");
       layer.append(ch.el);
       const progress = new J.Value(0);
+
       const flight = {
         ch,
         progress,
@@ -311,7 +347,9 @@
         size,
         done: false,
       };
+
       flights.add(flight);
+
       if (kind === "in") {
         // Launch: from the squish under the finger straight into a stretch.
         ch.v.plop.set(Math.max(0.16, source.v.plop.v));
@@ -320,6 +358,7 @@
       } else {
         ch.sleep();
       }
+
       progress.go(
         T(1, kind === "in" ? 540 : 620, ease.flight),
         C(() => land(flight)),
@@ -333,6 +372,7 @@
 
     function place(f) {
       const t = f.progress.v;
+
       if (f.scrolled !== scrollY) {
         // The page moved under the flight: follow both ends.
         const dy = f.scrolled - scrollY;
@@ -345,6 +385,7 @@
         f.toRect = f.toEl.getBoundingClientRect();
         f.scrolled = scrollY;
       }
+
       const to = f.toRect;
       const from = f.fromRect;
       const fx = from.left + from.width / 2;
@@ -376,9 +417,11 @@
       const r = el.getBoundingClientRect();
       const t = J.tones[hue];
       const colors = [t.fill, t.light, "#FFFFFF", t.fill];
+
       for (let i = 0; i < count; i++) {
         const a =
           Math.PI * (1.08 + (0.84 * i) / Math.max(1, count - 1)) + (Math.random() - 0.5) * 0.25;
+
         const d = r.width * (0.38 + Math.random() * 0.22);
         const dot = document.createElement("span");
         dot.className = "splash";
@@ -396,6 +439,7 @@
       if (calm()) return;
       stage.land(0.18);
       stage.v.hop.go(W(60), T(0.7, 200, ease.outQuad), T(0, 190, ease.inQuad));
+
       if (performance.now() > stage.busyUntil) stage.perform();
     }
 
@@ -409,6 +453,7 @@
       const t = Date.now() + offsetTarget;
       entries.push({ key: running.key, start: running.start, end: t });
       running = { key, start: t };
+
       if (!calm()) offsetTarget += Math.max(0, Math.min(POUR, dayEnd - t));
       prev.button.setAttribute("aria-pressed", "false");
       next.button.setAttribute("aria-pressed", "true");
@@ -421,6 +466,7 @@
         stage.setSpec(next.spec);
         showTile(prev, false);
         showTile(next, true);
+
         return;
       }
 
@@ -450,14 +496,17 @@
         kind: "in",
         onLand(flyer) {
           stage.setSpec(next.spec);
+
           for (const k of ["awake", "blink", "lookX", "lookY", "yawn"])
             stage.v[k].set(flyer.v[k].v);
           stage.el.classList.remove("is-away");
           stageFloor.classList.remove("is-away");
           stage.v.plop.set(0);
           stage.land(0.26);
+
           const fromLeft =
             next.slot.getBoundingClientRect().left < stageSlot.getBoundingClientRect().left;
+
           stage.v.tilt.go(T(fromLeft ? 7 : -7, 70), S(0, springs.wobble));
           stage.wake();
           stage.busyUntil = performance.now() + 900;
@@ -467,6 +516,7 @@
         },
       });
       showTile(next, true);
+
       // Its napping self in the slot goes back to sleep for when it returns.
       for (const k of ["awake", "plop"]) source.v[k].set(0);
     }
@@ -475,12 +525,14 @@
     for (const tile of tiles.values()) {
       const { button, ch } = tile;
       let sleepTimer = 0;
+
       const doze = (ms) => {
         clearTimeout(sleepTimer);
         sleepTimer = setTimeout(() => {
           if (running.key !== tile.key && !ch.follow) ch.sleep();
         }, ms);
       };
+
       button.addEventListener("pointerdown", (e) => {
         if (running.key === tile.key) return;
         clearTimeout(sleepTimer);
@@ -488,10 +540,12 @@
         ch.wake();
         ch.lookAt(e.clientX, e.clientY, 600);
       });
+
       const release = () => {
         ch.press(false);
         doze(350);
       };
+
       button.addEventListener("pointerup", release);
       button.addEventListener("pointercancel", release);
       button.addEventListener("pointerenter", (e) => {
@@ -503,17 +557,23 @@
       });
       button.addEventListener("pointerleave", (e) => {
         ch.follow = false;
+
         if (e.pointerType === "mouse") ch.press(false);
+
         if (running.key !== tile.key) doze(250);
       });
       button.addEventListener("click", () => {
         clearTimeout(sleepTimer);
+
         if (running.key === tile.key) {
           // Its dimple: the jelly on stage wiggles hello.
           if (!calm()) stage.v.tilt.go(T(-7, 60), T(6, 80), S(0, springs.wobble));
+
           return;
         }
+
         ch.follow = false;
+
         if (ch.v.plop.v < 0.05 && !calm()) ch.v.plop.set(0.18);
         switchTo(tile.key);
       });
@@ -535,6 +595,7 @@
             stage.v.hop.go(T(0.55, 200, ease.outQuad), T(0, 190, ease.inQuad));
             stage.v.plop.go(W(390), T(0.14, 60), S(0, springs.wobble));
           }
+
           happyHop();
         },
         6000 + Math.random() * 6000,
@@ -544,22 +605,26 @@
     // Until someone taps, a napping jelly stirs now and then as an invitation.
     let invited = false;
     let inviteTimer = 0;
+
     function interacted() {
       invited = true;
       clearTimeout(inviteTimer);
       hint.classList.add("is-done");
     }
+
     (function invite() {
       inviteTimer = setTimeout(
         () => {
           if (invited) return;
           const napping = [...tiles.values()].filter((t) => t.key !== running.key);
           const tile = napping[Math.floor(Math.random() * napping.length)];
+
           if (!calm() && tile && stage.visible && !document.hidden) {
             tile.ch.v.hop.go(T(0.4, 180, ease.outQuad), T(0, 170, ease.inQuad));
             tile.ch.v.plop.go(W(350), T(0.16, 60), S(0, springs.wobble));
             tile.ch.v.awake.go(T(0.7, 120), W(500), T(0, 300));
           }
+
           invite();
         },
         4500 + Math.random() * 3500,
@@ -572,12 +637,15 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
         const s = stageSlot.clientWidth;
+
         if (s && Math.abs(s - stage.size) > 8) {
           stage.size = s;
           stage.build();
         }
+
         for (const t of tiles.values()) {
           const w = t.slot.clientWidth;
+
           if (w && Math.abs(w - t.ch.size) > 8) {
             t.ch.size = w;
             t.ch.build();
@@ -592,12 +660,14 @@
 
     function liveCard(el) {
       const slot = el.querySelector(".live-jelly");
+
       const ch = new J.Character(J.spec(running.key), {
         size: 44,
         mood: "awake",
         shadow: false,
         sticker: false,
       });
+
       slot.append(ch.el);
       ch.lively(true);
       const name = el.querySelector(".live-name");
@@ -607,24 +677,29 @@
       let shown = null;
       let last = "";
       let previous = null;
+
       return {
         update(changed) {
           if (shown !== running.key) {
             previous = shown;
             shown = running.key;
             ch.setSpec(J.spec(running.key));
+
             if (changed && !calm()) {
               ch.land(0.24);
               ch.wake();
             }
           }
+
           name.textContent = tiles.get(running.key).name;
           since.textContent = `${sinceEl.dataset.label} ${clock.format(running.start)}`;
           const backKey = previous ?? entries[entries.length - 1]?.key;
+
           if (backKey && back)
             back.textContent = back.dataset.template.replace("{name}", tiles.get(backKey).name);
           const s = Math.max(0, Math.floor((demoNow() - running.start) / 1000));
           const text = `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}`;
+
           if (text !== last) {
             timer.textContent = text;
             last = text;
@@ -653,6 +728,7 @@
   /** Calls `fn` once when `el` is mostly on screen. */
   function whenSeen(el, fn, threshold = 0.6) {
     if (!el) return;
+
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -662,6 +738,7 @@
       },
       { threshold },
     );
+
     io.observe(el);
   }
 
@@ -710,6 +787,7 @@
   {
     const el = feature("targets");
     const jar = el?.querySelector("[data-jar]");
+
     if (jar) targetJar(el, jar, jellyIn(el));
   }
 
@@ -725,6 +803,7 @@
     const wave = new J.Value(0, draw);
     let celebrated = false;
     const minutes = () => Math.round(level.v * TARGET * 1.07);
+
     function draw() {
       const y = BOTTOM - (BOTTOM - TOP) * Math.min(1, level.v);
       const a = wave.v * 5;
@@ -735,29 +814,37 @@
       );
       const m = minutes();
       label.textContent = `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")} / 3:00`;
+
       if (m >= TARGET) star.textContent = `★ +0:${String(m - TARGET).padStart(2, "0")}`;
+
       if (!celebrated && m >= TARGET) {
         celebrated = true;
         star.classList.add("is-on");
         const r = jar.getBoundingClientRect();
         confetti(r.left + r.width / 2, r.top + r.height * 0.2);
+
         if (ch && !calm()) {
           ch.land(0.2);
           ch.perform();
         }
       }
     }
+
     function pour() {
       celebrated = false;
       star.classList.remove("is-on");
+
       if (calm()) {
         level.set(1);
+
         return;
       }
+
       level.set(0.55);
       level.go(W(250), T(1, 1500, ease.outCubic));
       wave.go(T(1, 300), S(0, springs.wobble));
     }
+
     draw();
     whenSeen(jar, pour, 0.7);
     onTap(jar, pour);
@@ -770,16 +857,19 @@
     const ch = jellyIn(el);
     const glyphs = ["🚀", "🎸", "🧶", "🪴", "🎨", "🧁", "📚", "🛹", "🧩", "🍕", "🎮", "🐈"];
     let i = 0;
+
     const reroll = () => {
       if (!ch) return;
       const s = J.surprise();
       ch.setSpec({ ...ch.spec, ...s, glyph: glyphs[++i % glyphs.length] });
+
       if (calm()) return;
       ch.dressUp();
       ch.land(0.22);
       ch.v.tilt.go(T(-6, 70), S(0, springs.wobble));
       ch.busyUntil = performance.now() + 900;
     };
+
     onTap(el?.querySelector(".feat-jelly"), reroll);
     onTap(el?.querySelector(".surprise"), reroll);
   }
@@ -802,32 +892,40 @@
     const el = feature("ai");
     const ch = jellyIn(el);
     const chip = el?.querySelector(".suggested");
+
     if (ch) {
       const dressed = ch.spec;
+
       const plain = {
         ...dressed,
         hue: "gray",
         glyph: null,
         look: { ...dressed.look, topper: "none", eyes: "dot", mouth: "smile", surface: "plain" },
       };
+
       ch.setSpec(plain);
       let busy = false;
+
       const suggest = () => {
         if (busy) return;
         busy = true;
         chip?.classList.remove("is-on");
+
         if (ch.spec.hue !== "gray") ch.setSpec(plain);
         const think = calm() ? 0 : 900;
+
         if (think) {
           ch.v.lookY.go(T(-0.8, 250), W(500), T(0, 200));
           ch.v.lookX.go(T(0.5, 250), W(500), T(0, 200));
           el.classList.add("is-thinking");
         }
+
         setTimeout(() => {
           el.classList.remove("is-thinking");
           ch.setSpec(dressed);
           chip?.classList.add("is-on");
           busy = false;
+
           if (calm()) return;
           ch.dressUp();
           ch.land(0.24);
@@ -835,6 +933,7 @@
           ch.busyUntil = performance.now() + 900;
         }, think);
       };
+
       whenSeen(el, suggest, 0.8);
       onTap(el.querySelector(".feat-jelly"), suggest);
     }
@@ -850,11 +949,13 @@
       const [a, b] = bubbles.map((x) => x.textContent);
       bubbles[0].textContent = b;
       bubbles[1].textContent = a;
+
       for (const x of bubbles) {
         x.classList.remove("boing");
         void x.offsetWidth;
         x.classList.add("boing");
       }
+
       if (!calm()) pair.forEach((ch, i) => ch && setTimeout(() => ch.land(0.2), i * 120));
     });
   }
@@ -864,14 +965,17 @@
   {
     const peek = document.querySelector("[data-peek]");
     const ch = peek?.querySelector("[data-jelly]")?.jelly;
+
     if (peek && ch) {
       const rise = new J.Value(0, () => peek.style.setProperty("--rise", rise.v.toFixed(3)));
       let hiding = false;
+
       const show = () => {
         if (calm()) return rise.set(1);
         rise.go(S(1, { damping: 9, stiffness: 170 }));
         ch.v.tilt.go(W(250), S(-9, springs.soft));
       };
+
       whenSeen(peek.parentElement, () => setTimeout(show, 400), 0.5);
       peek.addEventListener("click", () => {
         if (hiding) return;
@@ -894,14 +998,17 @@
   if (!calm() && "IntersectionObserver" in window) {
     const items = document.querySelectorAll(".pop");
     document.documentElement.classList.add("will-pop");
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (!e.isIntersecting) continue;
           io.unobserve(e.target);
+
           const siblings = [...e.target.parentElement.children].filter((x) =>
             x.classList.contains("pop"),
           );
+
           e.target.style.setProperty(
             "--delay",
             `${Math.max(0, siblings.indexOf(e.target)) * 70}ms`,
@@ -911,6 +1018,7 @@
       },
       { threshold: 0.18, rootMargin: "0px 0px -6% 0px" },
     );
+
     items.forEach((el) => io.observe(el));
   }
 })();

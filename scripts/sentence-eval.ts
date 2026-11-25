@@ -121,17 +121,24 @@ const yesterday = (t: number) => (startOfDay(t) < startOfDay(NOW) ? "yesterday "
 function describePlan(plan: Plan): string {
   if (plan.kind === "start")
     return `start ${name(plan.contextId)} at ${yesterday(plan.at)}${formatClock(plan.at)}`;
+
   if (plan.kind === "stop") return `stop at ${formatClock(plan.at)}`;
+
   return `place ${name(plan.contextId)} ${yesterday(plan.from)}${formatClock(plan.from)}–${formatClock(plan.to)}`;
 }
 
 function matches(plan: Plan | null, problem: boolean, e: Expected): boolean {
   if (e.kind === "ignored") return !plan && !problem;
+
   if (e.kind === "problem") return problem;
+
   if (!plan || plan.kind !== e.kind) return false;
+
   if (plan.kind === "stop" && e.kind === "stop") return formatClock(plan.at) === e.at;
+
   if (plan.kind === "start" && e.kind === "start")
     return name(plan.contextId) === e.jelly && formatClock(plan.at) === e.at && !yesterday(plan.at);
+
   if (plan.kind === "place" && e.kind === "place") {
     return (
       name(plan.contextId) === e.jelly &&
@@ -143,6 +150,7 @@ function matches(plan: Plan | null, problem: boolean, e: Expected): boolean {
       (e.day === "yesterday") === startOfDay(plan.from) < startOfDay(NOW)
     );
   }
+
   return false;
 }
 
@@ -151,6 +159,7 @@ const rows: string[] = [];
 let passed = 0;
 let total = 0;
 const latencies: number[] = [];
+
 for (const [phrase, expected] of cases) {
   if (only && !phrase.includes(only)) continue;
   total++;
@@ -159,13 +168,17 @@ for (const [phrase, expected] of cases) {
   let latency = "";
   let reading: ReturnType<typeof readSentence> = null;
   let failure = "";
+
   const run = spawnSync(process.env.HOPWATCH_MODEL_COMMAND ?? "scripts/model.sh", {
     input: JSON.stringify(request),
     encoding: "utf8",
   });
+
   const notes = run.stderr.split("\n").filter((l) => l && !l.includes("step-agent"));
   latency = notes.find((l) => /^\d+\.\d+s$/.test(l)) ?? "";
+
   if (latency) latencies.push(Number.parseFloat(latency));
+
   if (run.status === 0) {
     const answer = JSON.parse(run.stdout) as Parameters<typeof readSentence>[1];
     answerText = Object.entries(answer)
@@ -176,12 +189,16 @@ for (const [phrase, expected] of cases) {
   } else {
     failure = notes[0] ?? `exit ${run.status}`;
   }
+
   const plan = reading && "plan" in reading ? reading.plan : null;
   const problem = reading !== null && "problem" in reading;
+
   const ok =
     !failure &&
     (Array.isArray(expected) ? expected : [expected]).some((e) => matches(plan, problem, e));
+
   if (ok) passed++;
+
   const result = failure
     ? `model failed: ${failure}`
     : plan
@@ -189,15 +206,20 @@ for (const [phrase, expected] of cases) {
       : problem && reading && "problem" in reading
         ? `problem: ${reading.problem}`
         : "ignored";
+
   rows.push(`| ${phrase} | ${answerText} | ${result} | ${ok ? "ok" : "WRONG"} | ${latency} |`);
   console.error(`${ok ? "ok   " : "WRONG"} ${phrase} → ${result}  [${answerText}]`);
 }
 
 console.log("| Phrase | Model answer | Plan | Verdict | Latency |");
+
 console.log("| --- | --- | --- | --- | --- |");
+
 for (const row of rows) console.log(row);
+
 const sorted = [...latencies].sort((a, b) => a - b);
 const median = sorted[Math.floor(sorted.length / 2)];
+
 console.log(
   `\n${passed}/${total} right.${median === undefined ? "" : ` Latency median ${median.toFixed(2)} s, max ${sorted.at(-1)?.toFixed(2)} s.`}`,
 );

@@ -15,11 +15,13 @@ export function useDayOffPill(dayStart: number) {
   const tree = useTree();
   const { kind, holiday } = useDayOff(dayStart);
   const jobHours = tree.ordered.some((c) => !c.hidden && isJobHours(c));
+
   const label = holiday
     ? `🎉 ${dayText.holidays[holiday]}`
     : kind
       ? `${dayOffEmoji[kind]} ${s[kind]}`
       : s.ask;
+
   return {
     shown: jobHours || kind !== null || holiday !== null,
     off: kind !== null || holiday !== null,

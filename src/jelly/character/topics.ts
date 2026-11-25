@@ -432,10 +432,12 @@ export type TopicName = (typeof topics)[number]["name"];
 
 // Emoji presentation selectors and skin tone modifiers don't change what an emoji means.
 const EMOJI_NOISE = /[\u{FE0E}\u{FE0F}\u{1F3FB}-\u{1F3FF}]/gu;
+
 /** An emoji without presentation selectors and skin tones, for comparing. */
 export const emojiKey = (emoji: string) => emoji.replace(EMOJI_NOISE, "");
 
 const byEmoji = new Map<string, TopicName>();
+
 for (const t of topics)
   for (const emoji of t.emoji)
     if (!byEmoji.has(emojiKey(emoji))) byEmoji.set(emojiKey(emoji), t.name);
@@ -445,16 +447,20 @@ export const topic = (name: TopicName): Topic => topics.find((t) => t.name === n
 
 function wordMatch(name: string, words: string[], keyword: string): boolean {
   if (keyword.includes(" ")) return name.includes(keyword.replace("*", ""));
+
   if (keyword.endsWith("*")) return words.some((word) => word.startsWith(keyword.slice(0, -1)));
+
   return words.includes(keyword);
 }
 
 /** The topic the emoji points at, or the name when the emoji says nothing. */
 export function topicFor(glyph: string | null, name?: string): TopicName | undefined {
   const byGlyph = glyph ? byEmoji.get(emojiKey(glyph)) : undefined;
+
   if (byGlyph || !name) return byGlyph;
   const lower = name.toLowerCase();
   const words = lower.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+
   return topics.find((t) => t.words.some((keyword) => wordMatch(lower, words, keyword)))?.name;
 }
 
@@ -477,5 +483,6 @@ export function dress(
   picked?: Picked | null,
 ): Look {
   const found = picked?.topic ?? topicFor(source.glyph, source.name);
+
   return withTraits(withTraits(base, found && topic(found).look), picked?.traits);
 }

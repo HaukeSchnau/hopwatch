@@ -7,6 +7,7 @@
   "use strict";
 
   const DATA = window.JellyData;
+
   if (!DATA) return;
   document.documentElement.classList.add("js-jelly");
 
@@ -36,6 +37,7 @@
     plum: { light: "#5B4677", fill: "#3A2852", deep: "#1E1230" },
     pinkEar: { light: "#FFD0E2", fill: "#FFA6C8", deep: "#F07AA8" },
   };
+
   const HUES = [
     "red",
     "orange",
@@ -50,6 +52,7 @@
     "pink",
     "gray",
   ];
+
   const accentHue = {
     red: "amber",
     orange: "blue",
@@ -76,10 +79,12 @@
   /** FNV-1a, as in src/jelly/geometry.ts. */
   function hashSeed(id) {
     let h = 2166136261;
+
     for (let i = 0; i < id.length; i++) {
       h ^= id.charCodeAt(i);
       h = Math.imul(h, 16777619);
     }
+
     return h >>> 0;
   }
 
@@ -100,9 +105,11 @@
         svg.append(sharedDefs);
         document.body.prepend(svg);
       }
+
       sharedDefs.insertAdjacentHTML("beforeend", markup);
       defined.add(id);
     }
+
     return `url(#${id})`;
   }
 
@@ -113,11 +120,13 @@
           `<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"${cls ? ` class="${cls}"` : ""}/>`,
       )
       .join("");
+
   const vgrad = (id, list) =>
     define(
       id,
       `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops(list)}</linearGradient>`,
     );
+
   const rgrad = (id, list) =>
     define(id, `<radialGradient id="${id}">${stops(list)}</radialGradient>`);
 
@@ -128,17 +137,20 @@
       [0.5, tones[name].fill],
       [1, tones[name].deep],
     ]);
+
   const bodyPaint = (hue) =>
     vgrad(`jb-${hue}`, [
       [0, tones[hue].light],
       [0.48, tones[hue].fill],
       [1, tones[hue].deep],
     ]);
+
   const knot = (name) =>
     vgrad(`jk-${name}`, [
       [0, tones[name].fill],
       [1, tones[name].deep],
     ]);
+
   const lightFill = (name) =>
     vgrad(`jl-${name}`, [
       [0, tones[name].light],
@@ -148,6 +160,7 @@
   /** Registers derived tones (dog ears, knits) under a name. */
   function derived(name, make) {
     if (!tones[name]) tones[name] = make();
+
     return name;
   }
 
@@ -160,24 +173,32 @@
     const i = clamp(y / 2, 0, geo.widths.length - 1);
     const lo = Math.floor(i);
     const hi = Math.min(lo + 1, geo.widths.length - 1);
+
     return geo.widths[lo] + (geo.widths[hi] - geo.widths[lo]) * (i - lo);
   }
 
   const forehead = (geo, t) => geo.crown.y + (geo.face.y - 7 * geo.face.s - geo.crown.y) * t;
+
   const hatScale = (geo, height, sink) =>
     Math.min(clamp(geo.crown.w / 36, 0.85, 1.12) * 1.38, (geo.crown.y + sink - 1.5) / height);
+
   const line = (px) => Math.max(1.9, 1.2 * px);
   const lodFor = (size) => (size < 44 ? 0 : size < 84 ? 1 : 2);
 
   const path = (d, fill, extra = "") => `<path d="${d}" fill="${fill}"${extra}/>`;
+
   const stroke = (d, color, width, extra = "") =>
     `<path d="${d}" fill="none" stroke="${color}" stroke-width="${n(width)}" stroke-linecap="round" stroke-linejoin="round"${extra}/>`;
+
   const circle = (cx, cy, r, fill, extra = "") =>
     `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(r)}" fill="${fill}"${extra}/>`;
+
   const oval = (x, y, w, h, fill, extra = "") =>
     `<ellipse cx="${n(x + w / 2)}" cy="${n(y + h / 2)}" rx="${n(w / 2)}" ry="${n(h / 2)}" fill="${fill}"${extra}/>`;
+
   const rrect = (x, y, w, h, r, fill, extra = "") =>
     `<rect x="${n(x)}" y="${n(y)}" width="${n(w)}" height="${n(h)}" rx="${n(r)}" fill="${fill}"${extra}/>`;
+
   const g = (transform, inner, extra = "") =>
     `<g${transform ? ` transform="${transform}"` : ""}${extra}>${inner}</g>`;
 
@@ -185,8 +206,10 @@
 
   const EX = 12.5;
   const EY = -1;
+
   const closedArcs = (dx, y, w, depth) =>
     `M ${-dx - w} ${y} Q ${-dx} ${y + depth} ${-dx + w} ${y} M ${dx - w} ${y} Q ${dx} ${y + depth} ${dx + w} ${y}`;
+
   /** A moving eye: glances by `r`, blinks around its centre. */
   const eye = (x, y, r, inner) =>
     `<g data-k="eye" data-x="${x}" data-y="${y}" data-r="${r}">${inner}</g>`;
@@ -194,6 +217,7 @@
   function dotEyes(c, r = 3.8, dx = EX) {
     const pupil =
       circle(0, 0, r, INK) + (c.lod > 0 ? circle(-r * 0.34, -r * 0.36, r * 0.36, "#fff") : "");
+
     return (
       stroke(closedArcs(dx, EY, r * 1.08, r * 1.35), INK, line(c.px), ' data-k="shut"') +
       `<g data-k="open">${eye(-dx, EY, r * 0.5, pupil)}${eye(dx, EY, r * 0.5, pupil)}</g>`
@@ -205,15 +229,19 @@
     shiny(c) {
       const dx = 13;
       const w = line(c.px);
+
       const fill = vgrad("j-shiny", [
         [0, INK],
         [1, "#4B3470"],
       ]);
+
       const ball =
         oval(-4.6, -5.6, 9.2, 11.2, fill) +
         circle(-1.5, -2.3, c.lod > 0 ? 1.9 : 1.6, "#fff") +
         (c.lod > 0 ? circle(1.7, 2.3, 0.95, "rgba(255,255,255,0.9)") : "");
+
       const lashes = `M ${dx + 4.8} ${EY} l 2 -1.6 M ${-dx - 4.8} ${EY} l -2 -1.6`;
+
       return (
         `<g data-k="shut">${stroke(closedArcs(dx, EY, 4.8, 5.4), INK, w)}${c.lod > 0 ? stroke(lashes, INK, w * 0.8) : ""}</g>` +
         `<g data-k="open">${eye(-dx, EY - 0.6, 2, ball)}${eye(dx, EY - 0.6, 2, ball)}</g>`
@@ -224,6 +252,7 @@
       const dx = 13;
       const ring = Math.max(0.9, 0.75 * c.px);
       const lid = lightFill(c.hue);
+
       const shut = [-dx, dx]
         .map((x) =>
           g(
@@ -234,23 +263,29 @@
           ),
         )
         .join("");
+
       const pupil = `<g data-k="pupil" data-gx="3" data-gy="2.4" data-oy="1.1">${circle(0, 0, 3.4, INK)}${c.lod > 0 ? circle(-1.1, -1.2, 0.95, "#fff") : ""}</g>`;
+
       const open = [-dx, dx]
         .map(
           (x) =>
             `<g data-k="lid" data-x="${x}" data-y="${EY - 1}">${circle(0, 0, r, "#fff")}${circle(0, 0, r, "none", ` stroke="${INK}" stroke-width="${n(ring)}"`)}${pupil}</g>`,
         )
         .join("");
+
       return `<g data-k="shut">${shut}</g><g data-k="open">${open}</g>`;
     },
     sleepy(c) {
       const r = 4.2;
       const w = line(c.px);
       const lid = `M ${-r - 1.2} 0.9 Q 0 ${-r * 0.55} ${r + 1.2} 0.9`;
+
       const clip = c.local(
         `<clipPath id="${c.uid}-lid"><path d="${lid} L ${r + 2} ${r + 2} L ${-r - 2} ${r + 2} Z"/></clipPath>`,
       );
+
       const ball = `<g clip-path="${clip}">${circle(0, 0.6, r, INK)}${c.lod > 0 ? circle(-1.3, 1.9, 0.95, "#fff") : ""}</g>${stroke(lid, INK, w)}`;
+
       return (
         stroke(
           `M ${-EX - 4.4} ${EY + 0.8} Q ${-EX} ${EY + 2.8} ${-EX + 4.4} ${EY + 0.8} M ${EX - 4.4} ${EY + 0.8} Q ${EX} ${EY + 2.8} ${EX + 4.4} ${EY + 0.8}`,
@@ -263,6 +298,7 @@
     happy(c) {
       const w = line(c.px) * 1.05;
       const arc = stroke("M -4.2 1.8 Q 0 -4.2 4.2 1.8", INK, w);
+
       return (
         stroke(closedArcs(EX, EY, 4, 4.8), INK, w, ' data-k="shut"') +
         `<g data-k="open">${eye(-EX, EY, 1.6, arc)}${eye(EX, EY, 1.6, arc)}</g>`
@@ -273,11 +309,14 @@
       const y = -3.6;
       const ring = Math.max(0.9, 0.75 * c.px);
       const w = line(c.px);
+
       const iris = vgrad(`jd-${c.hue}`, [
         [0, tones[c.hue].deep],
         [1, tones[c.hue].fill],
       ]);
+
       const lashes = "M -4.6 1.9 l -1.3 2 M 0 2.7 l 0 2.2 M 4.6 1.9 l 1.3 2";
+
       return (
         `<g data-k="shut" transform="translate(0 ${y + 1})">${stroke(`M ${-r} -1 Q 0 ${r * 0.72} ${r} -1`, INK, w * 1.05)}${c.lod > 0 ? stroke(lashes, INK, w * 0.75) : ""}</g>` +
         `<g data-k="open"><g data-k="lid" data-x="0" data-y="${y}">${circle(0, 0, r, "#fff")}${circle(0, 0, r, "none", ` stroke="${INK}" stroke-width="${n(ring)}"`)}` +
@@ -289,6 +328,7 @@
       const r = 7.6;
       const frame = Math.max(1.4, 0.95 * c.px);
       const lens = (x) => circle(x, EY, r, "none", ` stroke="${INK}" stroke-width="${n(frame)}"`);
+
       return (
         dotEyes(c, 3.1, dx) +
         (c.lod > 0
@@ -308,18 +348,22 @@
     },
     shades(c) {
       const dx = 11.8;
+
       const lensPath =
         "M -6.8 -4.4 L 6.8 -4.4 Q 7.7 -4.4 7.5 -3.2 L 6.5 2.3 Q 5.7 5.5 2 5.5 L -2 5.5 Q -5.7 5.5 -6.5 2.3 L -7.5 -3.2 Q -7.7 -4.4 -6.8 -4.4 Z";
+
       const lens = vgrad("j-shades", [
         [0, "#4A3566"],
         [1, INK],
       ]);
+
       const glass = (x) =>
         g(
           `translate(${x} 0)`,
           path(lensPath, lens) +
             (c.lod > 0 ? stroke("M -4.8 1.8 L -1.4 -2.6", "rgba(255,255,255,0.55)", 1.3) : ""),
         );
+
       return (
         stroke(closedArcs(EX, EY + 0.5, 4, 4.8), INK, line(c.px), ' data-k="shut"') +
         `<g data-k="shades">${rrect(-dx + 5, -4.5, 2 * dx - 10, 2.2, 1.1, INK)}${glass(-dx)}${glass(dx)}</g>`
@@ -337,19 +381,23 @@
     glasses: 1,
     shades: 0.6,
   };
+
   const GRIN = "M -7 7.2 Q 0 8.8 7 7.2 Q 6.4 15.8 0 15.8 Q -6.4 15.8 -7 7.2 Z";
   const SMILE = "M -5.5 7.5 Q 0 13 5.5 7.5";
 
   function mouthShape(style, c, px) {
     const w = line(px);
     const s = (d, width = w) => stroke(d, INK, width);
+
     switch (style) {
       case "smile":
         return s(SMILE);
       case "grin": {
         const clip = c.local(`<clipPath id="${c.uid}-grin"><path d="${GRIN}"/></clipPath>`);
+
         return `<g clip-path="${clip}">${path(GRIN, INK)}${c.lod > 0 ? `<rect x="-8" y="6" width="16" height="3.8" fill="#fff"/>` : ""}${oval(-4, 12, 8, 5.6, TONGUE)}</g>`;
       }
+
       case "cat":
         return s("M -6 7.8 Q -3 11.8 0 8.6 Q 3 11.8 6 7.8");
       case "o":
@@ -393,6 +441,7 @@
   function cheeks(c, freckles, spread) {
     if (c.lod === 0) return "";
     const pale = c.hue === "pink" || c.hue === "red";
+
     const blush = pale
       ? rgrad("j-blush-w", [
           [0, "#fff", 0.34],
@@ -404,9 +453,12 @@
           [0.55, "#FF6092", 0.32],
           [1, "#FF6092", 0],
         ]);
+
     let out = [-1, 1].map((side) => oval(side * spread - 5.4, 1.6, 10.8, 6.4, blush)).join("");
+
     if (freckles) {
       const dot = alpha(tones[c.hue].deep, 0.75);
+
       for (const [x, y] of [
         [15.8, 6.6],
         [18.2, 4.6],
@@ -416,6 +468,7 @@
         for (const side of [-1, 1]) out += circle(side * (x + spread - 19.5), y, 0.8, dot);
       }
     }
+
     return out;
   }
 
@@ -447,6 +500,7 @@
               candy("pinkEar"),
             )
           : "");
+
       return pair(
         geo,
         inner,
@@ -460,10 +514,12 @@
       const inner =
         path("M 0 -7 A 7 7 0 1 1 0 7 A 7 7 0 1 1 0 -7 Z", candy(c.hue)) +
         (c.lod > 0 ? circle(0.4, -0.2, 3.6, mix(tones[c.hue].light, "#FFB9D2", 0.45)) : "");
+
       return pair(geo, inner, geo.ear.dx * 0.98, geo.ear.y + 2, 0, 1.25);
     },
     bunnyEars(geo, c) {
       const s = Math.min(1.3, (geo.crown.y + 4) / 23.4);
+
       const ear = (side, lean) =>
         g(
           `translate(${n(geo.crown.x + side * 7.5 * s)} ${n(geo.crown.y + 5)}) rotate(${side * lean}) scale(${n(s)})`,
@@ -475,19 +531,23 @@
                 )
               : ""),
         );
+
       return ear(-1, 9) + ear(1, 17);
     },
     dogEars(geo, c) {
       const t = tones[c.hue];
+
       const name = derived(`dogEar-${c.hue}`, () => ({
         light: t.fill,
         fill: t.deep,
         deep: mix(t.deep, INK, 0.35),
       }));
+
       const inner = path(
         "M -4 0.5 C -2 -3.6 6.4 -4.4 10.6 1.6 C 14.4 7.2 14.8 16.4 12.6 21.2 C 10.8 25.2 6.2 25 4.4 21.4 C 2.4 17.4 2.6 10.8 -0.6 6.4 C -2.4 4 -5 3 -4 0.5 Z",
         candy(name),
       );
+
       return pair(
         geo,
         inner,
@@ -509,6 +569,7 @@
     },
     tuft(geo, c) {
       const s = hatScale(geo, 11, 2.6);
+
       return g(
         `translate(${geo.crown.x + 1} ${n(geo.crown.y + 2.6)}) scale(${n(s)})`,
         stroke(
@@ -520,6 +581,7 @@
     },
     sprout(geo, c) {
       const s = hatScale(geo, 17.6, 2.4);
+
       return g(
         `translate(${geo.crown.x} ${n(geo.crown.y + 2.4)}) scale(${n(s)})`,
         stroke("M 0 1.5 C 0 -3 -0.6 -6 0.4 -9.5", tones.leaf.deep, Math.max(2.1, 1.1 * c.px)) +
@@ -542,12 +604,15 @@
     },
     flower(geo, c) {
       const s = hatScale(geo, 9, 3.4);
+
       const petals = [0, 1, 2, 3, 4]
         .map((i) => {
           const a = ((i * 72 - 90) * Math.PI) / 180;
+
           return circle(Math.cos(a) * 4.5, Math.sin(a) * 4.5, 3.8, lightFill(c.accent));
         })
         .join("");
+
       return g(
         `translate(${n(geo.crown.x + geo.crown.w * 0.3)} ${n(geo.crown.y + 3.4)}) rotate(${n(0.3 * DEG)}) scale(${n(s)})`,
         petals +
@@ -565,6 +630,7 @@
     },
     antenna(geo, c) {
       const s = hatScale(geo, 18.6, 2.6);
+
       return g(
         `translate(${geo.crown.x} ${n(geo.crown.y + 2.6)}) rotate(${n(0.12 * DEG)}) scale(${n(s)})`,
         `<g data-k="bob">${stroke("M 0 1 Q -1.2 -6 1.2 -12.5", tones.plum.fill, Math.max(1.9, 1.1 * c.px))}${path("M 1.4 -18.4 A 3.8 3.8 0 1 1 1.4 -10.8 A 3.8 3.8 0 1 1 1.4 -18.4 Z", candy(c.accent))}${
@@ -574,6 +640,7 @@
     },
     bow(geo, c) {
       const s = hatScale(geo, 7, 3.6);
+
       return g(
         `translate(${n(geo.crown.x + geo.crown.w * 0.24)} ${n(geo.crown.y + 3.6)}) rotate(${n(0.3 * DEG)}) scale(${n(s)})`,
         path("M 0 0 C -3 -6.4 -11 -7.4 -11.6 -1.2 C -12 4.6 -4.4 5.4 0 0 Z", candy(c.accent)) +
@@ -590,6 +657,7 @@
     },
     partyHat(geo, c) {
       const s = hatScale(geo, 26, 4.6);
+
       const dots =
         c.lod > 0
           ? [
@@ -602,6 +670,7 @@
               .map(([x, y, r]) => circle(x, y, r, "rgba(255,255,255,0.85)"))
               .join("")
           : "";
+
       return g(
         `translate(${geo.crown.x + 2} ${n(geo.crown.y + 4.6)}) rotate(${n(0.2 * DEG)}) scale(${n(s)})`,
         path("M -9 1 L -0.9 -21.4 Q 0 -22.8 0.9 -21.4 L 9 1 Q 0 3.8 -9 1 Z", candy(c.accent)) +
@@ -612,6 +681,7 @@
     },
     chefHat(geo, c) {
       const s = hatScale(geo, 24.6, 6.4);
+
       return g(
         `translate(${geo.crown.x} ${n(geo.crown.y + 6.4)}) scale(${n(s)})`,
         path(
@@ -637,6 +707,7 @@
     },
     crown(geo, c) {
       const s = hatScale(geo, 14, 4);
+
       const jewels =
         c.lod > 0
           ? [
@@ -649,6 +720,7 @@
             oval(-2, -4.8, 4, 4.8, "#FF4F86") +
             circle(-0.7, -3.6, 0.7, "rgba(255,255,255,0.9)")
           : "";
+
       return g(
         `translate(${geo.crown.x + 1} ${n(geo.crown.y + 4)}) rotate(${n(-0.12 * DEG)}) scale(${n(s)})`,
         path(
@@ -666,6 +738,7 @@
       const peak = Math.max(3, geo.top - 3.4);
       const ctrl = (peak - 0.25 * endY) / 0.75;
       const band = `M ${n(x - dx)} ${n(endY)} C ${n(x - dx)} ${n(ctrl)} ${n(x + dx)} ${n(ctrl)} ${n(x + dx)} ${n(endY)}`;
+
       const cups = [-1, 1]
         .map((side) =>
           g(
@@ -678,6 +751,7 @@
           ),
         )
         .join("");
+
       return (
         stroke(band, tones.plum.fill, Math.max(4.2, 1.5 * c.px)) +
         (c.lod > 1
@@ -688,6 +762,7 @@
     },
     halo(geo, c) {
       const y = Math.max(5, geo.top - 5);
+
       return g(
         `translate(${geo.crown.x} ${n(y)})`,
         `<g data-k="halo">${c.lod > 0 ? oval(-14, -4, 28, 8, "none", ' stroke="rgba(255,226,110,0.45)" stroke-width="5"') : ""}${oval(-14, -4, 28, 8, "none", ` stroke="${candy("gold")}" stroke-width="${n(Math.max(2.8, 1.2 * c.px))}"`)}</g>`,
@@ -696,9 +771,11 @@
     sweatband(geo, c) {
       const y = forehead(geo, 0.52);
       const k = 1.05;
+
       const clip = c.local(
         `<clipPath id="${c.uid}-band"><path d="${geo.d}" transform="matrix(${k} 0 0 ${k} ${n(geo.crown.x * (1 - k))} ${n(y * (1 - k))})"/></clipPath>`,
       );
+
       const grad = c.local(
         `<linearGradient id="${c.uid}-sweat" gradientUnits="userSpaceOnUse" x1="0" y1="${n(y - 4)}" x2="0" y2="${n(y + 8)}">${stops(
           [
@@ -708,8 +785,10 @@
           ],
         )}</linearGradient>`,
       );
+
       const curve = (dy) =>
         `M ${n(geo.left - 3)} ${n(y + dy)} Q ${geo.crown.x} ${n(y + dy + 5)} ${n(geo.right + 3)} ${n(y + dy)}`;
+
       return (
         `<g clip-path="${clip}">${stroke(curve(0), grad, 9, ' stroke-linecap="butt"')}${c.lod > 0 ? stroke(`${curve(-2.1)} ${curve(2.1)}`, "rgba(255,255,255,0.9)", 1.3, ' stroke-linecap="butt"') : ""}</g>` +
         (c.lod > 1
@@ -726,6 +805,7 @@
     },
     gradCap(geo, c) {
       const s = hatScale(geo, 12.4, 4.4);
+
       return g(
         `translate(${geo.crown.x} ${n(geo.crown.y + 4.4)}) rotate(${n(-0.08 * DEG)}) scale(${n(s)})`,
         path("M -9 -3.5 L -9 1.4 Q 0 4.4 9 1.4 L 9 -3.5 Z", candy("plum")) +
@@ -744,18 +824,23 @@
       const hw = Math.min(widthOf(geo, cut) / 2 + 2.6, Math.max(22, geo.crown.w * 0.85));
       const top = Math.max(12, geo.top - 7);
       const a = tones[c.accent];
+
       const knit = derived(`knit-${c.accent}`, () => ({
         light: mix(a.light, "#FFFFFF", 0.25),
         fill: a.light,
         deep: a.fill,
       }));
+
       const dome = `M ${n(x - hw)} ${n(cut)} C ${n(x - hw)} ${n(top + 7)} ${n(x - hw * 0.6)} ${n(top)} ${x} ${n(top)} C ${n(x + hw * 0.6)} ${n(top)} ${n(x + hw)} ${n(top + 7)} ${n(x + hw)} ${n(cut)} Z`;
       const rim = `M ${n(x - hw - 1.2)} ${n(cut - 6)} Q ${x} ${n(cut - 2.6)} ${n(x + hw + 1.2)} ${n(cut - 6)} L ${n(x + hw + 1.2)} ${n(cut + 0.4)} Q ${x} ${n(cut + 4)} ${n(x - hw - 1.2)} ${n(cut + 0.4)} Z`;
       const rib = `M ${n(x - hw - 1.2)} ${n(cut - 2.8)} Q ${x} ${n(cut + 0.7)} ${n(x + hw + 1.2)} ${n(cut - 2.8)}`;
+
       const domeClip =
         c.lod > 1 ? c.local(`<clipPath id="${c.uid}-dome"><path d="${dome}"/></clipPath>`) : "";
+
       const rimClip =
         c.lod > 0 ? c.local(`<clipPath id="${c.uid}-rim"><path d="${rim}"/></clipPath>`) : "";
+
       return (
         path(dome, candy(c.accent)) +
         (c.lod > 1
@@ -775,15 +860,18 @@
       const s = hatScale(geo, 14.4, 4.2);
       const dome = "M -9.5 1 C -9.5 -5.4 -5 -8.6 0 -8.6 C 5 -8.6 9.5 -5.4 9.5 1 Q 0 3 -9.5 1 Z";
       const clip = c.local(`<clipPath id="${c.uid}-prop"><path d="${dome}"/></clipPath>`);
+
       const shine = vgrad("j-shine", [
         [0, "#fff", 0.45],
         [0.5, "#fff", 0],
         [1, "#000", 0.15],
       ]);
+
       const blade = vgrad(`jbl-${c.accent}`, [
         [0, tones[c.accent].light],
         [1, tones[c.accent].deep],
       ]);
+
       return g(
         `translate(${geo.crown.x} ${n(geo.crown.y + 4.2)}) rotate(${n(0.1 * DEG)}) scale(${n(s)})`,
         `<g clip-path="${clip}"><rect x="-10" y="-10" width="6.8" height="14" fill="#FF5C6C"/><rect x="-3.2" y="-10" width="6.4" height="14" fill="${tones.gold.fill}"/><rect x="3.2" y="-10" width="6.8" height="14" fill="#4B8BFF"/>${path(dome, shine)}</g>` +
@@ -798,10 +886,13 @@
 
   function band(geo, c, y, thickness, toneName, stripes, key) {
     const k = 1.05;
+
     const clip = c.local(
       `<clipPath id="${c.uid}-${key}"><path d="${geo.d}" transform="matrix(${k} 0 0 ${k} ${n(geo.face.x * (1 - k))} ${n(y * (1 - k))})"/></clipPath>`,
     );
+
     const t = tones[toneName];
+
     const grad = c.local(
       `<linearGradient id="${c.uid}-${key}g" gradientUnits="userSpaceOnUse" x1="0" y1="${n(y - thickness / 2)}" x2="0" y2="${n(y + thickness / 2 + 2)}">${stops(
         [
@@ -811,7 +902,9 @@
         ],
       )}</linearGradient>`,
     );
+
     const curve = `M ${n(geo.left - 4)} ${n(y - 1.2)} Q ${geo.face.x} ${n(y + 3.4)} ${n(geo.right + 4)} ${n(y - 1.2)}`;
+
     return `<g clip-path="${clip}">${stroke(curve, grad, thickness, ' stroke-linecap="butt"')}${
       stripes
         ? stroke(
@@ -827,12 +920,15 @@
   function neckwear(geo, c, neck) {
     const x = geo.face.x;
     const y = geo.neck.y;
+
     const s =
       Math.min(1, Math.max(0.72, geo.neck.w / 56)) *
       geo.face.s *
       Math.min(1.3, Math.max(0.75, geo.neck.room / 11));
+
     const at = (dx, dy, extra = "") =>
       `translate(${n(x + dx)} ${n(y + dy)})${extra} scale(${n(s)})`;
+
     switch (neck) {
       case "bowtie":
         return g(
@@ -849,8 +945,10 @@
         );
       case "tie": {
         const blade = "M -2 2.2 L 2 2.2 L 3.9 12.4 L 0 16.2 L -3.9 12.4 Z";
+
         const bladeClip =
           c.lod > 0 ? c.local(`<clipPath id="${c.uid}-tie"><path d="${blade}"/></clipPath>`) : "";
+
         return `<g clip-path="url(#${c.uid}-body)">${g(
           at(0, -2.4),
           path(blade, candy(c.accent)) +
@@ -860,6 +958,7 @@
             path("M -3 -2.2 L 3 -2.2 L 2.1 2.4 L -2.1 2.4 Z", candy(c.accent)),
         )}</g>`;
       }
+
       case "scarf":
         return (
           band(geo, c, y, 6.6, c.accent, c.lod > 0, "scarf") +
@@ -931,6 +1030,7 @@
   function coat(geo, c, surface) {
     const spots = geo.spots[surface] || [];
     const t = tones[c.hue];
+
     switch (surface) {
       case "sprinkles":
         return c.lod === 0
@@ -973,11 +1073,13 @@
               .join("");
       case "belly": {
         const h = geo.bottom - geo.top;
+
         const fill = rgrad(`jbe-${c.hue}`, [
           [0, t.light, 0.62],
           [0.7, t.light, 0.55],
           [1, t.light, 0],
         ]);
+
         return oval(
           geo.face.x - geo.neck.w * 0.38,
           geo.bottom - h * 0.43,
@@ -986,6 +1088,7 @@
           fill,
         );
       }
+
       case "sparkle":
         return spots
           .slice(0, c.lod === 0 ? 1 : 3)
@@ -1014,6 +1117,7 @@
     const lod = lodFor(size);
     const uid = `jy${++uidCounter}`;
     const local = [];
+
     const c = {
       hue,
       accent: accentHue[hue],
@@ -1023,9 +1127,11 @@
       local(markup) {
         local.push(markup);
         const id = markup.match(/id="([^"]+)"/)[1];
+
         return `url(#${id})`;
       },
     };
+
     const t = tones[hue];
     const h = geo.bottom - geo.top;
     const w = geo.right - geo.left;
@@ -1039,19 +1145,23 @@
       [0.6, t.deep, 0.2, "jglow-mid"],
       [1, t.deep, 0],
     ]);
+
     const rim = vgrad("j-rim", [
       [0, "#fff", 0.7],
       [0.22, "#fff", 0.15],
       [0.4, "#fff", 0],
     ]);
+
     const shade = vgrad(`jsd-${hue}`, [
       [0.5, t.deep, 0],
       [1, t.deep, 0.55],
     ]);
+
     const inner = rgrad(`jin-${hue}`, [
       [0, t.light, 0.55],
       [1, t.light, 0],
     ]);
+
     const gloss = rgrad("j-gloss", [
       [0, "#fff", 0.8],
       [0.62, "#fff", 0.7],
@@ -1060,8 +1170,10 @@
 
     const topper =
       look.topper !== "none" && toppers[look.topper] ? toppers[look.topper](geo, c) : "";
+
     const behind = BEHIND.has(look.topper);
     const crown = geo.crown;
+
     const sparkles =
       lod > 0
         ? [
@@ -1125,14 +1237,18 @@
     const ay = 3 * y1 - 3 * y2 + 1;
     const by = 3 * y2 - 6 * y1;
     const cy = 3 * y1;
+
     return (x) => {
       let t = x;
+
       for (let i = 0; i < 6; i++) {
         const fx = ((ax * t + bx) * t + cx) * t - x;
         const d = (3 * ax * t + 2 * bx) * t + cx;
+
         if (Math.abs(d) < 1e-6) break;
         t = clamp(t - fx / d, 0, 1);
       }
+
       return ((ay * t + by) * t + cy) * t;
     };
   }
@@ -1169,8 +1285,11 @@
   function tick(now) {
     const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
     lastTime = now;
+
     for (const value of [...active]) value.advance(dt);
+
     for (const hook of [...frameHooks]) if (hook(now) === false) frameHooks.delete(hook);
+
     for (const ch of dirty) ch.render();
     dirty.clear();
     frame = active.size || frameHooks.size ? requestAnimationFrame(tick) : 0;
@@ -1194,16 +1313,19 @@
       this.q = [];
       this.vel = 0;
       active.delete(this);
+
       if (v !== this.v) {
         this.v = v;
         this.onChange?.();
       }
+
       return this;
     }
     go(...steps) {
       this.q = steps.map((s) => ({ ...s }));
       active.add(this);
       kick();
+
       return this;
     }
     get busy() {
@@ -1211,50 +1333,63 @@
     }
     advance(dt) {
       const before = this.v;
+
       while (this.q.length) {
         const s = this.q[0];
+
         if (!s.started) {
           s.started = true;
           s.t = 0;
           s.from = this.v;
         }
+
         if (s.call) {
           this.q.shift();
           s.call();
           continue;
         }
+
         if (s.wait !== undefined) {
           const left = s.wait / 1000 - s.t;
+
           if (dt < left) {
             s.t += dt;
             dt = 0;
             break;
           }
+
           dt -= left;
           this.vel = 0;
           this.q.shift();
           continue;
         }
+
         if (s.spring) {
           const { damping, stiffness, mass = 1 } = s.spring;
           let x = this.v;
           let v = this.vel;
+
           for (let left = dt; left > 0; left -= 1 / 240) {
             const h = Math.min(1 / 240, left);
             v += ((-stiffness * (x - s.to) - damping * v) / mass) * h;
             x += v * h;
           }
+
           this.v = x;
           this.vel = v;
+
           if (Math.abs(x - s.to) < 0.0008 && Math.abs(v) < 0.02) {
             this.v = s.to;
             this.vel = 0;
             this.q.shift();
           }
+
           break;
         }
+
         const span = s.ms / 1000;
         const prev = this.v;
+
         if (s.t + dt >= span) {
           dt -= span - s.t;
           this.v = s.to;
@@ -1262,12 +1397,15 @@
           this.q.shift();
           continue;
         }
+
         s.t += dt;
         this.v = s.from + (s.to - s.from) * s.ease(s.t / span);
         this.vel = dt > 0 ? (this.v - prev) / dt : 0;
         break;
       }
+
       if (!this.q.length) active.delete(this);
+
       if (this.v !== before) this.onChange?.();
     }
   }
@@ -1295,6 +1433,7 @@
       ]),
       S(0, springs.wobble),
     );
+
     return 660 * heights.length + 200;
   }
 
@@ -1303,6 +1442,7 @@
     v.yawn.go(T(1, 420), W(520), T(0, 320));
     v.blink.go(T(0.3, 380), W(700), T(1, 260));
     v.squash.go(T(-0.07, 420), W(520), S(0, springs.soft));
+
     return 1500;
   }
 
@@ -1316,11 +1456,13 @@
     );
     v.hop.go(W(1900), T(0.22, 90), T(0, 160));
     v.lookY.go(T(0.4, 900), W(1000), T(0, 150));
+
     return 2400;
   }
 
   function shiver(ch) {
     ch.v.shiver.go(...[1, -1, 1, -1, 0.7, -0.7, 0.4, 0].map((x) => T(x, 42)));
+
     return 400;
   }
 
@@ -1329,6 +1471,7 @@
     v.puff.go(T(1, 520, ease.outCubic), W(900), S(0, springs.wobble));
     v.lookY.go(T(-0.7, 400), W(1050), T(0, 300));
     v.blink.go(T(0.55, 300), W(1150), T(1, 200));
+
     return 1800;
   }
 
@@ -1338,6 +1481,7 @@
     v.tilt.go(S(side * 10, springs.soft), W(1300), S(0, springs.soft));
     v.lookX.go(S(side * 0.9, springs.soft), W(1300), S(0, springs.soft));
     v.lookY.go(T(-0.3, 300), W(1300), T(0, 300));
+
     return 2000;
   }
 
@@ -1350,12 +1494,14 @@
       T(0.5, 2000, ease.inOutSin),
       T(0, 1100, ease.inOutSin),
     );
+
     return 4200;
   }
 
   function wiggle(ch) {
     ch.v.tilt.go(...[-7, 7, -6, 6, -4, 3, 0].map((x) => T(x, 95)));
     ch.v.squash.go(...[0.06, -0.04, 0.05, -0.03, 0].map((x) => T(x, 130)));
+
     return 700;
   }
 
@@ -1421,10 +1567,12 @@
   /* ---------- Characters ---------- */
 
   const all = new Set();
+
   const seen = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
         const ch = e.target.jelly;
+
         if (ch) ch.visible = e.isIntersecting;
         e.target.classList.toggle("is-offscreen", !e.isIntersecting);
       }
@@ -1485,6 +1633,7 @@
     build() {
       this.move.innerHTML = drawJelly(this.spec, this.size, this.shadow);
       const sticker = this.showSticker && this.spec.glyph;
+
       if (sticker) {
         const badge = Math.max(23, this.size * 0.32);
         const s = document.createElement("span");
@@ -1496,6 +1645,7 @@
       } else {
         this.sticker = null;
       }
+
       this.parts = [...this.move.querySelectorAll("[data-k]")].map((el) => ({
         el,
         k: el.dataset.k,
@@ -1517,10 +1667,12 @@
       const sx = (1 + v.puff.v * 0.07 + v.squash.v * 0.12) * (1 + plop * 0.7);
       const sy = (1 + v.puff.v * 0.07 - v.squash.v * 0.12) * (1 - plop);
       const transform = `translate(${n(v.shiver.v * s * 0.014)}px,${n(-v.hop.v * s * 0.14 - v.lift.v)}px) rotate(${n(v.tilt.v)}deg) scale(${n(sx * 1000) / 1000},${n(sy * 1000) / 1000})`;
+
       if (force || transform !== this.lastMove) {
         this.move.style.transform = transform;
         this.lastMove = transform;
       }
+
       const awake = v.awake.v;
       const blink = Math.max(0.06, v.blink.v);
       const lx = v.lookX.v;
@@ -1528,9 +1680,11 @@
       const yawnV = v.yawn.v;
       const dress = v.dress.v;
       const pop = dress >= 0.999 ? 0 : Math.sin(Math.PI * Math.min(1, Math.max(0, dress)));
+
       for (const p of this.parts) {
         let attr = "transform";
         let val;
+
         switch (p.k) {
           case "open":
             attr = "opacity";
@@ -1545,6 +1699,7 @@
             val = `translate(${n(+p.d.x + lx * r)} ${n(+p.d.y + ly * r * 0.8)}) scale(1 ${n(blink)})`;
             break;
           }
+
           case "lid":
             val = `translate(${p.d.x} ${p.d.y}) scale(1 ${n(blink)})`;
             break;
@@ -1556,6 +1711,7 @@
             val = `translate(${n(lx * 1.2)} ${n(EY - up * 13)}) scale(${n(1 - up * 0.12)})`;
             break;
           }
+
           case "mouth":
             attr = "opacity";
             val = n(1 - yawnV);
@@ -1565,6 +1721,7 @@
             break;
           case "dress":
             val = `translate(0 ${n(-(1 - dress) * 16)})`;
+
             if (force || val !== p.last) p.el.setAttribute("opacity", n(clamp(dress * 2.5, 0, 1)));
             break;
           case "sparkles":
@@ -1576,6 +1733,7 @@
             val = `translate(${p.d.x} ${p.d.y}) scale(${n(sc)}) rotate(${n(pop * DEG)})`;
             break;
           }
+
           case "body":
             attr = "fill-opacity";
             val = n(v.fade.v);
@@ -1583,6 +1741,7 @@
           default:
             continue;
         }
+
         if (force || val !== p.last) {
           p.el.setAttribute(attr, val);
           p.last = val;
@@ -1615,12 +1774,14 @@
     perform() {
       const ms = this.personality.move(this);
       this.busyUntil = performance.now() + ms;
+
       return ms;
     }
 
     /** Glances toward a point on screen, like the app's random glances but aimed. */
     lookAt(x, y, hold = 2200) {
       const r = this.el.getBoundingClientRect();
+
       if (!r.width) return;
       const dx = x - (r.left + r.width / 2);
       const dy = y - (r.top + r.height * 0.6);
@@ -1638,20 +1799,27 @@
       for (const t of this.timers) clearTimeout(t);
       this.timers.clear();
       this.isLively = on;
+
       if (!on) return;
+
       const later = (ms, fn) => {
         const t = setTimeout(() => {
           this.timers.delete(t);
+
           if (this.isLively) fn();
         }, ms);
+
         this.timers.add(t);
       };
+
       const pause = ([lo, hi]) => lo + Math.random() * (hi - lo);
+
       const free = () =>
         this.visible &&
         !document.hidden &&
         performance.now() > this.busyUntil &&
         this.v.awake.v > 0.5;
+
       const blink = () => {
         if (free() && !this.v.blink.busy) {
           const shut = [T(0, 70), T(1, 110)];
@@ -1659,8 +1827,10 @@
             ...(Math.random() < this.personality.twice ? [...shut, W(90), ...shut] : shut),
           );
         }
+
         later(pause(this.personality.blink), blink);
       };
+
       const glance = () => {
         if (free() && performance.now() > this.followUntil) {
           const centre = Math.random() < 0.35;
@@ -1669,12 +1839,15 @@
           this.v.lookX.go(S(centre ? 0 : (Math.random() * 2 - 1) * reach, spring));
           this.v.lookY.go(S(centre ? 0 : (Math.random() * 1.2 - 0.6) * reach, spring));
         }
+
         later(pause(this.personality.glance), glance);
       };
+
       const move = () => {
         if (free() && !this.calm && !reduceMotion.matches) this.perform();
         later(pause(this.personality.every), move);
       };
+
       later(1200 + Math.random() * 1500, blink);
       later(900 + Math.random() * 2000, glance);
       later(pause(this.personality.every) * 0.5, move);
@@ -1700,18 +1873,22 @@
 
   let pointerFrame = 0;
   const pointer = { x: 0, y: 0 };
+
   function followPointer(e) {
     pointer.x = e.clientX;
     pointer.y = e.clientY;
+
     if (pointerFrame) return;
     pointerFrame = requestAnimationFrame(() => {
       pointerFrame = 0;
+
       for (const ch of all) {
         if (ch.isLively && ch.visible && ch.v.awake.v > 0.5 && performance.now() > ch.busyUntil)
           ch.lookAt(pointer.x, pointer.y);
       }
     });
   }
+
   addEventListener("pointermove", (e) => e.pointerType === "mouse" && followPointer(e), {
     passive: true,
   });
@@ -1722,6 +1899,7 @@
   /** A fresh copy of a cast member's spec, by key. */
   function spec(key) {
     const c = DATA.cast[key];
+
     return c ? { ...c, look: { ...c.look } } : null;
   }
 
@@ -1729,8 +1907,10 @@
   function mount(el, options = {}) {
     if (el.jelly) return el.jelly;
     const s = spec(el.dataset.jelly);
+
     if (!s) return null;
     const size = Number(el.dataset.size) || el.clientWidth || 84;
+
     const ch = new Character(s, {
       size,
       mood: el.dataset.mood || "awake",
@@ -1738,17 +1918,22 @@
       sticker: el.dataset.sticker !== "off" && size >= 36,
       ...options,
     });
+
     el.append(ch.el);
     el.jelly = ch;
+
     if (el.dataset.breathe !== "off") ch.el.classList.add("breathe");
     ch.el.style.setProperty("--phase", `${-(hashSeed(s.seed) % 2300)}ms`);
+
     if ((el.dataset.mood || "awake") === "awake") ch.lively(true);
+
     return ch;
   }
 
   /** A random look for "Surprise me" (derive.ts surpriseLook), on the reroll seed's bodies. */
   function surprise() {
     const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
     const look = {
       body: pick([
         "blob",
@@ -1798,6 +1983,7 @@
       ]),
       motion: pick(Object.keys(personalities)),
     };
+
     return {
       look,
       geo: `${look.body}:${DATA.rerollSeed}`,
@@ -1842,7 +2028,9 @@
   // The footer credit's jelly bows when the credits roll into view, and on a tap or hover.
   for (const credit of document.querySelectorAll("[data-bow]")) {
     const ch = credit.querySelector("[data-jelly]")?.jelly;
+
     if (!ch) continue;
+
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
@@ -1852,6 +2040,7 @@
       },
       { threshold: 1 },
     );
+
     io.observe(credit);
     credit.addEventListener("pointerenter", () => bow(ch));
     credit.addEventListener("click", () => bow(ch));

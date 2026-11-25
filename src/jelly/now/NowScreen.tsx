@@ -21,6 +21,7 @@ export function NowScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const running = useRunning();
+
   return (
     <ScreenTab value="index">
       <View style={[styles.screen, { backgroundColor: t.c.bg }]}>

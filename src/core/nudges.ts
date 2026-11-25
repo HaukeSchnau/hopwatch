@@ -47,25 +47,30 @@ async function setUpChannel() {
 
 function desiredNudge(state: HopwatchState) {
   const open = findOpen(state.entries);
+
   if (!open) return null;
   const context = state.tree.byId.get(open.contextId);
+
   if (!context) return null;
   const fireAt = open.startUtc + context.nudgeMinutes * MINUTE;
   const emoji = context.glyph ? `${context.glyph} ` : "";
   const title = `${emoji}${coreText.nudge.title(context.name)}`;
   const body = coreText.nudge.body(formatDuration(context.nudgeMinutes * MINUTE));
+
   // The text is part of the key, so a rename or a new app language reschedules it.
   return { key: `${open.id}@${fireAt}@${title}@${body}`, fireAt, title, body, entryId: open.id };
 }
 
 async function sync(state: HopwatchState) {
   const want = desiredNudge(state);
+
   if ((want?.key ?? null) === (scheduled?.key ?? null)) return;
 
   // Cancels a native one too, which the meta row doesn't know about.
   await Notifications.cancelScheduledNotificationAsync(NUDGE_ID).catch(() => {});
   scheduled = null;
   db.setMeta("nudge", null);
+
   if (!want || want.fireAt <= Date.now()) return;
 
   if (!(await requestNudgePermission())) return;
@@ -113,6 +118,7 @@ export function startNudges(): () => void {
 
   const saved = db.getMeta("nudge");
   const parsed = saved ? (JSON.parse(saved) as Scheduled & { notificationId?: string }) : null;
+
   // TODO: drop once 1.2.0 has been out a while. Versions up to 1.1.x scheduled the nudge
   // under a random id; cancel that one so it can't fire next to the NUDGE_ID one.
   if (parsed?.notificationId)
@@ -121,12 +127,15 @@ export function startNudges(): () => void {
 
   // Nudges wait for their channel.
   queue = setUpChannel().catch((error) => console.warn("nudge channel failed", error));
+
   const enqueue = (state: HopwatchState) => {
     queue = queue
       .then(() => sync(state))
       .catch((error) => console.warn("nudge sync failed", error));
   };
+
   enqueue(useHopwatch.getState());
+
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries !== prev.entries || state.tree !== prev.tree) enqueue(state);
   });
@@ -135,6 +144,7 @@ export function startNudges(): () => void {
     actions.setIntent({ kind: "stop-sheet" });
     Notifications.clearLastNotificationResponse();
   }
+
   const responses = Notifications.addNotificationResponseReceivedListener((response) => {
     if (isNudge(response)) actions.setIntent({ kind: "stop-sheet" });
   });

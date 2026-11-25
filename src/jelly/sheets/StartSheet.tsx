@@ -25,6 +25,7 @@ export function StartSheet() {
   const entries = useEntries();
   const now = useNow(15_000);
   const ss = useSheetStyles();
+
   const [picked, setPicked] = useState(
     () => new Date(roundDown(Date.now() - 15 * MINUTE, 5 * MINUTE)),
   );
@@ -43,6 +44,7 @@ export function StartSheet() {
 
   const isRunning = running?.context.id === context.id;
   const at = pastAt(picked, now);
+
   const start = (t: number) => {
     if (isRunning && running) {
       // Correcting the running entry's start, earlier or later.
@@ -56,6 +58,7 @@ export function StartSheet() {
       actions.start(context.id, { at: t });
       play("pop");
     }
+
     router.back();
   };
 

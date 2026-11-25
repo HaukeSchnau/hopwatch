@@ -31,12 +31,15 @@ export function TotalsTree({ roots, expanded, onToggle, targets, textFor }: Tota
   const t = useTheme();
   const max = Math.max(1, ...roots.map((r) => r.total));
   const rows: { node: TotalsNode; depth: number }[] = [];
+
   const walk = (nodes: TotalsNode[], depth: number) => {
     for (const node of nodes) {
       rows.push({ node, depth });
+
       if (expanded.has(node.context.id)) walk(node.children, depth + 1);
     }
   };
+
   walk(roots, 0);
 
   return (
@@ -81,6 +84,7 @@ function Row({
   const t = useTheme();
   const c = t.candy[node.context.hue];
   const expandable = node.children.length > 0;
+
   return (
     <View style={[styles.row, { paddingLeft: 12 + depth * 20 }]}>
       <Pressable

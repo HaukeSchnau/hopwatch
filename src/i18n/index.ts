@@ -9,6 +9,7 @@
 import { preferredLanguages } from "./device";
 
 export const languages = ["en", "de"] as const;
+
 export type Language = (typeof languages)[number];
 
 /** The first of the user's preferred languages Hopwatch speaks, the way iOS matches them. */
@@ -16,8 +17,10 @@ export function pickLanguage(preferred: readonly string[]): Language {
   for (const tag of preferred) {
     const code = tag.toLowerCase().split(/[-_]/)[0];
     const match = languages.find((l) => l === code);
+
     if (match) return match;
   }
+
   return "en";
 }
 

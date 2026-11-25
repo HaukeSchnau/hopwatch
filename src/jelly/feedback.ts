@@ -20,6 +20,7 @@ const sources = {
   boop: require("./assets/boop.wav") as number,
   plink: require("./assets/plink.wav") as number,
 };
+
 export type SoundName = keyof typeof sources;
 
 const SOUNDS = "jelly.sounds";
@@ -38,20 +39,25 @@ function ensurePlayers() {
     () => {},
   );
   players = {};
+
   for (const name of Object.keys(sources) as SoundName[]) {
     const player = createAudioPlayer(sources[name]);
     player.volume = 0.45;
     players[name] = player;
   }
+
   return players;
 }
 
 /** Plays one of the candy sounds from the start, if sounds are on. */
 export function play(name: SoundName) {
   const stored = useHopwatch.getState().prefs[SOUNDS];
+
   if (stored !== undefined && parseSounds(stored) === false) return;
+
   try {
     const player = ensurePlayers()[name];
+
     if (!player) return;
     player.seekTo(0);
     player.play();

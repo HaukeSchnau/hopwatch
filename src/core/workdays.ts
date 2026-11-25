@@ -14,6 +14,7 @@ export const noOffDays: OffDays = () => false;
 /** The public holiday on `day` in `region`, or null. */
 export function holidayOn(day: string, region: GermanState | null): HolidayId | null {
   if (!region) return null;
+
   return germanHolidays(Number(day.slice(0, 4)), region).get(day) ?? null;
 }
 
@@ -21,11 +22,15 @@ export function holidayOn(day: string, region: GermanState | null): HolidayId | 
 export function offDaysOf(daysOff: readonly DayOff[], region: GermanState | null): OffDays {
   const marked = new Set(daysOff.filter((o) => o.deletedAt === null).map((o) => o.day));
   const holidays = new Map<number, ReadonlyMap<string, HolidayId>>();
+
   return (day) => {
     if (marked.has(day)) return true;
+
     if (!region) return false;
     const year = Number(day.slice(0, 4));
+
     if (!holidays.has(year)) holidays.set(year, germanHolidays(year, region));
+
     return holidays.get(year)!.has(day);
   };
 }
@@ -40,8 +45,10 @@ export const isJobHours = (c: JobHours): c is { weeklyTargetMinutes: number; wor
 export function dailyTarget(c: JobHours, dayStart: number, offDays: OffDays): number {
   if (!isJobHours(c)) return 0;
   const weekday = weekdayOf(dayStart);
+
   if (!isWorkday(c.workDays, weekday) || offDays(dayKey(dayStart))) return 0;
   const workdays = [0, 1, 2, 3, 4, 5, 6].filter((d) => isWorkday(c.workDays, d)).length;
+
   return (c.weeklyTargetMinutes * MINUTE) / workdays;
 }
 
@@ -57,11 +64,15 @@ export function weekTarget(
   if (!isJobHours(c)) return { target: (c.weeklyTargetMinutes ?? 0) * MINUTE, daysOff: 0 };
   let target = 0;
   let daysOff = 0;
+
   for (let i = 0; i < 7; i++) {
     const day = addDays(weekStart, i);
+
     if (!isWorkday(c.workDays, weekdayOf(day))) continue;
+
     if (offDays(dayKey(day))) daysOff++;
     else target += dailyTarget(c, day, offDays);
   }
+
   return { target, daysOff };
 }

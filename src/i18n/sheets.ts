@@ -5,6 +5,7 @@ import { localized } from ".";
 
 const yesterdayEn = (clock: string, yesterday?: boolean) =>
   yesterday ? `yesterday ${clock}` : clock;
+
 const yesterdayDe = (clock: string, yesterday?: boolean) =>
   yesterday ? `gestern ${clock}` : clock;
 

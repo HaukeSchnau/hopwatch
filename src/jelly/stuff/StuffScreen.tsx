@@ -54,9 +54,11 @@ export function StuffScreen() {
   const addIcon = useHeaderIcon("plus", "add");
   const archivedCount = tree.ordered.filter((c) => c.archivedAt !== null).length;
   const q = query.trim().toLowerCase();
+
   const visible = tree.ordered.filter(
     (c) => (showArchived || !c.hidden) && (!q || pathLabel(c).toLowerCase().includes(q)),
   );
+
   const live = tree.ordered.filter((c) => !c.hidden).length;
 
   return (
@@ -155,6 +157,7 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
   const c = t.candy[context.hue];
   const pinned = context.pinPosition !== null;
   const archived = context.archivedAt !== null;
+
   const meta = [
     running && stuffText.meta.running,
     pinned && stuffText.meta.pinned,
@@ -164,7 +167,9 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
       stuffText.meta.nudgeAfter(formatDuration(context.nudgeAfterMinutes * MINUTE)),
     archived && stuffText.meta.archived,
   ].filter(Boolean);
+
   const depth = flat ? 0 : context.depth;
+
   // Tapping the row edits, so the start menu's own "Edit" item would only repeat it.
   const startItems = useStartMenu(context, now, running).filter(
     (item) => !("id" in item && item.id === "edit"),
@@ -172,13 +177,18 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
 
   const onMenu = (event: string) => {
     if (event === "start") return start();
+
     if (event === "child")
       return router.push({ pathname: "/context", params: { parent: context.id } });
+
     if (event === "pin") return pinned ? actions.unpin(context.id) : actions.pin(context.id);
+
     if (event === "move")
       return router.push({ pathname: "/pick", params: { mode: "parent", id: context.id } });
+
     if (event === "archive")
       return archived ? actions.unarchive(context.id) : actions.archive(context.id);
+
     if (event === "delete") return confirmDelete(context);
     onStartMenu(context.id, event);
   };
@@ -365,6 +375,7 @@ export function confirmDelete(context: ResolvedContext, after?: () => void) {
       onPress: () => {
         const result = actions.deleteContext(context.id);
         buzz.thud();
+
         if (result === "archived")
           Alert.alert(stuffText.archivedInstead, stuffText.archivedInsteadMessage(context.name));
         after?.();

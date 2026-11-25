@@ -43,12 +43,14 @@ export function useEveningSetting() {
   const minutes = useEveningCheck();
   const at = new Date();
   at.setHours(0, minutes ?? DEFAULT_EVENING, 0, 0);
+
   return {
     on: minutes !== null,
     at,
     toggle: (on: boolean) => {
       buzz.tap();
       setEveningCheck(on ? (minutes ?? DEFAULT_EVENING) : null);
+
       if (on) requestNudgePermission();
     },
     setAt: (date: Date) => setEveningCheck(date.getHours() * 60 + date.getMinutes()),
@@ -60,20 +62,24 @@ export function useSlackSetting() {
   const available = useSlackAvailable();
   const link = useSlackLink();
   const [busy, setBusy] = useState(false);
+
   const connect = () => {
     buzz.tap();
     setBusy(true);
     connectSlack()
       .then((result) => {
         if (result === "connected") buzz.success();
+
         if (result === "failed") Alert.alert(slack.failed, slack.failedMessage);
       })
       .finally(() => setBusy(false));
   };
+
   const disconnect = () => {
     buzz.thud();
     disconnectSlack();
   };
+
   return { available, link, busy, connect, disconnect };
 }
 
@@ -94,6 +100,7 @@ export function useSettingsActions() {
   const replace = (run: () => void) => {
     run();
     buzz.thud();
+
     if (router.canGoBack()) router.back();
     router.navigate("/");
   };
@@ -112,6 +119,7 @@ export function useSettingsActions() {
 
   const restore = async () => {
     const backup = await chooseBackup(contexts > 0);
+
     if (backup) replace(() => actions.restore(backup));
   };
 
@@ -131,6 +139,7 @@ export function Idea({ width }: { width: number }) {
   const t = useTheme();
   const face = useFace("awake");
   useLively(face, true);
+
   return (
     <View style={[styles.idea, { width }]}>
       <Character context={mascot} size={84} face={face} />

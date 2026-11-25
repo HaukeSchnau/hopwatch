@@ -14,14 +14,17 @@ import { markReloadForUpdate } from "@/core/launch";
  */
 export function startUpdates(): () => void {
   if (__DEV__) return () => {};
+
   let ready = false;
   let checking = false;
 
   const check = async () => {
     // Imported lazily: development clients don't have the native module.
     const Updates = await import("expo-updates");
+
     if (!Updates.isEnabled || ready || checking) return;
     checking = true;
+
     try {
       if ((await Updates.checkForUpdateAsync()).isAvailable)
         ready = (await Updates.fetchUpdateAsync()).isNew;
@@ -39,9 +42,11 @@ export function startUpdates(): () => void {
   };
 
   void check();
+
   const subscription = AppState.addEventListener("change", (state) => {
     if (state === "active") void check();
     else if (state === "background" && ready) void apply();
   });
+
   return () => subscription.remove();
 }

@@ -27,9 +27,11 @@ interface Piece {
 
 function pieces(seed: number, count: number): Piece[] {
   const next = random(seed);
+
   return Array.from({ length: count }, () => {
     const angle = -Math.PI / 2 + (next() - 0.5) * Math.PI * 0.9;
     const speed = 160 + next() * 200;
+
     return {
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
@@ -49,7 +51,9 @@ export function Confetti({ burst, count = 26 }: { burst: number; count?: number 
     progress.set(0);
     progress.set(withTiming(1, { duration: 1300, easing: Easing.out(Easing.quad) }));
   }, [burst, progress]);
+
   if (burst <= 0) return null;
+
   return (
     <View pointerEvents="none" style={styles.origin}>
       {pieces(burst, count).map((p, i) => (
@@ -62,6 +66,7 @@ export function Confetti({ burst, count = 26 }: { burst: number; count?: number 
 function Bit({ piece, progress }: { piece: Piece; progress: SharedValue<number> }) {
   const style = useAnimatedStyle(() => {
     const t = progress.get() * 1.3;
+
     return {
       opacity: progress.get() < 0.75 ? 1 : 1 - (progress.get() - 0.75) * 4,
       transform: [
@@ -72,6 +77,7 @@ function Bit({ piece, progress }: { piece: Piece; progress: SharedValue<number> 
       ],
     };
   });
+
   return (
     <Animated.View
       style={[

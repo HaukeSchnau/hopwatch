@@ -36,7 +36,9 @@ const LONGEST = 16 * HOUR;
 export function jellyChoices(tree: ContextTree): Map<string, ContextId> {
   const list = pickable(tree);
   const count = new Map<string, number>();
+
   for (const c of list) count.set(c.name.toLowerCase(), (count.get(c.name.toLowerCase()) ?? 0) + 1);
+
   return new Map(
     list.map((c) => [(count.get(c.name.toLowerCase()) ?? 0) > 1 ? pathLabel(c) : c.name, c.id]),
   );
@@ -91,6 +93,7 @@ function fieldsFor(jellies: readonly string[]) {
 }
 
 type FieldName = ReturnType<typeof fieldsFor>[number]["name"];
+
 /** The model's answer: one string per field. */
 export type SentenceAnswer = Record<FieldName, string>;
 
@@ -120,23 +123,33 @@ interface ClockTime {
  */
 function clockOf(value: string): ClockTime | null {
   const v = value.trim().toLowerCase();
+
   if (/\d\s*(h\b|min|std|stunde|hour|hr)/.test(v)) return null;
+
   const spoken = /(quarter|viertel) (to|vor|past|nach) (\d{1,2})|(half past|halb) (\d{1,2})/.exec(
     v,
   );
+
   if (spoken) {
     const h = Number(spoken[3] ?? spoken[5]);
+
     if (spoken[4]) return { h: spoken[4] === "halb" ? h - 1 : h, m: 30 };
+
     return ["to", "vor"].includes(spoken[2]) ? { h: h - 1, m: 45 } : { h, m: 15 };
   }
+
   const match = /(\d{1,2})(?:[:.h](\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?/.exec(v);
+
   // A bare 0 or 00:00 is a model's way of saying nothing far more often than midnight.
   if (!match || (Number(match[1]) === 0 && Number(match[2] ?? 0) === 0)) return null;
   let h = Number(match[1]);
   const m = Number(match[2] ?? 0);
   const half = match[3]?.replaceAll(".", "");
+
   if (half === "pm" && h < 12) h += 12;
+
   if (half === "am" && h === 12) h = 0;
+
   return h < 24 && m < 60 ? { h, m, exact: half !== undefined || h === 0 || h > 12 } : null;
 }
 
@@ -145,10 +158,13 @@ function minutesOf(value: string): number | null {
   const v = value.trim().toLowerCase();
   const hours = "(?:h|hrs?|hours?|std|stunden?)";
   const clock = /^(\d+):(\d{2})$/.exec(v) ?? new RegExp(`^(\\d+)\\s*${hours}\\s*(\\d+)`).exec(v);
+
   if (clock) return Number(clock[1]) * 60 + Number(clock[2]) || null;
   const match = new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(${hours})?`).exec(v);
+
   if (!match) return null;
   const minutes = Math.round(Number(match[1].replace(",", ".")) * (match[2] ? 60 : 1));
+
   return minutes > 0 ? minutes : null;
 }
 
@@ -186,35 +202,46 @@ const weekdayNames = [
  */
 function namedDay(sentence: string, now: number): number | null {
   const says = (...words: string[]) => saysAny(sentence, ...words);
+
   if (says("vorgestern")) return -2;
+
   if (says("tomorrow", "übermorgen")) return 1;
+
   if (says("yesterday", "gestern")) return -1;
   const weekday = weekdayNames.findIndex((names) => says(...names));
+
   if (weekday >= 0) return -((new Date(now).getDay() - weekday + 7) % 7);
+
   if (says("today", "heute")) return 0;
+
   return null;
 }
 
 /** A range written with digits: "12-1", "10–11", "9 to 11", "von 12 bis 13 Uhr", "2-4pm". */
 function writtenRange(sentence: string): [ClockTime, ClockTime] | null {
   const time = "(\\d{1,2}(?:[:.]\\d{2})?(?:\\s*[ap]m)?)";
+
   // Not lengths like "2-3 hours".
   const range = new RegExp(
     `${time}\\s*(?:-|–|—|to|till|until|bis)\\s*${time}(?!\\d|\\s*(?:h\\b|hours?|hrs?|min|std|stunden?))`,
     "i",
   );
+
   const match = range.exec(sentence);
   const from = match && clockOf(match[1]);
   const to = match && clockOf(match[2]);
+
   return from && to ? [from, to] : null;
 }
 
 /** Minutes ago written with digits: "20 min ago", "vor 5 Minuten", "vor 2 Stunden". */
 function writtenAgo(sentence: string): number | null {
   const unit = "(min|mins|minutes?|minuten|h|hrs?|hours?|std|stunden?)";
+
   const match =
     new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*${unit}\\s+ago\\b`, "i").exec(sentence) ??
     new RegExp(`\\bvor\\s+(\\d+(?:[.,]\\d+)?)\\s*${unit}\\b`, "i").exec(sentence);
+
   return match && minutesOf(`${match[1]} ${match[2]}`);
 }
 
@@ -230,19 +257,25 @@ function namedJelly(
 ): ContextId | undefined {
   const score = (c: ResolvedContext) =>
     [...c.ancestors, c].filter((a) => sentence.includes(plain(a.name))).length;
+
   const named = pickable(tree).filter((c) => sentence.includes(plain(c.name)));
+
   const best = named.reduce<ResolvedContext | null>(
     (a, b) => (a && score(a) >= score(b) ? a : b),
     null,
   );
+
   const current = picked && tree.byId.get(picked);
+
   if (!best || (current && named.includes(current) && score(current) >= score(best))) return picked;
+
   return best.id;
 }
 
 function on(day: number, { h, m }: ClockTime): number {
   const d = new Date(day);
   d.setHours(h, m, 0, 0);
+
   return d.getTime();
 }
 
@@ -255,9 +288,11 @@ function recent(day: number, clock: ClockTime, now: number): number | null {
   const hours = !clock.exact && clock.h >= 1 && clock.h <= 11 ? [clock.h, clock.h + 12] : [clock.h];
   const isToday = day === startOfDay(now);
   const days = isToday ? [day, addDays(day, -1)] : [day];
+
   const candidates = days
     .flatMap((d) => hours.map((h) => on(d, { h, m: clock.m })))
     .filter((t) => t <= now && (t >= day || now - t <= 6 * HOUR));
+
   return candidates.length ? Math.max(...candidates) : null;
 }
 
@@ -265,8 +300,10 @@ function recent(day: number, clock: ClockTime, now: number): number | null {
 function blockTime(day: number, clock: ClockTime, now: number): number {
   if (!clock.exact && clock.h >= 1 && clock.h <= 5) {
     const afternoon = on(day, { h: clock.h + 12, m: clock.m });
+
     if (afternoon <= now) return afternoon;
   }
+
   return on(day, clock);
 }
 
@@ -274,6 +311,7 @@ function blockTime(day: number, clock: ClockTime, now: number): number {
 function blockEnd(day: number, from: number, clock: ClockTime): number {
   const same = on(day, clock);
   const afternoon = !clock.exact && clock.h < 12 ? [on(day, { h: clock.h + 12, m: clock.m })] : [];
+
   return [same, ...afternoon].find((t) => t > from) ?? addDays(same, 1);
 }
 
@@ -295,21 +333,29 @@ function nearestFit(
   now: number,
 ): number | null {
   let best: number | null = null;
+
   const consider = (gapStart: number, gapEnd: number) => {
     if (gapEnd - gapStart < length) return;
     const start = Math.min(Math.max(anchor, gapStart), gapEnd - length);
+
     if (best === null || Math.abs(start - anchor) < Math.abs(best - anchor)) best = start;
   };
+
   let cursor = lo;
+
   for (const e of entries) {
     if (!isLive(e)) continue;
     const end = e.endUtc ?? now;
+
     if (end <= cursor) continue;
+
     if (e.startUtc >= hi) break;
     consider(cursor, e.startUtc);
     cursor = end;
   }
+
   consider(cursor, Math.min(hi, now));
+
   return best;
 }
 
@@ -326,14 +372,18 @@ function placeLength(
   now: number,
 ) {
   const window = part in windows ? windows[part as keyof typeof windows] : null;
+
   if (!window && day === startOfDay(now)) return { from: now - length, to: now };
   const { from, to, anchor } = window ?? { from: 8, to: 20, anchor: 9 };
   const at = (h: number) => on(day, { h, m: 0 });
+
   // A part of the day still to come stays there, and the caller says so.
   if (at(from) >= now) return { from: at(anchor), to: at(anchor) + length };
+
   const start =
     nearestFit(entries, at(from), at(to), at(anchor), length, now) ??
     Math.min(at(anchor), now - length);
+
   return { from: start, to: start + length };
 }
 
@@ -347,52 +397,68 @@ export function readSentence(
   { tree, entries, now }: { tree: ContextTree; entries: readonly Entry[]; now: number },
 ): Reading | null {
   const problem = (text: string): Reading => ({ problem: text });
+
   if (answer.action === NONE || !(ACTIONS as readonly string[]).includes(answer.action))
     return null;
 
   const said = plain(sentence);
   const today = startOfDay(now);
+
   const offset =
     namedDay(said, now) ?? (answer.day === "yesterday" ? -1 : answer.day === "today" ? 0 : null);
+
   if (offset !== 0 && offset !== -1) return problem(problems.onlyTodayAndYesterday);
   const day = addDays(today, offset);
 
   // The model sometimes makes numbers up. A time counts only if its hour is written in the
   // sentence (2 may come back as 14:00), a length only if the sentence has digits or says one.
   const numbers = new Set((sentence.match(/\d+/g) ?? []).map(Number));
+
   const grounded = (value: string) => {
     const h = Number(/\d+/.exec(value)?.[0]);
+
     return numbers.has(h) || numbers.has(h - 12);
   };
+
   const written = writtenRange(sentence);
   const from = written?.[0] ?? (grounded(answer.from) ? clockOf(answer.from) : null);
   const to = written?.[1] ?? (grounded(answer.to) ? clockOf(answer.to) : null);
   const untilNow = saysNow(answer.to);
+
   const saysLength =
     numbers.size > 0 || /half|halb|hour|stunde|minute|viertel|quarter/i.test(sentence);
+
   const minutes = saysLength ? minutesOf(answer.minutes) : null;
 
   /** When a start or stop happened: some minutes ago, at a clock time, or now. */
   const instant = (clock: ClockTime | null): number | Reading => {
     const ago = writtenAgo(sentence);
+
     if (ago !== null) return now - ago * MINUTE;
+
     if (clock)
       return recent(day, clock, now) ?? problem(problems.stillToCome(formatClock(on(day, clock))));
+
     return minutes !== null ? now - minutes * MINUTE : now;
   };
 
   if (answer.action === "stop") {
     const open = findOpen(entries);
+
     if (!open) return problem(problems.nothingRunning);
     // A model may put the stop time in either field.
     const at = instant(to ?? from);
+
     if (typeof at !== "number") return at;
     const name = tree.byId.get(open.contextId)?.name;
+
     if (at < open.startUtc) return problem(problems.beforeStart(name, formatClock(open.startUtc)));
+
     return { plan: { kind: "stop", at } };
   }
 
   const contextId = namedJelly(said, jellyChoices(tree).get(answer.jelly), tree);
+
   if (!contextId) return problem(problems.whichJelly);
 
   // A start with an end is a block. A block with nothing but a start today, or one that
@@ -404,12 +470,16 @@ export function readSentence(
 
   if (!isBlock) {
     const at = instant(from);
+
     if (typeof at !== "number") return at;
+
     if (now - at > LONGEST) return problem(problems.startedTooLongAgo);
+
     return { plan: { kind: "start", contextId, at } };
   }
 
   let range: { from: number; to: number };
+
   if (from && (to || untilNow)) {
     const start = blockTime(day, from, now);
     range = { from: start, to: to ? blockEnd(day, start, to) : now };
@@ -427,7 +497,10 @@ export function readSentence(
 
   if (range.from >= now) return problem(problems.stillToCome(formatClock(range.from)));
   const end = Math.min(range.to, now);
+
   if (end - range.from < Math.max(MIN_ENTRY_MS, MINUTE)) return problem(problems.tooShort);
+
   if (end - range.from > LONGEST) return problem(problems.tooLong);
+
   return { plan: { kind: "place", contextId, from: range.from, to: end } };
 }

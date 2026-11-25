@@ -63,6 +63,7 @@ function DotEyes({ face, lod, px, r = 3.8, dx = EX }: FacePartProps & { r?: numb
   const right = useEye(face, dx, EY, r * 0.5);
   const open = useOpen(face);
   const shut = useShut(face);
+
   return (
     <>
       <Path
@@ -94,6 +95,7 @@ function ShinyEyes({ face, lod, px }: FacePartProps) {
   const w = line(px);
   // Lashes flick out from the outer corners of the closed eyes.
   const lashes = `M ${dx + 4.8} ${EY} l 2 -1.6 M ${-dx - 4.8} ${EY} l -2 -1.6`;
+
   return (
     <>
       <Group opacity={shut}>
@@ -127,23 +129,28 @@ function GooglyEyes({ face, lod, px, tones }: FacePartProps) {
   const r = 6.8;
   const ring = Math.max(0.9, 0.75 * px);
   const dx = 13;
+
   const blinkL = useDerivedValue(() => [
     { translateX: -dx },
     { translateY: EY - 1 },
     { scaleY: Math.max(0.06, face.blink.get()) },
   ]);
+
   const blinkR = useDerivedValue(() => [
     { translateX: dx },
     { translateY: EY - 1 },
     { scaleY: Math.max(0.06, face.blink.get()) },
   ]);
+
   // Pupils sag a little, like real googly eyes, and roll with the glance.
   const pupil = useDerivedValue(() => [
     { translateX: face.lookX.get() * 3 },
     { translateY: 1.1 + face.lookY.get() * 2.4 },
   ]);
+
   const open = useOpen(face);
   const shut = useShut(face);
+
   return (
     <>
       {/* Asleep: the lids close over the bulging eyes. */}
@@ -194,6 +201,7 @@ function SleepyEyes({ face, lod, px }: FacePartProps) {
   // A heavy, domed lid covers the top half of each eye.
   const lid = `M ${-r - 1.2} 0.9 Q 0 ${-r * 0.55} ${r + 1.2} 0.9`;
   const below = `${lid} L ${r + 2} ${r + 2} L ${-r - 2} ${r + 2} Z`;
+
   return (
     <>
       <Path
@@ -225,6 +233,7 @@ function HappyEyes({ face, px }: FacePartProps) {
   const open = useOpen(face);
   const shut = useShut(face);
   const w = line(px) * 1.05;
+
   return (
     <>
       <Path
@@ -258,18 +267,22 @@ function CyclopsEye({ face, lod, px, tones }: FacePartProps) {
   const y = -3.6;
   const ring = Math.max(0.9, 0.75 * px);
   const w = line(px);
+
   const blink = useDerivedValue(() => [
     { translateY: y },
     { scaleY: Math.max(0.06, face.blink.get()) },
   ]);
+
   const iris = useDerivedValue(() => [
     { translateX: face.lookX.get() * 3.3 },
     { translateY: face.lookY.get() * 2.6 },
   ]);
+
   const open = useOpen(face);
   const shut = useShut(face);
   // Lashes hang from the closed lid.
   const lashes = "M -4.6 1.9 l -1.3 2 M 0 2.7 l 0 2.2 M 4.6 1.9 l 1.3 2";
+
   return (
     <>
       <Group opacity={shut} transform={[{ translateY: y + 1 }]}>
@@ -308,6 +321,7 @@ function GlassesEyes(props: FacePartProps) {
   const dx = 13.2;
   const r = 7.6;
   const frame = Math.max(1.4, 0.95 * px);
+
   return (
     <>
       <DotEyes {...props} r={3.1} dx={dx} />
@@ -346,15 +360,18 @@ function ShadesEyes(props: FacePartProps) {
   const { face, lod, px } = props;
   const dx = 11.8;
   const shut = useShut(face);
+
   // Awake they sit on the eyes; asleep they're pushed up onto the forehead.
   const wear = useDerivedValue(() => {
     const up = 1 - face.awake.get();
+
     return [
       { translateX: face.lookX.get() * 1.2 },
       { translateY: EY - up * 13 },
       { scale: 1 - up * 0.12 },
     ];
   });
+
   return (
     <>
       <Path
@@ -427,6 +444,7 @@ const SMILE = "M -5.5 7.5 Q 0 13 5.5 7.5";
 
 function MouthShape({ style, lod, px }: { style: Mouth; lod: Lod; px: number }) {
   const w = line(px);
+
   const stroke = {
     style: "stroke",
     strokeWidth: w,
@@ -434,6 +452,7 @@ function MouthShape({ style, lod, px }: { style: Mouth; lod: Lod; px: number }) 
     strokeJoin: "round",
     color: INK,
   } as const;
+
   switch (style) {
     case "smile":
       return <Path path={SMILE} {...stroke} />;
@@ -514,10 +533,12 @@ export function MouthPart({
   drop,
 }: FacePartProps & { style: Mouth; drop: number }) {
   const shown = useDerivedValue(() => 1 - face.yawn.get());
+
   const yawn = useDerivedValue(() => [
     { translateY: 11.2 + drop },
     { scaleY: Math.max(0.001, face.yawn.get()) },
   ]);
+
   return (
     <>
       <Group
@@ -549,12 +570,14 @@ export function Cheeks({
   spread: number;
 }) {
   if (lod === 0) return null;
+
   const dots = [
     [15.8, 6.6],
     [18.2, 4.6],
     [20.6, 6.8],
     [18.6, 8.6],
   ];
+
   return (
     <>
       {[-1, 1].map((side) => (

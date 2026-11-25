@@ -42,6 +42,7 @@ const STICKER_MIN = 23;
  */
 function stickerFrame(size: number) {
   const badge = Math.max(STICKER_MIN, size * 0.32);
+
   return { badge, right: size * 0.28 - badge, bottom: size * 0.02 - (badge - size * 0.32) * 0.3 };
 }
 
@@ -66,6 +67,7 @@ export function Character({
   const body = useAnimatedStyle(() => {
     const puff = f.puff.get() * 0.07;
     const squash = f.squash.get() * 0.12;
+
     return {
       transform: [
         { translateY: -f.hop.get() * size * 0.14 },
@@ -80,6 +82,7 @@ export function Character({
   // Each sticker leans its own way, like it was slapped on by hand.
   const tilt = (hashSeed(context.id) % 24) - 12;
   const { badge, right, bottom } = stickerFrame(size);
+
   return (
     <View style={[{ width: size, height: size }, style]}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.origin, body]}>

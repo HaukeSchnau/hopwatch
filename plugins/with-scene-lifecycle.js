@@ -7,6 +7,7 @@
 
 const fs = require("fs");
 const path = require("path");
+
 const {
   IOSConfig,
   withAppDelegate,
@@ -77,6 +78,7 @@ module.exports = function withSceneLifecycle(config) {
         ],
       },
     };
+
     return c;
   });
 
@@ -84,6 +86,7 @@ module.exports = function withSceneLifecycle(config) {
     if (c.modResults.language !== "swift")
       throw new Error("with-scene-lifecycle expects a Swift AppDelegate");
     c.modResults.contents = appDelegate;
+
     return c;
   });
 
@@ -95,6 +98,7 @@ module.exports = function withSceneLifecycle(config) {
         path.join(c.modRequest.platformProjectRoot, name, "SceneDelegate.swift"),
         sceneDelegate,
       );
+
       return c;
     },
   ]);
@@ -102,6 +106,7 @@ module.exports = function withSceneLifecycle(config) {
   return withXcodeProject(config, (c) => {
     const name = IOSConfig.XcodeUtils.getProjectName(c.modRequest.projectRoot);
     const filepath = `${name}/SceneDelegate.swift`;
+
     if (!c.modResults.hasFile(filepath)) {
       IOSConfig.XcodeUtils.addBuildSourceFileToGroup({
         filepath,
@@ -109,6 +114,7 @@ module.exports = function withSceneLifecycle(config) {
         project: c.modResults,
       });
     }
+
     return c;
   });
 };

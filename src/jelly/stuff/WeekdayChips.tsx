@@ -12,6 +12,7 @@ import { text, useTheme } from "../theme";
 // 1 January 2024 was a Monday.
 const weekday = (i: number, style: "short" | "long") =>
   new Intl.DateTimeFormat(locale, { weekday: style }).format(new Date(2024, 0, 1 + i));
+
 const days = Array.from({ length: 7 }, (_, i) => ({
   short: weekday(i, "short").slice(0, 2),
   long: weekday(i, "long"),
@@ -30,15 +31,18 @@ export function WeekdayChips({
 }) {
   const t = useTheme();
   const c = t.candy[hue];
+
   return (
     <View style={[styles.row, width !== undefined && { width }]}>
       {days.map((day, i) => {
         const on = isWorkday(value, i);
+
         return (
           <Pressable
             key={day.long}
             onPress={() => {
               const next = value ^ (1 << i);
+
               if (next === 0) return buzz.warn();
               buzz.tick();
               onChange(next);

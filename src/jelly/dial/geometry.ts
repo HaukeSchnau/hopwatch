@@ -33,12 +33,14 @@ export function degToFrac(deg: number): number {
 export function polar(frame: DialFrame, deg: number, radius = frame.r) {
   "worklet";
   const rad = (deg * Math.PI) / 180;
+
   return { x: frame.cx + radius * Math.sin(rad), y: frame.cy - radius * Math.cos(rad) };
 }
 
 /** The angle of a point around the dial's center, in [0, 360). */
 export function pointDeg(frame: DialFrame, x: number, y: number): number {
   const deg = (Math.atan2(x - frame.cx, frame.cy - y) * 180) / Math.PI;
+
   return (deg + 360) % 360;
 }
 
@@ -57,6 +59,7 @@ export function arcPath(frame: DialFrame, fromDeg: number, sweepDeg: number, rad
     fromDeg - 90,
     sweepDeg,
   );
+
   return path;
 }
 

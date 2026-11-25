@@ -48,10 +48,14 @@ export function startConsequence(
   const { cut, replaced } = previewStart(entries, contextId, at, now);
   const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? menuText.something;
   const parts: string[] = [];
+
   if (cut)
     parts.push(menuText.cut(name(cut.entry), cut.entry.endUtc === null, formatClock(cut.at)));
+
   if (replaced.length === 1) parts.push(menuText.replaces(name(replaced[0])));
+
   if (replaced.length > 1) parts.push(menuText.replacesMany(replaced.length));
+
   return parts.length
     ? { text: capitalized(parts.join(" · ")), replaces: replaced.length > 0 }
     : null;
@@ -74,8 +78,10 @@ export function useStartMenu(context: ResolvedContext, now: number, running: boo
   // Only entries that end after the earliest choice can be touched; Stuff renders a menu per row.
   const earliest = now - Math.max(...AGO) * MINUTE;
   const recent = entries.filter((e) => (e.endUtc ?? now) > earliest);
+
   const ago = AGO.map((m): MenuItem => {
     const consequence = startConsequence(recent, tree, context.id, now - m * MINUTE, now);
+
     return {
       id: `ago:${m}`,
       title: agoTitle(m, now),
@@ -83,6 +89,7 @@ export function useStartMenu(context: ResolvedContext, now: number, running: boo
       image: consequence?.replaces ? "exclamationmark.triangle" : "clock.arrow.circlepath",
     };
   });
+
   return [
     { title: running ? menuText.actuallyStarted : menuText.startedEarlier, items: ago },
     { id: "at", title: menuText.atTime, image: "clock" },
@@ -100,14 +107,17 @@ export function onStartMenu(contextId: ContextId, event: string, source?: string
     const open = useHopwatch.getState().entries.find((e) => e.endUtc === null);
     const context = useHopwatch.getState().tree.byId.get(contextId);
     buzz.success();
+
     if (open && open.contextId === contextId) {
       actions.updateEntry(
         open.id,
         { startUtc: at },
         menuText.movedStart(context?.name, formatClock(at)),
       );
+
       return;
     }
+
     if (source) noteSource(contextId, source);
     actions.start(contextId, { at });
     play("pop");
@@ -126,6 +136,7 @@ export function stopMenu(name: string, since: number, now: number): MenuEntry[] 
     subtitle: stopConsequence(name, since, now - m * MINUTE),
     image: "clock.arrow.circlepath",
   }));
+
   return [
     ...(ago.length ? [{ title: menuText.stoppedEarlier, items: ago }] : []),
     { id: "at", title: menuText.atTime, image: "clock" },

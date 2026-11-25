@@ -49,6 +49,7 @@ const Accent = createContext<string | null>(null);
 
 function useAccent(): string {
   const t = useTheme();
+
   return use(Accent) ?? t.c.pinkDeep;
 }
 
@@ -104,8 +105,11 @@ export function Dropdown({
 }) {
   const t = useTheme();
   const [used, setUsed] = useState(open);
+
   if (open && !used) setUsed(true);
+
   if (!used) return null;
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Host style={styles.fill} colorScheme={t.scheme} seedColor={t.c.pink}>
@@ -123,6 +127,7 @@ export function Dropdown({
 /** A heading inside a dropdown: the jelly's name, or a group like "Started earlier". */
 export function MenuLabel({ label, strong }: { label: string; strong?: boolean }) {
   const t = useTheme();
+
   return (
     <ComposeText
       color={strong ? t.c.ink : t.c.muted}
@@ -150,6 +155,7 @@ export function MenuRow({ title, subtitle, icon, destructive, checked, onPress }
   const image = useSymbolImage(icon);
   const check = useSymbolImage(checked ? "check" : undefined);
   const color = destructive ? t.c.danger : t.c.ink;
+
   return (
     <DropdownMenuItem
       onClick={onPress}
@@ -196,6 +202,7 @@ export function JellyForm({ title, tint, cancel, confirm, children }: JellyFormP
   const insets = useSafeAreaInsets();
   const accent = tint ?? t.c.pinkDeep;
   const close = cancel ?? { label: sheetsText.close, onPress: () => router.back() };
+
   return (
     <Accent value={accent}>
       <View style={[styles.fill, { backgroundColor: t.c.bg }]}>
@@ -263,6 +270,7 @@ export function HostedRow({
 }) {
   const t = useTheme();
   const { width } = useWindowDimensions();
+
   return (
     <View style={[styles.card, styles.hosted, { backgroundColor: color ?? t.c.card }]}>
       {render(width - MARGIN * 2)}
@@ -283,6 +291,7 @@ export function Section({
 }) {
   const t = useTheme();
   const accent = useAccent();
+
   return (
     <View style={styles.section}>
       {title ? (
@@ -314,6 +323,7 @@ export function Row({ label, detail, icon, trailing, onPress, destructive, check
   const t = useTheme();
   const accent = useAccent();
   const color = destructive ? t.c.danger : t.c.ink;
+
   const body = (
     <>
       {icon ? <MaterialIcon name={icon} color={destructive ? t.c.danger : accent} /> : null}
@@ -326,7 +336,9 @@ export function Row({ label, detail, icon, trailing, onPress, destructive, check
       {trailing}
     </>
   );
+
   if (!onPress) return <View style={styles.row}>{body}</View>;
+
   return (
     <Pressable
       onPress={onPress}
@@ -351,6 +363,7 @@ export function SwitchRow({
 }) {
   const t = useTheme();
   const accent = useAccent();
+
   return (
     <Row
       {...row}
@@ -399,6 +412,7 @@ export function PickerRow<T extends string>({
   const t = useTheme();
   const [open, setOpen] = useState(false);
   const current = choices.find((c) => c.value === value);
+
   return (
     <View>
       <Row
@@ -446,6 +460,7 @@ export function ChoiceChips<T extends number>({
 }) {
   const t = useTheme();
   const accent = useAccent();
+
   return (
     <View style={styles.chips}>
       <Host matchContents={{ vertical: true }} colorScheme={t.scheme} style={styles.grow}>
@@ -492,8 +507,10 @@ export function StepperRow({
 }) {
   const t = useTheme();
   const accent = useAccent();
+
   const button = (icon: AndroidSymbol, next: number, a11y: string) => {
     const disabled = next < min || next > max;
+
     return (
       <Pressable
         onPress={() => onChange(next)}
@@ -507,6 +524,7 @@ export function StepperRow({
       </Pressable>
     );
   };
+
   return (
     <View style={styles.row}>
       <Text style={[text.body, tabular, styles.rowText, { color: t.c.ink }]}>{label}</Text>
@@ -520,6 +538,7 @@ export function StepperRow({
 export function FieldRow(props: TextInputProps) {
   const t = useTheme();
   const accent = useAccent();
+
   return (
     <View style={styles.field}>
       <TextInput
@@ -549,6 +568,7 @@ export function TimeDialog({
   onClose: () => void;
 }) {
   const t = useTheme();
+
   return (
     <View style={styles.dialog} pointerEvents="none">
       <Host style={styles.fill} colorScheme={t.scheme} seedColor={color}>
@@ -583,6 +603,7 @@ export function DateDialog({
   onClose: () => void;
 }) {
   const t = useTheme();
+
   return (
     <View style={styles.dialog} pointerEvents="none">
       <Host style={styles.fill} colorScheme={t.scheme} seedColor={color}>
@@ -618,6 +639,7 @@ export function Pill({
   onPress: () => void;
 }) {
   const t = useTheme();
+
   return (
     <Pressable
       onPress={onPress}
@@ -643,6 +665,7 @@ export function TonalButton({
 }) {
   const t = useTheme();
   const accent = useAccent();
+
   return (
     <Pressable
       onPress={onPress}
@@ -672,6 +695,7 @@ export function DateRow({
   const accent = useAccent();
   const [open, setOpen] = useState(false);
   const day = `${formatWeekday(value)} ${formatDayMonth(value)}`;
+
   return (
     <Row
       label={label}
@@ -711,6 +735,7 @@ export function TimeRow({
   const accent = useAccent();
   const [open, setOpen] = useState(false);
   const clock = formatClock(value.getTime());
+
   return (
     <Row
       label={label}
@@ -755,6 +780,7 @@ export function DateTimeRow({
   const day = `${formatWeekday(value)} ${formatDayMonth(value)}`;
   const clock = formatClock(value);
   const pick = (date: Date) => onChange(date.getTime());
+
   return (
     <Row
       label={label}

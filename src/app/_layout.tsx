@@ -22,6 +22,7 @@ import { startShortcuts } from "@/widgets/shortcuts";
 export { ErrorScreen as ErrorBoundary } from "@/jelly/ErrorScreen";
 
 SplashScreen.preventAutoHideAsync();
+
 initStore();
 
 // Unsigned simulator builds have no keychain entitlement, so expo-notifications can't read
@@ -45,6 +46,7 @@ export default function RootLayout() {
   useDressUp();
   useDevLaunchRoute();
   const nav = t.dark ? DarkTheme : DefaultTheme;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider
@@ -80,6 +82,7 @@ export default function RootLayout() {
 function useDevLaunchRoute() {
   useEffect(() => {
     const route = devLaunchRoute();
+
     // Launch arguments are arbitrary strings from simctl, so they can't be typed routes.
     if (route) router.replace(route as Href);
   }, []);

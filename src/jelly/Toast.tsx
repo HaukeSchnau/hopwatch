@@ -41,6 +41,7 @@ export function Toast({ lift = 0 }: { lift?: number }) {
   // The newest of the two wins.
   const showNote = note?.visible && (!visible || !action || note.at > action.at);
   const showUndo = !showNote && visible && action;
+
   const toast = [
     styles.toast,
     { backgroundColor: t.c.toast, shadowColor: t.dark ? "#000000" : t.c.ink },
@@ -106,6 +107,7 @@ export function Toast({ lift = 0 }: { lift?: number }) {
 
 function popIn() {
   "worklet";
+
   return {
     initialValues: {
       opacity: 0,

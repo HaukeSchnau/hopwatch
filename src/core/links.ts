@@ -19,20 +19,25 @@ export type LinkAction =
 export function parseLink(pathOrUrl: string): LinkAction | null {
   const withoutScheme = pathOrUrl.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/^\/+/, "");
   const [route, query = ""] = withoutScheme.split("?");
+
   const params = new Map(
     query
       .split("&")
       .filter(Boolean)
       .map((pair): [string, string] => {
         const [key, value = ""] = pair.split("=");
+
         return [decodeURIComponent(key), decodeURIComponent(value)];
       }),
   );
+
   switch (route.replace(/\/+$/, "")) {
     case "start": {
       const contextId = params.get("context");
+
       return contextId ? { kind: "start", contextId: contextId as ContextId } : null;
     }
+
     case "stop":
       return { kind: "stop" };
     case "resume":

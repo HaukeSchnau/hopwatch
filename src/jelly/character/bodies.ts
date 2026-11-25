@@ -44,7 +44,9 @@ interface Def {
 
 function svg(d: string): SkPath {
   const path = Skia.Path.MakeFromSVGString(d);
+
   if (!path) throw new Error(`Bad body path: ${d}`);
+
   return path;
 }
 
@@ -55,12 +57,15 @@ function roundedPolygon(points: [number, number][], radii: number[]): SkPath {
   const [ax, ay] = points[n - 1];
   const [bx, by] = points[0];
   b.moveTo((ax + bx) / 2, (ay + by) / 2);
+
   for (let i = 0; i < n; i++) {
     const [x1, y1] = points[i];
     const [x2, y2] = points[(i + 1) % n];
     b.arcToTangent(x1, y1, x2, y2, radii[i]);
   }
+
   b.close();
+
   return b.detach();
 }
 
@@ -75,23 +80,28 @@ function ghostPath(): SkPath {
   b.cubicTo(right, 66, right + 1.5, 76, right + 1.5, hemTop);
   const scallops = 3;
   const span = (right + 1.5 - (left - 1.5)) / scallops;
+
   for (let i = 0; i < scallops; i++) {
     const xa = right + 1.5 - i * span;
     const xb = xa - span;
     b.cubicTo(xa, FLOOR + 2.4, xb, FLOOR + 2.4, xb, hemTop);
   }
+
   b.cubicTo(left - 1.5, 76, left, 66, left, 54);
   b.close();
+
   return b.detach();
 }
 
 function starPath(): SkPath {
   const points: [number, number][] = [];
+
   for (let i = 0; i < 10; i++) {
     const angle = -Math.PI / 2 + (i * Math.PI) / 5;
     const r = i % 2 === 0 ? 50 : 27;
     points.push([50 + Math.cos(angle) * r, 55 + Math.sin(angle) * r]);
   }
+
   return roundedPolygon(
     points,
     points.map((_, i) => (i % 2 === 0 ? 7.5 : 6)),
@@ -163,14 +173,17 @@ function blobPath(seed: string): SkPath {
   const next = random(hashSeed(`lumps:${seed}`));
   const count = 12;
   const raw = Array.from({ length: count }, () => next() * 2 - 1);
+
   const wobble = raw.map(
     (v, i) => (raw[(i + count - 1) % count] + 2 * v + raw[(i + 1) % count]) / 4,
   );
+
   const exponent = 2.6;
   const cx = 50;
   const cy = 61;
   const rx = 37;
   const ry = 30;
+
   return closedSpline(
     wobble.map((w, i) => {
       const theta = -Math.PI / 2 + (2 * Math.PI * i) / count;
@@ -180,7 +193,9 @@ function blobPath(seed: string): SkPath {
       const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / exponent);
       let uy = Math.sign(s) * Math.pow(Math.abs(s), 2 / exponent);
       const pear = 1 + 0.07 * uy;
+
       if (uy > 0) uy *= 0.95;
+
       return { x: cx + ux * rx * k * pear, y: cy + uy * ry * k };
     }),
   );
@@ -192,17 +207,21 @@ function reach(path: SkPath, x: number, y: number, deg: number): number {
   const dy = Math.sin((deg * Math.PI) / 180);
   let lo = 0;
   let hi = 80;
+
   for (let i = 0; i < 18; i++) {
     const mid = (lo + hi) / 2;
+
     if (path.contains(x + dx * mid, y + dy * mid)) lo = mid;
     else hi = mid;
   }
+
   return lo;
 }
 
 function edge(path: SkPath, x: number, y: number, deg: number) {
   const r = reach(path, x, y, deg);
   const rad = (deg * Math.PI) / 180;
+
   return { x: x + Math.cos(rad) * r, y: y + Math.sin(rad) * r };
 }
 
@@ -220,6 +239,7 @@ function measure(path: SkPath, face: Def["face"]): BodyGeo {
 
   // Hats sit where the head first gets wide enough to hold one.
   let crownY = top + 0.5;
+
   while (crownY < face.y && widthAt(path, cx, crownY) < 22) crownY += 0.5;
 
   const ear = edge(path, cx, face.y, -90 + 42);
@@ -268,6 +288,7 @@ const cache = new Map<string, BodyGeo>();
 export function bodyGeo(body: Body, seed: string): BodyGeo {
   const key = `${body}:${seed}`;
   const hit = cache.get(key);
+
   if (hit) return hit;
   const def = defs[body];
   const next = random(hashSeed(`shape:${seed}`));
@@ -283,7 +304,9 @@ export function bodyGeo(body: Body, seed: string): BodyGeo {
   );
   const face = { x: def.face.x, y: FLOOR - (FLOOR - def.face.y) * sy, s: def.face.s };
   const geo = measure(path, face);
+
   if (cache.size > 400) cache.clear();
   cache.set(key, geo);
+
   return geo;
 }

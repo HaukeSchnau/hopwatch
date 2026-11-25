@@ -3,9 +3,13 @@
 // timeline module directly.
 
 export { markBreak, setEveningCheck, useEveningCheck } from "./evening";
+
 export * from "./hooks";
+
 export { parseCommand, type RemoteCommand, type Snapshot, snapshotOf, tapCommand } from "./remote";
+
 export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from "./links";
+
 export {
   type ConnectResult,
   connectSlack,
@@ -15,10 +19,15 @@ export {
   useSlackAvailable,
   useSlackLink,
 } from "./slack-link";
+
 export type { SlackLine } from "./tree";
+
 export * from "./model";
+
 export { type GermanState, germanStates, type HolidayId } from "./holidays";
+
 export { isJobHours } from "./workdays";
+
 export {
   type DayReport,
   formatTargetLine,
@@ -32,6 +41,7 @@ export {
   totalsText,
   type WeekReport,
 } from "./reports";
+
 export {
   actions,
   connectRemoteQueue,
@@ -44,7 +54,9 @@ export {
   type HopwatchState,
   useHopwatch,
 } from "./store";
+
 export * from "./time";
+
 export {
   blockInside,
   type EntryPatch,
@@ -56,6 +68,7 @@ export {
   previewStart,
   type StartPreview,
 } from "./timeline";
+
 export {
   type Plan,
   type Reading,
@@ -63,9 +76,15 @@ export {
   type SentenceAnswer,
   sentenceRequest,
 } from "./sentence";
+
 export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from "./tree";
+
 export type { Backup, ParseResult } from "./backup";
+
 export { LAST_EXPORT, pickBackup, shareExport } from "./export";
+
 export { requestNudgePermission } from "./permissions";
+
 export { eraseAllData, loadSampleData } from "./sample-loader";
+
 export { checkSummary, summaryRequest, weekFacts, type WeekFacts } from "./week-facts";

@@ -63,10 +63,13 @@ export function useEditorTarget(): EditorTarget | null {
     parent?: string;
     pin?: string;
   }>();
+
   const tree = useTree();
   const existing = params.id ? (tree.ordered.find((c) => c.id === params.id) ?? null) : null;
+
   if (params.id && !existing) return null;
   const parent = existing ? null : (tree.ordered.find((c) => c.id === params.parent) ?? null);
+
   return {
     context: existing,
     initialParent: existing ? existing.parentId : (parent?.id ?? null),
@@ -83,9 +86,11 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   // A new jelly's emoji and color stay open to suggestions until they're touched.
   const [emojiTouched, setEmojiTouched] = useState(context !== null);
   const [colorTouched, setColorTouched] = useState(context !== null);
+
   const [color, setColor] = useState<Hue | null>(
     context ? context.color : initialParent ? null : "pink",
   );
+
   const [parentId, setParentId] = useState<ContextId | null>(initialParent);
   const [pinned, setPinned] = useState(context ? context.pinPosition !== null : pin);
   const [target, setTarget] = useState<number | null>(context?.weeklyTargetMinutes ?? null);
@@ -105,10 +110,13 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     emojiTouched ? emoji : null,
     !colorTouched && parentId === null,
   );
+
   const suggestedEmoji = !emojiTouched ? (suggested?.suggestion.emoji ?? null) : null;
   const shownEmoji = suggestedEmoji ?? emoji;
+
   const suggestedHue =
     !colorTouched && parentId === null ? (suggested?.suggestion.hue ?? null) : null;
+
   const shownColor = suggestedHue ?? color;
 
   const parent = parentId ? (tree.byId.get(parentId) ?? null) : null;
@@ -121,10 +129,12 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const slackStatus: SlackStatus | null = slackText.trim()
     ? { text: slackText.trim(), emoji: ownSlack?.emoji ?? null }
     : null;
+
   /** What Slack shows while it runs, for the footer. */
   const slackShown: SlackLine | null = slackStatus
     ? { text: slackStatus.text, emoji: slackStatus.emoji ?? glyph }
     : null;
+
   const excluded = context ? subtreeIds(tree, context.id) : new Set<ContextId>();
   const parents = tree.ordered.filter((p) => !p.hidden && !excluded.has(p.id));
 
@@ -139,9 +149,12 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     if (!context) return;
     const id = context.id;
     const original = context.name;
+
     return () => {
       const typed = latestName.current.trim();
+
       if (typed && typed !== original) actions.updateContext(id, { name: typed });
+
       if (slackTouched.current) saveSlackStatus(id, latestSlack.current);
     };
     // Only on unmount of this jelly's editor.
@@ -149,11 +162,13 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   }, [context?.id]);
 
   const bump = useSharedValue(0);
+
   const jiggle = () =>
     bump.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
 
   const saveName = () => {
     const typed = name.trim();
+
     if (context && typed && typed !== context.name)
       actions.updateContext(context.id, { name: typed });
   };
@@ -163,6 +178,7 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     setEmojiTouched(true);
     setEmoji(value);
     jiggle();
+
     if (context) actions.updateContext(context.id, { emoji: value });
   };
 
@@ -171,6 +187,7 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     setEmojiTouched(true);
     const next = firstGrapheme(typed) || null;
     setEmoji(next);
+
     if (context) actions.updateContext(context.id, { emoji: next });
   };
 
@@ -179,33 +196,40 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     setColorTouched(true);
     setColor(value);
     jiggle();
+
     if (context) actions.updateContext(context.id, { color: value });
   };
 
   const moveTo = (next: ContextId | null) => {
     setParentId(next);
+
     if (context) actions.moveContext(context.id, next);
   };
 
   const pinTo = (on: boolean) => {
     setPinned(on);
+
     if (context) (on ? actions.pin : actions.unpin)(context.id);
   };
 
   const changeTarget = (next: number | null) => {
     setTarget(next);
+
     if (context) actions.updateContext(context.id, { weeklyTargetMinutes: next });
   };
 
   const changeNudge = (next: number | null) => {
     setNudge(next);
+
     if (context) actions.updateContext(context.id, { nudgeAfterMinutes: next });
   };
 
   /** Job hours on (Monday to Friday to start) or off; off also ends the balance. */
   const changeWorkDays = (next: number | null) => {
     setWorkDays(next);
+
     if (next === null) setBalanceSince(null);
+
     if (context)
       actions.updateContext(
         context.id,
@@ -216,11 +240,13 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   /** The balance from a day on (this week's Monday to start), or none. */
   const changeBalanceSince = (next: string | null) => {
     setBalanceSince(next);
+
     if (context) actions.updateContext(context.id, { balanceSince: next });
   };
 
   const changeBalanceStart = (minutes: number) => {
     setBalanceStart(minutes);
+
     if (context) actions.updateContext(context.id, { balanceStartMinutes: minutes });
   };
 
@@ -236,7 +262,9 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
 
   const create = () => {
     const typed = name.trim();
+
     if (!typed) return buzz.warn();
+
     const id = actions.createContext({
       id: draftId,
       name: typed,
@@ -245,6 +273,7 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
       emoji: shownEmoji,
       pinned,
     });
+
     if (target !== null || nudge !== null || slackStatus !== null)
       actions.updateContext(id, {
         weeklyTargetMinutes: target,
@@ -254,6 +283,7 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
         balanceStartMinutes: balanceStart,
         slackStatus,
       });
+
     if (suggested && suggested.forName === typed)
       saveSuggestedLook(id, suggested.suggestion, typed, glyph);
     buzz.success();
@@ -312,6 +342,7 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
 /** Stores a jelly's Slack status if it changed. */
 function saveSlackStatus(id: ContextId, next: SlackStatus | null) {
   const current = useHopwatch.getState().contexts.find((c) => c.id === id)?.slackStatus ?? null;
+
   if (JSON.stringify(current) !== JSON.stringify(next))
     actions.updateContext(id, { slackStatus: next });
 }
@@ -342,9 +373,11 @@ export function Header({
   const t = useTheme();
   const face = useFace("awake");
   useLively(face, true);
+
   const style = useAnimatedStyle(() => ({
     transform: [{ scaleY: 1 - bump.get() }, { scaleX: 1 + bump.get() * 0.8 }],
   }));
+
   return (
     <View style={[styles.header, { width }]}>
       <Animated.View style={[{ transformOrigin: "bottom" }, style]}>

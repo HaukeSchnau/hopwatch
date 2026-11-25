@@ -32,6 +32,7 @@ export function Timer({
   const t = useTheme();
   const now = useNow(1000);
   const parts = durationParts(now - since);
+
   return (
     <View
       style={[styles.row, style]}
@@ -72,6 +73,7 @@ function Digits({
   style?: StyleProp<ViewStyle>;
 }) {
   const chars = [...text];
+
   return (
     <View style={[styles.row, style]}>
       {chars.map((ch, i) => (
@@ -100,6 +102,7 @@ function Digits({
 
 function digitIn() {
   "worklet";
+
   return {
     initialValues: { opacity: 0.3, transform: [{ translateY: -6 }, { scaleY: 0.7 }] },
     animations: {

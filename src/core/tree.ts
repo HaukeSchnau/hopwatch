@@ -49,17 +49,21 @@ export function buildTree(contexts: Iterable<Context>): ContextTree {
   const live = [...contexts].filter((c) => c.deletedAt === null);
   const known = new Set(live.map((c) => c.id));
   const children = new Map<ContextId | null, Context[]>();
+
   for (const c of live) {
     // Orphans (parent deleted or missing) are shown as roots rather than lost.
     const parent = c.parentId && known.has(c.parentId) ? c.parentId : null;
     children.set(parent, [...(children.get(parent) ?? []), c]);
   }
+
   for (const list of children.values()) list.sort(bySortOrder);
 
   const byId = new Map<ContextId, ResolvedContext>();
   const ordered: ResolvedContext[] = [];
+
   const visit = (c: Context, parent: ResolvedContext | null) => {
     const glyph = c.emoji ?? parent?.glyph ?? null;
+
     const node: ResolvedContext = {
       ...c,
       hue: c.color ?? parent?.hue ?? DEFAULT_HUE,
@@ -73,23 +77,32 @@ export function buildTree(contexts: Iterable<Context>): ContextTree {
       childIds: (children.get(c.id) ?? []).map((child) => child.id),
       hidden: c.archivedAt !== null || (parent?.hidden ?? false),
     };
+
     byId.set(c.id, node);
     ordered.push(node);
+
     for (const child of children.get(c.id) ?? []) visit(child, node);
   };
+
   const roots = children.get(null) ?? [];
+
   for (const root of roots) visit(root, null);
+
   return { byId, roots: roots.map((r) => r.id), ordered };
 }
 
 /** The node and all of its descendants. */
 export function subtreeIds(tree: ContextTree, id: ContextId): Set<ContextId> {
   const ids = new Set<ContextId>();
+
   const walk = (current: ContextId) => {
     ids.add(current);
+
     for (const child of tree.byId.get(current)?.childIds ?? []) walk(child);
   };
+
   walk(id);
+
   return ids;
 }
 
@@ -118,6 +131,7 @@ export function createContext(
 ): Context[] {
   const parentId = input.parentId ?? null;
   const siblings = contexts.filter((c) => c.deletedAt === null && c.parentId === parentId);
+
   const context: Context = {
     id: input.id,
     parentId,
@@ -137,6 +151,7 @@ export function createContext(
     updatedAt: now,
     deletedAt: null,
   };
+
   return [context];
 }
 
@@ -147,8 +162,11 @@ export function nextFreePin(contexts: readonly Context[]): number {
       .filter((c) => c.deletedAt === null && c.pinPosition !== null)
       .map((c) => c.pinPosition),
   );
+
   let slot = 0;
+
   while (taken.has(slot)) slot++;
+
   return slot;
 }
 
@@ -163,12 +181,17 @@ export function movePin(
   now: number,
 ): Context[] {
   const moving = contexts.find((c) => c.id === id);
+
   if (!moving || moving.pinPosition === slot) return [];
+
   const occupant = contexts.find(
     (c) => c.deletedAt === null && c.pinPosition === slot && c.id !== id,
   );
+
   const rows: Context[] = [{ ...moving, pinPosition: slot, updatedAt: now }];
+
   if (occupant) rows.push({ ...occupant, pinPosition: moving.pinPosition, updatedAt: now });
+
   return rows;
 }
 
@@ -184,17 +207,22 @@ export function moveContext(
   now: number,
 ): Context[] {
   const moving = contexts.find((c) => c.id === id);
+
   if (!moving) return [];
   const tree = buildTree(contexts);
+
   if (parentId !== null && subtreeIds(tree, id).has(parentId)) return [];
 
   const siblings = contexts
     .filter((c) => c.deletedAt === null && c.parentId === parentId && c.id !== id)
     .sort(bySortOrder);
+
   const clamped = Math.max(0, Math.min(index, siblings.length));
   const order = [...siblings.slice(0, clamped), moving, ...siblings.slice(clamped)];
+
   return order.flatMap((c, sortOrder) => {
     const changed = c.id === id ? { ...c, parentId, sortOrder } : { ...c, sortOrder };
+
     return c.sortOrder === sortOrder && c.id !== id ? [] : [{ ...changed, updatedAt: now }];
   });
 }
@@ -221,5 +249,6 @@ export function canDelete(
 ): boolean {
   const hasChildren = contexts.some((c) => c.deletedAt === null && c.parentId === id);
   const hasEntries = entries.some((e) => e.contextId === id);
+
   return !hasChildren && !hasEntries;
 }

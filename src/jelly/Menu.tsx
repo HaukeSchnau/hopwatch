@@ -46,6 +46,7 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
       <Item key={entry.id} item={entry} onPress={onPress} />
     ),
   );
+
   return (
     <Host matchContents ignoreSafeArea="all">
       <ContextMenu>
@@ -65,13 +66,16 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
 function Item({ item, onPress }: { item: MenuItem; onPress: (id: string) => void }) {
   const role = item.destructive ? "destructive" : undefined;
   const press = () => onPress(item.id);
+
   if (!item.subtitle)
     return <Button label={item.title} systemImage={item.image} role={role} onPress={press} />;
+
   // A label of image, title and subtitle: the system menu lays them out itself.
   const label = [
     <Text key="title">{item.title}</Text>,
     <Text key="subtitle">{item.subtitle}</Text>,
   ];
+
   return (
     <Button role={role} onPress={press}>
       {item.image ? [<Image key="image" systemName={item.image} />, ...label] : label}

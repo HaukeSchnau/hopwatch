@@ -86,6 +86,7 @@ const ROOT = "root";
 
 export function ContextEditor() {
   const target = useEditorTarget();
+
   if (!target) {
     return (
       <JellyForm title={s.title}>
@@ -95,12 +96,14 @@ export function ContextEditor() {
       </JellyForm>
     );
   }
+
   return <Editor key={target.context?.id ?? "new"} {...target} />;
 }
 
 function Editor(props: EditorTarget) {
   const { context } = props;
   const t = useTheme();
+
   const {
     name,
     setName,
@@ -142,6 +145,7 @@ function Editor(props: EditorTarget) {
     bump,
     create,
   } = useJellyDraft(props);
+
   const now = useNow(60_000);
   const slack = useSlackLink();
   const nameState = useNativeState(context?.name ?? "");
@@ -456,7 +460,9 @@ function SuggestButton({
 }) {
   const available = useModelAvailable();
   const [busy, setBusy] = useState(false);
+
   if (!available) return null;
+
   return (
     <Button
       label={busy ? s.thinking : s.suggest}
@@ -470,6 +476,7 @@ function SuggestButton({
         })
           .then((suggestion) => {
             if (!suggestion) return;
+
             if (suggestion.emoji) onEmoji(suggestion.emoji);
             saveSuggestedLook(context.id, suggestion, typed, suggestion.emoji ?? context.glyph);
           })
@@ -483,12 +490,14 @@ function SuggestButton({
 /** Twelve candy drops in two rows. */
 function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue) => void }) {
   const t = useTheme();
+
   return (
     <VStack spacing={12}>
       {[hues.slice(0, 6), hues.slice(6)].map((row, r) => (
         <HStack key={r} spacing={12}>
           {row.map((h) => {
             const c = t.candy[h];
+
             return (
               <ZStack
                 key={h}
@@ -520,6 +529,7 @@ function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue)
 function ExistingSections({ context }: { context: ResolvedContext }) {
   const [copied, setCopied] = useState(false);
   const link = startLink(context.id);
+
   return (
     <>
       <Section title={s.startLink} footer={<SwiftText>{s.startLinkFooter}</SwiftText>}>
@@ -562,6 +572,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
           systemImage={context.archivedAt ? "tray.and.arrow.up" : "archivebox"}
           onPress={() => {
             buzz.thud();
+
             if (context.archivedAt) actions.unarchive(context.id);
             else {
               actions.archive(context.id);

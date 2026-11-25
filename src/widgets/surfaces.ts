@@ -28,6 +28,7 @@ const night = darkTheme.c;
 
 function colors(hue: Hue) {
   const candy = lightTheme.candy[hue];
+
   return {
     light: candy.light,
     fill: candy.fill,
@@ -63,35 +64,46 @@ const strings = {
 /** Lets the store replay taps from the native queue. False in builds without the native side. */
 export function connectSurfaces(): boolean {
   const native = systemSurfaces;
+
   if (!native || typeof native.writeSnapshot !== "function") return false;
+
   const remove = (seqs: number[]) => {
     native.removeCommands(seqs);
     // Surfaces show the snapshot plus the queue, so they change with the queue even when
     // a replay changed nothing: write the snapshot again to make them catch up.
     publishSnapshot(useHopwatch.getState(), { force: true });
   };
+
   connectRemoteQueue({
     read: () => {
       const unreadable: number[] = [];
+
       const commands = native.readCommands().flatMap((json): RemoteCommand[] => {
         const command = parseCommand(json);
+
         if (command) return [command];
         // Native code may still read it and keep showing its tap: drop it.
         const seq = seqOf(json);
+
         if (seq !== null) unreadable.push(seq);
+
         return [];
       });
+
       if (unreadable.length > 0) remove(unreadable);
+
       return commands;
     },
     remove,
   });
+
   return true;
 }
 
 function seqOf(json: string): number | null {
   try {
     const seq: unknown = (JSON.parse(json) as { seq?: unknown } | null)?.seq;
+
     return typeof seq === "number" ? seq : null;
   } catch {
     return null;
@@ -106,6 +118,7 @@ export function publishSnapshot(
   { force = false } = {},
 ) {
   const json = JSON.stringify(snapshotOf(state.entries, state.tree, colors, paint, strings));
+
   if (json === written && !force) return;
   written = json;
   systemSurfaces?.writeSnapshot(json);
@@ -118,20 +131,25 @@ export function publishSnapshot(
  */
 export function startSurfaces(): () => void {
   if (!connectSurfaces() || !systemSurfaces) return () => {};
+
   publishSnapshot();
   syncSlack({ eager: true });
+
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries === prev.entries && state.tree === prev.tree) return;
     publishSnapshot(state);
     syncSlack();
   });
+
   const taps = systemSurfaces.addListener("onCommands", () => drainRemote());
+
   const foreground = AppState.addEventListener("change", (status) => {
     if (status !== "active") return;
     drainRemote();
     // Another look at Slack: a meeting's status may have ended, or a call failed offline.
     syncSlack({ eager: true });
   });
+
   return () => {
     unsubscribe();
     taps.remove();

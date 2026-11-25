@@ -22,7 +22,9 @@ export function markReloadForUpdate(on: boolean): void {
 export function initialLinkIsStale(): boolean {
   if (stale === null) {
     stale = db.getMeta(KEY) !== null;
+
     if (stale) db.setMeta(KEY, null);
   }
+
   return stale;
 }

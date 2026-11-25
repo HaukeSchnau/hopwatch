@@ -36,6 +36,7 @@ export interface Suggestion extends Picked {
 }
 
 type Asked = Extract<(typeof topics)[number], { about: string }>;
+
 const asked = topics.filter((t): t is Asked => "about" in t);
 const topicNames = asked.map((t) => t.name);
 
@@ -84,12 +85,15 @@ const withEmoji = (name: string, emoji: string | null | undefined) =>
 
 function promptFor(input: SuggestInput, group: boolean): string {
   const lines: string[] = [];
+
   if (group && input.ancestors.length > 0) lines.push(`Group: ${input.ancestors.join(" › ")}`);
+
   if (group && input.siblings.length > 0)
     lines.push(
       `Also in the group: ${input.siblings.map((s) => withEmoji(s.name, s.emoji)).join(", ")}`,
     );
   lines.push(`Activity: ${withEmoji(input.name, input.emoji)}`);
+
   return lines.join("\n");
 }
 
@@ -100,6 +104,7 @@ const candy = hues.filter((h) => h !== "gray");
 export function hueChoices(siblings: SuggestInput["siblings"]): readonly Hue[] {
   const taken = new Set(siblings.map((s) => s.hue));
   const free = candy.filter((h) => !taken.has(h));
+
   return free.length > 0 ? free : candy;
 }
 
@@ -112,6 +117,7 @@ const takenEmoji = (siblings: SuggestInput["siblings"]) =>
  */
 export function requestFor(input: SuggestInput, group = true) {
   const taken = takenEmoji(input.siblings);
+
   // The emoji comes first: asked after the mood, it drifted to 😴 for anything dozy.
   const fields = [
     ...(input.wantEmoji
@@ -139,6 +145,7 @@ export function requestFor(input: SuggestInput, group = true) {
         ]
       : []),
   ];
+
   return { instructions: INSTRUCTIONS, prompt: promptFor(input, group), fields };
 }
 
@@ -161,22 +168,28 @@ const PICTOGRAPHIC: readonly (readonly [number, number])[] = [
   [0x203c, 0x2049],
   [0x2122, 0x2139],
 ];
+
 const inRange = (cp: number) => PICTOGRAPHIC.some(([lo, hi]) => cp >= lo && cp <= hi);
+
 const isModifier = (cp: number) =>
   cp === 0xfe0f ||
   cp === 0xfe0e ||
   cp === 0x20e3 ||
   (cp >= 0x1f3fb && cp <= 0x1f3ff) ||
   (cp >= 0xe0020 && cp <= 0xe007f);
+
 const isFlagHalf = (cp: number) => cp >= 0x1f1e6 && cp <= 0x1f1ff;
 
 /** `text` if it is exactly one emoji (ZWJ sequences and flags included), else null. */
 export function singleEmoji(text: string): string | null {
   const trimmed = text.trim();
   const points = [...trimmed].map((c) => c.codePointAt(0) ?? 0);
+
   if (points.length === 0) return null;
+
   if (points.length === 2 && points.every(isFlagHalf)) return trimmed;
   let expectBase = true;
+
   for (const cp of points) {
     if (expectBase) {
       if (!inRange(cp) || isFlagHalf(cp)) return null;
@@ -184,6 +197,7 @@ export function singleEmoji(text: string): string | null {
     } else if (cp === 0x200d) expectBase = true;
     else if (!isModifier(cp)) return null;
   }
+
   return expectBase ? null : trimmed;
 }
 
@@ -195,7 +209,9 @@ function pickEmoji(
 ): string | null {
   const taken = new Set(takenEmoji(siblings).map(emojiKey));
   const own = answer ? singleEmoji(answer) : null;
+
   if (own && !taken.has(emojiKey(own))) return own;
+
   return (found && topic(found).emoji.find((e) => !taken.has(emojiKey(e)))) || own;
 }
 
@@ -203,6 +219,7 @@ function pickEmoji(
 export function readAnswer(input: SuggestInput, answer: Answer): Suggestion {
   const found = member(topicNames, answer.topic) ?? null;
   const motion = member(motions, answer.motion);
+
   return {
     topic: found,
     traits: motion ? { motion } : {},
@@ -231,7 +248,9 @@ export interface StoredSuggestion extends Picked {
 export function parseSuggestion(value: Json): StoredSuggestion | undefined {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
   const { v, name, glyph, topic: found, look } = value;
+
   if (typeof name !== "string") return undefined;
+
   return {
     version: typeof v === "number" ? v : 1,
     name,
@@ -244,10 +263,13 @@ export function parseSuggestion(value: Json): StoredSuggestion | undefined {
 /** The stored form of `picked`, made for `name` and `glyph`. */
 export function suggestionJson(picked: Picked, name: string, glyph: string | null): Json {
   const look: { [key: string]: Json } = {};
+
   for (const key of traitKeys) {
     const value = picked.traits[key];
+
     if (value !== undefined) look[key] = value;
   }
+
   return { v: SUGGESTION_VERSION, name, glyph, topic: picked.topic, look };
 }
 
@@ -260,6 +282,7 @@ export function freshPick(
   source: { glyph: string | null; name?: string },
 ): StoredSuggestion | null {
   if (!stored || stored.name !== source.name) return null;
+
   return stored.version < 2 || stored.glyph === source.glyph ? stored : null;
 }
 

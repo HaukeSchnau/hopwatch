@@ -32,12 +32,14 @@ const en = {
   span: (first: string, last: string | null) => (last ? `${first} to ${last}` : first),
   tracked: (total: string, running: boolean, versus: Versus) => {
     const last = running ? "at this point last week" : "the week before";
+
     const compared =
       versus === null
         ? ""
         : versus === "same"
           ? `, about the same as ${last}`
           : `, ${versus.by} ${versus.more ? "more" : "less"} than ${last}`;
+
     return `You tracked ${total}${running ? " so far" : ""}${compared}.`;
   },
   /** "Job got almost 38 hours, just short of its target of 40 hours." `actual` is null for no time. */
@@ -48,9 +50,11 @@ const en = {
     target: { of: string; state: TargetState } | null,
   ) => {
     const got = actual ? `got ${actual}${running ? " so far" : ""}` : "got no time";
+
     if (!target) return `${name} ${got}.`;
     const its = `its target of ${target.of}`;
     const s = target.state;
+
     const clause =
       s.kind === "past"
         ? `${s.running ? "already " : ""}past ${its}`
@@ -59,6 +63,7 @@ const en = {
           : s.kind === "behind"
             ? `behind pace for ${its}`
             : `${s.kind === "justShort" ? "just short" : "short"} of ${its}`;
+
     return `${name} ${got}, ${clause}.`;
   },
   lateEvenings: (days: number, names: string, mostly: string) =>
@@ -101,21 +106,25 @@ export const factText: Record<Language, typeof en> = {
     span: (first, last) => (last ? `${first} bis ${last}` : first),
     tracked: (total, running, versus) => {
       const last = running ? "letzte Woche um diese Zeit" : "in der Woche davor";
+
       const compared =
         versus === null
           ? ""
           : versus === "same"
             ? `, etwa so viel wie ${last}`
             : `, ${versus.by} ${versus.more ? "mehr" : "weniger"} als ${last}`;
+
       return `Du hast ${running ? "bisher " : ""}${total} erfasst${compared}.`;
     },
     context: (name, actual, running, target) => {
       const got = actual
         ? `kam ${running ? "bisher " : ""}auf ${actual}`
         : `bekam ${running ? "noch " : ""}keine Zeit`;
+
       if (!target) return `${name} ${got}.`;
       const goal = `Ziel von ${target.of}`;
       const s = target.state;
+
       const clause =
         s.kind === "past"
           ? `${s.running ? "schon " : ""}über dem ${goal}`
@@ -124,6 +133,7 @@ export const factText: Record<Language, typeof en> = {
             : s.kind === "behind"
               ? `hinter dem Plan zum ${goal}`
               : `${s.kind === "justShort" ? "knapp " : ""}unter dem ${goal}`;
+
       return `${name} ${got}, ${clause}.`;
     },
     lateEvenings: (days, names, mostly) =>

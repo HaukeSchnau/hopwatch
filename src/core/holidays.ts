@@ -21,7 +21,9 @@ export const germanStates = [
   "SH",
   "TH",
 ] as const;
+
 export type GermanState = (typeof germanStates)[number];
+
 export const isGermanState = (value: unknown): value is GermanState =>
   typeof value === "string" && (germanStates as readonly string[]).includes(value);
 
@@ -48,6 +50,7 @@ export type HolidayId =
 
 /** A day as YYYY-MM-DD, from a UTC date (only its calendar fields are used). */
 const key = (d: Date) => d.toISOString().slice(0, 10);
+
 const on = (year: number, month: number, day: number) =>
   key(new Date(Date.UTC(year, month - 1, day)));
 
@@ -67,6 +70,7 @@ function easter(year: number): Date {
   const m = Math.floor((a + 11 * h + 22 * l) / 451);
   const month = Math.floor((h + l - 7 * m + 114) / 31);
   const day = ((h + l - 7 * m + 114) % 31) + 1;
+
   return new Date(Date.UTC(year, month - 1, day));
 }
 
@@ -77,6 +81,7 @@ const afterEaster = (year: number, days: number) =>
 function repentanceDay(year: number): string {
   const nov22 = new Date(Date.UTC(year, 10, 22));
   const back = (nov22.getUTCDay() - 3 + 7) % 7;
+
   return on(year, 11, 22 - back);
 }
 
@@ -119,5 +124,6 @@ export function germanHolidays(year: number, state: GermanState): Map<string, Ho
     [on(year, 12, 25), "christmasDay"],
     [on(year, 12, 26), "boxingDay"],
   ];
+
   return new Map(all.filter(([, id]) => regional[id]?.includes(state) ?? true));
 }

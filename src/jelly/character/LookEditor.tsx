@@ -91,6 +91,7 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
       >
         {traitKeys.map((key) => {
           const on = key === trait;
+
           return (
             <Squishy
               key={key}
@@ -160,6 +161,7 @@ function OptionStrip<K extends Trait>({ trait, context, look, auto, onPick }: St
         const on = option === look[trait];
         const variant: Partial<Look> = { ...look };
         variant[trait] = option;
+
         return (
           <Squishy
             key={option}
@@ -215,10 +217,12 @@ function MotionChips({
   onPick: (value: Look["motion"]) => void;
 }) {
   const theme = useTheme();
+
   return (
     <View style={styles.chips}>
       {traitOptions.motion.map((motion) => {
         const on = motion === look.motion;
+
         return (
           <Squishy
             key={motion}

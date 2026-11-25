@@ -15,6 +15,7 @@ export const bodies = [
   "star",
   "ghost",
 ] as const;
+
 export const eyeStyles = [
   "dot",
   "shiny",
@@ -25,6 +26,7 @@ export const eyeStyles = [
   "glasses",
   "shades",
 ] as const;
+
 export const mouths = [
   "smile",
   "grin",
@@ -36,6 +38,7 @@ export const mouths = [
   "flat",
   "wobbly",
 ] as const;
+
 export const toppers = [
   "none",
   "tuft",
@@ -58,7 +61,9 @@ export const toppers = [
   "beanie",
   "propeller",
 ] as const;
+
 export const necks = ["none", "bowtie", "tie", "scarf", "collar", "bib", "medal"] as const;
+
 export const surfaces = [
   "plain",
   "freckles",
@@ -69,6 +74,7 @@ export const surfaces = [
   "belly",
   "sparkle",
 ] as const;
+
 export const motions = [
   "bouncy",
   "dozy",
@@ -80,11 +86,17 @@ export const motions = [
 ] as const;
 
 export type Body = (typeof bodies)[number];
+
 export type Eyes = (typeof eyeStyles)[number];
+
 export type Mouth = (typeof mouths)[number];
+
 export type Topper = (typeof toppers)[number];
+
 export type Neck = (typeof necks)[number];
+
 export type Surface = (typeof surfaces)[number];
+
 export type Motion = (typeof motions)[number];
 
 /** Everything that makes a jelly someone. Color and emoji stay on the context. */
@@ -140,7 +152,9 @@ function assign<K extends Trait>(out: Partial<Look>, key: K, value: Look[K] | un
 export function parseLook(value: Json): Partial<Look> | undefined {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
   const out: Partial<Look> = {};
+
   for (const key of traitKeys) assign(out, key, member(traitOptions[key], value[key]));
+
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
@@ -148,6 +162,8 @@ export function parseLook(value: Json): Partial<Look> | undefined {
 export function withTraits(base: Look, patch: Partial<Look> | null | undefined): Look {
   if (!patch) return base;
   const out = { ...base };
+
   for (const key of traitKeys) assign(out, key, patch[key]);
+
   return out;
 }

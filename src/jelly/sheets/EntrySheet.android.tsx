@@ -17,6 +17,7 @@ const s = sheetsText.entry;
 export function EntrySheet() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const entry = useEntries().find((e) => e.id === id) ?? null;
+
   if (!entry) {
     return (
       <JellyForm title={s.title}>
@@ -26,12 +27,14 @@ export function EntrySheet() {
       </JellyForm>
     );
   }
+
   // Keyed so the draft resets when a different entry opens.
   return <EntryForm key={entry.id} entry={entry} />;
 }
 
 function EntryForm({ entry }: { entry: Entry }) {
   const t = useTheme();
+
   const {
     contextId,
     setContextId,
@@ -46,6 +49,7 @@ function EntryForm({ entry }: { entry: Entry }) {
     save,
     remove,
   } = useEntryDraft(entry);
+
   const [note, setNote] = useState(entry.note ?? "");
 
   return (

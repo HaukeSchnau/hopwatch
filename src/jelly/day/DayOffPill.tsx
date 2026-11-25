@@ -10,7 +10,9 @@ import { dayOffChoices, useDayOffPill } from "./dayOff";
 export function DayOffPill({ dayStart }: { dayStart: number }) {
   const t = useTheme();
   const pill = useDayOffPill(dayStart);
+
   if (!pill.shown) return null;
+
   return (
     <Host matchContents>
       <Menu

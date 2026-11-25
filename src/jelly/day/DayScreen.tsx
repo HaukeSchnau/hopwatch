@@ -48,17 +48,22 @@ export function DayScreen() {
   const nextIcon = useHeaderIcon("chevron.right", "chevron_right");
   const now = useNow(30_000);
   const today = startOfDay(now);
+
   const [day, setDay] = useState(() =>
     params.day ? startOfDay(Number(params.day)) : startOfDay(Date.now()),
   );
+
   const [selected, setSelected] = useState<EntryId | null>(null);
   // A tapped evening check navigates here with a new `open`; follow it even when Day is
   // already showing another day.
   const [opening, setOpening] = useState(params.open);
+
   if (params.open !== opening) {
     setOpening(params.open);
+
     if (params.day) setDay(startOfDay(Number(params.day)));
   }
+
   const report = useDayReport(day);
   const running = useRunning();
   const axis = axisFor(report, now);
@@ -71,6 +76,7 @@ export function DayScreen() {
   const scroll = useRef<ScrollView>(null);
   const timelineTop = useRef(0);
   const opened = useRef<number | null>(null);
+
   const go = (next: number) => {
     buzz.tick();
     setSelected(null);
@@ -83,11 +89,14 @@ export function DayScreen() {
    */
   const open = (e: LayoutChangeEvent) => {
     timelineTop.current = e.nativeEvent.layout.y;
+
     if (opened.current === day) return;
     opened.current = day;
     const focus = day === today ? now : report.segments[0]?.start;
+
     if (focus === undefined) return;
     const y = timelineTop.current + yOf(focus, axis);
+
     if (header + y < height * 0.7) return;
     scroll.current?.scrollTo({ y: y - height * (day === today ? 0.55 : 0.3), animated: false });
   };
@@ -98,22 +107,30 @@ export function DayScreen() {
   const tapDial = (e: GestureResponderEvent) => {
     const { locationX: x, locationY: y } = e.nativeEvent;
     const radius = pointRadius(frame, x, y);
+
     if (Math.abs(radius - frame.r) > frame.stroke / 2 + 18) return;
     const at = timeAtDeg(pointDeg(frame, x, y), day, dayEnd);
     const hit = report.segments.find((s) => s.start <= at && at < s.end);
+
     if (hit) {
       buzz.tick();
+
       if (hit.entry.id === selected) {
         router.push({ pathname: "/entry", params: { id: hit.entry.id } });
+
         return;
       }
+
       setSelected(hit.entry.id);
       // Leaves room for the header above the bean.
       const offset = timelineTop.current + yOf(hit.start, axis) - 230;
       scroll.current?.scrollTo({ y: Math.max(0, offset), animated: true });
+
       return;
     }
+
     const gap = report.gaps.find((g) => g.start <= at && at < g.end);
+
     if (gap && gap.start < (live ? now : dayEnd)) {
       buzz.tap();
       router.push({
@@ -130,6 +147,7 @@ export function DayScreen() {
 
   const { blocks, median } = report.fragmentation;
   const titles = dayTitles(day, now);
+
   return (
     <>
       <Stack.Title asChild>

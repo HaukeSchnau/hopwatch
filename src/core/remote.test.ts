@@ -7,6 +7,7 @@ import { buildTree } from "./tree";
 
 const MIN = 60_000;
 const T0 = Date.UTC(2026, 9, 15, 7, 0);
+
 const context = (id: string, extra: Partial<Context> = {}): Context => ({
   id: id as ContextId,
   parentId: null,
@@ -27,16 +28,20 @@ const context = (id: string, extra: Partial<Context> = {}): Context => ({
   deletedAt: null,
   ...extra,
 });
+
 const tree = buildTree([context("job"), context("dog"), context("old", { archivedAt: 1 })]);
 const [job, dog, old] = ["job", "dog", "old"] as ContextId[];
 
 let n = 0;
+
 const clock = (now: number): timeline.Clock => ({
   now,
   offsetAt: () => 120,
   newId: () => `local${n++}` as EntryId,
 });
+
 const apply = (entries: Entry[], rows: Entry[] | null) => timeline.applyRows(entries, rows ?? []);
+
 const start = (
   contextId: ContextId,
   entryId: string,
@@ -62,6 +67,7 @@ describe("replaying taps from outside the app", () => {
       running,
       replay(running, tree, start(dog, "tap1", jobEntry, T0 + 30 * MIN), clock(T0 + 40 * MIN)),
     );
+
     expect(after.map((e) => [e.id, e.contextId, e.startUtc, e.endUtc])).toEqual([
       [jobEntry, job, T0, T0 + 30 * MIN],
       ["tap1", dog, T0 + 30 * MIN, null],
@@ -79,6 +85,7 @@ describe("replaying taps from outside the app", () => {
   it("replays a chain of taps in order", () => {
     const first = start(dog, "tap1", jobEntry, T0 + 30 * MIN, 1);
     const second = start(job, "tap2", "tap1" as EntryId, T0 + 50 * MIN, 2);
+
     const stop: RemoteCommand = {
       seq: 3,
       kind: "stop",
@@ -87,7 +94,9 @@ describe("replaying taps from outside the app", () => {
       expectOpen: "tap2" as EntryId,
       at: T0 + 70 * MIN,
     };
+
     let entries = running;
+
     for (const command of [first, second, stop])
       entries = apply(entries, replay(entries, tree, command, clock(T0 + 80 * MIN)));
     expect(entries.map((e) => [e.id, e.startUtc, e.endUtc])).toEqual([
@@ -106,10 +115,12 @@ describe("replaying taps from outside the app", () => {
   it("drops a tap the app has recorded time past, rather than cutting that time away", () => {
     // A Resume tapped at 08:00 that the app never replayed, then Dog tracked in the app until 09:00.
     const stopped = apply(running, timeline.stop(running, clock(T0 + 30 * MIN)));
+
     const dogLater = apply(
       stopped,
       timeline.place(stopped, dog, T0 + 50 * MIN, T0 + 120 * MIN, clock(T0 + 120 * MIN)),
     );
+
     expect(
       replay(dogLater, tree, start(job, "tap1", null, T0 + 60 * MIN), clock(T0 + 130 * MIN)),
     ).toBeNull();
@@ -150,6 +161,7 @@ describe("the snapshot", () => {
     let entries = apply([], timeline.start([], dog, clock(T0)));
     entries = apply(entries, timeline.start(entries, job, clock(T0 + 30 * MIN)));
     const pair = ["#fff", "#000"] as const;
+
     const colors = () => ({
       light: "#fff",
       fill: "#888",
@@ -158,6 +170,7 @@ describe("the snapshot", () => {
       accent: pair,
       wash: pair,
     });
+
     const snapshot = snapshotOf(
       entries,
       tree,
@@ -165,6 +178,7 @@ describe("the snapshot", () => {
       { bg: pair, ink: pair, muted: pair, stop: pair, onStop: pair },
       {},
     );
+
     expect(snapshot.running?.contextId).toBe(job);
     expect(snapshot.back).toBe(dog);
     expect(snapshot.jellies.map((j) => j.id).sort()).toEqual([dog, job]);

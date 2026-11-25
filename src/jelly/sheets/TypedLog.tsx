@@ -48,6 +48,7 @@ const s = sheetsText.typed;
 /** Whether a search might be a sentence to log rather than a jelly to find. */
 export function looksLikeSentence(query: string, matches: number): boolean {
   const q = query.trim();
+
   return q.length >= 3 && (matches === 0 || /\d/.test(q));
 }
 
@@ -57,26 +58,33 @@ export function looksLikeSentence(query: string, matches: number): boolean {
  */
 function useSentenceAnswer(sentence: string, enabled: boolean): SentenceAnswer | null | undefined {
   const trimmed = sentence.trim();
+
   const [asked, setAsked] = useState<{ sentence: string; answer: SentenceAnswer | null } | null>(
     null,
   );
+
   useEffect(() => {
     if (!enabled) return;
     let live = true;
+
     const timer = setTimeout(() => {
       generate(sentenceRequest(trimmed, useHopwatch.getState().tree))
         .catch(() => null)
         .then((answer) => {
           if (__DEV__ && !answer) console.warn("typed logging:", lastFailure());
+
           if (live) setAsked({ sentence: trimmed, answer });
         });
     }, 500);
+
     return () => {
       live = false;
       clearTimeout(timer);
     };
   }, [enabled, trimmed]);
+
   if (!enabled) return null;
+
   return asked?.sentence === trimmed ? asked.answer : undefined;
 }
 
@@ -99,18 +107,23 @@ function words(plan: Confirmable, { tree, entries, now }: Scene) {
   const name = (id: ContextId) => tree.byId.get(id)?.name ?? s.something;
   // A start or stop before today reads "yesterday 21:00".
   const yesterday = (at: number) => !isSameDay(at, now);
+
   if (plan.kind === "place") {
     const span = `${formatClock(plan.from)}–${formatClock(plan.to)}`;
+
     return {
       title: plan.contextId === null ? s.untracked(span) : `${name(plan.contextId)} ${span}`,
       detail: `${formatRelativeDay(plan.from, now)} · ${formatDuration(plan.to - plan.from)}`,
       button: plan.contextId === null ? s.leaveUntracked(span) : s.log(span),
     };
   }
+
   const open = findOpen(entries);
+
   if (plan.kind === "stop") {
     const running = open ? name(open.contextId) : s.it;
     const atNow = now - plan.at < MINUTE;
+
     return {
       title: atNow
         ? sheetsText.stopName(running)
@@ -121,12 +134,15 @@ function words(plan: Confirmable, { tree, entries, now }: Scene) {
       button: atNow ? sheetsText.stopNow : sheetsText.stopAt(formatClock(plan.at)),
     };
   }
+
   const atNow = now - plan.at < MINUTE;
+
   const since = sheetsText.nameSince(
     name(plan.contextId),
     formatClock(plan.at),
     yesterday(plan.at),
   );
+
   if (open?.contextId === plan.contextId) {
     return {
       title: since,
@@ -134,6 +150,7 @@ function words(plan: Confirmable, { tree, entries, now }: Scene) {
       button: sheetsText.moveStartTo(formatClock(plan.at)),
     };
   }
+
   return {
     title: atNow ? sheetsText.startName(name(plan.contextId)) : since,
     detail: atNow ? s.atNow : s.startedAgo(formatAgo(now - plan.at)),
@@ -158,12 +175,15 @@ const toneIcon = {
 /** What a plan does to the entries already there: "Replaces Cooking 12:10–12:40". */
 function changesOf(plan: Confirmable, { tree, entries, now }: Scene): Change[] {
   const name = (e: Entry) => tree.byId.get(e.contextId)?.name ?? s.something;
+
   const span = (e: Entry) =>
     `${formatClock(e.startUtc)}–${e.endUtc === null ? sheetsText.now : formatClock(e.endUtc)}`;
+
   const cut = (e: Entry, at: number): Change => ({
     text: s.ends(name(e), e.endUtc === null, formatClock(at)),
     tone: "cut",
   });
+
   const replaced = (list: Entry[]): Change[] =>
     list.length > 3
       ? [{ text: s.replacesCount(list.length), tone: "gone" }]
@@ -171,6 +191,7 @@ function changesOf(plan: Confirmable, { tree, entries, now }: Scene): Change[] {
 
   if (plan.kind === "place") {
     const p = previewPlace(entries, plan.contextId, plan.from, plan.to, now);
+
     return [
       ...(p.ended ? [cut(p.ended.entry, p.ended.at)] : []),
       ...(p.split
@@ -192,12 +213,17 @@ function changesOf(plan: Confirmable, { tree, entries, now }: Scene): Change[] {
         : []),
     ];
   }
+
   if (plan.kind === "start") {
     const p = previewStart(entries, plan.contextId, plan.at, now);
+
     return [...(p.cut ? [cut(p.cut.entry, p.cut.at)] : []), ...replaced(p.replaced)];
   }
+
   const open = findOpen(entries);
+
   if (!open) return [];
+
   // Too short an entry is dropped, the same rule stopConsequence words.
   return [
     {
@@ -211,15 +237,22 @@ function changesOf(plan: Confirmable, { tree, entries, now }: Scene): Change[] {
 function problemWith(plan: Confirmable, { tree, entries, now }: Scene): string | null {
   if (plan.kind === "place") {
     if (plan.to <= plan.from) return s.endsBeforeStart;
+
     if (plan.from >= now) return s.stillToCome;
+
     if (Math.min(plan.to, now) - plan.from < MINUTE) return s.tooShort;
+
     return null;
   }
+
   if (plan.at > now) return s.stillToCome;
+
   if (plan.kind === "start") return null;
   const open = findOpen(entries);
+
   if (!open) return sheetsText.nothingRunning;
   const name = tree.byId.get(open.contextId)?.name ?? s.It;
+
   return plan.at < open.startUtc ? s.beforeStart(name, formatClock(open.startUtc)) : null;
 }
 
@@ -236,6 +269,7 @@ export function useTypedLog(sentence: string, enabled: boolean) {
   const answer = useSentenceAnswer(sentence, enabled);
   const scene = useScene();
   const reading = answer ? readSentence(sentence, answer, scene) : null;
+
   return {
     sentence,
     answer,
@@ -244,6 +278,7 @@ export function useTypedLog(sentence: string, enabled: boolean) {
     shown: enabled && answer !== null && (answer === undefined || reading !== null),
   };
 }
+
 type TypedLog = ReturnType<typeof useTypedLog>;
 
 /**
@@ -259,10 +294,12 @@ export function LogRow({
 }) {
   const t = useTheme();
   const scene = useScene();
+
   if (!shown) return null;
   const said = plan ? words(plan, scene) : null;
   const title = said?.title ?? (answer === undefined ? s.logSentence(sentence.trim()) : s.cantLog);
   const detail = said?.detail ?? (reading && "problem" in reading ? reading.problem : s.reading);
+
   return (
     <Squishy
       amount={0.06}
@@ -313,6 +350,7 @@ export function LogRow({
 function onDay(base: number, picked: Date): number {
   const d = new Date(base);
   d.setHours(picked.getHours(), picked.getMinutes(), 0, 0);
+
   return d.getTime();
 }
 
@@ -343,8 +381,10 @@ export function LogConfirm({
   const apply = () => {
     if (problem) return buzz.warn();
     buzz.success();
+
     if (plan.kind === "place") {
       actions.place(plan.contextId, plan.from, plan.to);
+
       // A break left untracked on purpose; the evening check won't ask about it.
       if (plan.contextId === null) markBreak(plan.from, plan.to);
       play("pop");
@@ -361,6 +401,7 @@ export function LogConfirm({
       actions.start(plan.contextId, { at: plan.at });
       play("pop");
     }
+
     onDone();
   };
 
@@ -424,6 +465,7 @@ export function LogConfirm({
 
 function ChangeLine({ text: line, tone }: Change) {
   const t = useTheme();
+
   return (
     <View style={styles.change}>
       <SymbolView

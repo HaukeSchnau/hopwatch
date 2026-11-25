@@ -19,11 +19,13 @@ function touching(a: Circle, b: Circle, r: number, gap: number): Circle[] {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const d = Math.hypot(dx, dy);
+
   if (d === 0 || d > ra + rb || d < Math.abs(ra - rb)) return [];
   const along = (ra * ra - rb * rb + d * d) / (2 * d);
   const h = Math.sqrt(Math.max(0, ra * ra - along * along));
   const mx = a.x + (dx * along) / d;
   const my = a.y + (dy * along) / d;
+
   return [
     { x: mx + (h * dy) / d, y: my - (h * dx) / d, r },
     { x: mx - (h * dy) / d, y: my + (h * dx) / d, r },
@@ -38,9 +40,11 @@ export function pack(values: number[], width: number, height: number, gap = 6): 
   if (values.length === 0) return [];
   // Radii normalised so the biggest is 100, which makes `gap` a share of it.
   const max = Math.max(...values, 1);
+
   const order = values
     .map((v, i) => ({ i, r: Math.max(8, Math.sqrt(Math.max(v, 0) / max) * 100) }))
     .sort((a, b) => b.r - a.r);
+
   const placed: Circle[] = [];
   const byIndex = new Map<number, Circle>();
   // Squash towards a wide layout by weighting vertical distance more.
@@ -48,6 +52,7 @@ export function pack(values: number[], width: number, height: number, gap = 6): 
 
   for (const { i, r } of order) {
     let best: Circle | null = null;
+
     if (placed.length === 0) best = { x: 0, y: 0, r };
     else if (placed.length === 1) best = { x: placed[0].r + r + gap, y: 0, r };
     else {
@@ -58,8 +63,10 @@ export function pack(values: number[], width: number, height: number, gap = 6): 
           }
         }
       }
+
       best ??= { x: 0, y: placed.reduce((m, p) => Math.max(m, p.y + p.r), 0) + r + gap, r };
     }
+
     placed.push(best);
     byIndex.set(i, best);
   }
@@ -72,8 +79,10 @@ export function pack(values: number[], width: number, height: number, gap = 6): 
   const scale = Math.min(width / (maxX - minX), height / (maxY - minY));
   const offsetX = (width - (maxX - minX) * scale) / 2;
   const offsetY = (height - (maxY - minY) * scale) / 2;
+
   return values.map((_, i) => {
     const c = byIndex.get(i)!;
+
     return { x: (c.x - minX) * scale + offsetX, y: (c.y - minY) * scale + offsetY, r: c.r * scale };
   });
 }

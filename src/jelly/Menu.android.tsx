@@ -18,6 +18,7 @@ preloadSymbolImages(Object.values(menuSymbols));
 
 export function Menu({ title, items, onPress, children }: MenuProps) {
   const [open, setOpen] = useState(false);
+
   const hold = useMemo(
     () =>
       Gesture.LongPress()
@@ -29,10 +30,12 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
         }),
     [],
   );
+
   const pick = (id: string) => {
     setOpen(false);
     onPress(id);
   };
+
   return (
     <GestureDetector gesture={hold}>
       <View collapsable={false}>
@@ -64,11 +67,14 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
 /** Sections stay groups under their header; items between sections form untitled groups. */
 function groups(entries: MenuEntry[]): { title?: string; items: MenuItem[] }[] {
   const result: { title?: string; items: MenuItem[] }[] = [];
+
   for (const entry of entries) {
     const last = result.at(-1);
+
     if ("items" in entry) result.push({ title: entry.title, items: entry.items });
     else if (last && !last.title) last.items.push(entry);
     else result.push({ items: [entry] });
   }
+
   return result;
 }

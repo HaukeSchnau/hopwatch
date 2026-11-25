@@ -64,7 +64,9 @@ export function dayBeans(
     running: s.running,
     selected: s.entry.id === selected,
   }));
+
   const start = running?.entry.startUtc ?? 0;
+
   if (
     running &&
     !report.segments.some((s) => s.running) &&
@@ -79,6 +81,7 @@ export function dayBeans(
       running: true,
     });
   }
+
   return beans;
 }
 
@@ -113,8 +116,10 @@ function shapeOf(a0: number, a1: number, r: number, width: number): Shape {
   const cap = pxToDeg(width / 2, r);
   const from = a0 + gap + cap;
   const to = a1 - gap - cap;
+
   if (to - from > 0.1) return { kind: "bean", from, sweep: to - from, head: to };
   const length = ((Math.max(0, a1 - a0 - 2 * gap) * Math.PI) / 180) * r;
+
   return {
     kind: "dot",
     mid: (a0 + a1) / 2,
@@ -141,6 +146,7 @@ export function CandyDial({
 
   const outer = r + stroke / 2;
   const groove = [t.c.trackShade, t.c.track, t.c.track, t.c.trackRim];
+
   const groovePositions = [
     (r - stroke / 2) / outer,
     (r - stroke * 0.1) / outer,
@@ -156,6 +162,7 @@ export function CandyDial({
       shape: shapeOf(deg(b.start), deg(b.end), r, width),
       candy: t.candy[b.hue],
     }));
+
   const running = drawn.find((b) => b.running);
 
   return (
@@ -231,6 +238,7 @@ function SugarDots({ frame, color }: { frame: DialFrame; color: string }) {
     <Group>
       {Array.from({ length: 24 }, (_, h) => {
         const p = polar(frame, h * 15 + 180);
+
         return <Circle key={h} cx={p.x} cy={p.y} r={h % 6 === 0 ? 2.1 : 1.3} color={color} />;
       })}
     </Group>
@@ -252,9 +260,11 @@ interface BeanProps {
 function Bean({ frame, shape, width, candy, selected, haloColor, grow }: BeanProps) {
   const { cx, cy, r } = frame;
   const end = useDerivedValue(() => (grow ? Math.min(1, grow.get() * 1.4) : 1));
+
   if (shape.kind === "dot") {
     const p = polar(frame, shape.mid);
     const d = shape.diameter;
+
     return (
       <Group>
         {selected && <Circle cx={p.x} cy={p.y} r={d / 2 + 5} color={haloColor} opacity={0.35} />}
@@ -278,15 +288,18 @@ function Bean({ frame, shape, width, candy, selected, haloColor, grow }: BeanPro
       </Group>
     );
   }
+
   const outer = r + width / 2;
   const path = arcPath(frame, shape.from, shape.sweep);
   const glossInset = Math.min(shape.sweep / 2, pxToDeg(width * 0.1, r));
+
   const gloss = arcPath(
     frame,
     shape.from + glossInset,
     Math.max(0.01, shape.sweep - glossInset * 2),
     r + width * 0.16,
   );
+
   const shade = [
     candy.deep,
     candy.fill,
@@ -294,6 +307,7 @@ function Bean({ frame, shape, width, candy, selected, haloColor, grow }: BeanPro
     candy.fill,
     mix(candy.fill, candy.deep, 0.55),
   ];
+
   const positions = [
     (r - width / 2) / outer,
     (r - width * 0.18) / outer,
@@ -301,6 +315,7 @@ function Bean({ frame, shape, width, candy, selected, haloColor, grow }: BeanPro
     (r + width * 0.34) / outer,
     1,
   ];
+
   return (
     <Group>
       {selected && (
@@ -365,26 +380,35 @@ function Head({ frame, shape, width, candy, ignite, children }: HeadProps) {
     pulse.set(
       withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.sin) }), -1, true),
     );
+
     return () => {
       cancelAnimation(pulse);
       pulse.set(0);
     };
   }, [pulse, reduced, showing]);
+
   const pop = useDerivedValue(() => {
     const g = ignite ? ignite.get() : 1;
+
     // Pops in late in the pour, overshoots, settles.
     if (g < 0.55) return 0;
+
     if (g < 0.8) return ((g - 0.55) / 0.25) * 1.35;
+
     return 1.35 - ((g - 0.8) / 0.2) * 0.35;
   });
+
   const glowR = useDerivedValue(() => width * (0.85 + pulse.get() * 0.35) * pop.get());
   const glowOpacity = useDerivedValue(() => 0.5 - pulse.get() * 0.18);
   const coreR = useDerivedValue(() => width * 0.2 * pop.get());
   const rippleR = useDerivedValue(() => width * (0.6 + (ignite ? ignite.get() : 1) * 2.6));
+
   const rippleOpacity = useDerivedValue(() => {
     const g = ignite ? ignite.get() : 1;
+
     return g >= 1 ? 0 : (1 - g) * 0.8;
   });
+
   return (
     <Canvas
       style={{
@@ -429,8 +453,10 @@ function RingFlash({
 }) {
   const opacity = useDerivedValue(() => {
     const g = ignite.get();
+
     return g >= 1 ? 0 : Math.sin(Math.min(1, g * 1.6) * Math.PI) * 0.3;
   });
+
   return (
     <Circle
       cx={frame.cx}
@@ -457,6 +483,7 @@ function NowPin({
   ring: string;
 }) {
   const p = polar(frame, deg, frame.r + frame.stroke / 2 + 6);
+
   return (
     <Group>
       <Circle cx={p.x} cy={p.y} r={5} color={ring} />
@@ -472,6 +499,7 @@ function HourLabels({ frame, color }: { frame: DialFrame; color: string }) {
     <>
       {hourLabels.map((h) => {
         const p = polar(frame, h * 15 + 180, frame.r + frame.stroke / 2 + 12);
+
         return (
           <Text
             key={h}

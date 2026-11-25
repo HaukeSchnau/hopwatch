@@ -10,12 +10,14 @@ import type { SlackLine } from "./tree";
 
 /** Hopwatch's Slack app. Public: the sign-in uses PKCE, no secret. */
 export const SLACK_CLIENT_ID = "12359272740515.12360250962741";
+
 /**
  * Another Slack app's client id to sign in with instead, set by a hopwatch://slack-app link
  * (links.ts): a personal Slack app with its own name, for a workspace that should list that
  * one. Device-local; a connection keeps the app it was made with.
  */
 export const SLACK_APP_PREF = "slack.app";
+
 /** Slack only takes a custom scheme with PKCE, as a "desktop" redirect. */
 export const SLACK_REDIRECT = "hopwatch://slack-auth";
 const USER_SCOPES = "users.profile:read,users.profile:write";
@@ -74,8 +76,10 @@ export interface SlackMemory {
  * a calendar app cleared after a meeting comes back.
  */
 export const SLACK_RECHECK_MS = 30 * MINUTE;
+
 /** A look on demand (the app comes to the front, a background wake) waits at least this long. */
 const EAGER_MS = MINUTE;
+
 /** How long after another status runs out to look, so a calendar app is done with it. */
 const AFTER_OTHERS_MS = 2 * MINUTE;
 
@@ -85,7 +89,9 @@ const AFTER_OTHERS_MS = 2 * MINUTE;
  */
 export function slackDue(memory: SlackMemory, key: string, now: number, eager: boolean): boolean {
   if (memory.applied !== key) return true;
+
   if (key === appliedKey(null, now) && memory.ours === null) return false;
+
   return now - memory.checkedAt >= (eager ? EAGER_MS : SLACK_RECHECK_MS);
 }
 
@@ -114,24 +120,30 @@ export function slackPlan(
   const mine = memory.ours !== null && shown.text === memory.ours;
   const empty = shown.text === "" && shown.emoji === "";
   const checked: SlackMemory = { ...memory, applied: key, checkedAt: now };
+
   if (!mine && !empty) {
     const pending = want !== null || memory.ours !== null;
+
     const wakeAt = !pending
       ? null
       : shown.until > now
         ? shown.until + AFTER_OTHERS_MS
         : now + SLACK_RECHECK_MS;
+
     return { step: { kind: "leave" }, memory: checked, wakeAt };
   }
+
   if (want) {
     // Already showing this, from before: a key from the same switch and day.
     const showing = mine && shown.text === want.text && memory.applied === key;
+
     return {
       step: showing ? { kind: "leave" } : { kind: "set", status: want },
       memory: { ...checked, ours: want.text },
       wakeAt: now + SLACK_RECHECK_MS,
     };
   }
+
   return {
     step: mine ? { kind: "clear" } : { kind: "leave" },
     memory: { ...checked, ours: null },
@@ -165,12 +177,14 @@ export const base64url = (base64: string) =>
 /** The query parameters of the redirect Slack sends back. */
 export function redirectParams(url: string): Record<string, string> {
   const search = url.split("?")[1]?.split("#")[0] ?? "";
+
   return Object.fromEntries(
     search
       .split("&")
       .filter(Boolean)
       .map((pair) => {
         const [k, v = ""] = pair.split("=");
+
         return [decodeURIComponent(k), decodeURIComponent(v.replace(/\+/g, " "))];
       }),
   );
@@ -191,6 +205,7 @@ export type GrantAnswer = { ok: true; grant: SlackGrant } | { ok: false; error: 
 
 const record = (v: unknown): Record<string, unknown> =>
   typeof v === "object" && v !== null ? (v as Record<string, unknown>) : {};
+
 const string = (v: unknown) => (typeof v === "string" ? v : "");
 
 /**
@@ -199,10 +214,12 @@ const string = (v: unknown) => (typeof v === "string" ? v : "");
  */
 export function readGrant(json: unknown, now: number, before?: SlackGrant): GrantAnswer {
   const answer = record(json);
+
   if (answer.ok !== true) return { ok: false, error: string(answer.error) || "unreadable" };
   const authed = record(answer.authed_user);
   const user = typeof authed.access_token === "string" ? authed : answer;
   const team = record(answer.team);
+
   const grant: SlackGrant = {
     access: string(user.access_token),
     refresh: string(user.refresh_token),
@@ -211,7 +228,9 @@ export function readGrant(json: unknown, now: number, before?: SlackGrant): Gran
     teamId: string(team.id) || before?.teamId || "",
     userId: string(authed.id) || string(answer.user_id) || before?.userId || "",
   };
+
   if (!grant.access || !grant.refresh) return { ok: false, error: "no_token" };
+
   return { ok: true, grant };
 }
 

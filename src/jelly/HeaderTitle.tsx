@@ -17,6 +17,7 @@ export function HeaderTitle({
   onPress?: () => void;
 }) {
   const t = useTheme();
+
   return (
     <Pressable
       onPress={onPress}

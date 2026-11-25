@@ -12,7 +12,9 @@ export function DayOffPill({ dayStart }: { dayStart: number }) {
   const t = useTheme();
   const pill = useDayOffPill(dayStart);
   const [open, setOpen] = useState(false);
+
   if (!pill.shown) return null;
+
   return (
     <View>
       <Pressable

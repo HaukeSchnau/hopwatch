@@ -33,6 +33,7 @@ describe("German public holidays", () => {
       expect(days.get("2026-10-03")).toBe("unityDay");
       expect(days.get("2026-12-26")).toBe("boxingDay");
     }
+
     expect(germanHolidays(2026, "NI").size).toBe(10);
   });
 });

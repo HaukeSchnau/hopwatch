@@ -26,11 +26,13 @@ export function suggestInput(
   const tree = useHopwatch.getState().tree;
   const parent = parentId ? tree.byId.get(parentId) : undefined;
   const siblingIds = parent ? parent.childIds : tree.roots;
+
   return {
     name,
     ancestors: parent ? [...parent.ancestors.map((a) => a.name), parent.name] : [],
     siblings: siblingIds.flatMap((id) => {
       const c = tree.byId.get(id);
+
       return c && c.id !== self && !c.hidden ? [{ name: c.name, emoji: c.emoji, hue: c.hue }] : [];
     }),
     wantEmoji,
@@ -61,6 +63,7 @@ export function useNameSuggestion(
 
   useEffect(() => {
     if (!available || trimmed.length < 2) return;
+
     const timer = setTimeout(() => {
       suggestForContext({
         ...suggestInput(trimmed, parentId, null, emoji === null),
@@ -72,6 +75,7 @@ export function useNameSuggestion(
         })
         .catch(() => {});
     }, 600);
+
     return () => clearTimeout(timer);
   }, [available, parentId, trimmed, emoji]);
 

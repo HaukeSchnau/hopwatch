@@ -107,6 +107,7 @@ const base: Record<Hue, Base> = {
 };
 
 const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+
 const toHex = (rgb: number[]) =>
   `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`;
 
@@ -114,25 +115,30 @@ const toHex = (rgb: number[]) =>
 export function mix(a: string, b: string, t: number): string {
   const x = parse(a);
   const y = parse(b);
+
   return toHex(x.map((v, i) => v + (y[i] - v) * t));
 }
 
 export function alpha(hex: string, a: number): string {
   const [r, g, b] = parse(hex);
+
   return `rgba(${r},${g},${b},${a})`;
 }
 
 function luminance(hex: string): number {
   const [r, g, b] = parse(hex).map((c) => {
     const s = c / 255;
+
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
   });
+
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 /** WCAG contrast ratio between two hex colors. */
 function contrast(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+
   return (hi + 0.05) / (lo + 0.05);
 }
 
@@ -140,17 +146,21 @@ function contrast(a: string, b: string): number {
 function readable(color: string, against: string, towards: string, ratio: number): string {
   for (let t = 0; t <= 0.8; t += 0.05) {
     const candidate = mix(color, towards, t);
+
     if (contrast(candidate, against) >= ratio) return candidate;
   }
+
   return mix(color, towards, 0.8);
 }
 
 function buildCandy(scheme: Scheme): Record<Hue, Candy> {
   const p = palettes[scheme];
   const dark = scheme === "dark";
+
   return Object.fromEntries(
     hues.map((hue) => {
       const c = base[hue];
+
       return [
         hue,
         {

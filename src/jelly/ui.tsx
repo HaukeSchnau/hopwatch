@@ -58,6 +58,7 @@ export function Icon({ name, size, color, weight }: IconProps) {
   if (Platform.OS === "android" && (name.android === "stop" || name.android === "play_arrow")) {
     return <Solid shape={name.android} size={size} color={color} />;
   }
+
   return <SymbolView name={name} size={size} tintColor={color} weight={symbolWeight(weight)} />;
 }
 
@@ -72,6 +73,7 @@ function Solid({
   color: string;
 }) {
   const side = size * 0.72;
+
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
       {shape === "stop" ? (
@@ -102,16 +104,19 @@ const drawing = new Map<AndroidSymbol, Promise<ImageSourcePropType | null>>();
 
 function drawSymbol(symbol: AndroidSymbol): Promise<ImageSourcePropType | null> {
   let pending = drawing.get(symbol);
+
   if (!pending) {
     // Drawn black: native headers and Compose's Icon tint it themselves.
     pending = unstable_getMaterialSymbolSourceAsync(symbol, 24, "#000000")
       .catch(() => null)
       .then((source) => {
         symbolImages.set(symbol, source);
+
         return source;
       });
     drawing.set(symbol, pending);
   }
+
   return pending;
 }
 
@@ -130,15 +135,19 @@ export function useSymbolImage(symbol: AndroidSymbol | undefined): ImageSourcePr
     symbol: AndroidSymbol;
     source: ImageSourcePropType | null;
   } | null>(null);
+
   useEffect(() => {
     if (!symbol) return;
     let live = true;
     void drawSymbol(symbol).then((source) => live && setDrawn({ symbol, source }));
+
     return () => {
       live = false;
     };
   }, [symbol]);
+
   if (!symbol) return null;
+
   return drawn?.symbol === symbol ? drawn.source : (symbolImages.get(symbol) ?? null);
 }
 
@@ -172,16 +181,20 @@ export function Squishy({
   ...rest
 }: SquishyProps) {
   const squash = useSharedValue(0);
+
   const animated = useAnimatedStyle(() => {
     const s = squash.get();
+
     return { transform: [{ scaleX: 1 + s * 0.6 }, { scaleY: 1 - s }] };
   });
+
   return (
     <Pressable
       {...rest}
       style={outerStyle}
       onPressIn={(e) => {
         squash.set(withSpring(amount, springs.snappy));
+
         if (haptic) buzz.squish();
         onPressIn?.(e);
       }}
@@ -232,6 +245,7 @@ export function CandySurface({
 }: CandySurfaceProps) {
   const t = useTheme();
   const c = palette ?? t.candy[hue];
+
   return (
     <View
       style={[
@@ -310,6 +324,7 @@ export function JellyButton({
   const c = palette ?? t.candy[hue ?? "pink"];
   const height = size === "large" ? 58 : size === "medium" ? 50 : 40;
   const fontSize = size === "large" ? 20 : size === "medium" ? 17 : 15;
+
   return (
     <Squishy
       onPress={onPress}
@@ -356,6 +371,7 @@ export function RoundButton({
 }: RoundButtonProps) {
   const t = useTheme();
   const c = palette ?? t.plainCandy;
+
   return (
     <Squishy
       onPress={onPress}
@@ -381,6 +397,7 @@ export function RoundButton({
 export function useWiggle() {
   const r = useSharedValue(0);
   const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.get()}deg` }] }));
+
   const wiggle = () =>
     r.set(
       withSequence(
@@ -389,6 +406,7 @@ export function useWiggle() {
         withSpring(0, springs.wobble),
       ),
     );
+
   return { style, wiggle };
 }
 
@@ -403,6 +421,7 @@ export function SectionTitle({
   style?: StyleProp<ViewStyle>;
 }) {
   const t = useTheme();
+
   return (
     <View style={[styles.sectionRow, style]}>
       <Text style={[text.title3, { color: t.c.ink }]}>{children}</Text>

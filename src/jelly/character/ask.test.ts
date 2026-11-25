@@ -21,6 +21,7 @@ const base: Look = {
   surface: "spots",
   motion: "proud",
 };
+
 const dog = { glyph: "🐕", name: "Dog" };
 
 describe("dress", () => {
@@ -127,6 +128,7 @@ describe("stored picks", () => {
     const stored = parseSuggestion(
       suggestionJson({ topic: "dog", traits: { motion: "wiggly" } }, "Dog", "🐕"),
     );
+
     expect(stored).toEqual({
       version: 2,
       name: "Dog",

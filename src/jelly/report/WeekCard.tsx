@@ -42,10 +42,13 @@ export function WeekCardSheet() {
   const share = async () => {
     buzz.tap();
     setSharing(true);
+
     try {
       const image = await makeImageFromView(card);
+
       if (!image) return;
       const file = new File(Paths.cache, `hopwatch-week-${dayKey(week)}.png`);
+
       if (file.exists) file.delete();
       file.create();
       file.write(image.encodeToBytes());
@@ -88,11 +91,13 @@ function WeekCard({ week }: { week: number }) {
   const roots = report.totals.roots.filter((n) => n.total > 0).slice(0, 5);
   const top = roots.slice(0, 3);
   const area = { width: CARD.width - 48, height: 112 };
+
   const circles = pack(
     roots.map((n) => n.total),
     area.width,
     area.height,
   );
+
   const sentence = summary && summary !== "writing" ? summary.text : null;
 
   return (
@@ -149,6 +154,7 @@ function WeekCard({ week }: { week: number }) {
 function Row({ node, total }: { node: TotalsNode; total: number }) {
   const t = useTheme();
   const c = t.candy[node.context.hue];
+
   return (
     <View style={styles.row}>
       <Text style={styles.glyph}>{node.context.glyph ?? ""}</Text>

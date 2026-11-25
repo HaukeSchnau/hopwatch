@@ -44,6 +44,7 @@ export interface JellyFormProps {
 
 export function JellyForm({ title, tint, cancel, confirm, children }: JellyFormProps) {
   const t = useTheme();
+
   return (
     <Host style={{ flex: 1 }} colorScheme={t.scheme} seedColor={tint ?? t.c.pinkDeep}>
       <NavigationStack>
@@ -96,6 +97,7 @@ export function HostedRow({
   render: (width: number) => ReactElement;
 }) {
   const { width } = useWindowDimensions();
+
   return (
     <Section>
       <Group

@@ -40,6 +40,7 @@ export async function suggestForContext(input: SuggestInput): Promise<Suggestion
     (input.ancestors.length + input.siblings.length > 0
       ? await generate(requestFor(input, false))
       : null);
+
   return answer && readAnswer(input, answer);
 }
 
@@ -60,23 +61,29 @@ export function useModelAvailable(): boolean {
   const [ready, setReady] = useState(known === "available");
   useEffect(() => {
     let live = true;
+
     const check = () =>
       availability()
         .catch((): Availability => "unsupported")
         .then((next) => {
           known = next;
+
           if (live) setReady(next === "available");
         });
+
     void check();
+
     const subscription = AppState.addEventListener(
       "change",
       (state) => state === "active" && void check(),
     );
+
     return () => {
       live = false;
       subscription.remove();
     };
   }, []);
+
   return ready;
 }
 
@@ -89,13 +96,16 @@ export function suggestInputFor(
   const siblingIds = context.parentId
     ? (tree.byId.get(context.parentId)?.childIds ?? [])
     : tree.roots;
+
   const siblings = siblingIds
     .filter((id) => id !== context.id)
     .flatMap((id) => {
       const sibling = tree.byId.get(id);
+
       return sibling && !sibling.hidden ? [{ name: sibling.name, emoji: sibling.glyph }] : [];
     })
     .slice(0, 8);
+
   return {
     name: context.name,
     ancestors: context.ancestors.map((a) => a.name),
@@ -108,9 +118,11 @@ export function suggestInputFor(
 /** Whether a context still needs the model's picks for its current name and emoji. */
 function wantsDressUp(context: ResolvedContext, prefs: Readonly<Record<string, Json>>): boolean {
   const stored = prefs[suggestedKey(context.id)];
+
   if (stored !== undefined && isCurrent(parseSuggestion(stored), context)) return false;
   const custom = prefs[customKey(context.id)];
   const picked = custom === undefined ? undefined : parseLook(custom);
+
   // Every trait picked by hand: nothing left to dress.
   return !picked || traitKeys.some((key) => picked[key] === undefined);
 }
@@ -122,6 +134,7 @@ let queue: Promise<void> = Promise.resolve();
 async function dressUp(id: ContextId, name: string, glyph: string | null, key: string) {
   const state = useHopwatch.getState();
   const context = state.tree.byId.get(id);
+
   // Renamed, re-emojied or gone meanwhile: the new name or emoji gets its own turn.
   if (
     !context ||
@@ -130,11 +143,15 @@ async function dressUp(id: ContextId, name: string, glyph: string | null, key: s
     !wantsDressUp(context, state.prefs)
   )
     return;
+
   if ((await availability().catch(() => "unsupported")) !== "available") {
     tried.delete(key);
+
     return;
   }
+
   const suggestion = await suggestForContext(suggestInputFor(state.tree, context));
+
   // A failed answer isn't stored: failures were often the model having a bad moment, so
   // the next launch asks again. Until then the heuristic look applies.
   if (suggestion) saveSuggestedLook(id, suggestion, name, glyph);
@@ -149,10 +166,13 @@ export function useDressUp(): void {
   const ready = useModelAvailable();
   useEffect(() => {
     if (!ready) return;
+
     const visit = (tree: ContextTree) => {
       const { prefs } = useHopwatch.getState();
+
       for (const context of tree.ordered) {
         const key = `${context.id}\n${context.name}\n${context.glyph ?? ""}`;
+
         if (context.hidden || tried.has(key) || !wantsDressUp(context, prefs)) continue;
         tried.add(key);
         queue = queue
@@ -160,7 +180,9 @@ export function useDressUp(): void {
           .catch(() => undefined);
       }
     };
+
     visit(useHopwatch.getState().tree);
+
     // Subscribing here, not with a hook, so the layout hosting this never re-renders for it.
     return useHopwatch.subscribe((state, previous) => {
       if (state.tree !== previous.tree) visit(state.tree);

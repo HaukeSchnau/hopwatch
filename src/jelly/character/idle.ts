@@ -50,6 +50,7 @@ export function hop(face: Face, heights: readonly number[] = [1]): number {
       withSpring(0, springs.wobble),
     ),
   );
+
   return 660 * heights.length + 200;
 }
 
@@ -70,6 +71,7 @@ export function yawn(face: Face): number {
   face.squash.set(
     withSequence(withTiming(-0.07, { duration: 420 }), withDelay(520, withSpring(0, springs.soft))),
   );
+
   return 1500;
 }
 
@@ -94,6 +96,7 @@ function nodOff(face: Face): number {
       withDelay(1000, withTiming(0, { duration: 150 })),
     ),
   );
+
   return 2400;
 }
 
@@ -102,6 +105,7 @@ export function shiver(face: Face): number {
   face.shiver.set(
     withSequence(...[1, -1, 1, -1, 0.7, -0.7, 0.4, 0].map((v) => withTiming(v, { duration: 42 }))),
   );
+
   return 400;
 }
 
@@ -125,6 +129,7 @@ export function puff(face: Face): number {
       withDelay(1150, withTiming(1, { duration: 200 })),
     ),
   );
+
   return 1800;
 }
 
@@ -146,6 +151,7 @@ export function tilt(face: Face): number {
       withDelay(1300, withTiming(0, { duration: 300 })),
     ),
   );
+
   return 2000;
 }
 
@@ -171,6 +177,7 @@ export function sway(face: Face): number {
       withTiming(0, { duration: 1100, easing: inOut }),
     ),
   );
+
   return 4200;
 }
 
@@ -182,6 +189,7 @@ export function wiggle(face: Face): number {
   face.squash.set(
     withSequence(...[0.06, -0.04, 0.05, -0.03, 0].map((v) => withTiming(v, { duration: 130 }))),
   );
+
   return 700;
 }
 

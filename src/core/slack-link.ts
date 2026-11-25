@@ -48,8 +48,10 @@ const native =
 /** The Slack app to sign in with: Hopwatch's, or a personal one set by hopwatch://slack-app. */
 const clientIdOf = (prefs: HopwatchState["prefs"]) => {
   const own = prefs[SLACK_APP_PREF];
+
   return typeof own === "string" && own !== "" ? own : SLACK_CLIENT_ID;
 };
+
 const clientId = () => clientIdOf(useHopwatch.getState().prefs);
 
 /** Whether this build has a Slack client, and there's a Slack app to sign in with. */
@@ -60,13 +62,17 @@ export const useSlackAvailable = () => useHopwatch((s) => canConnect(clientIdOf(
 
 let link: SlackLink | null = null;
 const listeners = new Set<() => void>();
+
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 };
+
 function publish(next: SlackLink | null) {
   if (next?.team === link?.team && next?.broken === link?.broken) return;
   link = next;
+
   for (const listener of listeners) listener();
 }
 
@@ -82,6 +88,7 @@ export function useSlackLink(): SlackLink | null {
   useEffect(() => {
     if (canConnect(clientId())) refreshSlackLink();
   }, []);
+
   return useSyncExternalStore(subscribe, () => link);
 }
 
@@ -91,13 +98,16 @@ export type ConnectResult = "connected" | "cancelled" | "failed";
 export async function connectSlack(): Promise<ConnectResult> {
   const client = clientId();
   const verifier = (Crypto.randomUUID() + Crypto.randomUUID()).replace(/-/g, "");
+
   const challenge = base64url(
     await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, {
       encoding: Crypto.CryptoEncoding.BASE64,
     }),
   );
+
   const state = Crypto.randomUUID();
   let result: WebBrowser.WebBrowserAuthSessionResult;
+
   try {
     result = await WebBrowser.openAuthSessionAsync(
       authorizeUrl(client, challenge, state),
@@ -107,12 +117,17 @@ export async function connectSlack(): Promise<ConnectResult> {
     // The sign-in sheet didn't open. Say so, rather than leave the button looking dead.
     return "failed";
   }
+
   // 'locked': an earlier sheet never finished, so this one can't open either.
   if (result.type === "locked") return "failed";
+
   if (result.type !== "success") return "cancelled";
   const params = redirectParams(result.url);
+
   if (params.state !== state) return "failed";
+
   if (!params.code) return params.error === "access_denied" ? "cancelled" : "failed";
+
   try {
     const answer = await api("oauth.v2.access", {
       form: {
@@ -122,8 +137,11 @@ export async function connectSlack(): Promise<ConnectResult> {
         redirect_uri: SLACK_REDIRECT,
       },
     });
+
     const read = readGrant(answer, Date.now());
+
     if (!read.ok) return "failed";
+
     if (native) await native.slackConnect(JSON.stringify({ ...read.grant, clientId: client }));
     else {
       await serially(() =>
@@ -138,7 +156,9 @@ export async function connectSlack(): Promise<ConnectResult> {
       );
       syncSlack();
     }
+
     await refreshSlackLink();
+
     return "connected";
   } catch {
     return "failed";
@@ -153,9 +173,12 @@ export async function disconnectSlack() {
       const saved = await load();
       await save(null);
       systemSurfaces?.scheduleWake?.(null);
+
       if (!saved || saved.broken) return;
+
       try {
         const fresh = await freshen(saved);
+
         if (saved.ours !== null && (await shown(fresh.access)).text === saved.ours)
           await setStatus(fresh.access, { text: "", emoji: "" }, 0);
         await call("auth.revoke", { token: fresh.access });
@@ -175,6 +198,7 @@ interface Saved extends SlackGrant, SlackMemory {
 }
 
 const KEY = "slack.link";
+
 /** What this process last saved, so a store change that doesn't matter costs nothing. */
 let memoryHere: SlackMemory | null = null;
 
@@ -188,6 +212,7 @@ const memoryOf = (saved: Saved): SlackMemory => ({
 async function load(): Promise<Saved | null> {
   try {
     const json = await SecureStore.getItemAsync(KEY);
+
     return json ? (JSON.parse(json) as Saved) : null;
   } catch {
     return null;
@@ -196,14 +221,17 @@ async function load(): Promise<Saved | null> {
 
 async function save(saved: Saved | null) {
   memoryHere = saved ? memoryOf(saved) : null;
+
   if (saved) await SecureStore.setItemAsync(KEY, JSON.stringify(saved));
   else await SecureStore.deleteItemAsync(KEY);
 }
 
 /** One call at a time: overlapping refreshes would spend the same rotating token twice. */
 let queue: Promise<void> = Promise.resolve();
+
 function serially(work: () => Promise<void>): Promise<void> {
   queue = queue.then(work).catch(() => {});
+
   return queue;
 }
 
@@ -211,6 +239,7 @@ function serially(work: () => Promise<void>): Promise<void> {
 function wanted(): SlackWire | null {
   const { entries, tree } = useHopwatch.getState();
   const open = findOpen(entries);
+
   return open ? slackWire(tree.byId.get(open.contextId)?.slack ?? null) : null;
 }
 
@@ -226,20 +255,28 @@ export function syncSlack({ eager = false }: { eager?: boolean } = {}): Promise<
   const now = Date.now();
   const want = wanted();
   const key = appliedKey(want, now);
+
   if (memoryHere && !slackDue(memoryHere, key, now, eager)) return Promise.resolve();
+
   return serially(async () => {
     let saved = await load();
+
     if (!saved || saved.broken || !slackDue(memoryOf(saved), key, now, eager)) {
       memoryHere = saved && !saved.broken ? memoryOf(saved) : null;
+
       return;
     }
+
     try {
       const fresh = await freshen(saved);
+
       // A refresh spent the old refresh token: keep the new one before anything else.
       if (fresh !== saved) await save((saved = fresh));
       const plan = slackPlan(want, await shown(saved.access), memoryOf(saved), key, now);
+
       if (plan.step.kind === "set")
         await setStatus(saved.access, plan.step.status, slackExpiry(now));
+
       if (plan.step.kind === "clear") await setStatus(saved.access, { text: "", emoji: "" }, 0);
       await save({ ...saved, ...plan.memory });
       systemSurfaces?.scheduleWake?.(plan.wakeAt);
@@ -259,11 +296,15 @@ export function syncSlack({ eager = false }: { eager?: boolean } = {}): Promise<
 /** Refreshes the access token when it's about to run out. Tokens rotate: save the result. */
 async function freshen(saved: Saved): Promise<Saved> {
   if (saved.expiresAt - 60_000 > Date.now()) return saved;
+
   const answer = await api("oauth.v2.access", {
     form: { client_id: saved.clientId, grant_type: "refresh_token", refresh_token: saved.refresh },
   });
+
   const read = readGrant(answer, Date.now(), saved);
+
   if (!read.ok) throw new SlackError(read.error);
+
   return { ...saved, ...read.grant };
 }
 
@@ -272,6 +313,7 @@ async function shown(token: string): Promise<SlackShown> {
     string,
     unknown
   >;
+
   return {
     text: typeof profile.status_text === "string" ? profile.status_text : "",
     emoji: typeof profile.status_emoji === "string" ? profile.status_emoji : "",
@@ -319,8 +361,10 @@ async function api(
   { token, form, json }: Request,
 ): Promise<Record<string, unknown>> {
   const headers: Record<string, string> = {};
+
   if (token) headers.Authorization = `Bearer ${token}`;
   let body: string | undefined;
+
   if (form) {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
     body = formBody(form);
@@ -328,8 +372,10 @@ async function api(
     headers["Content-Type"] = "application/json; charset=utf-8";
     body = JSON.stringify(json);
   }
+
   const abort = new AbortController();
   const timeout = setTimeout(() => abort.abort(), 10_000);
+
   try {
     const response = await fetch(`https://slack.com/api/${method}`, {
       method: body === undefined ? "GET" : "POST",
@@ -337,6 +383,7 @@ async function api(
       body,
       signal: abort.signal,
     });
+
     return (await response.json()) as Record<string, unknown>;
   } finally {
     clearTimeout(timeout);
@@ -346,7 +393,9 @@ async function api(
 /** A Web API call that has to succeed. */
 async function call(method: string, request: Request) {
   const answer = await api(method, request);
+
   if (answer.ok !== true)
     throw new SlackError(typeof answer.error === "string" ? answer.error : "unreadable");
+
   return answer;
 }
