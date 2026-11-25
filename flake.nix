@@ -1,10 +1,16 @@
 {
   description = "Hopwatch's CI toolchain";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nix-infra-modules = {
+      url = "github:HaukeSchnau/nix-infra-modules/b365d13637b9dc83c397df542b5112a50ac8cbb9";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
   outputs =
-    { nixpkgs, ... }:
+    { nixpkgs, nix-infra-modules, ... }:
     {
       devShells =
         nixpkgs.lib.genAttrs
@@ -16,14 +22,10 @@
             system:
             let
               pkgs = nixpkgs.legacyPackages.${system};
-              tools = import ./nix/toolchain.nix { inherit pkgs; };
             in
             {
               ci = pkgs.mkShellNoCC {
-                packages = [
-                  tools.nodejs
-                  tools.pnpm
-                ];
+                packages = builtins.attrValues (nix-infra-modules.lib.toolchain { inherit pkgs; });
               };
             }
           );

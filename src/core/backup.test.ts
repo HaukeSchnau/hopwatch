@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { BACKUP_VERSION, backupPayload, parseBackup } from './backup';
 import type { Context, ContextId, DayOff, DayOffId, Entry, EntryId } from './model';

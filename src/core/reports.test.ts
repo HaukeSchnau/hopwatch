@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { type Context, type ContextId, type DayOff, type DayOffId, type Entry, type EntryId, MONDAY_TO_FRIDAY } from './model';
 import { dayReport, formatTargetLine, overtimeBalance, reviewGaps, totalsText, weekReport } from './reports';

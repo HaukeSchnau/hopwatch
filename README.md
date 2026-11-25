@@ -14,8 +14,7 @@ little jelly character; the one you're on lives in the middle of today's 24-hour
 ```sh
 pnpm install
 pnpm test              # domain tests
-pnpm typecheck
-pnpm lint
+pnpm check             # format, lint and type check
 pnpm start --dev-client
 pnpm expo run:ios      # development build on a Mac with Xcode
 pnpm expo run:android  # development build with the Android SDK

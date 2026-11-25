@@ -3,10 +3,10 @@
 // each phrase goes through the app's own request and resolver, against the sample data's
 // jellies, at a fixed "now" (Wednesday 30 September 2026, 15:10, Berlin). Prints a Markdown
 // table of phrase, model answer, plan, verdict and latency. Run from the repo root, with
-// the `@/` paths and the React Native stub vitest uses (src/i18n reads the language through
+// the `@/` paths and the React Native stub the tests use (src/i18n reads the language through
 // React Native; the stub makes it English):
 //
-//   TZ=Europe/Berlin node -e "import('vite').then((v) => v.runnerImport('./scripts/sentence-eval.ts', { resolve: { tsconfigPaths: true, alias: { 'react-native': process.cwd() + '/src/test/react-native.ts' } } }))"
+//   TZ=Europe/Berlin node -e "import('vite-plus').then((v) => v.runnerImport('./scripts/sentence-eval.ts', { resolve: { tsconfigPaths: true, alias: { 'react-native': process.cwd() + '/src/test/react-native.ts' } } }))"
 //
 // Set ONLY=<substring> to run matching phrases.
 

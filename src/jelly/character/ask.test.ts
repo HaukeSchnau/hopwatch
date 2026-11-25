@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { freshPick, hueChoices, isCurrent, parseSuggestion, readAnswer, type SuggestInput, suggestionJson } from './ask';
 import { dress } from './topics';

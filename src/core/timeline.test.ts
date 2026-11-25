@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { type ContextId, type Entry, type EntryId, MIN_ENTRY_MS } from './model';
 import * as timeline from './timeline';

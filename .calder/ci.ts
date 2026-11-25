@@ -1,13 +1,12 @@
 import { Calder, On, Secret, Step, Task, cmd } from "@calder-ci/core"
-import { Expo, Pnpm, Project } from "@calder-ci/std"
+import { Expo, Pnpm, Project, Vp } from "@calder-ci/std"
 import { Schema } from "effect"
 import { flake } from "./flake.ts"
 
 const shell = flake.devShells.ci
 const install = Pnpm.install({ shell })
-const checks = (["typecheck", "test", "lint"] as const).map((script) =>
-  Task.make(script, { shell, setup: install, run: cmd`pnpm ${script}` })
-)
+/** `vp check` (format, lint and type check) and `vp test run`, which gate the OTA and the store builds. */
+const checks = Vp.tasks({ shell, setup: install })
 
 /** The website under site/ on Cloudflare (alchemy.run.ts): production on push, previews per pull request. */
 const website = Project.alchemy({
