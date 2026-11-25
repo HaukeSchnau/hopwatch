@@ -7,12 +7,12 @@ import * as Haptics from "expo-haptics";
 import { actions, type Json, usePref, useHopwatch } from "@/core";
 
 export const buzz = {
-  tap: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
-  squish: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft),
-  thud: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
-  tick: () => Haptics.selectionAsync(),
-  success: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-  warn: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning),
+  tap: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+  squish: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft),
+  thud: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
+  tick: () => void Haptics.selectionAsync(),
+  success: () => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
+  warn: () => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning),
 };
 
 const sources = {
@@ -59,7 +59,7 @@ export function play(name: SoundName) {
     const player = ensurePlayers()[name];
 
     if (!player) return;
-    player.seekTo(0);
+    void player.seekTo(0);
     player.play();
   } catch {
     // Audio is decoration; never let it break a switch.

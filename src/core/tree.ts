@@ -158,9 +158,9 @@ export function createContext(
 /** The lowest free pin slot, so pinning never shifts existing tiles. */
 export function nextFreePin(contexts: readonly Context[]): number {
   const taken = new Set(
-    contexts
-      .filter((c) => c.deletedAt === null && c.pinPosition !== null)
-      .map((c) => c.pinPosition),
+    contexts.flatMap((c) =>
+      c.deletedAt === null && c.pinPosition !== null ? [c.pinPosition] : [],
+    ),
   );
 
   let slot = 0;

@@ -17,7 +17,7 @@ import {
 } from "@shopify/react-native-skia";
 import { useMemo } from "react";
 
-import { hashSeed, random } from "../geometry";
+import { around, hashSeed, random } from "../geometry";
 import { alpha, mix } from "../theme";
 import type { BodyGeo } from "./bodies";
 import type { Lod } from "./face";
@@ -295,7 +295,14 @@ function scatter(
     if (!geo.path.contains(x, y)) continue;
 
     if (out.some((o) => Math.hypot(o.x - x, o.y - y) < gap)) continue;
-    out.push({ x, y, r, turn, color: SPRINKLES[Math.floor(pick * SPRINKLES.length)], opacity });
+    out.push({
+      x,
+      y,
+      r,
+      turn,
+      color: around(SPRINKLES, Math.floor(pick * SPRINKLES.length)),
+      opacity,
+    });
   }
 
   cached.set(key, out);

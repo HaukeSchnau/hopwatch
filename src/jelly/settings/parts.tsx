@@ -41,7 +41,8 @@ const DEFAULT_EVENING = 20 * 60 + 30;
  */
 export function useEveningSetting() {
   const minutes = useEveningCheck();
-  const at = new Date();
+  const [today] = useState(() => new Date());
+  const at = new Date(today);
   at.setHours(0, minutes ?? DEFAULT_EVENING, 0, 0);
 
   return {
@@ -51,7 +52,7 @@ export function useEveningSetting() {
       buzz.tap();
       setEveningCheck(on ? (minutes ?? DEFAULT_EVENING) : null);
 
-      if (on) requestNudgePermission();
+      if (on) void requestNudgePermission();
     },
     setAt: (date: Date) => setEveningCheck(date.getHours() * 60 + date.getMinutes()),
   };
@@ -66,7 +67,7 @@ export function useSlackSetting() {
   const connect = () => {
     buzz.tap();
     setBusy(true);
-    connectSlack()
+    void connectSlack()
       .then((result) => {
         if (result === "connected") buzz.success();
 
@@ -77,7 +78,7 @@ export function useSlackSetting() {
 
   const disconnect = () => {
     buzz.thud();
-    disconnectSlack();
+    void disconnectSlack();
   };
 
   return { available, link, busy, connect, disconnect };
@@ -91,7 +92,7 @@ export function useSettingsActions() {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = (link: string) => {
-    Clipboard.setStringAsync(link);
+    void Clipboard.setStringAsync(link);
     buzz.success();
     setCopied(link);
   };

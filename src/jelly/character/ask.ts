@@ -183,7 +183,7 @@ const isFlagHalf = (cp: number) => cp >= 0x1f1e6 && cp <= 0x1f1ff;
 /** `text` if it is exactly one emoji (ZWJ sequences and flags included), else null. */
 export function singleEmoji(text: string): string | null {
   const trimmed = text.trim();
-  const points = [...trimmed].map((c) => c.codePointAt(0) ?? 0);
+  const points = Array.from(trimmed, (c) => c.codePointAt(0) ?? 0);
 
   if (points.length === 0) return null;
 

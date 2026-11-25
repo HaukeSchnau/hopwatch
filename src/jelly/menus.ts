@@ -52,9 +52,11 @@ export function startConsequence(
   if (cut)
     parts.push(menuText.cut(name(cut.entry), cut.entry.endUtc === null, formatClock(cut.at)));
 
-  if (replaced.length === 1) parts.push(menuText.replaces(name(replaced[0])));
+  const [only, ...more] = replaced;
 
-  if (replaced.length > 1) parts.push(menuText.replacesMany(replaced.length));
+  if (only && more.length === 0) parts.push(menuText.replaces(name(only)));
+
+  if (more.length > 0) parts.push(menuText.replacesMany(replaced.length));
 
   return parts.length
     ? { text: capitalized(parts.join(" · ")), replaces: replaced.length > 0 }
@@ -130,12 +132,18 @@ export function onStartMenu(contextId: ContextId, event: string, source?: string
 
 /** Menu for stopping `name`, which runs since `since`; limited to times after it started. */
 export function stopMenu(name: string, since: number, now: number): MenuEntry[] {
-  const ago = AGO.filter((m) => now - m * MINUTE > since).map((m): MenuItem => ({
-    id: `ago:${m}`,
-    title: agoTitle(m, now),
-    subtitle: stopConsequence(name, since, now - m * MINUTE),
-    image: "clock.arrow.circlepath",
-  }));
+  const ago = AGO.flatMap((m): MenuItem[] =>
+    now - m * MINUTE > since
+      ? [
+          {
+            id: `ago:${m}`,
+            title: agoTitle(m, now),
+            subtitle: stopConsequence(name, since, now - m * MINUTE),
+            image: "clock.arrow.circlepath",
+          },
+        ]
+      : [],
+  );
 
   return [
     ...(ago.length ? [{ title: menuText.stoppedEarlier, items: ago }] : []),

@@ -12,6 +12,7 @@ import { actions, type Hue, loadSampleData, useHopwatch, useTree } from "@/core"
 import { optionNames } from "@/i18n/character";
 
 import { Character } from "../Character";
+import { around } from "../geometry";
 import { useFace, useLively, wake } from "../Gummy";
 import type { LookSource } from "./derive";
 import { parseSuggestion, SUGGESTION_VERSION } from "./ask";
@@ -107,29 +108,31 @@ function Section({
   );
 }
 
-function TraitSection<K extends keyof Look>({
+/** A trait's options with their names, in the editor's order. */
+const namedOptions = <K extends keyof Look>(trait: K): { option: Look[K]; name: string }[] =>
+  traitOptions[trait].map((option) => ({ option, name: optionNames[trait][option] }));
+
+function TraitSection({
   trait,
   base,
   mood,
   size = 84,
 }: {
-  trait: K;
+  trait: keyof Look;
   base: Partial<Look>;
   mood: "awake" | "asleep";
   size?: number;
 }) {
-  const options = traitOptions[trait];
-
   return (
     <Section title={`${trait} · ${mood}`}>
-      {options.map((option, i) => (
+      {namedOptions(trait).map(({ option, name }, i) => (
         <Cell
           key={option}
-          source={{ id: `g-${trait}-${option}`, name: "", glyph: null, hue: hues[i % hues.length] }}
+          source={{ id: `g-${trait}-${option}`, name: "", glyph: null, hue: around(hues, i) }}
           size={size}
           look={{ ...plain, ...base, [trait]: option }}
           mood={mood}
-          label={optionNames[trait][option]}
+          label={name}
         />
       ))}
     </Section>
@@ -187,7 +190,7 @@ function ModelCheck() {
   const [answer, setAnswer] = useState("");
   useEffect(() => {
     let live = true;
-    (async () => {
+    void (async () => {
       const status = await availability();
 
       if (!live) return;
@@ -294,12 +297,20 @@ export function Gallery() {
       )}
       {show("sizes") && (
         <Section title="Sizes">
-          {[28, 36, 48, 64].map((size, i) => (
-            <Cell key={size} source={contexts[i + 1]} size={size} mood={mood} label={`${size}`} />
-          ))}
-          {[124, 200].map((size, i) => (
-            <Cell key={size} source={contexts[i + 3]} size={size} mood={mood} label={`${size}`} />
-          ))}
+          {(
+            [
+              [28, contexts[1]],
+              [36, contexts[2]],
+              [48, contexts[3]],
+              [64, contexts[4]],
+              [124, contexts[3]],
+              [200, contexts[4]],
+            ] as const
+          ).flatMap(([size, source]) =>
+            source
+              ? [<Cell key={size} source={source} size={size} mood={mood} label={`${size}`} />]
+              : [],
+          )}
         </Section>
       )}
       {show("bodies") && <TraitSection trait="body" base={{}} mood={mood} />}

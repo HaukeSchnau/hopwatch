@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { assert, describe, expect, it } from "vite-plus/test";
 
 import {
   type Context,
@@ -106,7 +106,8 @@ describe("reports", () => {
     ];
 
     const week = weekReport(entries, tree, monday, now);
-    const job = week.targets.find((t) => t.context.id === "job")!;
+    const job = week.targets.find((t) => t.context.id === "job");
+    assert(job);
     expect(formatTargetLine(job)).toBe("job 11:20 / 40:00 (−28:40)");
   });
 
@@ -140,11 +141,17 @@ describe("sample data", () => {
     const sorted = [...entries].sort((a, b) => a.startUtc - b.startUtc);
     expect(sorted.filter((e) => e.endUtc === null).length).toBeLessThanOrEqual(1);
 
-    for (let i = 1; i < sorted.length; i++)
-      expect(sorted[i - 1].endUtc!).toBeLessThanOrEqual(sorted[i].startUtc);
+    let previous: (typeof sorted)[number] | undefined;
+
+    for (const e of sorted) {
+      // Only the last entry may still run.
+      if (previous) expect(previous.endUtc ?? Infinity).toBeLessThanOrEqual(e.startUtc);
+      previous = e;
+    }
+
     expect(sorted.every((e) => e.startUtc < now)).toBe(true);
     expect(new Set(contexts.map((c) => c.pinPosition).filter((p) => p !== null)).size).toBe(9);
-    expect(sorted[0].startUtc).toBeGreaterThanOrEqual(addDays(startOfDay(now), -20));
+    expect(sorted[0]?.startUtc).toBeGreaterThanOrEqual(addDays(startOfDay(now), -20));
   });
 });
 
@@ -202,7 +209,9 @@ describe("job hours", () => {
     context("side", null, { weeklyTargetMinutes: 6 * 60 }),
   ]);
 
-  const job = jobTree.byId.get("job" as ContextId)!;
+  const job = jobTree.byId.get("job" as ContextId);
+  const side = jobTree.byId.get("side" as ContextId);
+  assert(job && side);
 
   const workday = (n: number, hours: number, id = "job") =>
     entry(id, day(n) + 9 * HOUR, day(n) + 9 * HOUR + hours * HOUR);
@@ -213,8 +222,8 @@ describe("job hours", () => {
     const withHoliday = (d: string) => offDays(d) || d === dayKey(day(4));
     const week = weekReport([workday(0, 9)], jobTree, monday, day(7), withHoliday);
     const [jobLine, sideLine] = week.targets;
-    expect([jobLine.target, jobLine.daysOff]).toEqual([24 * HOUR, 2]);
-    expect([sideLine.target, sideLine.daysOff]).toEqual([6 * HOUR, 0]);
+    expect([jobLine?.target, jobLine?.daysOff]).toEqual([24 * HOUR, 2]);
+    expect([sideLine?.target, sideLine?.daysOff]).toEqual([6 * HOUR, 0]);
   });
 
   it("keeps a balance from its start: tracked minus target for finished days, today apart", () => {
@@ -251,14 +260,6 @@ describe("job hours", () => {
 
     // Mon and Tue untracked (−16), Wednesday off but worked (+2), +2 start.
     expect(result?.balance).toBe(-12 * HOUR);
-    expect(
-      overtimeBalance(
-        [],
-        jobTree,
-        jobTree.byId.get("side" as ContextId)!,
-        offDaysOf([], null),
-        day(3),
-      ),
-    ).toBeNull();
+    expect(overtimeBalance([], jobTree, side, offDaysOf([], null), day(3))).toBeNull();
   });
 });

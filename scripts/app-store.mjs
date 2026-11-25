@@ -26,13 +26,13 @@ const frames = join(root, "store/screenshots/app-store");
 const DISPLAY_TYPE = "APP_IPHONE_67";
 
 /** Version states in which the listing can still be edited. */
-const EDITABLE = [
+const EDITABLE = new Set([
   "PREPARE_FOR_SUBMISSION",
   "DEVELOPER_REJECTED",
   "REJECTED",
   "METADATA_REJECTED",
   "INVALID_BINARY",
-];
+]);
 
 const args = process.argv.slice(2);
 const appFlag = args.indexOf("--app");
@@ -64,14 +64,17 @@ function asc(method, path, body) {
   return out.trim().startsWith("{") ? JSON.parse(out) : null;
 }
 
-const data = (type, id, attributes, relationships) => ({
-  data: {
-    type,
-    ...(id ? { id } : {}),
-    ...(attributes ? { attributes } : {}),
-    ...(relationships ? { relationships } : {}),
-  },
-});
+function data(type, id, attributes, relationships) {
+  const resource = { type };
+
+  if (id) resource.id = id;
+
+  if (attributes) resource.attributes = attributes;
+
+  if (relationships) resource.relationships = relationships;
+
+  return { data: resource };
+}
 
 const rel = (type, id) => ({ data: { type, id } });
 
@@ -103,7 +106,7 @@ function editableVersion() {
     `/v1/apps/${appId}/appStoreVersions?filter[platform]=IOS&limit=50`,
   ).data;
 
-  const editable = versions.find((v) => EDITABLE.includes(v.attributes.appVersionState));
+  const editable = versions.find((v) => EDITABLE.has(v.attributes.appVersionState));
 
   if (editable) return { version: editable, firstRelease: versions.length === 1 };
 
@@ -158,9 +161,10 @@ function pushText() {
       promotionalText: field(locale, "promotional_text.txt"),
       marketingUrl: field(locale, "marketing_url.txt"),
       supportUrl: field(locale, "support_url.txt"),
-      // App Store Connect only takes "What's New" from the second version on.
-      ...(firstRelease ? {} : { whatsNew: field(locale, "release_notes.txt") }),
     };
+
+    // App Store Connect only takes "What's New" from the second version on.
+    if (!firstRelease) attributes.whatsNew = field(locale, "release_notes.txt");
 
     const id = existing.get(locale);
 

@@ -576,7 +576,7 @@ export function Cheeks({
     [18.2, 4.6],
     [20.6, 6.8],
     [18.6, 8.6],
-  ];
+  ] as const;
 
   return (
     <>

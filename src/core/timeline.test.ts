@@ -1,5 +1,5 @@
 import * as fc from "fast-check";
-import { describe, expect, it } from "vite-plus/test";
+import { assert, describe, expect, it } from "vite-plus/test";
 
 import { type ContextId, type Entry, type EntryId, MIN_ENTRY_MS } from "./model";
 import * as timeline from "./timeline";
@@ -33,7 +33,7 @@ function assertInvariants(entries: readonly Entry[]) {
     if (next) {
       // An open entry must be the last one, and closed entries must not overlap.
       expect(e.endUtc).not.toBeNull();
-      expect(e.endUtc!).toBeLessThanOrEqual(next.startUtc);
+      expect(e.endUtc ?? Infinity).toBeLessThanOrEqual(next.startUtc);
     }
   }
 }
@@ -134,7 +134,8 @@ describe("editing", () => {
     const now = T0 + 9 * 60 * MIN;
     const gapRows = timeline.fillGap(entries, dog, now - 30 * MIN, now, makeClock(now));
     entries = timeline.applyRows(entries, gapRows);
-    const walk = entries.find((e) => e.contextId === dog)!;
+    const walk = entries.find((e) => e.contextId === dog);
+    assert(walk);
     entries = timeline.applyRows(
       entries,
       timeline.update(
@@ -392,17 +393,19 @@ function run(entries: Entry[], op: Op, clock: timeline.Clock): Entry[] {
   }
 }
 
-const shape = (entries: readonly Entry[]) =>
+const contentOf = (entries: readonly Entry[]) =>
   entries.map((e) => [e.id, e.contextId, e.startUtc, e.endUtc, e.note]);
 
 describe("a block inside an entry", () => {
   const day = new Date(2026, 9, 15);
   const at = (h: number, m = 0) => new Date(day).setHours(h, m, 0, 0);
 
-  const entry = (start: number, end: number | null): Entry => ({
-    ...timeline.start([], job, makeClock(start))[0],
-    endUtc: end,
-  });
+  const entry = (start: number, end: number | null): Entry => {
+    const [started] = timeline.start([], job, makeClock(start));
+    assert(started);
+
+    return { ...started, endUtc: end };
+  };
 
   it("starts at lunchtime when the entry covers it, on its last day first", () => {
     expect(timeline.blockInside(entry(at(9), at(17, 30)), at(18))).toEqual({
@@ -450,7 +453,7 @@ describe("invariants", () => {
           assertInvariants(next);
 
           const undone = timeline.applyRows(next, timeline.inverse(entries, rows, now));
-          expect(shape(undone)).toEqual(shape(entries));
+          expect(contentOf(undone)).toEqual(contentOf(entries));
 
           if (op.kind === "place") {
             // The preview names exactly the existing entries the block changes.

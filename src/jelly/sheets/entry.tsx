@@ -34,7 +34,9 @@ import { rounded, tabular, text, useTheme } from "../theme";
 export const putInside = (entry: Entry, untracked = false) =>
   ({
     pathname: "/pick",
-    params: { mode: "place", entry: entry.id, ...(untracked ? { untracked: "1" } : {}) },
+    params: untracked
+      ? { mode: "place", entry: entry.id, untracked: "1" }
+      : { mode: "place", entry: entry.id },
   }) as const;
 
 export function useEntryDraft(entry: Entry) {

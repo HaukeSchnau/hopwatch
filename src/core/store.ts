@@ -116,7 +116,8 @@ export function initStore() {
   });
   const links = pendingLinks;
   pendingLinks = [];
-  links.forEach(actions.handleLink);
+
+  for (const link of links) actions.handleLink(link);
 }
 
 /** Where taps from outside the app wait (remote.ts): the app group on iOS, files on Android. */

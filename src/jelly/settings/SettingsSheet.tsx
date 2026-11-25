@@ -185,7 +185,7 @@ function AppleIntelligence() {
 
   useEffect(() => {
     let live = true;
-    availability()
+    void availability()
       .catch((): Availability => "unsupported")
       .then((next) => live && setState(next));
 

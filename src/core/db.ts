@@ -192,10 +192,10 @@ function migrate(d: SQLiteDatabase) {
     user_version: 0,
   };
 
-  for (let version = user_version; version < migrations.length; version++) {
+  for (const [i, migration] of migrations.slice(user_version).entries()) {
     d.withTransactionSync(() => {
-      d.execSync(migrations[version]);
-      d.execSync(`PRAGMA user_version = ${version + 1}`);
+      d.execSync(migration);
+      d.execSync(`PRAGMA user_version = ${user_version + i + 1}`);
     });
   }
 }

@@ -5,7 +5,8 @@
 // shortcuts.ts).
 // Swift in ios/, Kotlin in android/.
 
-import { NativeModule, requireOptionalNativeModule } from "expo";
+import type { NativeModule } from "expo";
+import { requireOptionalNativeModule } from "expo";
 
 /** A jelly drawn as an icon. Colors are hex strings like "#FF6FB5". */
 export interface Icon {

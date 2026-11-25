@@ -47,8 +47,10 @@ export async function shareExport(): Promise<void> {
 export async function pickBackup(): Promise<ParseResult | null> {
   const picked = await getDocumentAsync({ type: "application/json", copyToCacheDirectory: true });
 
-  if (picked.canceled) return null;
-  const file = new File(picked.assets[0].uri);
+  const [asset] = picked.assets ?? [];
+
+  if (picked.canceled || !asset) return null;
+  const file = new File(asset.uri);
 
   try {
     return parseBackup(JSON.parse(await file.text()));

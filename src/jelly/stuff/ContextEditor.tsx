@@ -546,7 +546,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
           label={copied ? s.copied : s.copyLink}
           systemImage={copied ? "checkmark" : "link"}
           onPress={() => {
-            Clipboard.setStringAsync(link);
+            void Clipboard.setStringAsync(link);
             buzz.success();
             setCopied(true);
           }}

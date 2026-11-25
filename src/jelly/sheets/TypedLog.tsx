@@ -68,7 +68,7 @@ function useSentenceAnswer(sentence: string, enabled: boolean): SentenceAnswer |
     let live = true;
 
     const timer = setTimeout(() => {
-      generate(sentenceRequest(trimmed, useHopwatch.getState().tree))
+      void generate(sentenceRequest(trimmed, useHopwatch.getState().tree))
         .catch(() => null)
         .then((answer) => {
           if (__DEV__ && !answer) console.warn("typed logging:", lastFailure());

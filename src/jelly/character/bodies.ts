@@ -5,7 +5,7 @@
 
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-import { closedSpline, hashSeed, random } from "../geometry";
+import { around, closedSpline, hashSeed, random } from "../geometry";
 import type { Body } from "./traits";
 
 export const UNIT = 100;
@@ -50,18 +50,16 @@ function svg(d: string): SkPath {
   return path;
 }
 
-/** A polygon with rounded corners; `radii` per vertex. */
-function roundedPolygon(points: [number, number][], radii: number[]): SkPath {
+/** A polygon with rounded corners, each `[x, y, radius]`. */
+function roundedPolygon(corners: readonly [number, number, number][]): SkPath {
   const b = Skia.PathBuilder.Make();
-  const n = points.length;
-  const [ax, ay] = points[n - 1];
-  const [bx, by] = points[0];
+  const [ax, ay] = around(corners, -1);
+  const [bx, by] = around(corners, 0);
   b.moveTo((ax + bx) / 2, (ay + by) / 2);
 
-  for (let i = 0; i < n; i++) {
-    const [x1, y1] = points[i];
-    const [x2, y2] = points[(i + 1) % n];
-    b.arcToTangent(x1, y1, x2, y2, radii[i]);
+  for (const [i, [x1, y1, radius]] of corners.entries()) {
+    const [x2, y2] = around(corners, i + 1);
+    b.arcToTangent(x1, y1, x2, y2, radius);
   }
 
   b.close();
@@ -94,18 +92,15 @@ function ghostPath(): SkPath {
 }
 
 function starPath(): SkPath {
-  const points: [number, number][] = [];
+  const corners: [number, number, number][] = [];
 
   for (let i = 0; i < 10; i++) {
     const angle = -Math.PI / 2 + (i * Math.PI) / 5;
     const r = i % 2 === 0 ? 50 : 27;
-    points.push([50 + Math.cos(angle) * r, 55 + Math.sin(angle) * r]);
+    corners.push([50 + Math.cos(angle) * r, 55 + Math.sin(angle) * r, i % 2 === 0 ? 7.5 : 6]);
   }
 
-  return roundedPolygon(
-    points,
-    points.map((_, i) => (i % 2 === 0 ? 7.5 : 6)),
-  );
+  return roundedPolygon(corners);
 }
 
 const defs: Record<Body, Def> = {
@@ -148,14 +143,11 @@ const defs: Record<Body, Def> = {
   },
   onigiri: {
     path: () =>
-      roundedPolygon(
-        [
-          [50, 6],
-          [95, 90],
-          [5, 90],
-        ],
-        [14, 16, 16],
-      ),
+      roundedPolygon([
+        [50, 6, 14],
+        [95, 90, 16],
+        [5, 90, 16],
+      ]),
     face: { x: 50, y: 64, s: 1 },
   },
   star: {
@@ -174,9 +166,7 @@ function blobPath(seed: string): SkPath {
   const count = 12;
   const raw = Array.from({ length: count }, () => next() * 2 - 1);
 
-  const wobble = raw.map(
-    (v, i) => (raw[(i + count - 1) % count] + 2 * v + raw[(i + 1) % count]) / 4,
-  );
+  const wobble = raw.map((v, i) => (around(raw, i - 1) + 2 * v + around(raw, i + 1)) / 4);
 
   const exponent = 2.6;
   const cx = 50;

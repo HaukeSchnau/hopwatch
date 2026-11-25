@@ -133,12 +133,12 @@ export function startSurfaces(): () => void {
   if (!connectSurfaces() || !systemSurfaces) return () => {};
 
   publishSnapshot();
-  syncSlack({ eager: true });
+  void syncSlack({ eager: true });
 
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries === prev.entries && state.tree === prev.tree) return;
     publishSnapshot(state);
-    syncSlack();
+    void syncSlack();
   });
 
   const taps = systemSurfaces.addListener("onCommands", () => drainRemote());
@@ -147,7 +147,7 @@ export function startSurfaces(): () => void {
     if (status !== "active") return;
     drainRemote();
     // Another look at Slack: a meeting's status may have ended, or a call failed offline.
-    syncSlack({ eager: true });
+    void syncSlack({ eager: true });
   });
 
   return () => {

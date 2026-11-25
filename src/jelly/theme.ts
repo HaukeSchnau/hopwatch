@@ -106,17 +106,24 @@ const base: Record<Hue, Base> = {
   gray: { fill: "#A597B3", light: "#D2C8DC", deep: "#76688A", on: "#FFFFFF" },
 };
 
-const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const channel = (hex: string, at: number) => parseInt(hex.slice(at, at + 2), 16);
+
+const parse = (hex: string): [number, number, number] => [
+  channel(hex, 1),
+  channel(hex, 3),
+  channel(hex, 5),
+];
 
 const toHex = (rgb: number[]) =>
   `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`;
 
 /** Mixes `a` towards `b` by `t` (0 keeps a, 1 gives b). */
 export function mix(a: string, b: string, t: number): string {
-  const x = parse(a);
-  const y = parse(b);
+  const [r1, g1, b1] = parse(a);
+  const [r2, g2, b2] = parse(b);
+  const towards = (from: number, to: number) => from + (to - from) * t;
 
-  return toHex(x.map((v, i) => v + (y[i] - v) * t));
+  return toHex([towards(r1, r2), towards(g1, g2), towards(b1, b2)]);
 }
 
 export function alpha(hex: string, a: number): string {
@@ -126,20 +133,23 @@ export function alpha(hex: string, a: number): string {
 }
 
 function luminance(hex: string): number {
-  const [r, g, b] = parse(hex).map((c) => {
+  const linear = (c: number) => {
     const s = c / 255;
 
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
+  };
 
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const [r, g, b] = parse(hex);
+
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
 }
 
 /** WCAG contrast ratio between two hex colors. */
 function contrast(a: string, b: string): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  const la = luminance(a);
+  const lb = luminance(b);
 
-  return (hi + 0.05) / (lo + 0.05);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
 /** `color` pushed towards `towards` until it reads on `against`. */

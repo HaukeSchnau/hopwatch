@@ -20,7 +20,7 @@ export function holidayOn(day: string, region: GermanState | null): HolidayId | 
 
 /** Days off work: the ones marked off, plus the public holidays of `region`. */
 export function offDaysOf(daysOff: readonly DayOff[], region: GermanState | null): OffDays {
-  const marked = new Set(daysOff.filter((o) => o.deletedAt === null).map((o) => o.day));
+  const marked = new Set(daysOff.flatMap((o) => (o.deletedAt === null ? [o.day] : [])));
   const holidays = new Map<number, ReadonlyMap<string, HolidayId>>();
 
   return (day) => {
@@ -29,9 +29,14 @@ export function offDaysOf(daysOff: readonly DayOff[], region: GermanState | null
     if (!region) return false;
     const year = Number(day.slice(0, 4));
 
-    if (!holidays.has(year)) holidays.set(year, germanHolidays(year, region));
+    let yearHolidays = holidays.get(year);
 
-    return holidays.get(year)!.has(day);
+    if (!yearHolidays) {
+      yearHolidays = germanHolidays(year, region);
+      holidays.set(year, yearHolidays);
+    }
+
+    return yearHolidays.has(day);
   };
 }
 
@@ -52,15 +57,16 @@ export function dailyTarget(c: JobHours, dayStart: number, offDays: OffDays): nu
   return (c.weeklyTargetMinutes * MINUTE) / workdays;
 }
 
+export interface WeekTarget {
+  target: number;
+  daysOff: number;
+}
+
 /**
  * A context's target for the week starting `weekStart`: the plain weekly target, or for
  * job hours the sum of its daily shares, with how many work days were off.
  */
-export function weekTarget(
-  c: JobHours,
-  weekStart: number,
-  offDays: OffDays,
-): { target: number; daysOff: number } {
+export function weekTarget(c: JobHours, weekStart: number, offDays: OffDays): WeekTarget {
   if (!isJobHours(c)) return { target: (c.weeklyTargetMinutes ?? 0) * MINUTE, daysOff: 0 };
   let target = 0;
   let daysOff = 0;

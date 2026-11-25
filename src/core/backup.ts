@@ -53,9 +53,9 @@ export function backupPayload(data: Omit<Backup, "exportedAt">, exportedAt: Date
 /** Reads one field; `undefined` means the value is invalid. */
 type Read<T> = (value: unknown) => T | undefined;
 
-type Shape = Record<string, Read<unknown>>;
+type Fields = Record<string, Read<unknown>>;
 
-type Parsed<S extends Shape> = { [K in keyof S]: Exclude<ReturnType<S[K]>, undefined> };
+type Parsed<S extends Fields> = { [K in keyof S]: Exclude<ReturnType<S[K]>, undefined> };
 
 const num: Read<number> = (v) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 const str: Read<string> = (v) => (typeof v === "string" ? v : undefined);
@@ -79,12 +79,12 @@ const nullable =
   (v) =>
     v === null || v === undefined ? null : read(v);
 
-function readObject<S extends Shape>(shape: S, value: unknown): Parsed<S> | undefined {
+function readObject<S extends Fields>(fields: S, value: unknown): Parsed<S> | undefined {
   if (typeof value !== "object" || value === null) return undefined;
   const record = value as Record<string, unknown>;
   const out: Record<string, unknown> = {};
 
-  for (const [key, read] of Object.entries(shape)) {
+  for (const [key, read] of Object.entries(fields)) {
     const field = read(record[key]);
 
     if (field === undefined) return undefined;
@@ -94,7 +94,7 @@ function readObject<S extends Shape>(shape: S, value: unknown): Parsed<S> | unde
   return out as Parsed<S>;
 }
 
-const contextShape = {
+const contextFields = {
   id: id<ContextId>(),
   parentId: nullable(id<ContextId>()),
   name: str,
@@ -114,9 +114,9 @@ const contextShape = {
   createdAt: num,
   updatedAt: num,
   deletedAt: nullable(num),
-} satisfies Shape;
+} satisfies Fields;
 
-const entryShape = {
+const entryFields = {
   id: id<EntryId>(),
   contextId: id<ContextId>(),
   startUtc: num,
@@ -127,9 +127,9 @@ const entryShape = {
   createdAt: num,
   updatedAt: num,
   deletedAt: nullable(num),
-} satisfies Shape;
+} satisfies Fields;
 
-const dayOffShape = {
+const dayOffFields = {
   id: id<DayOffId>(),
   day,
   kind: (v: unknown) => (isDayOffKind(v) ? v : undefined),
@@ -137,7 +137,7 @@ const dayOffShape = {
   createdAt: num,
   updatedAt: num,
   deletedAt: nullable(num),
-} satisfies Shape;
+} satisfies Fields;
 
 const isJsonObject = (v: unknown): v is { [key: string]: Json } =>
   typeof v === "object" && v !== null && !Array.isArray(v) && Object.values(v).every(isJson);
@@ -148,12 +148,12 @@ const isJson = (v: unknown): v is Json =>
   (Array.isArray(v) && v.every(isJson)) ||
   isJsonObject(v);
 
-/** Every row of `list` read with `shape`, or the index of the first bad one. */
-function readAll<S extends Shape>(shape: S, list: unknown[]): Parsed<S>[] | number {
+/** Every row of `list` read with `fields`, or the index of the first bad one. */
+function readAll<S extends Fields>(fields: S, list: unknown[]): Parsed<S>[] | number {
   const rows: Parsed<S>[] = [];
 
   for (const [i, item] of list.entries()) {
-    const row = readObject(shape, item);
+    const row = readObject(fields, item);
 
     if (!row) return i;
     rows.push(row);
@@ -202,13 +202,13 @@ export function parseBackup(json: unknown): ParseResult {
 
   if (!Array.isArray(file.contexts) || !Array.isArray(file.entries)) return fail(text.notAnExport);
 
-  const contexts = readAll(contextShape, file.contexts);
+  const contexts = readAll(contextFields, file.contexts);
 
   if (typeof contexts === "number") return fail(text.damagedContext(contexts + 1));
-  const entries = readAll(entryShape, file.entries);
+  const entries = readAll(entryFields, file.entries);
 
   if (typeof entries === "number") return fail(text.damagedEntry(entries + 1));
-  const daysOff = readAll(dayOffShape, Array.isArray(file.daysOff) ? file.daysOff : []);
+  const daysOff = readAll(dayOffFields, Array.isArray(file.daysOff) ? file.daysOff : []);
 
   if (typeof daysOff === "number") return fail(text.damagedDayOff(daysOff + 1));
 

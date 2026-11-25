@@ -81,7 +81,7 @@ export function Stage({ running }: { running: Running | null }) {
     if (previous.current === runningId) return;
     const from = previous.current;
     previous.current = runningId;
-    choreograph(from, runningId, animate.current);
+    void choreograph(from, runningId, animate.current);
   }, [runningId]);
 
   // Lights the new running bean up as its jelly lands in the ring.

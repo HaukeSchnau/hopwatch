@@ -158,7 +158,6 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
       if (slackTouched.current) saveSlackStatus(id, latestSlack.current);
     };
     // Only on unmount of this jelly's editor.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context?.id]);
 
   const bump = useSharedValue(0);
@@ -209,7 +208,10 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const pinTo = (on: boolean) => {
     setPinned(on);
 
-    if (context) (on ? actions.pin : actions.unpin)(context.id);
+    if (!context) return;
+
+    if (on) actions.pin(context.id);
+    else actions.unpin(context.id);
   };
 
   const changeTarget = (next: number | null) => {

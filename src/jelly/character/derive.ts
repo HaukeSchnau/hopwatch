@@ -14,19 +14,22 @@ export interface LookSource {
   name?: string;
 }
 
-type Weighted<T> = readonly (readonly [T, number])[];
+type Weighted<T> = readonly [readonly [T, number], ...(readonly [T, number])[]];
 
 function weighted<T>(next: () => number, options: Weighted<T>): T {
   const total = options.reduce((sum, [, weight]) => sum + weight, 0);
   let roll = next() * total;
+  let picked = options[0][0];
 
   for (const [value, weight] of options) {
+    picked = value;
     roll -= weight;
 
-    if (roll < 0) return value;
+    if (roll < 0) break;
   }
 
-  return options[options.length - 1][0];
+  // Rounding can leave the roll at 0 after the last weight, which picks the last option.
+  return picked;
 }
 
 // Random picks only use the generic options. Meaningful ones (chef hat, dog ears, a bib)

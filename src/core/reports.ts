@@ -107,10 +107,12 @@ export function reviewGaps(
 ): GapSegment[] {
   const segments = segmentsIn(entries, tree, dayStart, addDays(dayStart, 1), now);
 
-  if (segments.length === 0) return [];
+  const [first] = segments;
+
+  if (!first) return [];
   const last = Math.max(...segments.map((s) => s.end));
 
-  return gapsIn(segments, segments[0].start, last, now).filter(
+  return gapsIn(segments, first.start, last, now).filter(
     (g) =>
       g.end - g.start >= REVIEW_GAP_MS &&
       !breaks.some(([from, to]) => from <= g.start && to >= g.end),
@@ -171,8 +173,14 @@ export function fragmentation(segments: readonly Segment[]): Fragmentation {
   const lengths = segments.map((s) => s.end - s.start).sort((a, b) => a - b);
 
   if (lengths.length === 0) return { blocks: 0, median: 0 };
-  const mid = Math.floor(lengths.length / 2);
-  const median = lengths.length % 2 ? lengths[mid] : (lengths[mid - 1] + lengths[mid]) / 2;
+
+  // The one or two lengths in the middle.
+  const middle = lengths.slice(
+    Math.ceil(lengths.length / 2) - 1,
+    Math.floor(lengths.length / 2) + 1,
+  );
+
+  const median = middle.reduce((sum, v) => sum + v, 0) / middle.length;
 
   return { blocks: lengths.length, median };
 }

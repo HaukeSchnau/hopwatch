@@ -10,7 +10,7 @@ import { coreText } from "@/i18n/core";
 
 import { type ContextId, type Entry, MIN_ENTRY_MS } from "./model";
 import { addDays, formatClock, HOUR, MINUTE, startOfDay } from "./time";
-import { findOpen, isLive } from "./timeline";
+import { type Block, findOpen, isLive } from "./timeline";
 import { type ContextTree, pathLabel, pickable, type ResolvedContext } from "./tree";
 
 /** What typed logging can do: switch (maybe backdated), log a past block, or stop. */
@@ -135,7 +135,7 @@ function clockOf(value: string): ClockTime | null {
 
     if (spoken[4]) return { h: spoken[4] === "halb" ? h - 1 : h, m: 30 };
 
-    return ["to", "vor"].includes(spoken[2]) ? { h: h - 1, m: 45 } : { h, m: 15 };
+    return spoken[2] === "to" || spoken[2] === "vor" ? { h: h - 1, m: 45 } : { h, m: 15 };
   }
 
   const match = /(\d{1,2})(?:[:.h](\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?/.exec(v);
@@ -163,7 +163,8 @@ function minutesOf(value: string): number | null {
   const match = new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s*(${hours})?`).exec(v);
 
   if (!match) return null;
-  const minutes = Math.round(Number(match[1].replace(",", ".")) * (match[2] ? 60 : 1));
+  const [, amount = "", unit] = match;
+  const minutes = Math.round(Number(amount.replace(",", ".")) * (unit ? 60 : 1));
 
   return minutes > 0 ? minutes : null;
 }
@@ -227,9 +228,9 @@ function writtenRange(sentence: string): [ClockTime, ClockTime] | null {
     "i",
   );
 
-  const match = range.exec(sentence);
-  const from = match && clockOf(match[1]);
-  const to = match && clockOf(match[2]);
+  const [, fromText, toText] = range.exec(sentence) ?? [];
+  const from = fromText === undefined ? null : clockOf(fromText);
+  const to = toText === undefined ? null : clockOf(toText);
 
   return from && to ? [from, to] : null;
 }
@@ -478,7 +479,7 @@ export function readSentence(
     return { plan: { kind: "start", contextId, at } };
   }
 
-  let range: { from: number; to: number };
+  let range: Block;
 
   if (from && (to || untilNow)) {
     const start = blockTime(day, from, now);

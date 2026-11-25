@@ -54,7 +54,7 @@ export function TotalsTree({ roots, expanded, onToggle, targets, textFor }: Tota
           onToggle={() => onToggle(node.context.id)}
           target={targets.get(node.context.id)}
           onCopy={() => {
-            Clipboard.setStringAsync(textFor(node.context.id));
+            void Clipboard.setStringAsync(textFor(node.context.id));
             buzz.success();
             say(weekText.copied(node.context.name));
           }}

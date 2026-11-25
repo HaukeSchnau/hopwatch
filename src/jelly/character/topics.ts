@@ -431,7 +431,7 @@ export const topics = [
 export type TopicName = (typeof topics)[number]["name"];
 
 // Emoji presentation selectors and skin tone modifiers don't change what an emoji means.
-const EMOJI_NOISE = /[\u{FE0E}\u{FE0F}\u{1F3FB}-\u{1F3FF}]/gu;
+const EMOJI_NOISE = /\u{FE0E}|\u{FE0F}|[\u{1F3FB}-\u{1F3FF}]/gu;
 
 /** An emoji without presentation selectors and skin tones, for comparing. */
 export const emojiKey = (emoji: string) => emoji.replace(EMOJI_NOISE, "");

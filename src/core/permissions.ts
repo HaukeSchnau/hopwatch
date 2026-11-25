@@ -19,12 +19,12 @@ export function requestNudgePermission(explain?: () => Promise<void>): Promise<b
   asking ??= (async () => {
     let { status, canAskAgain } = await Notifications.getPermissionsAsync();
 
-    if (status !== "granted" && canAskAgain) {
+    if (status !== Notifications.PermissionStatus.GRANTED && canAskAgain) {
       await explain?.();
       ({ status } = await Notifications.requestPermissionsAsync());
     }
 
-    return status === "granted";
+    return status === Notifications.PermissionStatus.GRANTED;
   })().finally(() => {
     asking = null;
   });

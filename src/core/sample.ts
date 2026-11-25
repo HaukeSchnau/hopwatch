@@ -66,16 +66,37 @@ function rng(seed: number) {
 
 type Plan = [key: Seed["key"], minutes: number, gapAfter?: number][];
 
+export interface SampleData {
+  contexts: Context[];
+  entries: Entry[];
+}
+
 export function sampleData(
   now: number,
   newId: () => string,
   offsetAt: (ts: number) => number,
-): { contexts: Context[]; entries: Entry[] } {
+): SampleData {
   const random = rng(Math.floor(startOfDay(now) / 86_400_000));
   const between = (min: number, max: number) => Math.round(min + random() * (max - min));
-  const pick = <T>(items: T[]) => items[Math.floor(random() * items.length)];
+
+  const pick = <T>(items: readonly T[]): T => {
+    const item = items[Math.floor(random() * items.length)];
+
+    if (item === undefined) throw new Error("pick() needs items");
+
+    return item;
+  };
 
   const ids = new Map(seeds.map((s) => [s.key, newId() as ContextId]));
+
+  const idOf = (key: Seed["key"]) => {
+    const id = ids.get(key);
+
+    if (!id) throw new Error(`No sample context ${key}`);
+
+    return id;
+  };
+
   const sortOrders = new Map<Seed["key"] | null, number>();
 
   const contexts: Context[] = seeds.map((s) => {
@@ -84,8 +105,8 @@ export function sampleData(
     sortOrders.set(parentKey, sortOrder + 1);
 
     return {
-      id: ids.get(s.key)!,
-      parentId: s.parent ? ids.get(s.parent)! : null,
+      id: idOf(s.key),
+      parentId: s.parent ? idOf(s.parent) : null,
       name: names[s.key],
       color: s.color ?? null,
       emoji: s.emoji ?? null,
@@ -165,7 +186,7 @@ export function sampleData(
       const running = end === now;
       entries.push({
         id: newId() as EntryId,
-        contextId: ids.get(key)!,
+        contextId: idOf(key),
         startUtc: start,
         startOffsetMinutes: offsetAt(start),
         endUtc: running ? null : end,

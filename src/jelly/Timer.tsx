@@ -72,7 +72,7 @@ function Digits({
   weight: "700" | "800";
   style?: StyleProp<ViewStyle>;
 }) {
-  const chars = [...text];
+  const chars = Array.from(text);
 
   return (
     <View style={[styles.row, style]}>

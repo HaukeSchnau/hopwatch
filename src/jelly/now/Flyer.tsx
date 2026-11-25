@@ -51,7 +51,7 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
     });
 
     return () => cancelAnimationFrame(handle);
-  }, [flight.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flight.key]);
 
   useEffect(() => {
     if (!go) return;
@@ -63,7 +63,7 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
         if (finished) scheduleOnRN(land, flight);
       }),
     );
-  }, [go]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [go]);
 
   const style = useAnimatedStyle(() => {
     const t = progress.get();

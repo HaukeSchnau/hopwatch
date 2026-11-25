@@ -1286,9 +1286,10 @@
     const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
     lastTime = now;
 
-    for (const value of [...active]) value.advance(dt);
+    // Snapshots, since a settled value leaves `active` and a finished hook leaves `frameHooks`.
+    for (const value of Array.from(active)) value.advance(dt);
 
-    for (const hook of [...frameHooks]) if (hook(now) === false) frameHooks.delete(hook);
+    for (const hook of Array.from(frameHooks)) if (hook(now) === false) frameHooks.delete(hook);
 
     for (const ch of dirty) ch.render();
     dirty.clear();

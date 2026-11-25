@@ -92,11 +92,7 @@ function WeekCard({ week }: { week: number }) {
   const top = roots.slice(0, 3);
   const area = { width: CARD.width - 48, height: 112 };
 
-  const circles = pack(
-    roots.map((n) => n.total),
-    area.width,
-    area.height,
-  );
+  const packed = pack(roots, (n) => n.total, area.width, area.height);
 
   const sentence = summary && summary !== "writing" ? summary.text : null;
 
@@ -113,17 +109,14 @@ function WeekCard({ week }: { week: number }) {
       </Text>
 
       <View style={[styles.jellies, area]}>
-        {roots.map((node, i) => (
+        {packed.map(({ item: node, circle }, i) => (
           <View
             key={node.context.id}
-            style={[
-              styles.jelly,
-              { left: circles[i].x - circles[i].r, top: circles[i].y - circles[i].r },
-            ]}
+            style={[styles.jelly, { left: circle.x - circle.r, top: circle.y - circle.r }]}
           >
             <Character
               context={node.context}
-              size={Math.max(28, circles[i].r * 1.9)}
+              size={Math.max(28, circle.r * 1.9)}
               mood={i === 0 ? "awake" : "asleep"}
               shadow={false}
             />

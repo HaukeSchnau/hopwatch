@@ -37,6 +37,14 @@ const endOf = (e: Entry) => e.endUtc ?? Number.POSITIVE_INFINITY;
 
 export const isLive = (e: Entry) => e.deletedAt === null;
 
+function liveById(entries: readonly Entry[]): Map<EntryId, Entry> {
+  const live = new Map<EntryId, Entry>();
+
+  for (const e of entries) if (isLive(e)) live.set(e.id, e);
+
+  return live;
+}
+
 export const findOpen = (entries: readonly Entry[]) =>
   entries.find((e) => e.deletedAt === null && e.endUtc === null) ?? null;
 
@@ -290,10 +298,11 @@ export function fillGap(
   // The first free instant in the range is either `from` or the end of an entry.
   const probes = [
     from,
-    ...entries
-      .filter(isLive)
-      .map(endOf)
-      .filter((t) => t > from && t < to),
+    ...entries.flatMap((e) => {
+      const end = endOf(e);
+
+      return isLive(e) && end > from && end < to ? [end] : [];
+    }),
   ].sort((a, b) => a - b);
 
   for (const probe of probes) {
@@ -340,13 +349,19 @@ export function place(
   return d.result();
 }
 
+/** A block of time to place, in epoch ms. */
+export interface Block {
+  from: number;
+  to: number;
+}
+
 /**
  * Where a block put inside `entry` starts out, before the user adjusts it: lunchtime
  * (12:00–12:30) when the entry covers it, on its last day first, otherwise half an hour
  * (or half the entry, if that's shorter) in its middle, on 5-minute marks. A running
  * entry counts up to now.
  */
-export function blockInside(entry: Entry, now: number): { from: number; to: number } {
+export function blockInside(entry: Entry, now: number): Block {
   const end = entry.endUtc ?? now;
 
   for (const day of [end, entry.startUtc]) {
@@ -394,7 +409,7 @@ export function previewPlace(
   to: number,
   now: number,
 ): PlacePreview {
-  const before = new Map(entries.filter(isLive).map((e) => [e.id, e]));
+  const before = liveById(entries);
   let ids = 0;
   const clock: Clock = { now, offsetAt: () => 0, newId: () => `preview-${ids++}` as EntryId };
   const rows = place(entries, contextId, from, to, clock);
@@ -445,7 +460,7 @@ export function previousContextId(entries: readonly Entry[]): ContextId | null {
  * Rows that existed come back as they were; rows the change created are deleted.
  */
 export function inverse(before: readonly Entry[], changed: readonly Entry[], now: number): Entry[] {
-  const prior = new Map(before.filter(isLive).map((e) => [e.id, e]));
+  const prior = liveById(before);
 
   return changed.map((row) => {
     const was = prior.get(row.id);

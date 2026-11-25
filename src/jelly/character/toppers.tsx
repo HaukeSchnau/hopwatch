@@ -403,13 +403,15 @@ function PartyHat({ geo, accent, lod }: TopperProps) {
       <CandyPath path={cone} tones={accent} top={-22} bottom={3} />
       {lod > 0 && (
         <Group clip={cone}>
-          {[
-            [-3, -3.6, 1.7],
-            [3.6, -8.6, 1.5],
-            [-1, -14, 1.3],
-            [4.6, -1.6, 1.4],
-            [-5.2, 0.4, 1.2],
-          ].map(([x, y, r]) => (
+          {(
+            [
+              [-3, -3.6, 1.7],
+              [3.6, -8.6, 1.5],
+              [-1, -14, 1.3],
+              [4.6, -1.6, 1.4],
+              [-5.2, 0.4, 1.2],
+            ] as const
+          ).map(([x, y, r]) => (
             <Circle key={`${x}${y}`} cx={x} cy={y} r={r} color="rgba(255,255,255,0.85)" />
           ))}
         </Group>

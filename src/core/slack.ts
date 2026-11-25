@@ -183,7 +183,7 @@ export function redirectParams(url: string): Record<string, string> {
       .split("&")
       .filter(Boolean)
       .map((pair) => {
-        const [k, v = ""] = pair.split("=");
+        const [k = "", v = ""] = pair.split("=");
 
         return [decodeURIComponent(k), decodeURIComponent(v.replace(/\+/g, " "))];
       }),

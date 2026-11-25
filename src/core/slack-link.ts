@@ -86,7 +86,7 @@ export async function refreshSlackLink() {
 /** The connected workspace, or null. Reads it again whenever a screen using it shows. */
 export function useSlackLink(): SlackLink | null {
   useEffect(() => {
-    if (canConnect(clientId())) refreshSlackLink();
+    if (canConnect(clientId())) void refreshSlackLink();
   }, []);
 
   return useSyncExternalStore(subscribe, () => link);
@@ -119,7 +119,7 @@ export async function connectSlack(): Promise<ConnectResult> {
   }
 
   // 'locked': an earlier sheet never finished, so this one can't open either.
-  if (result.type === "locked") return "failed";
+  if (result.type === WebBrowser.WebBrowserResultType.LOCKED) return "failed";
 
   if (result.type !== "success") return "cancelled";
   const params = redirectParams(result.url);
@@ -154,7 +154,7 @@ export async function connectSlack(): Promise<ConnectResult> {
           checkedAt: 0,
         }),
       );
-      syncSlack();
+      void syncSlack();
     }
 
     await refreshSlackLink();
@@ -344,8 +344,11 @@ async function setStatus(token: string, status: SlackWire, expiration: number): 
 // Slack's Web API.
 
 class SlackError extends Error {
-  constructor(readonly code: string) {
+  readonly code: string;
+
+  constructor(code: string) {
     super(`Slack: ${code}`);
+    this.code = code;
   }
 }
 

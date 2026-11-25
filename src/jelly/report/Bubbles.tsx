@@ -28,21 +28,17 @@ export function Bubbles({
   height: number;
   onPick: (id: ContextId) => void;
 }) {
-  const circles = pack(
-    nodes.map((n) => n.total),
-    width,
-    height,
-  );
+  const packed = pack(nodes, (n) => n.total, width, height);
 
   return (
     <View style={{ width, height }}>
-      {nodes.map((n, i) => (
+      {packed.map(({ item: n, circle }) => (
         <Bubble
           key={n.context.id}
           node={n}
-          x={circles[i].x}
-          y={circles[i].y}
-          r={circles[i].r}
+          x={circle.x}
+          y={circle.y}
+          r={circle.r}
           onPick={onPick}
         />
       ))}

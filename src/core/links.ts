@@ -18,14 +18,14 @@ export type LinkAction =
 /** Parses a URL or router path such as "hopwatch://start?context=…" or "/stop". */
 export function parseLink(pathOrUrl: string): LinkAction | null {
   const withoutScheme = pathOrUrl.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/^\/+/, "");
-  const [route, query = ""] = withoutScheme.split("?");
+  const [route = "", query = ""] = withoutScheme.split("?");
 
   const params = new Map(
     query
       .split("&")
       .filter(Boolean)
       .map((pair): [string, string] => {
-        const [key, value = ""] = pair.split("=");
+        const [key = "", value = ""] = pair.split("=");
 
         return [decodeURIComponent(key), decodeURIComponent(value)];
       }),

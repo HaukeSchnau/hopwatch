@@ -111,17 +111,20 @@ export function usePinned(): { tiles: ResolvedContext[]; slots: (ResolvedContext
 
   return useMemo(() => {
     const tiles = pickable(tree)
-      .filter((c) => c.pinPosition !== null)
-      .sort((a, b) => a.pinPosition! - b.pinPosition!);
+      .filter(isPinned)
+      .sort((a, b) => a.pinPosition - b.pinPosition);
 
-    const size = tiles.length ? tiles[tiles.length - 1].pinPosition! + 1 : 0;
+    const size = (tiles.at(-1)?.pinPosition ?? -1) + 1;
     const slots: (ResolvedContext | null)[] = Array.from({ length: size }, () => null);
 
-    for (const t of tiles) slots[t.pinPosition!] = t;
+    for (const t of tiles) slots[t.pinPosition] = t;
 
     return { tiles, slots };
   }, [tree]);
 }
+
+const isPinned = (c: ResolvedContext): c is ResolvedContext & { pinPosition: number } =>
+  c.pinPosition !== null;
 
 /** Recently used contexts, newest first, excluding pinned ones and the running one. */
 export function useRecents(limit = 6): ResolvedContext[] {
@@ -134,7 +137,9 @@ export function useRecents(limit = 6): ResolvedContext[] {
     const result: ResolvedContext[] = [];
 
     for (let i = entries.length - 1; i >= 0 && result.length < limit; i--) {
-      const id = entries[i].contextId;
+      const id = entries[i]?.contextId;
+
+      if (id === undefined) continue;
 
       if (seen.has(id) || id === running) continue;
       seen.add(id);
@@ -186,11 +191,13 @@ export function useOffDays(): OffDays {
   return useMemo(() => offDaysOf(daysOff, region), [daysOff, region]);
 }
 
-/** Why the day starting at `dayStart` is off work, if it is: a marked kind, or a holiday. */
-export function useDayOff(dayStart: number): {
+export interface DayOffReason {
   kind: DayOffKind | null;
   holiday: HolidayId | null;
-} {
+}
+
+/** Why the day starting at `dayStart` is off work, if it is: a marked kind, or a holiday. */
+export function useDayOff(dayStart: number): DayOffReason {
   const day = dayKey(dayStart);
   const kind = useHopwatch((s) => s.daysOff.find((o) => o.day === day)?.kind ?? null);
   const region = useHolidayRegion();
@@ -220,11 +227,16 @@ export function useGapAt(at: number | null) {
   return useMemo(() => (at === null ? null : gapAt(entries, at, now)), [entries, at, now]);
 }
 
+export interface UndoToast {
+  action: LastAction | null;
+  visible: boolean;
+}
+
 /**
  * Drives the "Switched to X · Undo" toast. `action` stays set for `windowMs` after the
  * last timeline change; render it while `visible`.
  */
-export function useUndoToast(windowMs = 5000): { action: LastAction | null; visible: boolean } {
+export function useUndoToast(windowMs = 5000): UndoToast {
   const action = useHopwatch((s) => s.lastAction);
 
   // The action whose window has run out. A screen mounting after the window starts hidden.

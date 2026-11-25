@@ -64,11 +64,6 @@ export default defineConfig({
       "anti-slop/no-widen-then-assert": "error",
       "anti-slop/require-readable-spacing": "error",
 
-      // `typescript/no-unsafe-type-assertion` already rejects narrowing casts, so a comment on a
-      // safe upcast adds friction without safety. 81 findings.
-      // https://github.com/dmmulroy/anti-slop/blob/63dbb09/src/rules/require-safety-comment-for-type-assertion.ts
-      "anti-slop/require-safety-comment-for-type-assertion": "off",
-
       // Reusing a precise name in a nested callback reads better, and TypeScript resolves the
       // scopes. 23 findings.
       // https://oxc.rs/docs/guide/usage/linter/rules/eslint/no-shadow.html
@@ -103,11 +98,13 @@ export default defineConfig({
       // src/core checks what it reads by hand: the backup import, saved JSON, SQLite rows, Slack's
       // answers and the widgets' commands go through `typeof` checks and `Record<string, unknown>`,
       // and IDs get their brand by a cast (`randomUUID() as EntryId`). Decoding them with schemas
-      // that mint the brands is a rewrite of those boundaries. 76 findings (67 in src/core), 55,
-      // 15 and 10 findings. The `unknown` parameters also include `.catch` callbacks, whose reason
-      // would otherwise be `any`.
+      // that mint the brands is a rewrite of those boundaries, which the casts wait for under both
+      // assertion rules. 76 findings (67 in src/core), 81, 55, 15 and 10. The `unknown` parameters
+      // also include `.catch` callbacks, whose reason would otherwise be `any`.
       // https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-unsafe-type-assertion.html
       "typescript/no-unsafe-type-assertion": "off",
+      // https://github.com/dmmulroy/anti-slop/blob/63dbb09/src/rules/require-safety-comment-for-type-assertion.ts
+      "anti-slop/require-safety-comment-for-type-assertion": "off",
       // https://github.com/dmmulroy/anti-slop/blob/63dbb09/src/rules/no-runtime-typeof.ts
       "anti-slop/no-runtime-typeof": "off",
       // https://github.com/dmmulroy/anti-slop/blob/63dbb09/src/rules/no-unknown-parameters.ts

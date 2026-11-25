@@ -33,56 +33,73 @@ function touching(a: Circle, b: Circle, r: number, gap: number): Circle[] {
 }
 
 /**
- * Packs circles with areas proportional to `values` into a `width` × `height` box.
- * Returns circles in the input order.
+ * Packs one circle per item, with areas proportional to `size(item)`, into a `width` × `height`
+ * box. Returns each item with its circle, in the input order.
  */
-export function pack(values: number[], width: number, height: number, gap = 6): Circle[] {
-  if (values.length === 0) return [];
+export function pack<T>(
+  items: readonly T[],
+  size: (item: T) => number,
+  width: number,
+  height: number,
+  gap = 6,
+): { item: T; circle: Circle }[] {
+  if (items.length === 0) return [];
+  const sized = items.map((item) => ({ item, value: size(item) }));
   // Radii normalised so the biggest is 100, which makes `gap` a share of it.
-  const max = Math.max(...values, 1);
+  const max = Math.max(...sized.map((s) => s.value), 1);
 
-  const order = values
-    .map((v, i) => ({ i, r: Math.max(8, Math.sqrt(Math.max(v, 0) / max) * 100) }))
+  const order = sized
+    .map(({ item, value }, i) => ({
+      i,
+      item,
+      r: Math.max(8, Math.sqrt(Math.max(value, 0) / max) * 100),
+    }))
     .sort((a, b) => b.r - a.r);
 
-  const placed: Circle[] = [];
-  const byIndex = new Map<number, Circle>();
+  const placed: { i: number; item: T; circle: Circle }[] = [];
+  const circles: Circle[] = [];
   // Squash towards a wide layout by weighting vertical distance more.
   const cost = (c: Circle) => Math.hypot(c.x * 0.8, c.y * 1.5);
 
-  for (const { i, r } of order) {
+  for (const { i, item, r } of order) {
+    const [first] = circles;
     let best: Circle | null = null;
 
-    if (placed.length === 0) best = { x: 0, y: 0, r };
-    else if (placed.length === 1) best = { x: placed[0].r + r + gap, y: 0, r };
+    if (!first) best = { x: 0, y: 0, r };
+    else if (circles.length === 1) best = { x: first.r + r + gap, y: 0, r };
     else {
-      for (let a = 0; a < placed.length; a++) {
-        for (let b = a + 1; b < placed.length; b++) {
-          for (const c of touching(placed[a], placed[b], r, gap)) {
-            if (!overlaps(c, placed, gap) && (!best || cost(c) < cost(best))) best = c;
+      for (const [a, ca] of circles.entries()) {
+        for (const cb of circles.slice(a + 1)) {
+          for (const c of touching(ca, cb, r, gap)) {
+            if (!overlaps(c, circles, gap) && (!best || cost(c) < cost(best))) best = c;
           }
         }
       }
 
-      best ??= { x: 0, y: placed.reduce((m, p) => Math.max(m, p.y + p.r), 0) + r + gap, r };
+      best ??= { x: 0, y: circles.reduce((m, p) => Math.max(m, p.y + p.r), 0) + r + gap, r };
     }
 
-    placed.push(best);
-    byIndex.set(i, best);
+    placed.push({ i, item, circle: best });
+    circles.push(best);
   }
 
   // Fit into the box.
-  const minX = Math.min(...placed.map((c) => c.x - c.r));
-  const maxX = Math.max(...placed.map((c) => c.x + c.r));
-  const minY = Math.min(...placed.map((c) => c.y - c.r));
-  const maxY = Math.max(...placed.map((c) => c.y + c.r));
+  const minX = Math.min(...circles.map((c) => c.x - c.r));
+  const maxX = Math.max(...circles.map((c) => c.x + c.r));
+  const minY = Math.min(...circles.map((c) => c.y - c.r));
+  const maxY = Math.max(...circles.map((c) => c.y + c.r));
   const scale = Math.min(width / (maxX - minX), height / (maxY - minY));
   const offsetX = (width - (maxX - minX) * scale) / 2;
   const offsetY = (height - (maxY - minY) * scale) / 2;
 
-  return values.map((_, i) => {
-    const c = byIndex.get(i)!;
-
-    return { x: (c.x - minX) * scale + offsetX, y: (c.y - minY) * scale + offsetY, r: c.r * scale };
-  });
+  return placed
+    .sort((a, b) => a.i - b.i)
+    .map(({ item, circle: c }) => ({
+      item,
+      circle: {
+        x: (c.x - minX) * scale + offsetX,
+        y: (c.y - minY) * scale + offsetY,
+        r: c.r * scale,
+      },
+    }));
 }

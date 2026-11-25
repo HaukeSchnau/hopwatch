@@ -113,8 +113,10 @@ export interface Look {
 
 export type Trait = keyof Look;
 
+type TraitOptions = { readonly [K in Trait]: readonly Look[K][] };
+
 /** Each trait's options, in the order the editor shows them. */
-export const traitOptions: { readonly [K in Trait]: readonly Look[K][] } = {
+export const traitOptions: TraitOptions = {
   body: bodies,
   eyes: eyeStyles,
   mouth: mouths,

@@ -29,17 +29,26 @@ export function random(seed: number) {
   };
 }
 
-/** A closed Catmull-Rom spline through `pts`, as cubic Béziers. */
-export function closedSpline(pts: { x: number; y: number }[]): SkPath {
-  const b = Skia.PathBuilder.Make();
-  const n = pts.length;
-  b.moveTo(pts[0].x, pts[0].y);
+/** `items[i]` with `i` counted around both ends, for closed outlines. */
+export function around<T>(items: readonly T[], i: number): T {
+  const n = items.length;
+  const item = items[((i % n) + n) % n];
 
-  for (let i = 0; i < n; i++) {
-    const p0 = pts[(i + n - 1) % n];
-    const p1 = pts[i];
-    const p2 = pts[(i + 1) % n];
-    const p3 = pts[(i + 2) % n];
+  if (item === undefined) throw new Error("A closed outline needs at least one point");
+
+  return item;
+}
+
+/** A closed Catmull-Rom spline through `pts`, as cubic Béziers. */
+export function closedSpline(pts: readonly { x: number; y: number }[]): SkPath {
+  const b = Skia.PathBuilder.Make();
+  const start = around(pts, 0);
+  b.moveTo(start.x, start.y);
+
+  for (const [i, p1] of pts.entries()) {
+    const p0 = around(pts, i - 1);
+    const p2 = around(pts, i + 1);
+    const p3 = around(pts, i + 2);
     b.cubicTo(
       p1.x + (p2.x - p0.x) / 6,
       p1.y + (p2.y - p0.y) / 6,

@@ -43,7 +43,7 @@ describe("slack status in the tree", () => {
     context("deep", { parentId: "job" as ContextId, emoji: "🎧" }),
   ]);
 
-  const slack = (id: string) => tree.byId.get(id as ContextId)!.slack;
+  const slack = (id: string) => tree.byId.get(id as ContextId)?.slack;
 
   it("defaults the emoji to the jelly's own", () => {
     expect(slack("job")).toEqual({ text: "Working remotely", emoji: "🏡" });

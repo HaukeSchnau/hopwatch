@@ -135,7 +135,7 @@ export function weekFacts(
   const text = factText[lang];
   const say = (ms: number) => spoken(ms, lang);
   /** Monday is 0. */
-  const weekday = (ts: number) => text.weekdays[(new Date(ts).getDay() + 6) % 7];
+  const weekday = (ts: number) => text.weekdays[(new Date(ts).getDay() + 6) % 7] ?? "";
   const end = addDays(weekStart, 7);
   const at = Math.min(now, end);
   const week = weekReport(entries, tree, weekStart, at, offDays);
@@ -187,14 +187,22 @@ export function weekFacts(
   const tracked = week.days.filter((d) => d.totals.total > 0);
 
   const notable = (): string | null => {
-    const late = week.days.map((d) => clip(d.segments, d.end - 2 * HOUR, d.end));
-    const lateDays = week.days.filter((_, i) => sum(late[i]) >= 15 * MINUTE);
+    const late = week.days.map((d) => ({
+      day: d,
+      segments: clip(d.segments, d.end - 2 * HOUR, d.end),
+    }));
+
+    const lateDays = late.filter((l) => sum(l.segments) >= 15 * MINUTE).map((l) => l.day);
 
     if (lateDays.length >= 2) {
       return text.lateEvenings(
         lateDays.length,
         text.list(lateDays.map((d) => weekday(d.start))),
-        mostly(late.flat(), 0.5, lang),
+        mostly(
+          late.flatMap((l) => l.segments),
+          0.5,
+          lang,
+        ),
       );
     }
 
@@ -214,13 +222,15 @@ export function weekFacts(
 
     const weekend = week.days.slice(5).flatMap((d) => d.segments);
 
-    if (at > week.days[5].start && sum(weekend) >= Math.max(2 * HOUR, total * 0.25)) {
+    const saturday = week.days[5];
+
+    if (saturday && at > saturday.start && sum(weekend) >= Math.max(2 * HOUR, total * 0.25)) {
       return text.weekend(say(sum(weekend)), running, mostly(weekend, 0.5, lang, true));
     }
 
     const busiest = [...tracked].sort((a, b) => b.totals.total - a.totals.total)[0];
 
-    if (tracked.length >= 2 && busiest.totals.total >= 1.3 * (total / tracked.length)) {
+    if (busiest && tracked.length >= 2 && busiest.totals.total >= 1.3 * (total / tracked.length)) {
       return text.busiest(
         weekday(busiest.start),
         say(busiest.totals.total),
@@ -248,14 +258,14 @@ export function weekFacts(
   if (extra) facts.push(extra);
 
   // Other targets, unless archived and untouched, then the runner-up context.
-  for (const line of [...targets.values()]) {
+  for (const line of targets.values()) {
     if (!(line.context.hidden && line.actual === 0))
       facts.push(contextFact(line.context, line.actual));
   }
 
   if (roots[1]) facts.push(contextFact(roots[1].context, roots[1].total));
 
-  const span = running ? text.span(text.weekdays[0], today === 0 ? null : weekday(at)) : null;
+  const span = running ? text.span(weekday(weekStart), today === 0 ? null : weekday(at)) : null;
 
   return { over: !running, span, facts: facts.slice(0, MAX_FACTS) };
 }
@@ -419,7 +429,7 @@ function numbersIn(text: string, lang: Language): Set<number> {
 }
 
 /** Weekday names to look for, Monday first, with what may follow them. */
-const weekdayNames: Record<Language, { names: string[][]; suffix: string }> = {
+const weekdayNames: Record<Language, { names: [string, ...string[]][]; suffix: string }> = {
   en: {
     names: [
       ["monday"],

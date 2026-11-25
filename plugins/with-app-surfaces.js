@@ -6,8 +6,8 @@
 // It edits the AppDelegate that with-scene-lifecycle writes. Expo runs a later plugin's
 // AppDelegate change first, so this one must come before with-scene-lifecycle in app.json.
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const {
   IOSConfig,

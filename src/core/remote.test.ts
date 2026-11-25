@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { assert, describe, expect, it } from "vite-plus/test";
 
 import type { Context, ContextId, Entry, EntryId } from "./model";
 import { parseCommand, type RemoteCommand, replay, snapshotOf } from "./remote";
@@ -30,7 +30,9 @@ const context = (id: string, extra: Partial<Context> = {}): Context => ({
 });
 
 const tree = buildTree([context("job"), context("dog"), context("old", { archivedAt: 1 })]);
-const [job, dog, old] = ["job", "dog", "old"] as ContextId[];
+const job = "job" as ContextId;
+const dog = "dog" as ContextId;
+const old = "old" as ContextId;
 
 let n = 0;
 
@@ -60,7 +62,9 @@ const start = (
 describe("replaying taps from outside the app", () => {
   // Job runs since 07:00.
   const running = apply([], timeline.start([], job, clock(T0)));
-  const jobEntry = running[0].id;
+  const [jobRow] = running;
+  assert(jobRow);
+  const jobEntry = jobRow.id;
 
   it("switches at the tap, keeping the id the tap made", () => {
     const after = apply(

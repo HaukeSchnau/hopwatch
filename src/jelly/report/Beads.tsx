@@ -18,8 +18,8 @@ export function BeadString({ day, width }: { day: DayReport; width: number }) {
   return (
     <View style={[styles.string, { width }]}>
       <View style={[styles.thread, { backgroundColor: alpha(t.c.ink, 0.12) }]} />
-      {day.segments.map((s, i) => {
-        const size = sizes[i] * scale;
+      {day.segments.map((s) => {
+        const size = beadSize(s.end - s.start) * scale;
         const c = t.candy[s.context.hue];
 
         return (

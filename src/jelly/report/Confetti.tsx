@@ -13,7 +13,7 @@ import Animated, {
 
 import { hues } from "@/core";
 
-import { random } from "../geometry";
+import { around, random } from "../geometry";
 import { lightTheme } from "../theme";
 
 interface Piece {
@@ -38,7 +38,7 @@ function pieces(seed: number, count: number): Piece[] {
       spin: (next() - 0.5) * 900,
       size: 6 + next() * 6,
       round: next() < 0.4,
-      color: lightTheme.candy[hues[Math.floor(next() * (hues.length - 1))]].fill,
+      color: lightTheme.candy[around(hues, Math.floor(next() * (hues.length - 1)))].fill,
     };
   });
 }

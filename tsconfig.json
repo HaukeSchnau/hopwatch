@@ -8,6 +8,6 @@
       "@modules/*": ["./modules/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "android", "ios", "tools/oxlint/anti-slop"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "android", "ios", "tools/oxlint/anti-slop", "expo-env.d.ts"]
 }

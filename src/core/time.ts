@@ -62,7 +62,7 @@ export function dayKey(ts: number): string {
 
 /** Local midnight of a YYYY-MM-DD day key. */
 export function dayStart(key: string): number {
-  const [y, m, d] = key.split("-").map(Number);
+  const [y = NaN, m = NaN, d = NaN] = key.split("-").map(Number);
 
   return new Date(y, m - 1, d).getTime();
 }

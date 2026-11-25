@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, type Href, router, Stack, ThemeProvider } from "expo-router";
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -21,7 +21,7 @@ import { startShortcuts } from "@/widgets/shortcuts";
 // The last resort if the frame itself fails; each route also exports its own.
 export { ErrorScreen as ErrorBoundary } from "@/jelly/ErrorScreen";
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 initStore();
 
@@ -83,7 +83,6 @@ function useDevLaunchRoute() {
   useEffect(() => {
     const route = devLaunchRoute();
 
-    // Launch arguments are arbitrary strings from simctl, so they can't be typed routes.
-    if (route) router.replace(route as Href);
+    if (route) router.replace(route);
   }, []);
 }
