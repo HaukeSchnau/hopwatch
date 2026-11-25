@@ -4,14 +4,14 @@
 // +native-intent again: a second "stop", possibly of an entry started since. So
 // src/shell/updates.ts marks the reload, and the next start skips its initial link once.
 
-import * as db from './db';
+import * as db from "./db";
 
-const KEY = 'reloadForUpdate';
+const KEY = "reloadForUpdate";
 let stale: boolean | null = null;
 
 /** Called right before an update reload, and again with false if the reload fails. */
 export function markReloadForUpdate(on: boolean): void {
-  db.setMeta(KEY, on ? '1' : null);
+  db.setMeta(KEY, on ? "1" : null);
 }
 
 /**

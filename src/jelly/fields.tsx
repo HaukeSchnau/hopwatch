@@ -2,30 +2,51 @@
 // gummy hue picker and the emoji well with quick picks. The iOS editor uses the same emoji
 // list in SwiftUI.
 
-import { SymbolView } from 'expo-symbols';
-import { useRef } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SymbolView } from "expo-symbols";
+import { useRef } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { type Hue, hues } from '@/core';
-import { characterText } from '@/i18n/character';
-import { welcomeText } from '@/i18n/welcome';
+import { type Hue, hues } from "@/core";
+import { characterText } from "@/i18n/character";
+import { welcomeText } from "@/i18n/welcome";
 
-import { buzz } from './feedback';
-import { useTheme } from './theme';
-import { CandySurface, Squishy } from './ui';
+import { buzz } from "./feedback";
+import { useTheme } from "./theme";
+import { CandySurface, Squishy } from "./ui";
 
 /** Emoji offered when making a jelly; any other emoji can be typed. */
-export const EMOJI_SUGGESTIONS = ['💼', '🐕', '🏠', '🧪', '🎧', '🤝', '💻', '📚', '🏃', '🍳', '🛒', '🎨', '✍️', '🧘', '🎮', '👶', '🌱', '📞', '☕️', '🚀'];
+export const EMOJI_SUGGESTIONS = [
+  "💼",
+  "🐕",
+  "🏠",
+  "🧪",
+  "🎧",
+  "🤝",
+  "💻",
+  "📚",
+  "🏃",
+  "🍳",
+  "🛒",
+  "🎨",
+  "✍️",
+  "🧘",
+  "🎮",
+  "👶",
+  "🌱",
+  "📞",
+  "☕️",
+  "🚀",
+];
 
 /** The first user-perceived character of a string, so "🧑‍💻x" keeps the whole emoji. */
 export function firstGrapheme(value: string): string {
   const trimmed = value.trim();
-  if (!trimmed) return '';
-  if ('Segmenter' in Intl) {
-    const [first] = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(trimmed);
-    return first?.segment ?? '';
+  if (!trimmed) return "";
+  if ("Segmenter" in Intl) {
+    const [first] = new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(trimmed);
+    return first?.segment ?? "";
   }
-  return Array.from(trimmed)[0] ?? '';
+  return Array.from(trimmed)[0] ?? "";
 }
 
 /** A row of gummy drops, one per hue. */
@@ -45,10 +66,23 @@ export function HuePicker({ value, onChange }: { value: Hue; onChange: (hue: Hue
             }}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
-            accessibilityLabel={characterText.hues[hue]}>
+            accessibilityLabel={characterText.hues[hue]}
+          >
             <View style={[styles.ring, selected && { borderColor: t.candy[hue].fill }]}>
-              <CandySurface hue={hue} radius={20} flat style={[styles.drop, selected && { transform: [{ scale: 1.08 }] }]}>
-                {selected && <SymbolView name={{ ios: 'checkmark', android: 'check' }} size={14} tintColor={t.candy[hue].on} weight="heavy" />}
+              <CandySurface
+                hue={hue}
+                radius={20}
+                flat
+                style={[styles.drop, selected && { transform: [{ scale: 1.08 }] }]}
+              >
+                {selected && (
+                  <SymbolView
+                    name={{ ios: "checkmark", android: "check" }}
+                    size={14}
+                    tintColor={t.candy[hue].on}
+                    weight="heavy"
+                  />
+                )}
               </CandySurface>
             </View>
           </Squishy>
@@ -80,12 +114,29 @@ export function EmojiField({
   const input = useRef<TextInput>(null);
   return (
     <View style={styles.emojiRow}>
-      <Squishy amount={0.12} onPress={() => input.current?.focus()} accessibilityRole="button" accessibilityLabel={suggested ? welcomeText.suggestedEmoji : welcomeText.typeEmoji}>
-        <View style={[styles.emojiWell, { backgroundColor: t.c.card, borderColor: suggested ? t.c.pink : t.c.line }]}>
-          <Text style={[styles.emojiBig, !value && { opacity: 0.35 }]}>{value ?? placeholder ?? '🙂'}</Text>
+      <Squishy
+        amount={0.12}
+        onPress={() => input.current?.focus()}
+        accessibilityRole="button"
+        accessibilityLabel={suggested ? welcomeText.suggestedEmoji : welcomeText.typeEmoji}
+      >
+        <View
+          style={[
+            styles.emojiWell,
+            { backgroundColor: t.c.card, borderColor: suggested ? t.c.pink : t.c.line },
+          ]}
+        >
+          <Text style={[styles.emojiBig, !value && { opacity: 0.35 }]}>
+            {value ?? placeholder ?? "🙂"}
+          </Text>
           {suggested && (
             <View style={[styles.sparkle, { backgroundColor: t.c.pink }]}>
-              <SymbolView name={{ ios: 'sparkles', android: 'auto_awesome' }} size={11} tintColor="#FFFFFF" weight="bold" />
+              <SymbolView
+                name={{ ios: "sparkles", android: "auto_awesome" }}
+                size={11}
+                tintColor="#FFFFFF"
+                weight="bold"
+              />
             </View>
           )}
           <TextInput
@@ -104,7 +155,12 @@ export function EmojiField({
           />
         </View>
       </Squishy>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestions} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.suggestions}
+        keyboardShouldPersistTaps="handled"
+      >
         {EMOJI_SUGGESTIONS.map((e) => (
           <Squishy
             key={e}
@@ -115,8 +171,19 @@ export function EmojiField({
               else onChange(e);
             }}
             accessibilityLabel={e}
-            accessibilityState={{ selected: value === e }}>
-            <View style={[styles.suggestion, { backgroundColor: t.c.sunken }, value === e && { backgroundColor: t.candy.pink.tint, borderColor: t.c.pink, borderWidth: 2 }]}>
+            accessibilityState={{ selected: value === e }}
+          >
+            <View
+              style={[
+                styles.suggestion,
+                { backgroundColor: t.c.sunken },
+                value === e && {
+                  backgroundColor: t.candy.pink.tint,
+                  borderColor: t.c.pink,
+                  borderWidth: 2,
+                },
+              ]}
+            >
               <Text style={styles.emojiSmall}>{e}</Text>
             </View>
           </Squishy>
@@ -127,15 +194,37 @@ export function EmojiField({
 }
 
 const styles = StyleSheet.create({
-  hues: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 7, rowGap: 4 },
-  ring: { padding: 3, borderRadius: 26, borderWidth: 2.5, borderColor: 'transparent' },
-  drop: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  emojiRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  emojiWell: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
+  hues: { flexDirection: "row", flexWrap: "wrap", columnGap: 7, rowGap: 4 },
+  ring: { padding: 3, borderRadius: 26, borderWidth: 2.5, borderColor: "transparent" },
+  drop: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  emojiRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  emojiWell: {
+    width: 64,
+    height: 64,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+  },
   emojiBig: { fontSize: 34 },
-  sparkle: { position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  hiddenInput: { position: 'absolute', opacity: 0, width: 1, height: 1 },
-  suggestions: { gap: 6, paddingRight: 10, alignItems: 'center' },
-  suggestion: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  sparkle: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hiddenInput: { position: "absolute", opacity: 0, width: 1, height: 1 },
+  suggestions: { gap: 6, paddingRight: 10, alignItems: "center" },
+  suggestion: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   emojiSmall: { fontSize: 22 },
 });

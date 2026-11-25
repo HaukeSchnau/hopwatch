@@ -3,26 +3,26 @@
 // them. The look resolves per context (custom > model-picked > derived, see
 // character/look.ts), and an awake face idles in the look's personality.
 
-import { useEffect } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useEffect } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
-import type { ResolvedContext } from '@/core';
+import type { ResolvedContext } from "@/core";
 
-import type { LookSource } from './character/derive';
-import { useLook } from './character/look';
-import { type Look, withTraits } from './character/traits';
-import { hashSeed } from './geometry';
-import { type Face, Gummy, useFace } from './Gummy';
+import type { LookSource } from "./character/derive";
+import { useLook } from "./character/look";
+import { type Look, withTraits } from "./character/traits";
+import { hashSeed } from "./geometry";
+import { type Face, Gummy, useFace } from "./Gummy";
 
 export interface CharacterProps {
   /** A context, or any look-alike such as the onboarding preview. */
-  context: LookSource & { hue: ResolvedContext['hue'] };
+  context: LookSource & { hue: ResolvedContext["hue"] };
   size: number;
   face?: Face;
   /** Used when no `face` is passed. */
-  mood?: 'awake' | 'asleep';
+  mood?: "awake" | "asleep";
   shadow?: boolean;
   dim?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -45,7 +45,17 @@ function stickerFrame(size: number) {
   return { badge, right: size * 0.28 - badge, bottom: size * 0.02 - (badge - size * 0.32) * 0.3 };
 }
 
-export function Character({ context, size, face, mood = 'asleep', shadow, dim, style, look: preview, sticker = size >= 36 }: CharacterProps) {
+export function Character({
+  context,
+  size,
+  face,
+  mood = "asleep",
+  shadow,
+  dim,
+  style,
+  look: preview,
+  sticker = size >= 36,
+}: CharacterProps) {
   const look = withTraits(useLook(context), preview);
   const own = useFace(mood);
   const f = face ?? own;
@@ -73,7 +83,15 @@ export function Character({ context, size, face, mood = 'asleep', shadow, dim, s
   return (
     <View style={[{ width: size, height: size }, style]}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.origin, body]}>
-        <Gummy size={size} hue={context.hue} look={look} seed={context.id} face={f} shadow={shadow} dim={dim} />
+        <Gummy
+          size={size}
+          hue={context.hue}
+          look={look}
+          seed={context.id}
+          face={f}
+          shadow={shadow}
+          dim={dim}
+        />
         {sticker && context.glyph ? (
           <View
             style={[
@@ -87,8 +105,12 @@ export function Character({ context, size, face, mood = 'asleep', shadow, dim, s
                 transform: [{ rotate: `${tilt}deg` }],
               },
               dim && { opacity: 0.5 },
-            ]}>
-            <Text allowFontScaling={false} style={{ fontSize: badge * 0.64, lineHeight: badge * 0.82 }}>
+            ]}
+          >
+            <Text
+              allowFontScaling={false}
+              style={{ fontSize: badge * 0.64, lineHeight: badge * 0.82 }}
+            >
               {context.glyph}
             </Text>
           </View>
@@ -99,13 +121,13 @@ export function Character({ context, size, face, mood = 'asleep', shadow, dim, s
 }
 
 const styles = StyleSheet.create({
-  origin: { transformOrigin: '50% 90%' },
+  origin: { transformOrigin: "50% 90%" },
   sticker: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#2B1B3D',
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#2B1B3D",
     shadowOpacity: 0.18,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1.5 },

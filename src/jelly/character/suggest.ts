@@ -3,16 +3,31 @@
 // jellies in the background. Without the model, nothing here shows up and the heuristics
 // in topics.ts do all the work.
 
-import { type Availability, availability, generate } from '@modules/on-device-model';
-import { useEffect, useState } from 'react';
-import { AppState } from 'react-native';
+import { type Availability, availability, generate } from "@modules/on-device-model";
+import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 
-import { actions, type ContextId, type ContextTree, type Json, type ResolvedContext, useHopwatch } from '@/core';
+import {
+  actions,
+  type ContextId,
+  type ContextTree,
+  type Json,
+  type ResolvedContext,
+  useHopwatch,
+} from "@/core";
 
-import { isCurrent, parseSuggestion, readAnswer, requestFor, type SuggestInput, type Suggestion, suggestionJson } from './ask';
-import { customKey, suggestedKey } from './look';
-import type { Picked } from './topics';
-import { parseLook, traitKeys } from './traits';
+import {
+  isCurrent,
+  parseSuggestion,
+  readAnswer,
+  requestFor,
+  type SuggestInput,
+  type Suggestion,
+  suggestionJson,
+} from "./ask";
+import { customKey, suggestedKey } from "./look";
+import type { Picked } from "./topics";
+import { parseLook, traitKeys } from "./traits";
 
 /**
  * Asks the on-device model about a jelly in one request: its topic and mood, plus an emoji
@@ -20,12 +35,21 @@ import { parseLook, traitKeys } from './traits';
  * If the group trips a guardrail, it asks again without it.
  */
 export async function suggestForContext(input: SuggestInput): Promise<Suggestion | null> {
-  const answer = (await generate(requestFor(input))) ?? (input.ancestors.length + input.siblings.length > 0 ? await generate(requestFor(input, false)) : null);
+  const answer =
+    (await generate(requestFor(input))) ??
+    (input.ancestors.length + input.siblings.length > 0
+      ? await generate(requestFor(input, false))
+      : null);
   return answer && readAnswer(input, answer);
 }
 
 /** Stores the model's picks for a context, made for its name and emoji (below a custom look). */
-export function saveSuggestedLook(contextId: ContextId, picked: Picked, forName: string, forGlyph: string | null): void {
+export function saveSuggestedLook(
+  contextId: ContextId,
+  picked: Picked,
+  forName: string,
+  forGlyph: string | null,
+): void {
   actions.setPref(suggestedKey(contextId), suggestionJson(picked, forName, forGlyph));
 }
 
@@ -33,18 +57,21 @@ let known: Availability | null = null;
 
 /** True when Apple's on-device model can answer right now. Rechecks when the app returns. */
 export function useModelAvailable(): boolean {
-  const [ready, setReady] = useState(known === 'available');
+  const [ready, setReady] = useState(known === "available");
   useEffect(() => {
     let live = true;
     const check = () =>
       availability()
-        .catch((): Availability => 'unsupported')
+        .catch((): Availability => "unsupported")
         .then((next) => {
           known = next;
-          if (live) setReady(next === 'available');
+          if (live) setReady(next === "available");
         });
     void check();
-    const subscription = AppState.addEventListener('change', (state) => state === 'active' && void check());
+    const subscription = AppState.addEventListener(
+      "change",
+      (state) => state === "active" && void check(),
+    );
     return () => {
       live = false;
       subscription.remove();
@@ -54,8 +81,14 @@ export function useModelAvailable(): boolean {
 }
 
 /** What the model hears about an existing context: its name, emoji, group and neighbours. */
-export function suggestInputFor(tree: ContextTree, context: ResolvedContext, wantEmoji = false): SuggestInput {
-  const siblingIds = context.parentId ? (tree.byId.get(context.parentId)?.childIds ?? []) : tree.roots;
+export function suggestInputFor(
+  tree: ContextTree,
+  context: ResolvedContext,
+  wantEmoji = false,
+): SuggestInput {
+  const siblingIds = context.parentId
+    ? (tree.byId.get(context.parentId)?.childIds ?? [])
+    : tree.roots;
   const siblings = siblingIds
     .filter((id) => id !== context.id)
     .flatMap((id) => {
@@ -63,7 +96,13 @@ export function suggestInputFor(tree: ContextTree, context: ResolvedContext, wan
       return sibling && !sibling.hidden ? [{ name: sibling.name, emoji: sibling.glyph }] : [];
     })
     .slice(0, 8);
-  return { name: context.name, ancestors: context.ancestors.map((a) => a.name), siblings, wantEmoji, emoji: context.glyph };
+  return {
+    name: context.name,
+    ancestors: context.ancestors.map((a) => a.name),
+    siblings,
+    wantEmoji,
+    emoji: context.glyph,
+  };
 }
 
 /** Whether a context still needs the model's picks for its current name and emoji. */
@@ -84,8 +123,14 @@ async function dressUp(id: ContextId, name: string, glyph: string | null, key: s
   const state = useHopwatch.getState();
   const context = state.tree.byId.get(id);
   // Renamed, re-emojied or gone meanwhile: the new name or emoji gets its own turn.
-  if (!context || context.name !== name || context.glyph !== glyph || !wantsDressUp(context, state.prefs)) return;
-  if ((await availability().catch(() => 'unsupported')) !== 'available') {
+  if (
+    !context ||
+    context.name !== name ||
+    context.glyph !== glyph ||
+    !wantsDressUp(context, state.prefs)
+  )
+    return;
+  if ((await availability().catch(() => "unsupported")) !== "available") {
     tried.delete(key);
     return;
   }
@@ -107,10 +152,12 @@ export function useDressUp(): void {
     const visit = (tree: ContextTree) => {
       const { prefs } = useHopwatch.getState();
       for (const context of tree.ordered) {
-        const key = `${context.id}\n${context.name}\n${context.glyph ?? ''}`;
+        const key = `${context.id}\n${context.name}\n${context.glyph ?? ""}`;
         if (context.hidden || tried.has(key) || !wantsDressUp(context, prefs)) continue;
         tried.add(key);
-        queue = queue.then(() => dressUp(context.id, context.name, context.glyph, key)).catch(() => undefined);
+        queue = queue
+          .then(() => dressUp(context.id, context.name, context.glyph, key))
+          .catch(() => undefined);
       }
     };
     visit(useHopwatch.getState().tree);

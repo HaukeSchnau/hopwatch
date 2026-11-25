@@ -1,7 +1,7 @@
 // Seeded randomness and smooth outlines for the gummies. Body shapes themselves live in
 // character/bodies.ts.
 
-import { Skia, type SkPath } from '@shopify/react-native-skia';
+import { Skia, type SkPath } from "@shopify/react-native-skia";
 
 /** FNV-1a hash of a string, for stable per-context randomness. */
 export function hashSeed(id: string): number {
@@ -35,7 +35,14 @@ export function closedSpline(pts: { x: number; y: number }[]): SkPath {
     const p1 = pts[i];
     const p2 = pts[(i + 1) % n];
     const p3 = pts[(i + 2) % n];
-    b.cubicTo(p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6, p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6, p2.x, p2.y);
+    b.cubicTo(
+      p1.x + (p2.x - p0.x) / 6,
+      p1.y + (p2.y - p0.y) / 6,
+      p2.x - (p3.x - p1.x) / 6,
+      p2.y - (p3.y - p1.y) / 6,
+      p2.x,
+      p2.y,
+    );
   }
   b.close();
   return b.build();

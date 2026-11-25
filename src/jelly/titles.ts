@@ -1,7 +1,15 @@
 // Header titles for day and week navigation. Title and subtitle never repeat each other.
 
-import { addDays, formatDayMonth, formatRelativeDay, formatWeekday, formatWeekRange, isSameDay, startOfWeek } from '@/core';
-import { shellText } from '@/i18n/shell';
+import {
+  addDays,
+  formatDayMonth,
+  formatRelativeDay,
+  formatWeekday,
+  formatWeekRange,
+  isSameDay,
+  startOfWeek,
+} from "@/core";
+import { shellText } from "@/i18n/shell";
 
 /** "Today" / "Fri 25 Sep", "Yesterday" / "Thu 24 Sep", "Mon" / "22 Sep". */
 export function dayTitles(day: number, now: number) {

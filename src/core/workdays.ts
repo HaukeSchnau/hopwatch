@@ -2,9 +2,9 @@
 // public holiday on a work day takes that day's share off. Days off apply to every
 // job-hours target at once; a context without `workDays` keeps a plain weekly target.
 
-import { type GermanState, germanHolidays, type HolidayId } from './holidays';
-import { type Context, type DayOff, isWorkday } from './model';
-import { addDays, dayKey, MINUTE, weekdayOf } from './time';
+import { type GermanState, germanHolidays, type HolidayId } from "./holidays";
+import { type Context, type DayOff, isWorkday } from "./model";
+import { addDays, dayKey, MINUTE, weekdayOf } from "./time";
 
 /** Whether a day (YYYY-MM-DD) is off work: marked off, or a public holiday. */
 export type OffDays = (day: string) => boolean;
@@ -30,7 +30,7 @@ export function offDaysOf(daysOff: readonly DayOff[], region: GermanState | null
   };
 }
 
-type JobHours = Pick<Context, 'weeklyTargetMinutes' | 'workDays'>;
+type JobHours = Pick<Context, "weeklyTargetMinutes" | "workDays">;
 
 /** Whether a context's target is job hours: a weekly target spread over work days. */
 export const isJobHours = (c: JobHours): c is { weeklyTargetMinutes: number; workDays: number } =>
@@ -49,7 +49,11 @@ export function dailyTarget(c: JobHours, dayStart: number, offDays: OffDays): nu
  * A context's target for the week starting `weekStart`: the plain weekly target, or for
  * job hours the sum of its daily shares, with how many work days were off.
  */
-export function weekTarget(c: JobHours, weekStart: number, offDays: OffDays): { target: number; daysOff: number } {
+export function weekTarget(
+  c: JobHours,
+  weekStart: number,
+  offDays: OffDays,
+): { target: number; daysOff: number } {
   if (!isJobHours(c)) return { target: (c.weeklyTargetMinutes ?? 0) * MINUTE, daysOff: 0 };
   let target = 0;
   let daysOff = 0;

@@ -1,6 +1,6 @@
-import { AppState } from 'react-native';
+import { AppState } from "react-native";
 
-import { markReloadForUpdate } from '@/core/launch';
+import { markReloadForUpdate } from "@/core/launch";
 
 /**
  * Keeps release builds current with EAS Update (docs/architecture.md, Releasing). expo-updates on its
@@ -19,11 +19,12 @@ export function startUpdates(): () => void {
 
   const check = async () => {
     // Imported lazily: development clients don't have the native module.
-    const Updates = await import('expo-updates');
+    const Updates = await import("expo-updates");
     if (!Updates.isEnabled || ready || checking) return;
     checking = true;
     try {
-      if ((await Updates.checkForUpdateAsync()).isAvailable) ready = (await Updates.fetchUpdateAsync()).isNew;
+      if ((await Updates.checkForUpdateAsync()).isAvailable)
+        ready = (await Updates.fetchUpdateAsync()).isNew;
     } catch {
       // Offline or the server had trouble: the next foreground tries again.
     } finally {
@@ -32,15 +33,15 @@ export function startUpdates(): () => void {
   };
 
   const apply = async () => {
-    const Updates = await import('expo-updates');
+    const Updates = await import("expo-updates");
     markReloadForUpdate(true);
     await Updates.reloadAsync().catch(() => markReloadForUpdate(false));
   };
 
   void check();
-  const subscription = AppState.addEventListener('change', (state) => {
-    if (state === 'active') void check();
-    else if (state === 'background' && ready) void apply();
+  const subscription = AppState.addEventListener("change", (state) => {
+    if (state === "active") void check();
+    else if (state === "background" && ready) void apply();
   });
   return () => subscription.remove();
 }

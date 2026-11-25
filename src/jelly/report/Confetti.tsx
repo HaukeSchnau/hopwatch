@@ -1,14 +1,20 @@
 // A small candy confetti burst. Each piece follows a ballistic arc from one progress
 // value, so the whole burst is a single animation on the UI thread.
 
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, type SharedValue, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, {
+  Easing,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
-import { hues } from '@/core';
+import { hues } from "@/core";
 
-import { random } from '../geometry';
-import { lightTheme } from '../theme';
+import { random } from "../geometry";
+import { lightTheme } from "../theme";
 
 interface Piece {
   vx: number;
@@ -69,7 +75,13 @@ function Bit({ piece, progress }: { piece: Piece; progress: SharedValue<number> 
   return (
     <Animated.View
       style={[
-        { position: 'absolute', width: piece.size, height: piece.round ? piece.size : piece.size * 0.5, borderRadius: piece.round ? piece.size / 2 : 2, backgroundColor: piece.color },
+        {
+          position: "absolute",
+          width: piece.size,
+          height: piece.round ? piece.size : piece.size * 0.5,
+          borderRadius: piece.round ? piece.size / 2 : 2,
+          backgroundColor: piece.color,
+        },
         style,
       ]}
     />
@@ -77,5 +89,12 @@ function Bit({ piece, progress }: { piece: Piece; progress: SharedValue<number> 
 }
 
 const styles = StyleSheet.create({
-  origin: { position: 'absolute', left: '50%', top: '20%', width: 0, height: 0, overflow: 'visible' },
+  origin: {
+    position: "absolute",
+    left: "50%",
+    top: "20%",
+    width: 0,
+    height: 0,
+    overflow: "visible",
+  },
 });

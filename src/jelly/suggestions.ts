@@ -3,12 +3,12 @@
 // Nothing waits on it: answers arrive a second or two after typing stops, stale ones are
 // dropped, and without the model this does nothing at all.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import { type ContextId, useHopwatch } from '@/core';
+import { type ContextId, useHopwatch } from "@/core";
 
-import type { SuggestInput, Suggestion } from './character/ask';
-import { suggestForContext, useModelAvailable } from './character/suggest';
+import type { SuggestInput, Suggestion } from "./character/ask";
+import { suggestForContext, useModelAvailable } from "./character/suggest";
 
 /** A suggestion and the name it was made for. */
 export interface NameSuggestion {
@@ -17,7 +17,12 @@ export interface NameSuggestion {
 }
 
 /** The parent path and siblings of a jelly under `parentId`, as the model wants them. */
-export function suggestInput(name: string, parentId: ContextId | null, self: ContextId | null, wantEmoji: boolean): SuggestInput {
+export function suggestInput(
+  name: string,
+  parentId: ContextId | null,
+  self: ContextId | null,
+  wantEmoji: boolean,
+): SuggestInput {
   const tree = useHopwatch.getState().tree;
   const parent = parentId ? tree.byId.get(parentId) : undefined;
   const siblingIds = parent ? parent.childIds : tree.roots;
@@ -38,7 +43,12 @@ export function suggestInput(name: string, parentId: ContextId | null, self: Con
  * suggested; `wantHue` asks for a color too. Keeps the last answer that still matched the
  * name when it arrived.
  */
-export function useNameSuggestion(name: string, parentId: ContextId | null, emoji: string | null, wantHue: boolean): NameSuggestion | null {
+export function useNameSuggestion(
+  name: string,
+  parentId: ContextId | null,
+  emoji: string | null,
+  wantHue: boolean,
+): NameSuggestion | null {
   const available = useModelAvailable();
   const [result, setResult] = useState<NameSuggestion | null>(null);
   const trimmed = name.trim();
@@ -52,7 +62,11 @@ export function useNameSuggestion(name: string, parentId: ContextId | null, emoj
   useEffect(() => {
     if (!available || trimmed.length < 2) return;
     const timer = setTimeout(() => {
-      suggestForContext({ ...suggestInput(trimmed, parentId, null, emoji === null), emoji, wantHue: hue.current })
+      suggestForContext({
+        ...suggestInput(trimmed, parentId, null, emoji === null),
+        emoji,
+        wantHue: hue.current,
+      })
         .then((suggestion) => {
           if (suggestion && latest.current === trimmed) setResult({ forName: trimmed, suggestion });
         })

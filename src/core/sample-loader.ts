@@ -1,8 +1,8 @@
-import { randomUUID } from 'expo-crypto';
+import { randomUUID } from "expo-crypto";
 
-import { sampleData } from './sample';
-import { actions } from './store';
-import { offsetAt } from './time';
+import { sampleData } from "./sample";
+import { actions } from "./store";
+import { offsetAt } from "./time";
 
 /** Replaces all contexts and entries with three weeks of sample data. */
 export function loadSampleData() {

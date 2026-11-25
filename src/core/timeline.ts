@@ -8,8 +8,8 @@
 // produces them. Each function returns the rows it changed, including soft deletes,
 // so the caller can persist them and derive an undo.
 
-import { type ContextId, type Entry, type EntryId, MIN_ENTRY_MS } from './model';
-import { MINUTE } from './time';
+import { type ContextId, type Entry, type EntryId, MIN_ENTRY_MS } from "./model";
+import { MINUTE } from "./time";
 
 const FIVE_MINUTES = 5 * MINUTE;
 
@@ -102,7 +102,11 @@ function carve(d: Draft, clock: Clock, from: number, to: number | null, exceptId
     const keepsTail = end > until;
     if (keepsHead && keepsTail) {
       d.keepOrDrop({ ...e, endUtc: from, endOffsetMinutes: clock.offsetAt(from) });
-      d.keepOrDrop({ ...newEntry(clock, e.contextId, until, e.endUtc), endOffsetMinutes: e.endOffsetMinutes, note: e.note });
+      d.keepOrDrop({
+        ...newEntry(clock, e.contextId, until, e.endUtc),
+        endOffsetMinutes: e.endOffsetMinutes,
+        note: e.note,
+      });
     } else if (keepsHead) {
       d.keepOrDrop({ ...e, endUtc: from, endOffsetMinutes: clock.offsetAt(from) });
     } else if (keepsTail) {
@@ -118,7 +122,12 @@ function carve(d: Draft, clock: Clock, from: number, to: number | null, exceptId
  * and a backdated start trims or removes whatever it overlaps. Starting the context
  * that already runs only moves its start earlier.
  */
-export function start(entries: readonly Entry[], contextId: ContextId, clock: Clock, at?: number): Entry[] {
+export function start(
+  entries: readonly Entry[],
+  contextId: ContextId,
+  clock: Clock,
+  at?: number,
+): Entry[] {
   const d = draft(entries, clock);
   const t = Math.min(at ?? clock.now, clock.now);
   const open = findOpen(d.live());
@@ -148,12 +157,17 @@ export interface StartPreview {
  * it, so the UI can say "Deep work stops at 14:50" first. Moving the running context's
  * start earlier counts the same way; the started or moved entry itself isn't listed.
  */
-export function previewStart(entries: readonly Entry[], contextId: ContextId, at: number, now: number): StartPreview {
+export function previewStart(
+  entries: readonly Entry[],
+  contextId: ContextId,
+  at: number,
+  now: number,
+): StartPreview {
   // Only entries that end after the new start can be touched.
   const reach = entries.filter((e) => isLive(e) && endOf(e) > Math.min(at, now));
   const before = new Map(reach.map((e) => [e.id, e]));
   const open = findOpen(reach);
-  const clock: Clock = { now, offsetAt: () => 0, newId: () => 'preview' as EntryId };
+  const clock: Clock = { now, offsetAt: () => 0, newId: () => "preview" as EntryId };
   const preview: StartPreview = { cut: null, replaced: [] };
   for (const row of start(reach, contextId, clock, at)) {
     const was = before.get(row.id);
@@ -178,7 +192,12 @@ export function stop(entries: readonly Entry[], clock: Clock, at?: number): Entr
  * Edits one entry. Times are clamped to now and end is never before start. Any
  * neighbour the new range overlaps is trimmed, split or removed.
  */
-export function update(entries: readonly Entry[], id: EntryId, patch: EntryPatch, clock: Clock): Entry[] {
+export function update(
+  entries: readonly Entry[],
+  id: EntryId,
+  patch: EntryPatch,
+  clock: Clock,
+): Entry[] {
   const d = draft(entries, clock);
   const e = d.get(id);
   if (!e) return [];
@@ -243,9 +262,13 @@ export function fillGap(
   clock: Clock,
 ): Entry[] {
   // The first free instant in the range is either `from` or the end of an entry.
-  const probes = [from, ...entries.filter(isLive).map(endOf).filter((t) => t > from && t < to)].sort(
-    (a, b) => a - b,
-  );
+  const probes = [
+    from,
+    ...entries
+      .filter(isLive)
+      .map(endOf)
+      .filter((t) => t > from && t < to),
+  ].sort((a, b) => a - b);
   for (const probe of probes) {
     const gap = gapAt(entries, probe, clock.now);
     if (!gap) continue;
@@ -293,11 +316,18 @@ export function blockInside(entry: Entry, now: number): { from: number; to: numb
   const end = entry.endUtc ?? now;
   for (const day of [end, entry.startUtc]) {
     const noon = new Date(day).setHours(12, 0, 0, 0);
-    if (noon > entry.startUtc && noon + 30 * MINUTE < end) return { from: noon, to: noon + 30 * MINUTE };
+    if (noon > entry.startUtc && noon + 30 * MINUTE < end)
+      return { from: noon, to: noon + 30 * MINUTE };
   }
-  const length = Math.max(MINUTE, Math.min(30 * MINUTE, Math.floor((end - entry.startUtc) / 2 / FIVE_MINUTES) * FIVE_MINUTES));
+  const length = Math.max(
+    MINUTE,
+    Math.min(30 * MINUTE, Math.floor((end - entry.startUtc) / 2 / FIVE_MINUTES) * FIVE_MINUTES),
+  );
   const middle = entry.startUtc + (end - entry.startUtc) / 2;
-  const from = Math.max(entry.startUtc, Math.round((middle - length / 2) / FIVE_MINUTES) * FIVE_MINUTES);
+  const from = Math.max(
+    entry.startUtc,
+    Math.round((middle - length / 2) / FIVE_MINUTES) * FIVE_MINUTES,
+  );
   return { from, to: Math.min(end, from + length) };
 }
 
@@ -317,7 +347,13 @@ export interface PlacePreview {
  * What `place(entries, contextId, from, to, …)` would do to the other entries, without
  * doing it, so the UI can say "Replaces Cooking 12:10–12:40" first.
  */
-export function previewPlace(entries: readonly Entry[], contextId: ContextId | null, from: number, to: number, now: number): PlacePreview {
+export function previewPlace(
+  entries: readonly Entry[],
+  contextId: ContextId | null,
+  from: number,
+  to: number,
+  now: number,
+): PlacePreview {
   const before = new Map(entries.filter(isLive).map((e) => [e.id, e]));
   let ids = 0;
   const clock: Clock = { now, offsetAt: () => 0, newId: () => `preview-${ids++}` as EntryId };
@@ -326,7 +362,9 @@ export function previewPlace(entries: readonly Entry[], contextId: ContextId | n
   const start = Math.min(from, end);
   // Only a block ending before now can land inside an entry; one reaching now cuts it.
   const inside = rows.length > 0 && end < now;
-  const split = inside ? [...before.values()].find((e) => e.startUtc < start && endOf(e) > end) : undefined;
+  const split = inside
+    ? [...before.values()].find((e) => e.startUtc < start && endOf(e) > end)
+    : undefined;
   const preview: PlacePreview = { ended: null, started: null, split: split ?? null, replaced: [] };
   for (const row of rows) {
     const was = before.get(row.id);

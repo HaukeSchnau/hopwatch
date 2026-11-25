@@ -1,10 +1,20 @@
 // Reports over entries and the context tree: day segments with gaps, subtree
 // roll-ups with weekly targets, fragmentation, and the plain-text totals export.
 
-import type { ContextId, Entry } from './model';
-import { addDays, dayStart, formatDayMonth, formatDuration, formatSignedDuration, formatWeekday, formatWeekRange, MINUTE, startOfDay } from './time';
-import { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
-import { dailyTarget, isJobHours, noOffDays, type OffDays, weekTarget } from './workdays';
+import type { ContextId, Entry } from "./model";
+import {
+  addDays,
+  dayStart,
+  formatDayMonth,
+  formatDuration,
+  formatSignedDuration,
+  formatWeekday,
+  formatWeekRange,
+  MINUTE,
+  startOfDay,
+} from "./time";
+import { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from "./tree";
+import { dailyTarget, isJobHours, noOffDays, type OffDays, weekTarget } from "./workdays";
 
 /** An entry clipped to a range. A running entry is clipped to now. */
 export interface Segment {
@@ -23,7 +33,13 @@ export interface GapSegment {
   end: number;
 }
 
-export function segmentsIn(entries: readonly Entry[], tree: ContextTree, from: number, to: number, now: number): Segment[] {
+export function segmentsIn(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  from: number,
+  to: number,
+  now: number,
+): Segment[] {
   const segments: Segment[] = [];
   for (const entry of entries) {
     const context = tree.byId.get(entry.contextId);
@@ -46,7 +62,12 @@ export function segmentsIn(entries: readonly Entry[], tree: ContextTree, from: n
 }
 
 /** Untracked stretches between segments inside [from, min(to, now)). */
-export function gapsIn(segments: readonly Segment[], from: number, to: number, now: number): GapSegment[] {
+export function gapsIn(
+  segments: readonly Segment[],
+  from: number,
+  to: number,
+  now: number,
+): GapSegment[] {
   const limit = Math.min(to, now);
   const gaps: GapSegment[] = [];
   let cursor = from;
@@ -70,12 +91,20 @@ export const REVIEW_GAP_MS = 15 * MINUTE;
  * marked breaks. Time before the first entry and after the last never counts, so the
  * night doesn't either.
  */
-export function reviewGaps(entries: readonly Entry[], tree: ContextTree, dayStart: number, now: number, breaks: readonly Break[]): GapSegment[] {
+export function reviewGaps(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  dayStart: number,
+  now: number,
+  breaks: readonly Break[],
+): GapSegment[] {
   const segments = segmentsIn(entries, tree, dayStart, addDays(dayStart, 1), now);
   if (segments.length === 0) return [];
   const last = Math.max(...segments.map((s) => s.end));
   return gapsIn(segments, segments[0].start, last, now).filter(
-    (g) => g.end - g.start >= REVIEW_GAP_MS && !breaks.some(([from, to]) => from <= g.start && to >= g.end),
+    (g) =>
+      g.end - g.start >= REVIEW_GAP_MS &&
+      !breaks.some(([from, to]) => from <= g.start && to >= g.end),
   );
 }
 
@@ -139,7 +168,12 @@ export interface DayReport {
   fragmentation: Fragmentation;
 }
 
-export function dayReport(entries: readonly Entry[], tree: ContextTree, dayStart: number, now: number): DayReport {
+export function dayReport(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  dayStart: number,
+  now: number,
+): DayReport {
   const end = addDays(dayStart, 1);
   const segments = segmentsIn(entries, tree, dayStart, end, now);
   return {
@@ -179,7 +213,9 @@ export function weekReport(
   now: number,
   offDays: OffDays = noOffDays,
 ): WeekReport {
-  const days = Array.from({ length: 7 }, (_, i) => dayReport(entries, tree, addDays(weekStart, i), now));
+  const days = Array.from({ length: 7 }, (_, i) =>
+    dayReport(entries, tree, addDays(weekStart, i), now),
+  );
   const segments = days.flatMap((d) => d.segments);
   const weekTotals = totals(tree, segments);
   const targets = tree.ordered
@@ -214,14 +250,23 @@ export function overtimeBalance(
   if (!isJobHours(context) || context.balanceSince === null) return null;
   const ids = subtreeIds(tree, context.id);
   const tracked = (from: number, to: number) =>
-    from >= to ? 0 : segmentsIn(entries, tree, from, to, now).reduce((sum, s) => (ids.has(s.context.id) ? sum + s.end - s.start : sum), 0);
+    from >= to
+      ? 0
+      : segmentsIn(entries, tree, from, to, now).reduce(
+          (sum, s) => (ids.has(s.context.id) ? sum + s.end - s.start : sum),
+          0,
+        );
   const today = startOfDay(now);
   const since = dayStart(context.balanceSince);
   let target = 0;
-  for (let day = since; day < today; day = addDays(day, 1)) target += dailyTarget(context, day, offDays);
+  for (let day = since; day < today; day = addDays(day, 1))
+    target += dailyTarget(context, day, offDays);
   return {
     balance: context.balanceStartMinutes * MINUTE + tracked(since, today) - target,
-    today: { actual: tracked(today, addDays(today, 1)), target: since <= today ? dailyTarget(context, today, offDays) : 0 },
+    today: {
+      actual: tracked(today, addDays(today, 1)),
+      target: since <= today ? dailyTarget(context, today, offDays) : 0,
+    },
   };
 }
 
@@ -241,9 +286,11 @@ export function totalsText(
   now: number,
 ): string {
   const root = tree.byId.get(contextId);
-  if (!root) return '';
+  if (!root) return "";
   const ids = subtreeIds(tree, contextId);
-  const segments = segmentsIn(entries, tree, range.start, range.end, now).filter((s) => ids.has(s.context.id));
+  const segments = segmentsIn(entries, tree, range.start, range.end, now).filter((s) =>
+    ids.has(s.context.id),
+  );
   const sums = totals(tree, segments);
   const rootTotal = sums.byId.get(contextId)?.total ?? 0;
 
@@ -259,15 +306,18 @@ export function totalsText(
       walk(child, `${indent}  `);
     }
   };
-  walk(sums.byId.get(contextId), '  ');
+  walk(sums.byId.get(contextId), "  ");
 
   if (isWeek) {
-    lines.push('');
+    lines.push("");
     for (let day = range.start; day < range.end; day = addDays(day, 1)) {
       const next = addDays(day, 1);
-      const dayTotal = segments.filter((s) => s.start >= day && s.start < next).reduce((sum, s) => sum + s.end - s.start, 0);
-      if (dayTotal > 0) lines.push(`${formatWeekday(day)} ${formatDayMonth(day)}  ${formatDuration(dayTotal)}`);
+      const dayTotal = segments
+        .filter((s) => s.start >= day && s.start < next)
+        .reduce((sum, s) => sum + s.end - s.start, 0);
+      if (dayTotal > 0)
+        lines.push(`${formatWeekday(day)} ${formatDayMonth(day)}  ${formatDuration(dayTotal)}`);
     }
   }
-  return lines.join('\n');
+  return lines.join("\n");
 }

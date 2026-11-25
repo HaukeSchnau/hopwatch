@@ -1,10 +1,10 @@
 // Haptics and tiny sounds. Sounds are quiet, mix with other audio and follow the
 // ringer switch; they can be turned off in settings (the `jelly.sounds` preference).
 
-import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
-import * as Haptics from 'expo-haptics';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 
-import { actions, type Json, usePref, useHopwatch } from '@/core';
+import { actions, type Json, usePref, useHopwatch } from "@/core";
 
 export const buzz = {
   tap: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
@@ -16,14 +16,14 @@ export const buzz = {
 };
 
 const sources = {
-  pop: require('./assets/pop.wav') as number,
-  boop: require('./assets/boop.wav') as number,
-  plink: require('./assets/plink.wav') as number,
+  pop: require("./assets/pop.wav") as number,
+  boop: require("./assets/boop.wav") as number,
+  plink: require("./assets/plink.wav") as number,
 };
 export type SoundName = keyof typeof sources;
 
-const SOUNDS = 'jelly.sounds';
-const parseSounds = (value: Json) => (typeof value === 'boolean' ? value : undefined);
+const SOUNDS = "jelly.sounds";
+const parseSounds = (value: Json) => (typeof value === "boolean" ? value : undefined);
 
 /** Whether the squishy sounds are on. */
 export const useSounds = () => usePref(SOUNDS, true, parseSounds);
@@ -34,7 +34,9 @@ let players: Partial<Record<SoundName, AudioPlayer>> | null = null;
 
 function ensurePlayers() {
   if (players) return players;
-  setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' }).catch(() => {});
+  setAudioModeAsync({ playsInSilentMode: false, interruptionMode: "mixWithOthers" }).catch(
+    () => {},
+  );
   players = {};
   for (const name of Object.keys(sources) as SoundName[]) {
     const player = createAudioPlayer(sources[name]);

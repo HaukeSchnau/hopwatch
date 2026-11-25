@@ -2,14 +2,14 @@
 // resolves quietly when the model isn't there (Android, iOS before 26, devices without
 // Apple Intelligence, or while the model is still downloading).
 
-import { requireOptionalNativeModule } from 'expo';
+import { requireOptionalNativeModule } from "expo";
 
 export type Availability =
-  | 'available'
-  | 'deviceNotEligible'
-  | 'appleIntelligenceNotEnabled'
-  | 'modelNotReady'
-  | 'unsupported';
+  | "available"
+  | "deviceNotEligible"
+  | "appleIntelligenceNotEnabled"
+  | "modelNotReady"
+  | "unsupported";
 
 export interface Field {
   name: string;
@@ -21,10 +21,14 @@ export interface Field {
 
 interface Native {
   availability(): Promise<Availability>;
-  generate(options: { instructions: string; prompt: string; fields: Field[] }): Promise<Record<string, string>>;
+  generate(options: {
+    instructions: string;
+    prompt: string;
+    fields: Field[];
+  }): Promise<Record<string, string>>;
 }
 
-const native = requireOptionalNativeModule<Native>('OnDeviceModel');
+const native = requireOptionalNativeModule<Native>("OnDeviceModel");
 
 let failure: string | null = null;
 
@@ -34,7 +38,7 @@ export function lastFailure(): string | null {
 }
 
 export async function availability(): Promise<Availability> {
-  return native ? native.availability() : 'unsupported';
+  return native ? native.availability() : "unsupported";
 }
 
 /** How long a request may take before callers fall back; a busy device can stall the model for minutes. */
@@ -49,33 +53,37 @@ export async function generate<const F extends readonly Field[]>(request: {
   instructions: string;
   prompt: string;
   fields: F;
-}): Promise<{ [K in F[number]['name']]: string } | null> {
-  const state = native ? await native.availability() : 'unsupported';
-  if (!native || state !== 'available') {
+}): Promise<{ [K in F[number]["name"]]: string } | null> {
+  const state = native ? await native.availability() : "unsupported";
+  if (!native || state !== "available") {
     failure = `model unavailable: ${state}`;
     return null;
   }
   try {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(`no answer within ${TIMEOUT_MS / 1000} s`)), TIMEOUT_MS);
+      timer = setTimeout(
+        () => reject(new Error(`no answer within ${TIMEOUT_MS / 1000} s`)),
+        TIMEOUT_MS,
+      );
     });
-    const answer = await Promise.race([native.generate({ ...request, fields: [...request.fields] }), timeout]).finally(() =>
-      clearTimeout(timer),
-    );
+    const answer = await Promise.race([
+      native.generate({ ...request, fields: [...request.fields] }),
+      timeout,
+    ]).finally(() => clearTimeout(timer));
     // Trust the native schema, but verify at the boundary: every field present, choices kept.
     for (const field of request.fields) {
       const value = answer[field.name];
-      if (typeof value !== 'string' || (field.choices && !field.choices.includes(value))) {
+      if (typeof value !== "string" || (field.choices && !field.choices.includes(value))) {
         failure = `answer didn't fit: ${field.name} = ${JSON.stringify(value)}`;
         return null;
       }
     }
     failure = null;
-    return answer as { [K in F[number]['name']]: string };
+    return answer as { [K in F[number]["name"]]: string };
   } catch (error) {
     failure = error instanceof Error ? error.message : String(error);
-    if (__DEV__) console.warn('on-device model failed', error);
+    if (__DEV__) console.warn("on-device model failed", error);
     return null;
   }
 }

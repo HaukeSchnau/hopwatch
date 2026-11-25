@@ -6,9 +6,9 @@
 // have the same shape as English, so a missing translation fails the type check.
 // Wording, tone and the glossary: docs/german.md.
 
-import { preferredLanguages } from './device';
+import { preferredLanguages } from "./device";
 
-export const languages = ['en', 'de'] as const;
+export const languages = ["en", "de"] as const;
 export type Language = (typeof languages)[number];
 
 /** The first of the user's preferred languages Hopwatch speaks, the way iOS matches them. */
@@ -18,13 +18,13 @@ export function pickLanguage(preferred: readonly string[]): Language {
     const match = languages.find((l) => l === code);
     if (match) return match;
   }
-  return 'en';
+  return "en";
 }
 
 export const language: Language = pickLanguage(preferredLanguages());
 
 /** For Intl formatters: day-first dates and a 24-hour clock in both languages. */
-export const locale = language === 'de' ? 'de-DE' : 'en-GB';
+export const locale = language === "de" ? "de-DE" : "en-GB";
 
 /** The strings for the app's language. */
 export function localized<T>(strings: { en: T; de: NoInfer<T> }): T {

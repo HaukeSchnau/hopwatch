@@ -1,25 +1,35 @@
 // The app state and every action that changes it. Screens read through the hooks in
 // hooks.ts and write only through `actions`; entries change only via timeline.ts.
 
-import { randomUUID } from 'expo-crypto';
-import { create } from 'zustand';
+import { randomUUID } from "expo-crypto";
+import { create } from "zustand";
 
-import { coreText } from '@/i18n/core';
+import { coreText } from "@/i18n/core";
 
-import type { Backup } from './backup';
-import * as db from './db';
-import { initialLinkIsStale } from './launch';
-import type { LinkAction } from './links';
-import type { Context, ContextId, DayOff, DayOffId, DayOffKind, Entry, EntryId, Hue, SlackStatus } from './model';
-import { type RemoteCommand, replay } from './remote';
-import { SLACK_APP_PREF } from './slack';
-import * as timeline from './timeline';
-import { formatClock, offsetAt } from './time';
-import * as tree from './tree';
+import type { Backup } from "./backup";
+import * as db from "./db";
+import { initialLinkIsStale } from "./launch";
+import type { LinkAction } from "./links";
+import type {
+  Context,
+  ContextId,
+  DayOff,
+  DayOffId,
+  DayOffKind,
+  Entry,
+  EntryId,
+  Hue,
+  SlackStatus,
+} from "./model";
+import { type RemoteCommand, replay } from "./remote";
+import { SLACK_APP_PREF } from "./slack";
+import * as timeline from "./timeline";
+import { formatClock, offsetAt } from "./time";
+import * as tree from "./tree";
 
 /** The most recent timeline change, for the "Switched to X · Undo" toast. */
 export interface LastAction {
-  kind: 'start' | 'stop' | 'back' | 'resume' | 'edit' | 'delete' | 'fill' | 'place';
+  kind: "start" | "stop" | "back" | "resume" | "edit" | "delete" | "fill" | "place";
   /** Ready-made toast text, e.g. "Switched to Dog". */
   label: string;
   contextId: ContextId | null;
@@ -30,11 +40,11 @@ export interface LastAction {
 /** JSON-serializable values, for preferences. */
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
-const PREF_PREFIX = 'pref:';
+const PREF_PREFIX = "pref:";
 
 /** Something outside the app asked a screen to do something. */
 /** Something a notification tap asks the UI to open: the stop sheet, or a day to review. */
-export type Intent = { kind: 'stop-sheet' } | { kind: 'day-gaps'; day: number };
+export type Intent = { kind: "stop-sheet" } | { kind: "day-gaps"; day: number };
 
 export interface HopwatchState {
   ready: boolean;
@@ -152,7 +162,7 @@ function entriesNow() {
   return get().entries;
 }
 
-function commitEntries(rows: Entry[], action: Omit<LastAction, 'at' | 'undoRows'> | null) {
+function commitEntries(rows: Entry[], action: Omit<LastAction, "at" | "undoRows"> | null) {
   if (rows.length === 0) return;
   const now = Date.now();
   const before = get().entries;
@@ -200,7 +210,7 @@ export const actions = {
   /** Switches to a context. `at` backdates the start. */
   start(contextId: ContextId, opts: { at?: number } = {}) {
     const rows = timeline.start(entriesNow(), contextId, clock(), opts.at);
-    commitEntries(rows, { kind: 'start', label: toast.switched(nameOf(contextId)), contextId });
+    commitEntries(rows, { kind: "start", label: toast.switched(nameOf(contextId)), contextId });
   },
 
   /** Stops the running entry. `at` backdates the stop. */
@@ -208,7 +218,11 @@ export const actions = {
     const entries = entriesNow();
     const open = timeline.findOpen(entries);
     const rows = timeline.stop(entries, clock(), opts.at);
-    commitEntries(rows, { kind: 'stop', label: toast.stopped(nameOf(open?.contextId ?? null)), contextId: open?.contextId ?? null });
+    commitEntries(rows, {
+      kind: "stop",
+      label: toast.stopped(nameOf(open?.contextId ?? null)),
+      contextId: open?.contextId ?? null,
+    });
   },
 
   /**
@@ -222,7 +236,7 @@ export const actions = {
     const running = timeline.findOpen(entries) !== null;
     const rows = timeline.start(entries, id, clock(), opts.at);
     commitEntries(rows, {
-      kind: running ? 'back' : 'resume',
+      kind: running ? "back" : "resume",
       label: (running ? toast.back : toast.resumed)(nameOf(id)),
       contextId: id,
     });
@@ -244,20 +258,24 @@ export const actions = {
   updateEntry(id: EntryId, patch: timeline.EntryPatch, label = toast.updated) {
     const rows = timeline.update(entriesNow(), id, patch, clock());
     const entry = rows.find((r) => r.id === id);
-    commitEntries(rows, { kind: 'edit', label, contextId: entry?.contextId ?? null });
+    commitEntries(rows, { kind: "edit", label, contextId: entry?.contextId ?? null });
   },
 
   deleteEntry(id: EntryId) {
     const entries = entriesNow();
     const entry = entries.find((e) => e.id === id);
     const rows = timeline.remove(entries, id, clock());
-    commitEntries(rows, { kind: 'delete', label: toast.deleted(nameOf(entry?.contextId ?? null)), contextId: entry?.contextId ?? null });
+    commitEntries(rows, {
+      kind: "delete",
+      label: toast.deleted(nameOf(entry?.contextId ?? null)),
+      contextId: entry?.contextId ?? null,
+    });
   },
 
   /** Creates an entry for [from, to], clamped to the gap it falls into. */
   fillGap(contextId: ContextId, from: number, to: number) {
     const rows = timeline.fillGap(entriesNow(), contextId, from, to, clock());
-    commitEntries(rows, { kind: 'fill', label: toast.added(nameOf(contextId)), contextId });
+    commitEntries(rows, { kind: "fill", label: toast.added(nameOf(contextId)), contextId });
   },
 
   /**
@@ -267,8 +285,11 @@ export const actions = {
    */
   place(contextId: ContextId | null, from: number, to: number) {
     const rows = timeline.place(entriesNow(), contextId, from, to, clock());
-    const label = contextId === null ? toast.untracked(formatClock(from), formatClock(to)) : toast.added(nameOf(contextId));
-    commitEntries(rows, { kind: 'place', label, contextId });
+    const label =
+      contextId === null
+        ? toast.untracked(formatClock(from), formatClock(to))
+        : toast.added(nameOf(contextId));
+    commitEntries(rows, { kind: "place", label, contextId });
   },
 
   /** Hides the undo toast without undoing. */
@@ -280,14 +301,19 @@ export const actions = {
    * Creates a context. Pass an `id` from `newContextId()` when a preview needs to know it
    * before the context exists; otherwise one is generated.
    */
-  createContext(input: Omit<tree.NewContextInput, 'id'> & { id?: ContextId }): ContextId {
+  createContext(input: Omit<tree.NewContextInput, "id"> & { id?: ContextId }): ContextId {
     const id = input.id ?? newContextId();
     commitContexts(tree.createContext(get().contexts, { ...input, id }, Date.now()));
     return id;
   },
 
   updateContext(id: ContextId, patch: ContextPatch) {
-    updateContextRow(id, (c, now) => ({ ...c, ...patch, name: patch.name?.trim() || c.name, updatedAt: now }));
+    updateContextRow(id, (c, now) => ({
+      ...c,
+      ...patch,
+      name: patch.name?.trim() || c.name,
+      updatedAt: now,
+    }));
   },
 
   /** Moves a context under `parentId` (null for root) at `index` among its siblings. */
@@ -297,7 +323,9 @@ export const actions = {
 
   pin(id: ContextId) {
     const slot = tree.nextFreePin(get().contexts);
-    updateContextRow(id, (c, now) => (c.pinPosition === null ? { ...c, pinPosition: slot, updatedAt: now } : c));
+    updateContextRow(id, (c, now) =>
+      c.pinPosition === null ? { ...c, pinPosition: slot, updatedAt: now } : c,
+    );
   },
 
   unpin(id: ContextId) {
@@ -318,13 +346,18 @@ export const actions = {
   },
 
   /** Deletes a context without entries or children, and archives any other. */
-  deleteContext(id: ContextId): 'deleted' | 'archived' {
+  deleteContext(id: ContextId): "deleted" | "archived" {
     if (tree.canDelete(get().contexts, get().entries, id)) {
-      updateContextRow(id, (c, now) => ({ ...c, deletedAt: now, pinPosition: null, updatedAt: now }));
-      return 'deleted';
+      updateContextRow(id, (c, now) => ({
+        ...c,
+        deletedAt: now,
+        pinPosition: null,
+        updatedAt: now,
+      }));
+      return "deleted";
     }
     updateContextRow(id, tree.archive);
-    return 'archived';
+    return "archived";
   },
 
   /** Stores a UI preference; null removes it. See `usePref`. */
@@ -342,10 +375,10 @@ export const actions = {
       pendingLinks.push(link);
       return;
     }
-    if (link.kind === 'start') {
+    if (link.kind === "start") {
       if (get().tree.byId.get(link.contextId)) actions.start(link.contextId);
-    } else if (link.kind === 'stop') actions.stop();
-    else if (link.kind === 'slack-app') actions.setPref(SLACK_APP_PREF, link.clientId);
+    } else if (link.kind === "stop") actions.stop();
+    else if (link.kind === "slack-app") actions.setPref(SLACK_APP_PREF, link.clientId);
     else actions.back();
   },
 
@@ -375,17 +408,31 @@ export const actions = {
       if (existing.kind === kind) return;
       row = { ...existing, kind, updatedAt: now };
     } else {
-      row = { id: randomUUID() as DayOffId, day, kind, note: null, createdAt: now, updatedAt: now, deletedAt: null };
+      row = {
+        id: randomUUID() as DayOffId,
+        day,
+        kind,
+        note: null,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
     }
     db.writeRows({ daysOff: [row] });
     const others = get().daysOff.filter((o) => o.id !== row.id);
-    set({ daysOff: row.deletedAt === null ? [...others, row].sort((a, b) => a.day.localeCompare(b.day)) : others });
+    set({
+      daysOff:
+        row.deletedAt === null
+          ? [...others, row].sort((a, b) => a.day.localeCompare(b.day))
+          : others,
+    });
   },
 
   /** Replaces all data with a checked backup (see `pickBackup`) and merges its preferences. */
   restore({ contexts, entries, daysOff, prefs }: Backup) {
     actions.replaceAll({ contexts, entries, daysOff });
-    for (const [key, value] of Object.entries(prefs)) db.setMeta(`${PREF_PREFIX}${key}`, JSON.stringify(value));
+    for (const [key, value] of Object.entries(prefs))
+      db.setMeta(`${PREF_PREFIX}${key}`, JSON.stringify(value));
     set({ prefs: { ...get().prefs, ...prefs } });
   },
 
@@ -397,7 +444,9 @@ export const actions = {
     set({
       contexts,
       entries: timeline.applyRows([], data.entries),
-      daysOff: (data.daysOff ?? []).filter((o) => o.deletedAt === null).sort((a, b) => a.day.localeCompare(b.day)),
+      daysOff: (data.daysOff ?? [])
+        .filter((o) => o.deletedAt === null)
+        .sort((a, b) => a.day.localeCompare(b.day)),
       tree: tree.buildTree(contexts),
       lastAction: null,
     });

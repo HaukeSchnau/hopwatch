@@ -1,7 +1,7 @@
 // SQLite persistence. The store keeps every live row in memory and writes changed
 // rows through here synchronously; personal-scale data makes that cheap.
 
-import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
+import { openDatabaseSync, type SQLiteDatabase } from "expo-sqlite";
 
 import {
   type Context,
@@ -14,7 +14,7 @@ import {
   isHue,
   isSlackStatus,
   type SlackStatus,
-} from './model';
+} from "./model";
 
 /**
  * Schema steps: step i brings a database from `user_version` i to i + 1, in one
@@ -167,7 +167,7 @@ const toDayOff = (r: DayOffRow): DayOff => ({
   id: r.id as DayOffId,
   day: r.day,
   // A kind from a newer version reads as "other" rather than losing the day.
-  kind: isDayOffKind(r.kind) ? r.kind : 'other',
+  kind: isDayOffKind(r.kind) ? r.kind : "other",
   note: r.note,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
@@ -178,14 +178,16 @@ let db: SQLiteDatabase | null = null;
 
 function open(): SQLiteDatabase {
   if (db) return db;
-  db = openDatabaseSync('hopwatch.db');
-  db.execSync('PRAGMA journal_mode = WAL;');
+  db = openDatabaseSync("hopwatch.db");
+  db.execSync("PRAGMA journal_mode = WAL;");
   migrate(db);
   return db;
 }
 
 function migrate(d: SQLiteDatabase) {
-  const { user_version } = d.getFirstSync<{ user_version: number }>('PRAGMA user_version') ?? { user_version: 0 };
+  const { user_version } = d.getFirstSync<{ user_version: number }>("PRAGMA user_version") ?? {
+    user_version: 0,
+  };
   for (let version = user_version; version < migrations.length; version++) {
     d.withTransactionSync(() => {
       d.execSync(migrations[version]);
@@ -203,11 +205,15 @@ export interface Rows {
 /** Every live context, entry and day off, entries sorted by start. */
 export function loadAll(): Rows {
   const d = open();
-  const contexts = d.getAllSync<ContextRow>('SELECT * FROM contexts WHERE deleted_at IS NULL').map(toContext);
+  const contexts = d
+    .getAllSync<ContextRow>("SELECT * FROM contexts WHERE deleted_at IS NULL")
+    .map(toContext);
   const entries = d
-    .getAllSync<EntryRow>('SELECT * FROM entries WHERE deleted_at IS NULL ORDER BY start_utc')
+    .getAllSync<EntryRow>("SELECT * FROM entries WHERE deleted_at IS NULL ORDER BY start_utc")
     .map(toEntry);
-  const daysOff = d.getAllSync<DayOffRow>('SELECT * FROM days_off WHERE deleted_at IS NULL ORDER BY day').map(toDayOff);
+  const daysOff = d
+    .getAllSync<DayOffRow>("SELECT * FROM days_off WHERE deleted_at IS NULL ORDER BY day")
+    .map(toDayOff);
   return { contexts, entries, daysOff };
 }
 
@@ -215,13 +221,17 @@ export function loadAll(): Rows {
 export function dumpAll(): Rows {
   const d = open();
   return {
-    contexts: d.getAllSync<ContextRow>('SELECT * FROM contexts').map(toContext),
-    entries: d.getAllSync<EntryRow>('SELECT * FROM entries ORDER BY start_utc').map(toEntry),
-    daysOff: d.getAllSync<DayOffRow>('SELECT * FROM days_off ORDER BY day').map(toDayOff),
+    contexts: d.getAllSync<ContextRow>("SELECT * FROM contexts").map(toContext),
+    entries: d.getAllSync<EntryRow>("SELECT * FROM entries ORDER BY start_utc").map(toEntry),
+    daysOff: d.getAllSync<DayOffRow>("SELECT * FROM days_off ORDER BY day").map(toDayOff),
   };
 }
 
-export function writeRows(rows: { contexts?: readonly Context[]; entries?: readonly Entry[]; daysOff?: readonly DayOff[] }): void {
+export function writeRows(rows: {
+  contexts?: readonly Context[];
+  entries?: readonly Entry[];
+  daysOff?: readonly DayOff[];
+}): void {
   const d = open();
   d.withTransactionSync(() => {
     for (const c of rows.contexts ?? []) {
@@ -283,23 +293,26 @@ export function writeRows(rows: { contexts?: readonly Context[]; entries?: reado
 }
 
 export function getMeta(key: string): string | null {
-  return open().getFirstSync<{ value: string }>('SELECT value FROM meta WHERE key = ?', key)?.value ?? null;
+  return (
+    open().getFirstSync<{ value: string }>("SELECT value FROM meta WHERE key = ?", key)?.value ??
+    null
+  );
 }
 
 /** Every meta row whose key starts with `prefix`. */
 export function metaWithPrefix(prefix: string): { key: string; value: string }[] {
   return open().getAllSync<{ key: string; value: string }>(
-    'SELECT key, value FROM meta WHERE substr(key, 1, length(?1)) = ?1',
+    "SELECT key, value FROM meta WHERE substr(key, 1, length(?1)) = ?1",
     prefix,
   );
 }
 
 export function setMeta(key: string, value: string | null): void {
-  if (value === null) open().runSync('DELETE FROM meta WHERE key = ?', key);
-  else open().runSync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', key, value);
+  if (value === null) open().runSync("DELETE FROM meta WHERE key = ?", key);
+  else open().runSync("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", key, value);
 }
 
 /** Hard-deletes all contexts, entries and days off. Settings in meta survive. */
 export function eraseAll(): void {
-  open().execSync('DELETE FROM entries; DELETE FROM contexts; DELETE FROM days_off;');
+  open().execSync("DELETE FROM entries; DELETE FROM contexts; DELETE FROM days_off;");
 }

@@ -5,9 +5,15 @@
 //
 // TODO: remove once the Expo SDK prebuild template includes SceneDelegate.swift (SDK 58).
 
-const fs = require('fs');
-const path = require('path');
-const { IOSConfig, withAppDelegate, withDangerousMod, withInfoPlist, withXcodeProject } = require('expo/config-plugins');
+const fs = require("fs");
+const path = require("path");
+const {
+  IOSConfig,
+  withAppDelegate,
+  withDangerousMod,
+  withInfoPlist,
+  withXcodeProject,
+} = require("expo/config-plugins");
 
 const appDelegate = `internal import Expo
 import React
@@ -65,8 +71,8 @@ module.exports = function withSceneLifecycle(config) {
       UISceneConfigurations: {
         UIWindowSceneSessionRoleApplication: [
           {
-            UISceneConfigurationName: 'Default Configuration',
-            UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
+            UISceneConfigurationName: "Default Configuration",
+            UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).SceneDelegate",
           },
         ],
       },
@@ -75,16 +81,20 @@ module.exports = function withSceneLifecycle(config) {
   });
 
   config = withAppDelegate(config, (c) => {
-    if (c.modResults.language !== 'swift') throw new Error('with-scene-lifecycle expects a Swift AppDelegate');
+    if (c.modResults.language !== "swift")
+      throw new Error("with-scene-lifecycle expects a Swift AppDelegate");
     c.modResults.contents = appDelegate;
     return c;
   });
 
   config = withDangerousMod(config, [
-    'ios',
+    "ios",
     (c) => {
       const name = IOSConfig.XcodeUtils.getProjectName(c.modRequest.projectRoot);
-      fs.writeFileSync(path.join(c.modRequest.platformProjectRoot, name, 'SceneDelegate.swift'), sceneDelegate);
+      fs.writeFileSync(
+        path.join(c.modRequest.platformProjectRoot, name, "SceneDelegate.swift"),
+        sceneDelegate,
+      );
       return c;
     },
   ]);
@@ -93,7 +103,11 @@ module.exports = function withSceneLifecycle(config) {
     const name = IOSConfig.XcodeUtils.getProjectName(c.modRequest.projectRoot);
     const filepath = `${name}/SceneDelegate.swift`;
     if (!c.modResults.hasFile(filepath)) {
-      IOSConfig.XcodeUtils.addBuildSourceFileToGroup({ filepath, groupName: name, project: c.modResults });
+      IOSConfig.XcodeUtils.addBuildSourceFileToGroup({
+        filepath,
+        groupName: name,
+        project: c.modResults,
+      });
     }
     return c;
   });

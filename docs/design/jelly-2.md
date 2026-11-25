@@ -3,6 +3,7 @@
 Hauke tried all five directions. His verdict, in his words:
 
 > I like the vibe of Jelly the most overall. My only issues with it:
+>
 > - It doesn't feel quite as native as I'd like it to
 > - The Jellys all look kind of the same aside from the color. I'd love for them to each
 >   have more personality and be unique.

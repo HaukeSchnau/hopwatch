@@ -14,15 +14,15 @@
 // The other direction is the snapshot: what native surfaces show, published by the app on
 // every change (see src/widgets/surfaces.ts).
 
-import type { ContextId, Entry, EntryId, Hue } from './model';
-import { type SlackWire, slackWire } from './slack';
-import * as timeline from './timeline';
-import type { ContextTree } from './tree';
+import type { ContextId, Entry, EntryId, Hue } from "./model";
+import { type SlackWire, slackWire } from "./slack";
+import * as timeline from "./timeline";
+import type { ContextTree } from "./tree";
 
 export interface RemoteCommand {
   /** Taps replay in this order. */
   seq: number;
-  kind: 'start' | 'stop';
+  kind: "start" | "stop";
   /** A start's jelly. */
   contextId: ContextId | null;
   /** A start's new entry, with the id made where the tap happened. */
@@ -38,13 +38,18 @@ export interface RemoteCommand {
  * notification): start `contextId`, or stop for null, against the entry open now. The
  * native side stamps `seq` and `at` with the tap's time.
  */
-export const tapCommand = (open: EntryId | null, contextId: ContextId | null, newId: () => string): Omit<RemoteCommand, 'seq' | 'at'> =>
+export const tapCommand = (
+  open: EntryId | null,
+  contextId: ContextId | null,
+  newId: () => string,
+): Omit<RemoteCommand, "seq" | "at"> =>
   contextId === null
-    ? { kind: 'stop', contextId: null, entryId: null, expectOpen: open }
-    : { kind: 'start', contextId, entryId: newId() as EntryId, expectOpen: open };
+    ? { kind: "stop", contextId: null, entryId: null, expectOpen: open }
+    : { kind: "start", contextId, entryId: newId() as EntryId, expectOpen: open };
 
 // Swift's JSONEncoder leaves out nil fields, so a missing id is null too.
-const idOrNull = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : v === null || v === undefined ? null : undefined);
+const idOrNull = (v: unknown) =>
+  typeof v === "string" && v.length > 0 ? v : v === null || v === undefined ? null : undefined;
 
 /** Reads a queued command, or null when it isn't one. */
 export function parseCommand(json: string): RemoteCommand | null {
@@ -54,17 +59,32 @@ export function parseCommand(json: string): RemoteCommand | null {
   } catch {
     return null;
   }
-  if (typeof raw !== 'object' || raw === null) return null;
+  if (typeof raw !== "object" || raw === null) return null;
   const c = raw as Record<string, unknown>;
   const contextId = idOrNull(c.contextId);
   const entryId = idOrNull(c.entryId);
   const expectOpen = idOrNull(c.expectOpen);
-  if (typeof c.seq !== 'number' || typeof c.at !== 'number' || !Number.isFinite(c.at)) return null;
+  if (typeof c.seq !== "number" || typeof c.at !== "number" || !Number.isFinite(c.at)) return null;
   if (contextId === undefined || entryId === undefined || expectOpen === undefined) return null;
-  if (c.kind === 'start' && contextId !== null && entryId !== null) {
-    return { seq: c.seq, kind: 'start', contextId: contextId as ContextId, entryId: entryId as EntryId, expectOpen: expectOpen as EntryId | null, at: c.at };
+  if (c.kind === "start" && contextId !== null && entryId !== null) {
+    return {
+      seq: c.seq,
+      kind: "start",
+      contextId: contextId as ContextId,
+      entryId: entryId as EntryId,
+      expectOpen: expectOpen as EntryId | null,
+      at: c.at,
+    };
   }
-  if (c.kind === 'stop') return { seq: c.seq, kind: 'stop', contextId: null, entryId: null, expectOpen: expectOpen as EntryId | null, at: c.at };
+  if (c.kind === "stop")
+    return {
+      seq: c.seq,
+      kind: "stop",
+      contextId: null,
+      entryId: null,
+      expectOpen: expectOpen as EntryId | null,
+      at: c.at,
+    };
   return null;
 }
 
@@ -73,14 +93,19 @@ export function parseCommand(json: string): RemoteCommand | null {
  * the timeline already reaches past the tap, or its jelly is gone or archived.
  * `clock.newId` makes ids for anything but the started entry, which keeps the command's.
  */
-export function replay(entries: readonly Entry[], tree: ContextTree, command: RemoteCommand, clock: timeline.Clock): Entry[] | null {
+export function replay(
+  entries: readonly Entry[],
+  tree: ContextTree,
+  command: RemoteCommand,
+  clock: timeline.Clock,
+): Entry[] | null {
   const open = timeline.findOpen(entries);
   if ((open?.id ?? null) !== command.expectOpen) return null;
   const at = Math.min(command.at, clock.now);
   // Time recorded after the tap means the app moved on without it. Replaying it then would
   // cut that time away: a start carves everything after it.
   if (entries.some((e) => timeline.isLive(e) && (e.endUtc ?? e.startUtc) > at)) return null;
-  if (command.kind === 'stop') return open ? timeline.stop(entries, clock, at) : null;
+  if (command.kind === "stop") return open ? timeline.stop(entries, clock, at) : null;
   const context = command.contextId ? tree.byId.get(command.contextId) : undefined;
   if (!context || context.hidden || !command.entryId) return null;
   let keepId: EntryId | null = command.entryId;
@@ -178,7 +203,7 @@ export function snapshotOf(
       .map((c) => ({
         id: c.id,
         name: c.name,
-        parents: c.ancestors.map((a) => a.name).join(' › '),
+        parents: c.ancestors.map((a) => a.name).join(" › "),
         mark: c.glyph ?? c.name.slice(0, 1).toUpperCase(),
         hue: c.hue,
         colors: colors(c.hue),

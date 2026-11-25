@@ -3,10 +3,10 @@
 // on-device model, bubbles sized by time, candy jars for weekly targets, the expandable
 // tree of totals with copy buttons, and bead strings showing how fragmented each day was.
 
-import { SegmentedControl } from '@expo/ui/community/segmented-control';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { SegmentedControl } from "@expo/ui/community/segmented-control";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { type ReactNode, useState } from "react";
+import { Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import {
   addDays,
@@ -24,55 +24,71 @@ import {
   useRunning,
   useTree,
   useWeekReport,
-} from '@/core';
-import { shellText } from '@/i18n/shell';
-import { weekText } from '@/i18n/week';
+} from "@/core";
+import { shellText } from "@/i18n/shell";
+import { weekText } from "@/i18n/week";
 
-import { buzz } from '../feedback';
-import { HeaderTitle } from '../HeaderTitle';
-import { useHeaderIcon } from '../nav';
-import { rounded, tabular, text, useTheme } from '../theme';
-import { dayTitles, weekTitles } from '../titles';
-import { JellyButton, SectionTitle } from '../ui';
-import { BeadString, WeekBeads } from './Beads';
-import { Bubbles } from './Bubbles';
-import { Jars } from './Jars';
-import { TotalsTree } from './TotalsTree';
-import { WeekSummary } from './WeekSummary';
+import { buzz } from "../feedback";
+import { HeaderTitle } from "../HeaderTitle";
+import { useHeaderIcon } from "../nav";
+import { rounded, tabular, text, useTheme } from "../theme";
+import { dayTitles, weekTitles } from "../titles";
+import { JellyButton, SectionTitle } from "../ui";
+import { BeadString, WeekBeads } from "./Beads";
+import { Bubbles } from "./Bubbles";
+import { Jars } from "./Jars";
+import { TotalsTree } from "./TotalsTree";
+import { WeekSummary } from "./WeekSummary";
 
-type Mode = 'day' | 'week';
-const modes: Mode[] = ['day', 'week'];
+type Mode = "day" | "week";
+const modes: Mode[] = ["day", "week"];
 
 export function ReportScreen() {
   const t = useTheme();
   const params = useLocalSearchParams<{ mode?: string }>();
-  const [mode, setMode] = useState<Mode>(params.mode === 'day' ? 'day' : 'week');
+  const [mode, setMode] = useState<Mode>(params.mode === "day" ? "day" : "week");
   const now = useNow(60_000);
   const running = useRunning();
   const [day, setDay] = useState(() => startOfDay(Date.now()));
   const [week, setWeek] = useState(() => startOfWeek(Date.now()));
-  const previousIcon = useHeaderIcon('chevron.left', 'chevron_left');
-  const nextIcon = useHeaderIcon('chevron.right', 'chevron_right');
+  const previousIcon = useHeaderIcon("chevron.left", "chevron_left");
+  const nextIcon = useHeaderIcon("chevron.right", "chevron_right");
 
   const step = (dir: 1 | -1) => {
     buzz.tick();
-    if (mode === 'day') setDay(addDays(day, dir));
+    if (mode === "day") setDay(addDays(day, dir));
     else setWeek(addDays(week, 7 * dir));
   };
-  const current = mode === 'day' ? day === startOfDay(now) : week === startOfWeek(now);
-  const jump = () => (mode === 'day' ? setDay(startOfDay(now)) : setWeek(startOfWeek(now)));
-  const { title, subtitle } = mode === 'day' ? dayTitles(day, now) : weekTitles(week, now);
+  const current = mode === "day" ? day === startOfDay(now) : week === startOfWeek(now);
+  const jump = () => (mode === "day" ? setDay(startOfDay(now)) : setWeek(startOfWeek(now)));
+  const { title, subtitle } = mode === "day" ? dayTitles(day, now) : weekTitles(week, now);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ backgroundColor: t.c.bg }} contentContainerStyle={styles.content}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={{ backgroundColor: t.c.bg }}
+      contentContainerStyle={styles.content}
+    >
       <Stack.Title asChild>
         <HeaderTitle title={title} subtitle={subtitle} onPress={current ? undefined : jump} />
       </Stack.Title>
       <Stack.Toolbar placement="left">
-        {previousIcon && <Stack.Toolbar.Button icon={previousIcon} accessibilityLabel={shellText.header.previous(mode)} onPress={() => step(-1)} />}
+        {previousIcon && (
+          <Stack.Toolbar.Button
+            icon={previousIcon}
+            accessibilityLabel={shellText.header.previous(mode)}
+            onPress={() => step(-1)}
+          />
+        )}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        {nextIcon && <Stack.Toolbar.Button icon={nextIcon} accessibilityLabel={shellText.header.next(mode)} onPress={() => step(1)} />}
+        {nextIcon && (
+          <Stack.Toolbar.Button
+            icon={nextIcon}
+            accessibilityLabel={shellText.header.next(mode)}
+            onPress={() => step(1)}
+          />
+        )}
       </Stack.Toolbar>
 
       <View style={styles.segment}>
@@ -80,14 +96,16 @@ export function ReportScreen() {
           values={modes.map((m) => weekText.ranges[m])}
           selectedIndex={modes.indexOf(mode)}
           // Android's Material segments, in the same wash as the tab bar's selected pill.
-          tintColor={Platform.OS === 'android' ? t.candy[running?.context.hue ?? 'pink'].tint : undefined}
+          tintColor={
+            Platform.OS === "android" ? t.candy[running?.context.hue ?? "pink"].tint : undefined
+          }
           onChange={(e) => {
             buzz.tick();
-            setMode(modes[e.nativeEvent.selectedSegmentIndex] ?? 'week');
+            setMode(modes[e.nativeEvent.selectedSegmentIndex] ?? "week");
           }}
         />
       </View>
-      {mode === 'day' ? <DayBody day={day} now={now} /> : <WeekBody week={week} now={now} />}
+      {mode === "day" ? <DayBody day={day} now={now} /> : <WeekBody week={week} now={now} />}
     </ScrollView>
   );
 }
@@ -105,7 +123,8 @@ function WeekBody({ week, now }: { week: number; now: number }) {
         range={{ start: report.start, end: report.end }}
         targets={targets}
         now={now}
-        summary={<WeekSummary weekStart={week} />}>
+        summary={<WeekSummary weekStart={week} />}
+      >
         {report.targets.length > 0 && (
           <>
             <SectionTitle style={styles.section}>{weekText.jars}</SectionTitle>
@@ -118,12 +137,14 @@ function WeekBody({ week, now }: { week: number; now: number }) {
           <SectionTitle style={styles.section}>{weekText.beadsPerDay}</SectionTitle>
           <View style={[styles.card, { backgroundColor: t.c.card }]}>
             <WeekBeads days={report.days} width={width - 64} now={now} />
-            <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>{weekText.beadsLegend}</Text>
+            <Text style={[text.caption, styles.legend, { color: t.c.muted }]}>
+              {weekText.beadsLegend}
+            </Text>
           </View>
           <JellyButton
             label={weekText.card.button}
-            icon={{ ios: 'square.and.arrow.up', android: 'share' }}
-            onPress={() => router.push({ pathname: '/week-card', params: { week: String(week) } })}
+            icon={{ ios: "square.and.arrow.up", android: "share" }}
+            onPress={() => router.push({ pathname: "/week-card", params: { week: String(week) } })}
             style={styles.shareWeek}
           />
         </>
@@ -137,7 +158,13 @@ function DayBody({ day, now }: { day: number; now: number }) {
   const { width } = useWindowDimensions();
   return (
     <>
-      <Overview totals={report.totals} label={weekText.trackedDay} range={{ start: report.start, end: report.end }} targets={new Map()} now={now} />
+      <Overview
+        totals={report.totals}
+        label={weekText.trackedDay}
+        range={{ start: report.start, end: report.end }}
+        targets={new Map()}
+        now={now}
+      />
       {report.totals.total > 0 && (
         <>
           <SectionTitle style={styles.section}>{weekText.beads}</SectionTitle>
@@ -153,7 +180,11 @@ function DayBeads({ report, width }: { report: DayReport; width: number }) {
   const { blocks, median } = report.fragmentation;
   return (
     <View style={[styles.card, { backgroundColor: t.c.card }]}>
-      {blocks ? <BeadString day={report} width={width} /> : <Text style={[text.footnote, { color: t.c.muted }]}>{weekText.noBlocks}</Text>}
+      {blocks ? (
+        <BeadString day={report} width={width} />
+      ) : (
+        <Text style={[text.footnote, { color: t.c.muted }]}>{weekText.noBlocks}</Text>
+      )}
       <Text style={[text.callout, tabular, styles.fragment, { color: t.c.ink }]}>
         {weekText.blocks(blocks, formatDuration(median))}
       </Text>
@@ -199,8 +230,12 @@ function Overview({
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyEmoji}>🫙</Text>
-        <Text style={[text.title3, styles.emptyTitle, { color: t.c.ink }]}>{weekText.emptyTitle}</Text>
-        <Text style={[text.subhead, styles.emptyText, { color: t.c.muted }]}>{weekText.emptyText}</Text>
+        <Text style={[text.title3, styles.emptyTitle, { color: t.c.ink }]}>
+          {weekText.emptyTitle}
+        </Text>
+        <Text style={[text.subhead, styles.emptyText, { color: t.c.muted }]}>
+          {weekText.emptyText}
+        </Text>
       </View>
     );
   }
@@ -208,12 +243,19 @@ function Overview({
   return (
     <>
       <View style={styles.totalRow}>
-        <Text style={[styles.total, tabular, { color: t.c.ink }]}>{formatDuration(totals.total)}</Text>
+        <Text style={[styles.total, tabular, { color: t.c.ink }]}>
+          {formatDuration(totals.total)}
+        </Text>
         <Text style={[text.footnote, { color: t.c.muted }]}>{label}</Text>
       </View>
       {summary}
       <View style={styles.bubbles}>
-        <Bubbles nodes={totals.roots} width={width - 32} height={Math.min(250, 90 + totals.roots.length * 26)} onPick={(id) => toggle(id)} />
+        <Bubbles
+          nodes={totals.roots}
+          width={width - 32}
+          height={Math.min(250, 90 + totals.roots.length * 26)}
+          onPick={(id) => toggle(id)}
+        />
       </View>
       {children}
       <SectionTitle style={styles.section}>{weekText.totals}</SectionTitle>
@@ -231,16 +273,16 @@ function Overview({
 const styles = StyleSheet.create({
   content: { paddingBottom: 40 },
   segment: { paddingHorizontal: 16, paddingTop: 8 },
-  totalRow: { alignItems: 'center', marginTop: 14 },
-  total: { ...rounded('800'), fontSize: 52, letterSpacing: -1 },
-  bubbles: { alignItems: 'center', marginTop: 12, paddingHorizontal: 16 },
+  totalRow: { alignItems: "center", marginTop: 14 },
+  total: { ...rounded("800"), fontSize: 52, letterSpacing: -1 },
+  bubbles: { alignItems: "center", marginTop: 12, paddingHorizontal: 16 },
   shareWeek: { marginHorizontal: 16, marginTop: 20 },
   section: { marginHorizontal: 20, marginTop: 28 },
   card: { borderRadius: 24, padding: 16, marginHorizontal: 16 },
   legend: { marginTop: 12 },
   fragment: { marginTop: 10 },
-  empty: { alignItems: 'center', marginTop: 70, paddingHorizontal: 40 },
+  empty: { alignItems: "center", marginTop: 70, paddingHorizontal: 40 },
   emptyEmoji: { fontSize: 54 },
   emptyTitle: { marginTop: 8 },
-  emptyText: { textAlign: 'center', marginTop: 4 },
+  emptyText: { textAlign: "center", marginTop: 4 },
 });

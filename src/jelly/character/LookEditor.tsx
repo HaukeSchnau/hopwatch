@@ -2,21 +2,21 @@
 // trait, "Surprise me" and "Automatic". Picks are stored as the context's custom look
 // right away; traits left alone keep following the automatic look (see look.ts).
 
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import type { ResolvedContext } from '@/core';
-import { characterText, optionNames } from '@/i18n/character';
+import type { ResolvedContext } from "@/core";
+import { characterText, optionNames } from "@/i18n/character";
 
-import { Character } from '../Character';
-import { buzz } from '../feedback';
-import { useFace, useLively, wake } from '../Gummy';
-import { rounded, text, useTheme } from '../theme';
-import { JellyButton, Squishy } from '../ui';
-import { surpriseLook } from './derive';
-import { hop, perform } from './idle';
-import { saveCustomLook, useAutoLook, useCustomLook } from './look';
-import { type Look, type Trait, traitKeys, traitOptions, withTraits } from './traits';
+import { Character } from "../Character";
+import { buzz } from "../feedback";
+import { useFace, useLively, wake } from "../Gummy";
+import { rounded, text, useTheme } from "../theme";
+import { JellyButton, Squishy } from "../ui";
+import { surpriseLook } from "./derive";
+import { hop, perform } from "./idle";
+import { saveCustomLook, useAutoLook, useCustomLook } from "./look";
+import { type Look, type Trait, traitKeys, traitOptions, withTraits } from "./traits";
 
 const { traits: traitNames, moods } = characterText;
 
@@ -35,8 +35,8 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
   const auto = useAutoLook(context);
   const custom = useCustomLook(context.id);
   const look = withTraits(auto, custom);
-  const [trait, setTrait] = useState<Trait>('topper');
-  const face = useFace('awake');
+  const [trait, setTrait] = useState<Trait>("topper");
+  const face = useFace("awake");
   useLively(face, true);
 
   function pick<K extends Trait>(key: K, value: Look[K]) {
@@ -57,7 +57,7 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
       <View style={styles.actions}>
         <JellyButton
           label={characterText.surprise}
-          icon={{ ios: 'dice.fill', android: 'casino' }}
+          icon={{ ios: "dice.fill", android: "casino" }}
           size="small"
           hue={context.hue}
           style={styles.action}
@@ -70,7 +70,7 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
         />
         <JellyButton
           label={characterText.automatic}
-          icon={{ ios: 'wand.and.stars', android: 'auto_fix_high' }}
+          icon={{ ios: "wand.and.stars", android: "auto_fix_high" }}
           size="small"
           palette={theme.plainCandy}
           disabled={!custom}
@@ -84,7 +84,11 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
         />
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabs}
+      >
         {traitKeys.map((key) => {
           const on = key === trait;
           return (
@@ -93,19 +97,22 @@ export function LookEditor({ context, preview = true }: LookEditorProps) {
               onPress={() => setTrait(key)}
               accessibilityRole="tab"
               accessibilityState={{ selected: on }}
-              style={[styles.tab, { backgroundColor: on ? tint.fill : theme.c.sunken }]}>
-              <Text style={[text.subhead, { color: on ? tint.on : theme.c.ink }]}>{traitNames[key]}</Text>
+              style={[styles.tab, { backgroundColor: on ? tint.fill : theme.c.sunken }]}
+            >
+              <Text style={[text.subhead, { color: on ? tint.on : theme.c.ink }]}>
+                {traitNames[key]}
+              </Text>
             </Squishy>
           );
         })}
       </ScrollView>
 
-      {trait === 'motion' ? (
+      {trait === "motion" ? (
         <MotionChips
           look={look}
           auto={auto}
           onPick={(motion) => {
-            pick('motion', motion);
+            pick("motion", motion);
             perform(face, motion);
           }}
         />
@@ -143,7 +150,12 @@ function OptionStrip<K extends Trait>({ trait, context, look, auto, onPick }: St
   const start = Math.max(0, options.indexOf(look[trait]) * CELL - CELL * 1.5);
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentOffset={{ x: start, y: 0 }} contentContainerStyle={styles.strip}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentOffset={{ x: start, y: 0 }}
+      contentContainerStyle={styles.strip}
+    >
       {options.map((option) => {
         const on = option === look[trait];
         const variant: Partial<Look> = { ...look };
@@ -155,14 +167,35 @@ function OptionStrip<K extends Trait>({ trait, context, look, auto, onPick }: St
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
             accessibilityLabel={optionNames[trait][option]}
-            style={styles.cell}>
-            <View style={[styles.thumb, { backgroundColor: on ? tint.tint : theme.c.sunken, borderColor: on ? tint.fill : 'transparent' }]}>
-              <Character context={context} size={THUMB} look={variant} mood="awake" sticker={false} shadow={false} />
+            style={styles.cell}
+          >
+            <View
+              style={[
+                styles.thumb,
+                {
+                  backgroundColor: on ? tint.tint : theme.c.sunken,
+                  borderColor: on ? tint.fill : "transparent",
+                },
+              ]}
+            >
+              <Character
+                context={context}
+                size={THUMB}
+                look={variant}
+                mood="awake"
+                sticker={false}
+                shadow={false}
+              />
             </View>
             {/* German compounds like "Heiligenschein" shrink a little rather than get cut. */}
-            <Text style={[styles.label, { color: on ? tint.ink : theme.c.muted }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+            <Text
+              style={[styles.label, { color: on ? tint.ink : theme.c.muted }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+            >
               {optionNames[trait][option]}
-              {option === auto[trait] ? ' ✦' : ''}
+              {option === auto[trait] ? " ✦" : ""}
             </Text>
           </Squishy>
         );
@@ -172,7 +205,15 @@ function OptionStrip<K extends Trait>({ trait, context, look, auto, onPick }: St
 }
 
 /** Personalities can't be seen in a still, so they are chips that play on the preview. */
-function MotionChips({ look, auto, onPick }: { look: Look; auto: Look; onPick: (value: Look['motion']) => void }) {
+function MotionChips({
+  look,
+  auto,
+  onPick,
+}: {
+  look: Look;
+  auto: Look;
+  onPick: (value: Look["motion"]) => void;
+}) {
   const theme = useTheme();
   return (
     <View style={styles.chips}>
@@ -184,12 +225,17 @@ function MotionChips({ look, auto, onPick }: { look: Look; auto: Look; onPick: (
             onPress={() => onPick(motion)}
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
-            style={[styles.chip, { backgroundColor: on ? theme.c.ink : theme.c.sunken }]}>
+            style={[styles.chip, { backgroundColor: on ? theme.c.ink : theme.c.sunken }]}
+          >
             <Text style={[text.subhead, { color: on ? theme.c.bg : theme.c.ink }]}>
               {optionNames.motion[motion]}
-              {motion === auto.motion ? ' ✦' : ''}
+              {motion === auto.motion ? " ✦" : ""}
             </Text>
-            <Text style={[text.caption, rounded('600'), { color: on ? theme.c.faint : theme.c.muted }]}>{moods[motion]}</Text>
+            <Text
+              style={[text.caption, rounded("600"), { color: on ? theme.c.faint : theme.c.muted }]}
+            >
+              {moods[motion]}
+            </Text>
           </Squishy>
         );
       })}
@@ -199,15 +245,28 @@ function MotionChips({ look, auto, onPick }: { look: Look; auto: Look; onPick: (
 
 const styles = StyleSheet.create({
   root: { gap: 12 },
-  stage: { height: 184, borderRadius: 30, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
-  actions: { flexDirection: 'row', gap: 10 },
+  stage: {
+    height: 184,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    overflow: "hidden",
+  },
+  actions: { flexDirection: "row", gap: 10 },
   action: { flex: 1 },
   tabs: { gap: 6, paddingRight: 8 },
-  tab: { paddingHorizontal: 14, height: 34, borderRadius: 17, justifyContent: 'center' },
+  tab: { paddingHorizontal: 14, height: 34, borderRadius: 17, justifyContent: "center" },
   strip: { gap: 4, paddingRight: 8 },
-  cell: { width: CELL, alignItems: 'center' },
-  thumb: { width: CELL - 6, height: CELL - 6, borderRadius: 22, borderWidth: 2.5, alignItems: 'center', justifyContent: 'center' },
-  label: { ...rounded('700'), fontSize: 12, marginTop: 4 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, minWidth: '30%' },
+  cell: { width: CELL, alignItems: "center" },
+  thumb: {
+    width: CELL - 6,
+    height: CELL - 6,
+    borderRadius: 22,
+    borderWidth: 2.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: { ...rounded("700"), fontSize: 12, marginTop: 4 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, minWidth: "30%" },
 });

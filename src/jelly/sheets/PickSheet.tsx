@@ -10,10 +10,10 @@
 // In start mode, with Apple's on-device model, the search field also takes a sentence
 // like "2h deep work this morning" and offers to log it (see TypedLog).
 
-import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useState } from 'react';
-import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, useLocalSearchParams } from "expo-router";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useState } from "react";
+import { Keyboard, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import {
   actions,
@@ -30,19 +30,27 @@ import {
   useEntries,
   usePickableContexts,
   useTree,
-} from '@/core';
-import { sheetsText } from '@/i18n/sheets';
+} from "@/core";
+import { sheetsText } from "@/i18n/sheets";
 
-import { buzz, play } from '../feedback';
-import { Character } from '../Character';
-import { useModelAvailable } from '../character/suggest';
-import { tabular, text, useTheme } from '../theme';
-import { Squishy } from '../ui';
-import { sheetBody } from './parts';
-import { TimeChip } from './time';
-import { type Confirmable, LogConfirm, LogRow, looksLikeSentence, useTypedLog } from './TypedLog';
+import { buzz, play } from "../feedback";
+import { Character } from "../Character";
+import { useModelAvailable } from "../character/suggest";
+import { tabular, text, useTheme } from "../theme";
+import { Squishy } from "../ui";
+import { sheetBody } from "./parts";
+import { TimeChip } from "./time";
+import { type Confirmable, LogConfirm, LogRow, looksLikeSentence, useTypedLog } from "./TypedLog";
 
-type Params = { mode?: string; from?: string; to?: string; at?: string; entry?: string; id?: string; untracked?: string };
+type Params = {
+  mode?: string;
+  from?: string;
+  to?: string;
+  at?: string;
+  entry?: string;
+  id?: string;
+  untracked?: string;
+};
 
 const FIVE = 5 * MINUTE;
 const s = sheetsText.pick;
@@ -50,20 +58,22 @@ const s = sheetsText.pick;
 export function PickSheet() {
   const t = useTheme();
   const params = useLocalSearchParams<Params>();
-  const mode = params.mode ?? 'start';
+  const mode = params.mode ?? "start";
   const tree = useTree();
   const entries = useEntries();
   const pickable = usePickableContexts();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const entry = entries.find((e) => e.id === params.entry) ?? null;
   // What to confirm: the typed sentence's plan once its row is tapped, or in place mode
   // the block with the jelly picked for it (null jelly: a break, where `untracked` starts).
-  const placing = mode === 'place' && entry !== null;
+  const placing = mode === "place" && entry !== null;
   const blockWith = (contextId: ContextId | null): Confirmable | null =>
-    entry ? { kind: 'place', contextId, ...blockInside(entry, Date.now()) } : null;
-  const [confirming, setConfirming] = useState<Confirmable | null>(() => (placing && params.untracked ? blockWith(null) : null));
+    entry ? { kind: "place", contextId, ...blockInside(entry, Date.now()) } : null;
+  const [confirming, setConfirming] = useState<Confirmable | null>(() =>
+    placing && params.untracked ? blockWith(null) : null,
+  );
   const modelReady = useModelAvailable();
-  const canType = mode === 'start' && modelReady;
+  const canType = mode === "start" && modelReady;
 
   const gapFrom = Number(params.from);
   const gapTo = Number(params.to);
@@ -78,14 +88,14 @@ export function PickSheet() {
   let onPick: (c: ResolvedContext | null) => void = (c) => {
     if (!c) return;
     actions.start(c.id);
-    play('pop');
+    play("pop");
   };
-  if (mode === 'fill' && Number.isFinite(from) && Number.isFinite(to)) {
+  if (mode === "fill" && Number.isFinite(from) && Number.isFinite(to)) {
     title = s.fill;
     subtitle = `${formatClock(from)} – ${formatClock(to)} · ${formatDuration(to - from)}`;
     // No jelly: the gap was a break, which the evening check then leaves alone.
     onPick = (c) => (c ? actions.fillGap(c.id, from, to) : markBreak(from, to));
-  } else if (mode === 'entry' && entry) {
+  } else if (mode === "entry" && entry) {
     const current = tree.byId.get(entry.contextId);
     title = s.change;
     subtitle = `${current?.name ?? s.entry} · ${formatClock(entry.startUtc)} – ${entry.endUtc ? formatClock(entry.endUtc) : sheetsText.now}`;
@@ -93,14 +103,19 @@ export function PickSheet() {
   } else if (placing) {
     title = s.putIn;
     subtitle = `${tree.byId.get(entry.contextId)?.name ?? s.entry} · ${formatClock(entry.startUtc)} – ${entry.endUtc ? formatClock(entry.endUtc) : sheetsText.now}`;
-  } else if (mode === 'parent' && moving) {
+  } else if (mode === "parent" && moving) {
     title = s.move(moving.name);
     onPick = (c) => actions.moveContext(moving.id, c?.id ?? null);
   }
 
   const q = query.trim().toLowerCase();
   // Putting a jelly inside its own entry would change nothing.
-  const list = pickable.filter((c) => !excluded.has(c.id) && !(placing && c.id === entry.contextId) && (!q || pathLabel(c).toLowerCase().includes(q)));
+  const list = pickable.filter(
+    (c) =>
+      !excluded.has(c.id) &&
+      !(placing && c.id === entry.contextId) &&
+      (!q || pathLabel(c).toLowerCase().includes(q)),
+  );
   const log = useTypedLog(query, canType && looksLikeSentence(query, list.length));
   const confirm = (plan: Plan | null) => {
     if (!plan) return;
@@ -116,20 +131,41 @@ export function PickSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={[sheetBody, { paddingBottom: 40 }]} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+    <ScrollView
+      contentContainerStyle={[sheetBody, { paddingBottom: 40 }]}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+    >
       <Text style={[text.title2, { color: t.c.ink }]}>{title}</Text>
-      {subtitle ? <Text style={[text.subhead, tabular, styles.subtitle, { color: t.c.muted }]}>{subtitle}</Text> : null}
-      {mode === 'fill' && Number.isFinite(gapFrom) && Number.isFinite(gapTo) && (
+      {subtitle ? (
+        <Text style={[text.subhead, tabular, styles.subtitle, { color: t.c.muted }]}>
+          {subtitle}
+        </Text>
+      ) : null}
+      {mode === "fill" && Number.isFinite(gapFrom) && Number.isFinite(gapTo) && (
         <View style={styles.range}>
           <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.from}</Text>
-          <TimeChip value={new Date(from)} color={t.c.pinkDeep} onChange={(d) => setFrom(clamp(onDay(gapFrom, d), gapFrom, to - MINUTE))} />
+          <TimeChip
+            value={new Date(from)}
+            color={t.c.pinkDeep}
+            onChange={(d) => setFrom(clamp(onDay(gapFrom, d), gapFrom, to - MINUTE))}
+          />
           <Text style={[text.headline, { color: t.c.ink }]}>{sheetsText.to}</Text>
-          <TimeChip value={new Date(to)} color={t.c.pinkDeep} onChange={(d) => setTo(clamp(onDay(gapTo, d), from + MINUTE, gapTo))} />
+          <TimeChip
+            value={new Date(to)}
+            color={t.c.pinkDeep}
+            onChange={(d) => setTo(clamp(onDay(gapTo, d), from + MINUTE, gapTo))}
+          />
         </View>
       )}
       {(pickable.length > 8 || canType) && (
         <View style={[styles.search, { backgroundColor: t.c.sunken }]}>
-          <SymbolView name={{ ios: 'magnifyingglass', android: 'search' }} size={16} tintColor={t.c.muted} weight="bold" />
+          <SymbolView
+            name={{ ios: "magnifyingglass", android: "search" }}
+            size={16}
+            tintColor={t.c.muted}
+            weight="bold"
+          />
           <TextInput
             value={query}
             onChangeText={(value) => {
@@ -146,13 +182,31 @@ export function PickSheet() {
         </View>
       )}
       {confirming ? (
-        <LogConfirm plan={confirming} onDone={() => router.back()} onCancel={() => (placing && params.untracked ? router.back() : setConfirming(null))} />
+        <LogConfirm
+          plan={confirming}
+          onDone={() => router.back()}
+          onCancel={() => (placing && params.untracked ? router.back() : setConfirming(null))}
+        />
       ) : (
         <View style={styles.list}>
           <LogRow log={log} onPress={confirm} />
-          {mode === 'parent' && moving && !q && <Row label={s.topLevel} context={null} depth={0} onPress={() => pick(null)} selected={moving.parentId === null} />}
-          {(placing || mode === 'fill') && !q && (
-            <Row label={s.nothing} context={null} symbol={{ ios: 'cup.and.saucer.fill', android: 'coffee' }} depth={0} onPress={() => pick(null)} />
+          {mode === "parent" && moving && !q && (
+            <Row
+              label={s.topLevel}
+              context={null}
+              depth={0}
+              onPress={() => pick(null)}
+              selected={moving.parentId === null}
+            />
+          )}
+          {(placing || mode === "fill") && !q && (
+            <Row
+              label={s.nothing}
+              context={null}
+              symbol={{ ios: "cup.and.saucer.fill", android: "coffee" }}
+              depth={0}
+              onPress={() => pick(null)}
+            />
           )}
           {list.map((c) => (
             <Row
@@ -160,11 +214,16 @@ export function PickSheet() {
               label={q ? pathLabel(c) : c.name}
               context={c}
               depth={q ? 0 : c.depth}
-              selected={(mode === 'entry' && entry?.contextId === c.id) || (mode === 'parent' && moving?.parentId === c.id)}
+              selected={
+                (mode === "entry" && entry?.contextId === c.id) ||
+                (mode === "parent" && moving?.parentId === c.id)
+              }
               onPress={() => pick(c)}
             />
           ))}
-          {list.length === 0 && !log.shown && <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{s.noMatch(query)}</Text>}
+          {list.length === 0 && !log.shown && (
+            <Text style={[text.body, styles.empty, { color: t.c.muted }]}>{s.noMatch(query)}</Text>
+          )}
         </View>
       )}
     </ScrollView>
@@ -191,23 +250,31 @@ function onDay(base: number, picked: Date): number {
 function Row({
   label,
   context,
-  symbol = { ios: 'house.fill', android: 'home' },
+  symbol = { ios: "house.fill", android: "home" },
   depth,
   selected,
   onPress,
 }: {
   label: string;
   context: ResolvedContext | null;
-  symbol?: SymbolViewProps['name'];
+  symbol?: SymbolViewProps["name"];
   depth: number;
   selected?: boolean;
   onPress: () => void;
 }) {
   const t = useTheme();
-  const c = t.candy[context?.hue ?? 'gray'];
+  const c = t.candy[context?.hue ?? "gray"];
   return (
-    <Squishy amount={0.06} onPress={onPress} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }}>
-      <View style={[styles.row, { marginLeft: depth * 20 }, selected && { backgroundColor: c.tint }]}>
+    <Squishy
+      amount={0.06}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
+    >
+      <View
+        style={[styles.row, { marginLeft: depth * 20 }, selected && { backgroundColor: c.tint }]}
+      >
         {context ? (
           <Character context={context} size={44} shadow={false} style={styles.jelly} />
         ) : (
@@ -218,7 +285,14 @@ function Row({
         <Text style={[text.body, styles.rowLabel, { color: t.c.ink }]} numberOfLines={1}>
           {label}
         </Text>
-        {selected && <SymbolView name={{ ios: 'checkmark', android: 'check' }} size={16} tintColor={c.ink} weight="heavy" />}
+        {selected && (
+          <SymbolView
+            name={{ ios: "checkmark", android: "check" }}
+            size={16}
+            tintColor={c.ink}
+            weight="heavy"
+          />
+        )}
       </View>
     </Squishy>
   );
@@ -226,14 +300,36 @@ function Row({
 
 const styles = StyleSheet.create({
   subtitle: { marginTop: 2 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, paddingHorizontal: 12, height: 42, marginTop: 16 },
+  search: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 42,
+    marginTop: 16,
+  },
   searchInput: { flex: 1 },
   list: { marginTop: 14, gap: 2 },
-  range: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 54, paddingHorizontal: 8, borderRadius: 18 },
+  range: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    height: 54,
+    paddingHorizontal: 8,
+    borderRadius: 18,
+  },
   // Room for the emoji sticker, which hangs out of a small jelly's box.
   jelly: { marginRight: 6 },
-  home: { width: 44, height: 44, borderRadius: 22, marginRight: 6, alignItems: 'center', justifyContent: 'center' },
+  home: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   rowLabel: { flex: 1 },
-  empty: { textAlign: 'center', marginTop: 20 },
+  empty: { textAlign: "center", marginTop: 20 },
 });

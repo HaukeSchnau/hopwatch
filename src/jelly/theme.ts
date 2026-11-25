@@ -4,11 +4,11 @@
 // Rounded through the system font on iOS and the bundled Nunito on Android, with tabular
 // digits for anything that ticks.
 
-import { Platform, type TextStyle, useColorScheme } from 'react-native';
+import { Platform, type TextStyle, useColorScheme } from "react-native";
 
-import { type Hue, hues } from '@/core';
+import { type Hue, hues } from "@/core";
 
-export type Scheme = 'light' | 'dark';
+export type Scheme = "light" | "dark";
 
 /** Surface and text colors for one appearance. */
 export interface Palette {
@@ -37,38 +37,38 @@ export interface Palette {
 
 const palettes: Record<Scheme, Palette> = {
   light: {
-    bg: '#FFF4E8',
-    sunken: '#F8E7D5',
-    card: '#FFFBF6',
-    line: '#EEDCCB',
-    ink: '#2B1B3D',
-    muted: '#8C7A99',
-    faint: '#BCAEC5',
-    pink: '#FF6FB5',
-    pinkDeep: '#D93A86',
-    danger: '#E8434A',
-    track: '#F4E2D0',
-    trackShade: '#E6CDB6',
-    trackRim: '#FFF9F2',
-    toast: '#2B1B3D',
-    onToast: '#FFFFFF',
+    bg: "#FFF4E8",
+    sunken: "#F8E7D5",
+    card: "#FFFBF6",
+    line: "#EEDCCB",
+    ink: "#2B1B3D",
+    muted: "#8C7A99",
+    faint: "#BCAEC5",
+    pink: "#FF6FB5",
+    pinkDeep: "#D93A86",
+    danger: "#E8434A",
+    track: "#F4E2D0",
+    trackShade: "#E6CDB6",
+    trackRim: "#FFF9F2",
+    toast: "#2B1B3D",
+    onToast: "#FFFFFF",
   },
   dark: {
-    bg: '#150F1D',
-    sunken: '#241B2F',
-    card: '#1E1728',
-    line: '#30263C',
-    ink: '#FBF3FF',
-    muted: '#A99BB8',
-    faint: '#685B79',
-    pink: '#FF78BE',
-    pinkDeep: '#FF8CC8',
-    danger: '#FF6B70',
-    track: '#261D31',
-    trackShade: '#1A1323',
-    trackRim: '#3A2E47',
-    toast: '#FBF3FF',
-    onToast: '#2B1B3D',
+    bg: "#150F1D",
+    sunken: "#241B2F",
+    card: "#1E1728",
+    line: "#30263C",
+    ink: "#FBF3FF",
+    muted: "#A99BB8",
+    faint: "#685B79",
+    pink: "#FF78BE",
+    pinkDeep: "#FF8CC8",
+    danger: "#FF6B70",
+    track: "#261D31",
+    trackShade: "#1A1323",
+    trackRim: "#3A2E47",
+    toast: "#FBF3FF",
+    onToast: "#2B1B3D",
   },
 };
 
@@ -89,25 +89,26 @@ export interface Candy {
   ink: string;
 }
 
-type Base = Pick<Candy, 'fill' | 'light' | 'deep' | 'on'>;
+type Base = Pick<Candy, "fill" | "light" | "deep" | "on">;
 
 const base: Record<Hue, Base> = {
-  red: { fill: '#FF5C6C', light: '#FF9BA6', deep: '#D2324B', on: '#FFFFFF' },
-  orange: { fill: '#FF8A3D', light: '#FFB982', deep: '#DE6116', on: '#FFFFFF' },
-  amber: { fill: '#FFC53D', light: '#FFE393', deep: '#E39510', on: '#4A2A00' },
-  lime: { fill: '#9ED93F', light: '#CDF184', deep: '#68A61B', on: '#223A00' },
-  green: { fill: '#34C97E', light: '#86E7B5', deep: '#1B9A5B', on: '#FFFFFF' },
-  teal: { fill: '#22BFAE', light: '#79E2D6', deep: '#0E9184', on: '#FFFFFF' },
-  cyan: { fill: '#3CC6F0', light: '#93E4FB', deep: '#1896C6', on: '#083246' },
-  blue: { fill: '#4B8BFF', light: '#94BAFF', deep: '#2860D8', on: '#FFFFFF' },
-  indigo: { fill: '#6E6BF5', light: '#A9A7FF', deep: '#4540CD', on: '#FFFFFF' },
-  violet: { fill: '#A36AFF', light: '#CEAEFF', deep: '#773BDB', on: '#FFFFFF' },
-  pink: { fill: '#FF6FB5', light: '#FFA9D3', deep: '#DC3F8A', on: '#FFFFFF' },
-  gray: { fill: '#A597B3', light: '#D2C8DC', deep: '#76688A', on: '#FFFFFF' },
+  red: { fill: "#FF5C6C", light: "#FF9BA6", deep: "#D2324B", on: "#FFFFFF" },
+  orange: { fill: "#FF8A3D", light: "#FFB982", deep: "#DE6116", on: "#FFFFFF" },
+  amber: { fill: "#FFC53D", light: "#FFE393", deep: "#E39510", on: "#4A2A00" },
+  lime: { fill: "#9ED93F", light: "#CDF184", deep: "#68A61B", on: "#223A00" },
+  green: { fill: "#34C97E", light: "#86E7B5", deep: "#1B9A5B", on: "#FFFFFF" },
+  teal: { fill: "#22BFAE", light: "#79E2D6", deep: "#0E9184", on: "#FFFFFF" },
+  cyan: { fill: "#3CC6F0", light: "#93E4FB", deep: "#1896C6", on: "#083246" },
+  blue: { fill: "#4B8BFF", light: "#94BAFF", deep: "#2860D8", on: "#FFFFFF" },
+  indigo: { fill: "#6E6BF5", light: "#A9A7FF", deep: "#4540CD", on: "#FFFFFF" },
+  violet: { fill: "#A36AFF", light: "#CEAEFF", deep: "#773BDB", on: "#FFFFFF" },
+  pink: { fill: "#FF6FB5", light: "#FFA9D3", deep: "#DC3F8A", on: "#FFFFFF" },
+  gray: { fill: "#A597B3", light: "#D2C8DC", deep: "#76688A", on: "#FFFFFF" },
 };
 
 const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-const toHex = (rgb: number[]) => `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+const toHex = (rgb: number[]) =>
+  `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`;
 
 /** Mixes `a` towards `b` by `t` (0 keeps a, 1 gives b). */
 export function mix(a: string, b: string, t: number): string {
@@ -146,7 +147,7 @@ function readable(color: string, against: string, towards: string, ratio: number
 
 function buildCandy(scheme: Scheme): Record<Hue, Candy> {
   const p = palettes[scheme];
-  const dark = scheme === 'dark';
+  const dark = scheme === "dark";
   return Object.fromEntries(
     hues.map((hue) => {
       const c = base[hue];
@@ -156,7 +157,9 @@ function buildCandy(scheme: Scheme): Record<Hue, Candy> {
           ...c,
           tint: mix(p.bg, c.fill, dark ? 0.2 : 0.16),
           glow: alpha(c.deep, dark ? 0.5 : 0.34),
-          ink: dark ? readable(c.light, p.bg, '#FFFFFF', 5) : readable(c.deep, p.bg, '#000000', 3.6),
+          ink: dark
+            ? readable(c.light, p.bg, "#FFFFFF", 5)
+            : readable(c.deep, p.bg, "#000000", 3.6),
         },
       ];
     }),
@@ -176,26 +179,58 @@ export interface Theme {
 
 const themes: Record<Scheme, Theme> = {
   light: {
-    scheme: 'light',
+    scheme: "light",
     dark: false,
     c: palettes.light,
-    candy: buildCandy('light'),
-    inkCandy: { fill: '#3A2852', light: '#5B4677', deep: '#20122F', on: '#FFFFFF', tint: '#F8E7D5', glow: 'rgba(32,18,47,0.3)', ink: '#2B1B3D' },
-    plainCandy: { fill: '#FFFBF6', light: '#FFFFFF', deep: '#F3E2D0', on: '#2B1B3D', tint: '#F8E7D5', glow: 'rgba(120,80,60,0.18)', ink: '#2B1B3D' },
+    candy: buildCandy("light"),
+    inkCandy: {
+      fill: "#3A2852",
+      light: "#5B4677",
+      deep: "#20122F",
+      on: "#FFFFFF",
+      tint: "#F8E7D5",
+      glow: "rgba(32,18,47,0.3)",
+      ink: "#2B1B3D",
+    },
+    plainCandy: {
+      fill: "#FFFBF6",
+      light: "#FFFFFF",
+      deep: "#F3E2D0",
+      on: "#2B1B3D",
+      tint: "#F8E7D5",
+      glow: "rgba(120,80,60,0.18)",
+      ink: "#2B1B3D",
+    },
   },
   dark: {
-    scheme: 'dark',
+    scheme: "dark",
     dark: true,
     c: palettes.dark,
-    candy: buildCandy('dark'),
-    inkCandy: { fill: '#F3E8FA', light: '#FFFFFF', deep: '#C9B8D8', on: '#2B1B3D', tint: '#241B2F', glow: 'rgba(0,0,0,0.5)', ink: '#FBF3FF' },
-    plainCandy: { fill: '#2C2238', light: '#3D3149', deep: '#1E1728', on: '#FBF3FF', tint: '#241B2F', glow: 'rgba(0,0,0,0.45)', ink: '#FBF3FF' },
+    candy: buildCandy("dark"),
+    inkCandy: {
+      fill: "#F3E8FA",
+      light: "#FFFFFF",
+      deep: "#C9B8D8",
+      on: "#2B1B3D",
+      tint: "#241B2F",
+      glow: "rgba(0,0,0,0.5)",
+      ink: "#FBF3FF",
+    },
+    plainCandy: {
+      fill: "#2C2238",
+      light: "#3D3149",
+      deep: "#1E1728",
+      on: "#FBF3FF",
+      tint: "#241B2F",
+      glow: "rgba(0,0,0,0.45)",
+      ink: "#FBF3FF",
+    },
   },
 };
 
 /** Jelly's theme for the current system appearance. */
 export function useTheme(): Theme {
-  return themes[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  return themes[useColorScheme() === "dark" ? "dark" : "light"];
 }
 
 /** The themes, for code outside React. */
@@ -203,40 +238,40 @@ export const lightTheme = themes.light;
 export const darkTheme = themes.dark;
 
 /** The weights of the rounded face Hopwatch uses. */
-export type Weight = '500' | '600' | '700' | '800';
+export type Weight = "500" | "600" | "700" | "800";
 
 /**
  * The system's SF Pro Rounded on iOS. Nunito on Android, embedded in all four weights by
  * expo-font's config plugin (app.json).
  */
-const face = Platform.OS === 'android' ? 'Nunito' : 'ui-rounded';
+const face = Platform.OS === "android" ? "Nunito" : "ui-rounded";
 
 /** The rounded face at `weight`. Use it instead of setting `fontFamily` and `fontWeight` yourself. */
 export const rounded = (weight: Weight): TextStyle => ({ fontFamily: face, fontWeight: weight });
 
 /** Header titles in the rounded face on Android; iOS keeps its system header font. */
 export const headerFont: { fontFamily?: string; fontWeight?: Weight } =
-  Platform.OS === 'android' ? { fontFamily: face, fontWeight: '800' } : {};
+  Platform.OS === "android" ? { fontFamily: face, fontWeight: "800" } : {};
 
 /**
  * Text styles in the rounded face, sized like the iOS text styles. Colors come from the
  * theme at the call site.
  */
 export const text = {
-  largeTitle: { ...rounded('800'), fontSize: 34, letterSpacing: -0.4 },
-  title: { ...rounded('800'), fontSize: 28, letterSpacing: -0.3 },
-  title2: { ...rounded('700'), fontSize: 22, letterSpacing: -0.2 },
-  title3: { ...rounded('700'), fontSize: 20, letterSpacing: -0.1 },
-  headline: { ...rounded('700'), fontSize: 17 },
-  body: { ...rounded('500'), fontSize: 17 },
-  callout: { ...rounded('600'), fontSize: 16 },
-  subhead: { ...rounded('600'), fontSize: 15 },
-  footnote: { ...rounded('600'), fontSize: 13 },
-  caption: { ...rounded('700'), fontSize: 12 },
+  largeTitle: { ...rounded("800"), fontSize: 34, letterSpacing: -0.4 },
+  title: { ...rounded("800"), fontSize: 28, letterSpacing: -0.3 },
+  title2: { ...rounded("700"), fontSize: 22, letterSpacing: -0.2 },
+  title3: { ...rounded("700"), fontSize: 20, letterSpacing: -0.1 },
+  headline: { ...rounded("700"), fontSize: 17 },
+  body: { ...rounded("500"), fontSize: 17 },
+  callout: { ...rounded("600"), fontSize: 16 },
+  subhead: { ...rounded("600"), fontSize: 15 },
+  footnote: { ...rounded("600"), fontSize: 13 },
+  caption: { ...rounded("700"), fontSize: 12 },
 } as const satisfies Record<string, TextStyle>;
 
 /** Digits that don't jiggle as they tick. */
-export const tabular: TextStyle = { fontVariant: ['tabular-nums'] };
+export const tabular: TextStyle = { fontVariant: ["tabular-nums"] };
 
 /** Springs used across the app. Jelly overshoots; snappy settles fast. */
 export const springs = {

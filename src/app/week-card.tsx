@@ -1,4 +1,4 @@
-import { WeekCardSheet } from '@/jelly/report/WeekCard';
+import { WeekCardSheet } from "@/jelly/report/WeekCard";
 
 export default WeekCardSheet;
-export { ErrorScreen as ErrorBoundary } from '@/jelly/ErrorScreen';
+export { ErrorScreen as ErrorBoundary } from "@/jelly/ErrorScreen";

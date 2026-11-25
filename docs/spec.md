@@ -68,30 +68,30 @@ There are two tables, contexts and entries, stored in SQLite through `expo-sqlit
 
 ### contexts
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| id | UUID | Generated on the device |
-| parent\_id | UUID, nullable | Null for a root node; depth is unlimited |
-| name | text |  |
-| color | text, nullable | Inherited from the parent when null |
-| emoji | text, nullable | Inherited from the parent when null |
-| pin\_position | integer, nullable | Null means not pinned; pinned tiles keep fixed positions |
-| sort\_order | integer | Order among siblings in the tree |
-| weekly\_target\_minutes | integer, nullable | Applies to the whole subtree |
-| nudge\_after\_minutes | integer, nullable | Inherited from the parent, then from the global default of 180 |
-| archived\_at | timestamp, nullable | Archived nodes leave the pickers and stay in history and reports |
+| Field                   | Type                | Notes                                                            |
+| ----------------------- | ------------------- | ---------------------------------------------------------------- |
+| id                      | UUID                | Generated on the device                                          |
+| parent\_id              | UUID, nullable      | Null for a root node; depth is unlimited                         |
+| name                    | text                |                                                                  |
+| color                   | text, nullable      | Inherited from the parent when null                              |
+| emoji                   | text, nullable      | Inherited from the parent when null                              |
+| pin\_position           | integer, nullable   | Null means not pinned; pinned tiles keep fixed positions         |
+| sort\_order             | integer             | Order among siblings in the tree                                 |
+| weekly\_target\_minutes | integer, nullable   | Applies to the whole subtree                                     |
+| nudge\_after\_minutes   | integer, nullable   | Inherited from the parent, then from the global default of 180   |
+| archived\_at            | timestamp, nullable | Archived nodes leave the pickers and stay in history and reports |
 
 ### entries
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| id | UUID | Generated on the device |
-| context\_id | UUID | Any node, not only leaves |
-| start\_utc | timestamp |  |
-| start\_offset\_minutes | integer | Local UTC offset at the time of recording |
-| end\_utc | timestamp, nullable | Null means the entry is running |
-| end\_offset\_minutes | integer, nullable |  |
-| note | text, nullable |  |
+| Field                  | Type                | Notes                                     |
+| ---------------------- | ------------------- | ----------------------------------------- |
+| id                     | UUID                | Generated on the device                   |
+| context\_id            | UUID                | Any node, not only leaves                 |
+| start\_utc             | timestamp           |                                           |
+| start\_offset\_minutes | integer             | Local UTC offset at the time of recording |
+| end\_utc               | timestamp, nullable | Null means the entry is running           |
+| end\_offset\_minutes   | integer, nullable   |                                           |
+| note                   | text, nullable      |                                           |
 
 Both tables also carry `created_at`, `updated_at` and `deleted_at`. Deletes are soft. Together with the UUIDs, this is everything a later last-write-wins sync needs.
 
@@ -106,15 +106,15 @@ Two invariants hold after every operation. They should live in one domain module
 
 Each editing operation preserves them in a defined way:
 
-| Operation | Behaviour |
-| --- | --- |
-| Switch to B while A runs | A ends and B starts at the same timestamp |
-| Start backdated into an earlier entry | The earlier entry is trimmed to end at the new start |
-| Stop backdated | The end is clamped so that it is never before the entry's start |
-| Drag a block edge into a neighbour | The neighbour is trimmed; a neighbour trimmed to under 30 seconds is removed |
-| Fill a gap | The new entry is clamped to the gap |
-| Undo a switch | The new entry is removed and the previous entry is reopened |
-| Entry shorter than 30 seconds on stop or switch | Discarded automatically |
+| Operation                                       | Behaviour                                                                    |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| Switch to B while A runs                        | A ends and B starts at the same timestamp                                    |
+| Start backdated into an earlier entry           | The earlier entry is trimmed to end at the new start                         |
+| Stop backdated                                  | The end is clamped so that it is never before the entry's start              |
+| Drag a block edge into a neighbour              | The neighbour is trimmed; a neighbour trimmed to under 30 seconds is removed |
+| Fill a gap                                      | The new entry is clamped to the gap                                          |
+| Undo a switch                                   | The new entry is removed and the previous entry is reopened                  |
+| Entry shorter than 30 seconds on stop or switch | Discarded automatically                                                      |
 
 ### Time
 
@@ -168,13 +168,13 @@ The MVP has one report screen with a day and a week mode. It shows an expandable
 
 The five questions from the purpose section map onto this screen as follows:
 
-| Question | Answered by |
-| --- | --- |
-| Where did my week go? | Tree roll-up in week mode |
-| How many hours did each client get? | The clients subtree, expanded |
-| How fragmented are my days? | Blocks per day and median block length |
+| Question                              | Answered by                                       |
+| ------------------------------------- | ------------------------------------------------- |
+| Where did my week go?                 | Tree roll-up in week mode                         |
+| How many hours did each client get?   | The clients subtree, expanded                     |
+| How fragmented are my days?           | Blocks per day and median block length            |
 | Is there time left for side projects? | The side projects subtree next to the job subtree |
-| Too many or too few job hours? | Weekly target line on the job context |
+| Too many or too few job hours?        | Weekly target line on the job context             |
 
 Anything beyond this runs on the exported data, outside the app, until a pattern proves worth building in.
 
@@ -188,11 +188,11 @@ Starting an entry schedules one local notification for the moment the entry exce
 
 The app registers a URL scheme with three actions:
 
-| Link | Action |
-| --- | --- |
-| `tracker://start?context=<id>` | Switch to that context |
-| `tracker://stop` | Stop the running entry |
-| `tracker://resume` | Start the previous context again |
+| Link                           | Action                           |
+| ------------------------------ | -------------------------------- |
+| `tracker://start?context=<id>` | Switch to that context           |
+| `tracker://stop`               | Stop the running entry           |
+| `tracker://resume`             | Start the previous context again |
 
 The iOS Shortcuts app can open these links, which gives home screen icons for single contexts and automations such as "when I arrive at the office, start Job". The app briefly comes to the foreground each time; the native actions below don't. Each context's settings screen offers its link for copying.
 
@@ -200,12 +200,12 @@ The iOS Shortcuts app can open these links, which gives home screen icons for si
 
 Since 1.2.0 the common switches work without opening the app, with the app suspended or killed:
 
-| | iOS | Android |
-| --- | --- | --- |
-| Running timer | Live Activity with Stop and Back | Ongoing notification with Stop and Back |
-| Home screen | Widgets: running + Back/Stop, and up to six pinned jellies | Widget: running, Stop, Back and four pinned jellies |
-| System | Controls for Control Center, the lock screen and the Action Button: Back or Resume, Stop, Start a jelly | Quick Settings tile: Back or Resume |
-| Voice | Siri, Spotlight and Shortcuts actions: Start a jelly, Back, Stop | (launcher shortcuts) |
+|               | iOS                                                                                                     | Android                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Running timer | Live Activity with Stop and Back                                                                        | Ongoing notification with Stop and Back             |
+| Home screen   | Widgets: running + Back/Stop, and up to six pinned jellies                                              | Widget: running, Stop, Back and four pinned jellies |
+| System        | Controls for Control Center, the lock screen and the Action Button: Back or Resume, Stop, Start a jelly | Quick Settings tile: Back or Resume                 |
+| Voice         | Siri, Spotlight and Shortcuts actions: Start a jelly, Back, Stop                                        | (launcher shortcuts)                                |
 
 A tap records a command; the app replays it through the timeline the next time it runs, which on iOS is right away (the system launches the app in the background for the intent) and on Android within a second (a headless task). A command made from a stale view (something else is running by now) is dropped, so a tap can't undo a switch made in the app.
 

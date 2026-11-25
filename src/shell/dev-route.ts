@@ -1,4 +1,4 @@
-import { Settings } from 'react-native';
+import { Settings } from "react-native";
 
 /**
  * Development only: `simctl launch … -hopwatchRoute /day` opens that route on launch.
@@ -7,6 +7,6 @@ import { Settings } from 'react-native';
  */
 export function devLaunchRoute(): string | null {
   if (!__DEV__) return null;
-  const route: unknown = Settings.get('hopwatchRoute');
-  return typeof route === 'string' && route.startsWith('/') ? route : null;
+  const route: unknown = Settings.get("hopwatchRoute");
+  return typeof route === "string" && route.startsWith("/") ? route : null;
 }

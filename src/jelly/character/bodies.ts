@@ -3,10 +3,10 @@
 // neckwear go) are measured from the outline, so parts fit every body and every seeded
 // variation of it.
 
-import { Skia, type SkPath } from '@shopify/react-native-skia';
+import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-import { closedSpline, hashSeed, random } from '../geometry';
-import type { Body } from './traits';
+import { closedSpline, hashSeed, random } from "../geometry";
+import type { Body } from "./traits";
 
 export const UNIT = 100;
 export const FLOOR = 90;
@@ -104,21 +104,32 @@ const defs: Record<Body, Def> = {
     face: { x: 50, y: 61.5, s: 1.12 },
   },
   gumdrop: {
-    path: () => svg('M 22 90 C 12 90 9 84 10.5 75 C 13 55 27 27 50 27 C 73 27 87 55 89.5 75 C 91 84 88 90 78 90 Z'),
+    path: () =>
+      svg(
+        "M 22 90 C 12 90 9 84 10.5 75 C 13 55 27 27 50 27 C 73 27 87 55 89.5 75 C 91 84 88 90 78 90 Z",
+      ),
     face: { x: 50, y: 65, s: 1.06 },
   },
   drop: {
-    path: () => svg('M 53 11 C 55 27 85 40 85 63 C 85 79 70 90 50 90 C 30 90 15 79 15 63 C 15 42 43 30 53 11 Z'),
+    path: () =>
+      svg(
+        "M 53 11 C 55 27 85 40 85 63 C 85 79 70 90 50 90 C 30 90 15 79 15 63 C 15 42 43 30 53 11 Z",
+      ),
     face: { x: 50, y: 65, s: 1.06 },
     mirror: true,
   },
   bean: {
     path: () =>
-      svg('M 12 65 C 12 49 24 40.5 37 41.5 C 43 42 46 45 50 45 C 54 45 57 42 63 41.5 C 76 40.5 88 49 88 65 C 88 81 72 90 50 90 C 28 90 12 81 12 65 Z'),
+      svg(
+        "M 12 65 C 12 49 24 40.5 37 41.5 C 43 42 46 45 50 45 C 54 45 57 42 63 41.5 C 76 40.5 88 49 88 65 C 88 81 72 90 50 90 C 28 90 12 81 12 65 Z",
+      ),
     face: { x: 50, y: 67, s: 1.06 },
   },
   mochi: {
-    path: () => svg('M 21 90 C 12.5 90 9 85 9 78 C 9 58.5 28.5 44 50 44 C 71.5 44 91 58.5 91 78 C 91 85 87.5 90 79 90 Z'),
+    path: () =>
+      svg(
+        "M 21 90 C 12.5 90 9 85 9 78 C 9 58.5 28.5 44 50 44 C 71.5 44 91 58.5 91 78 C 91 85 87.5 90 79 90 Z",
+      ),
     face: { x: 50, y: 69, s: 1 },
   },
   capsule: {
@@ -152,7 +163,9 @@ function blobPath(seed: string): SkPath {
   const next = random(hashSeed(`lumps:${seed}`));
   const count = 12;
   const raw = Array.from({ length: count }, () => next() * 2 - 1);
-  const wobble = raw.map((v, i) => (raw[(i + count - 1) % count] + 2 * v + raw[(i + 1) % count]) / 4);
+  const wobble = raw.map(
+    (v, i) => (raw[(i + count - 1) % count] + 2 * v + raw[(i + 1) % count]) / 4,
+  );
   const exponent = 2.6;
   const cx = 50;
   const cy = 61;
@@ -199,7 +212,7 @@ const widthAt = (path: SkPath, x: number, y: number) =>
 /** The body's width at height `y` through the face's centre line (0 outside the body). */
 export const widthOf = (geo: BodyGeo, y: number) => widthAt(geo.path, geo.face.x, y);
 
-function measure(path: SkPath, face: Def['face']): BodyGeo {
+function measure(path: SkPath, face: Def["face"]): BodyGeo {
   const bounds = path.computeTightBounds();
   const top = bounds.y;
   const bottom = bounds.y + bounds.height;
@@ -265,7 +278,9 @@ export function bodyGeo(body: Body, seed: string): BodyGeo {
   // Settle every body on the floor before stretching it around its foot.
   const raw = path.computeTightBounds();
   path.offset(0, FLOOR - (raw.y + raw.height));
-  path.transform(Skia.Matrix([sx * flip, 0, 50 - 50 * sx * flip, 0, sy, FLOOR - FLOOR * sy, 0, 0, 1]));
+  path.transform(
+    Skia.Matrix([sx * flip, 0, 50 - 50 * sx * flip, 0, sy, FLOOR - FLOOR * sy, 0, 0, 1]),
+  );
   const face = { x: def.face.x, y: FLOOR - (FLOOR - def.face.y) * sy, s: def.face.s };
   const geo = measure(path, face);
   if (cache.size > 400) cache.clear();

@@ -2,15 +2,15 @@
 // expo-router's `ErrorBoundary`. Plain React Native only, so it still renders when Skia,
 // gestures or the store are what failed.
 
-import type { ErrorBoundaryProps } from 'expo-router';
-import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { ErrorBoundaryProps } from "expo-router";
+import { router } from "expo-router";
+import { useEffect } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { shellText } from '@/i18n/shell';
+import { shellText } from "@/i18n/shell";
 
-import { text, useTheme } from './theme';
+import { text, useTheme } from "./theme";
 
 export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
   const t = useTheme();
@@ -31,7 +31,11 @@ export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
         <Pressable
           accessibilityRole="button"
           onPress={retry}
-          style={({ pressed }) => [styles.button, { backgroundColor: t.c.pinkDeep, opacity: pressed ? 0.7 : 1 }]}>
+          style={({ pressed }) => [
+            styles.button,
+            { backgroundColor: t.c.pinkDeep, opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
           <Text style={[text.headline, { color: t.c.bg }]}>{shellText.error.retry}</Text>
         </Pressable>
         {canClose && (
@@ -45,9 +49,9 @@ export function ErrorScreen({ error, retry }: ErrorBoundaryProps) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
+  screen: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 32 },
   emoji: { fontSize: 72, marginBottom: 8 },
-  center: { textAlign: 'center' },
-  buttons: { marginTop: 16, gap: 8, alignSelf: 'stretch' },
-  button: { alignItems: 'center', borderRadius: 16, paddingVertical: 14 },
+  center: { textAlign: "center" },
+  buttons: { marginTop: 16, gap: 8, alignSelf: "stretch" },
+  button: { alignItems: "center", borderRadius: 16, paddingVertical: 14 },
 });

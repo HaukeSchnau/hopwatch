@@ -38,7 +38,9 @@ export function pack(values: number[], width: number, height: number, gap = 6): 
   if (values.length === 0) return [];
   // Radii normalised so the biggest is 100, which makes `gap` a share of it.
   const max = Math.max(...values, 1);
-  const order = values.map((v, i) => ({ i, r: Math.max(8, Math.sqrt(Math.max(v, 0) / max) * 100) })).sort((a, b) => b.r - a.r);
+  const order = values
+    .map((v, i) => ({ i, r: Math.max(8, Math.sqrt(Math.max(v, 0) / max) * 100) }))
+    .sort((a, b) => b.r - a.r);
   const placed: Circle[] = [];
   const byIndex = new Map<number, Circle>();
   // Squash towards a wide layout by weighting vertical distance more.

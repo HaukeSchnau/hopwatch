@@ -17,57 +17,57 @@ sake. These rules keep the three people (or agents) writing it consistent.
 
 ## Glossary
 
-| English | German | Notes |
-|---|---|---|
-| jelly, jellies | Jelly, Jellys | das Jelly. Hopwatch's word for a context; keep it as a name. |
-| Now / Day / Week / Stuff (tabs) | Jetzt / Tag / Woche / Kram | |
-| entry, entries | Eintrag, Einträge | |
-| switch to X | zu X wechseln | Toast: „Zu Hund gewechselt“ |
-| Back to X | Zurück zu X | |
-| Resume X | X fortsetzen | |
-| start / stop (verbs) | starten / stoppen | Button: „Stopp“ |
-| running | läuft | |
-| since 09:12 | seit 09:12 | |
-| untracked | nicht erfasst | |
-| fill the gap | Lücke füllen | |
-| backdate | zurückdatieren | Prefer showing the time: „Seit 14:50“ |
-| weekly target | Wochenziel | |
-| job hours, work days | Arbeitszeit, Arbeitstage | Jelly editor |
-| day off (vacation, sick, other) | freier Tag (Urlaub, krank, anderer Grund) | |
-| public holiday | Feiertag | |
-| overtime balance, starting balance | Überstundenkonto, Startsaldo | |
-| nudge, nudge after | Erinnerung, erinnern nach | |
-| pin, pinned | anpinnen, angepinnt | Unpin: „lösen“ |
-| archive, archived | archivieren, archiviert | |
-| group, inside X, top level | Gruppe, in X, oberste Ebene | |
-| look, mood | Look, Laune | |
-| suggested ✨ | vorgeschlagen ✨ | |
-| Undo | Rückgängig | |
-| Settings | Einstellungen | |
-| export / restore | exportieren / wiederherstellen | |
-| erase all data | alle Daten löschen | |
-| Today / Yesterday | Heute / Gestern | |
-| min, h | Min., Std. | |
-| tracked | erfasst | |
-| added (an entry) | eingetragen | Toast: „Fokus eingetragen“ |
-| almost / just over (summary) | knapp / gut | „knapp 38 Stunden“; in a week sentence „Ziel von 40 Stunden“ reads better than „Wochenziel“ |
-| bean, bead, block | Bohne, Perle, Block (Blöcke) | Day and Week visuals |
-| target jars, totals, bubbles | Zielgläser, Summen, Blasen | Week tab |
-| At a time… | Uhrzeit wählen… | Menus |
-| greetings | Nachteule / Morgen! / Hallo! / Abend! / Noch wach? | Now header |
-| dial | Rad | |
-| unarchive | zurückholen | |
-| pin to Now / unpin | Auf Jetzt anpinnen / Von Jetzt lösen | |
-| start at 14:50 / stop at 14:50 (buttons) | Ab 14:50 starten / Um 14:50 stoppen | „Seit“ reads oddly on a button |
-| N a week | N pro Woche | |
-| Shortcuts, Action Button, start link | Kurzbefehle, Aktionstaste, Start-Link | |
-| sample data | Beispieldaten | |
-| Suggest / Surprise me / Automatic | Vorschlag / Überrasch mich / Automatisch | |
-| look parts | Körper, Augen, Mund, Kopf, Hals, Muster, Laune | „Muster“ for coat |
-| squishy sounds | Glibbertöne | |
-| Sound (settings section) | Ton | |
-| Export Data | Daten exportieren | |
-| One more thing | Noch eine Sache | before the notification prompt |
+| English                                  | German                                             | Notes                                                                                       |
+| ---------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| jelly, jellies                           | Jelly, Jellys                                      | das Jelly. Hopwatch's word for a context; keep it as a name.                                |
+| Now / Day / Week / Stuff (tabs)          | Jetzt / Tag / Woche / Kram                         |                                                                                             |
+| entry, entries                           | Eintrag, Einträge                                  |                                                                                             |
+| switch to X                              | zu X wechseln                                      | Toast: „Zu Hund gewechselt“                                                                 |
+| Back to X                                | Zurück zu X                                        |                                                                                             |
+| Resume X                                 | X fortsetzen                                       |                                                                                             |
+| start / stop (verbs)                     | starten / stoppen                                  | Button: „Stopp“                                                                             |
+| running                                  | läuft                                              |                                                                                             |
+| since 09:12                              | seit 09:12                                         |                                                                                             |
+| untracked                                | nicht erfasst                                      |                                                                                             |
+| fill the gap                             | Lücke füllen                                       |                                                                                             |
+| backdate                                 | zurückdatieren                                     | Prefer showing the time: „Seit 14:50“                                                       |
+| weekly target                            | Wochenziel                                         |                                                                                             |
+| job hours, work days                     | Arbeitszeit, Arbeitstage                           | Jelly editor                                                                                |
+| day off (vacation, sick, other)          | freier Tag (Urlaub, krank, anderer Grund)          |                                                                                             |
+| public holiday                           | Feiertag                                           |                                                                                             |
+| overtime balance, starting balance       | Überstundenkonto, Startsaldo                       |                                                                                             |
+| nudge, nudge after                       | Erinnerung, erinnern nach                          |                                                                                             |
+| pin, pinned                              | anpinnen, angepinnt                                | Unpin: „lösen“                                                                              |
+| archive, archived                        | archivieren, archiviert                            |                                                                                             |
+| group, inside X, top level               | Gruppe, in X, oberste Ebene                        |                                                                                             |
+| look, mood                               | Look, Laune                                        |                                                                                             |
+| suggested ✨                             | vorgeschlagen ✨                                   |                                                                                             |
+| Undo                                     | Rückgängig                                         |                                                                                             |
+| Settings                                 | Einstellungen                                      |                                                                                             |
+| export / restore                         | exportieren / wiederherstellen                     |                                                                                             |
+| erase all data                           | alle Daten löschen                                 |                                                                                             |
+| Today / Yesterday                        | Heute / Gestern                                    |                                                                                             |
+| min, h                                   | Min., Std.                                         |                                                                                             |
+| tracked                                  | erfasst                                            |                                                                                             |
+| added (an entry)                         | eingetragen                                        | Toast: „Fokus eingetragen“                                                                  |
+| almost / just over (summary)             | knapp / gut                                        | „knapp 38 Stunden“; in a week sentence „Ziel von 40 Stunden“ reads better than „Wochenziel“ |
+| bean, bead, block                        | Bohne, Perle, Block (Blöcke)                       | Day and Week visuals                                                                        |
+| target jars, totals, bubbles             | Zielgläser, Summen, Blasen                         | Week tab                                                                                    |
+| At a time…                               | Uhrzeit wählen…                                    | Menus                                                                                       |
+| greetings                                | Nachteule / Morgen! / Hallo! / Abend! / Noch wach? | Now header                                                                                  |
+| dial                                     | Rad                                                |                                                                                             |
+| unarchive                                | zurückholen                                        |                                                                                             |
+| pin to Now / unpin                       | Auf Jetzt anpinnen / Von Jetzt lösen               |                                                                                             |
+| start at 14:50 / stop at 14:50 (buttons) | Ab 14:50 starten / Um 14:50 stoppen                | „Seit“ reads oddly on a button                                                              |
+| N a week                                 | N pro Woche                                        |                                                                                             |
+| Shortcuts, Action Button, start link     | Kurzbefehle, Aktionstaste, Start-Link              |                                                                                             |
+| sample data                              | Beispieldaten                                      |                                                                                             |
+| Suggest / Surprise me / Automatic        | Vorschlag / Überrasch mich / Automatisch           |                                                                                             |
+| look parts                               | Körper, Augen, Mund, Kopf, Hals, Muster, Laune     | „Muster“ for coat                                                                           |
+| squishy sounds                           | Glibbertöne                                        |                                                                                             |
+| Sound (settings section)                 | Ton                                                |                                                                                             |
+| Export Data                              | Daten exportieren                                  |                                                                                             |
+| One more thing                           | Noch eine Sache                                    | before the notification prompt                                                              |
 
 In `localized({ en, de })`, give optional parameters as `flag?: boolean`, not with a default
 value: a default in the `en` function makes the `de` side lose its parameter types.

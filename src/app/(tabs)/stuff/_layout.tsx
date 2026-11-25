@@ -1,3 +1,3 @@
-import { TabStack } from '@/jelly/nav';
+import { TabStack } from "@/jelly/nav";
 
 export default TabStack;

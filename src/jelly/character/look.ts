@@ -4,11 +4,11 @@
 // its emoji or name points at (derive.ts). All of it is stored as device-local
 // preferences, so nothing here touches tracking data.
 
-import { actions, type Json, usePref } from '@/core';
+import { actions, type Json, usePref } from "@/core";
 
-import { freshPick, parseSuggestion, type StoredSuggestion } from './ask';
-import { type LookSource, lookFor } from './derive';
-import { type Look, parseLook, traitKeys, withTraits } from './traits';
+import { freshPick, parseSuggestion, type StoredSuggestion } from "./ask";
+import { type LookSource, lookFor } from "./derive";
+import { type Look, parseLook, traitKeys, withTraits } from "./traits";
 
 /** Preference key of the custom look: only the traits picked by hand. */
 export const customKey = (id: string) => `jelly.look.${id}`;
@@ -16,10 +16,12 @@ export const customKey = (id: string) => `jelly.look.${id}`;
 export const suggestedKey = (id: string) => `jelly.look.ai.${id}`;
 
 /** The traits someone picked by hand for `id`, or null. */
-export const useCustomLook = (id: string) => usePref<Partial<Look> | null>(customKey(id), null, parseLook);
+export const useCustomLook = (id: string) =>
+  usePref<Partial<Look> | null>(customKey(id), null, parseLook);
 
 /** The model's stored picks for `id`, whatever name they were made for. */
-export const useStoredSuggestion = (id: string) => usePref<StoredSuggestion | null>(suggestedKey(id), null, parseSuggestion);
+export const useStoredSuggestion = (id: string) =>
+  usePref<StoredSuggestion | null>(suggestedKey(id), null, parseSuggestion);
 
 /** The look "Automatic" stands for: the derived look, dressed by the model's picks while they fit. */
 export function useAutoLook(source: LookSource): Look {

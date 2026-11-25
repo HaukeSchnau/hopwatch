@@ -1,19 +1,19 @@
 // Backdated start: "started N minutes ago" chips or a specific time. Opened by
 // long-pressing a tile, bean or the back pill, and by tapping "since 09:12".
 
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Text } from 'react-native';
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { Text } from "react-native";
 
-import { actions, formatClock, MINUTE, useEntries, useNow, useRunning, useTree } from '@/core';
-import { sheetsText } from '@/i18n/sheets';
+import { actions, formatClock, MINUTE, useEntries, useNow, useRunning, useTree } from "@/core";
+import { sheetsText } from "@/i18n/sheets";
 
-import { play } from '../feedback';
-import { startConsequence } from '../menus';
-import { noteSource } from '../now/choreo';
-import { JellyButton } from '../ui';
-import { AGO, AgoChips, pastAt, SheetBody, SheetHeader, useSheetStyles } from './parts';
-import { TimeWheel } from './time';
+import { play } from "../feedback";
+import { startConsequence } from "../menus";
+import { noteSource } from "../now/choreo";
+import { JellyButton } from "../ui";
+import { AGO, AgoChips, pastAt, SheetBody, SheetHeader, useSheetStyles } from "./parts";
+import { TimeWheel } from "./time";
 
 const roundDown = (t: number, step: number) => Math.floor(t / step) * step;
 
@@ -25,12 +25,18 @@ export function StartSheet() {
   const entries = useEntries();
   const now = useNow(15_000);
   const ss = useSheetStyles();
-  const [picked, setPicked] = useState(() => new Date(roundDown(Date.now() - 15 * MINUTE, 5 * MINUTE)));
+  const [picked, setPicked] = useState(
+    () => new Date(roundDown(Date.now() - 15 * MINUTE, 5 * MINUTE)),
+  );
 
   if (!context) {
     return (
       <SheetBody>
-        <SheetHeader context={null} title={sheetsText.start.gone} subtitle={sheetsText.start.goneDetail} />
+        <SheetHeader
+          context={null}
+          title={sheetsText.start.gone}
+          subtitle={sheetsText.start.goneDetail}
+        />
       </SheetBody>
     );
   }
@@ -40,11 +46,15 @@ export function StartSheet() {
   const start = (t: number) => {
     if (isRunning && running) {
       // Correcting the running entry's start, earlier or later.
-      actions.updateEntry(running.entry.id, { startUtc: t }, sheetsText.nameSince(context.name, formatClock(t)));
+      actions.updateEntry(
+        running.entry.id,
+        { startUtc: t },
+        sheetsText.nameSince(context.name, formatClock(t)),
+      );
     } else {
-      noteSource(context.id, 'start-sheet');
+      noteSource(context.id, "start-sheet");
       actions.start(context.id, { at: t });
-      play('pop');
+      play("pop");
     }
     router.back();
   };
@@ -53,16 +63,28 @@ export function StartSheet() {
     <SheetBody>
       <SheetHeader
         context={context}
-        title={isRunning ? sheetsText.start.correcting(context.name) : sheetsText.start.backdating(context.name)}
-        subtitle={isRunning && running ? sheetsText.runningSince(formatClock(running.entry.startUtc)) : sheetsText.start.when}
+        title={
+          isRunning
+            ? sheetsText.start.correcting(context.name)
+            : sheetsText.start.backdating(context.name)
+        }
+        subtitle={
+          isRunning && running
+            ? sheetsText.runningSince(formatClock(running.entry.startUtc))
+            : sheetsText.start.when
+        }
       />
       <Text style={ss.label}>{sheetsText.start.started}</Text>
       <AgoChips hue={context.hue} now={now} options={AGO} onPick={start} />
       <Text style={ss.label}>{sheetsText.orAt}</Text>
       <TimeWheel value={picked} onChange={setPicked} hue={context.hue} />
-      <Text style={ss.hint}>{startConsequence(entries, tree, context.id, at, now)?.text ?? ' '}</Text>
+      <Text style={ss.hint}>
+        {startConsequence(entries, tree, context.id, at, now)?.text ?? " "}
+      </Text>
       <JellyButton
-        label={isRunning ? sheetsText.moveStartTo(formatClock(at)) : sheetsText.startAt(formatClock(at))}
+        label={
+          isRunning ? sheetsText.moveStartTo(formatClock(at)) : sheetsText.startAt(formatClock(at))
+        }
         hue={context.hue}
         size="large"
         onPress={() => start(at)}

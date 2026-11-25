@@ -1,4 +1,4 @@
-import { ContextEditor } from '@/jelly/stuff/ContextEditor';
+import { ContextEditor } from "@/jelly/stuff/ContextEditor";
 
 export default ContextEditor;
-export { ErrorScreen as ErrorBoundary } from '@/jelly/ErrorScreen';
+export { ErrorScreen as ErrorBoundary } from "@/jelly/ErrorScreen";

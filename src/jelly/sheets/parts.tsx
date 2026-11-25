@@ -1,33 +1,33 @@
 // Pieces shared by Jelly's time sheets: the header with a character and the chunky
 // "N min ago" chips. The time pickers are in time.tsx.
 
-import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { ReactNode } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { formatClock, type Hue, MINUTE, type ResolvedContext } from '@/core';
-import { locale } from '@/i18n';
-import { sheetsText } from '@/i18n/sheets';
+import { formatClock, type Hue, MINUTE, type ResolvedContext } from "@/core";
+import { locale } from "@/i18n";
+import { sheetsText } from "@/i18n/sheets";
 
-import { Character } from '../Character';
-import { useFace, useLively } from '../Gummy';
-import { rounded, tabular, text, useTheme } from '../theme';
-import { CandySurface, Squishy } from '../ui';
+import { Character } from "../Character";
+import { useFace, useLively } from "../Gummy";
+import { rounded, tabular, text, useTheme } from "../theme";
+import { CandySurface, Squishy } from "../ui";
 
 export function SheetHeader({
   context,
   title,
   subtitle,
-  mood = 'awake',
+  mood = "awake",
 }: {
   context: ResolvedContext | null;
   title: string;
   subtitle?: ReactNode;
-  mood?: 'awake' | 'asleep';
+  mood?: "awake" | "asleep";
 }) {
   const t = useTheme();
   const face = useFace(mood);
-  useLively(face, mood === 'awake');
+  useLively(face, mood === "awake");
   return (
     <View style={styles.header}>
       {context && <Character context={context} size={72} face={face} />}
@@ -35,7 +35,9 @@ export function SheetHeader({
         <Text style={[text.title2, { color: t.c.ink }]} numberOfLines={2}>
           {title}
         </Text>
-        {subtitle ? <Text style={[text.subhead, styles.subtitle, { color: t.c.muted }]}>{subtitle}</Text> : null}
+        {subtitle ? (
+          <Text style={[text.subhead, styles.subtitle, { color: t.c.muted }]}>{subtitle}</Text>
+        ) : null}
       </View>
     </View>
   );
@@ -74,10 +76,13 @@ export function AgoChips({
             onPress={() => onPick(at)}
             style={[styles.chipWrap, disabled && { opacity: 0.3 }]}
             accessibilityRole="button"
-            accessibilityLabel={sheetsText.agoLabel(m, formatClock(at))}>
+            accessibilityLabel={sheetsText.agoLabel(m, formatClock(at))}
+          >
             <CandySurface hue={hue} radius={22} style={styles.chip}>
               <Text style={[styles.chipNumber, { color: c.on }]}>{m}</Text>
-              <Text style={[text.caption, styles.chipUnit, { color: c.on }]}>{sheetsText.agoUnit}</Text>
+              <Text style={[text.caption, styles.chipUnit, { color: c.on }]}>
+                {sheetsText.agoUnit}
+              </Text>
             </CandySurface>
             <Text style={[text.caption, tabular, { color: t.c.muted }]}>{formatClock(at)}</Text>
           </Squishy>
@@ -88,7 +93,7 @@ export function AgoChips({
 }
 
 /** For native date and time pickers: the app's language with a 24-hour clock, as "de_DE". */
-export const pickerLocale = locale.replace('-', '_');
+export const pickerLocale = locale.replace("-", "_");
 
 /**
  * The most recent past instant at the picked wall-clock time: 23:30 picked at 00:10
@@ -123,13 +128,13 @@ export function SheetBody({ children }: { children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  header: { flexDirection: "row", alignItems: "center", gap: 12 },
   subtitle: { marginTop: 2 },
   label: { marginTop: 22, marginBottom: 10 },
-  hint: { textAlign: 'center', marginTop: 10 },
-  chips: { flexDirection: 'row', justifyContent: 'space-between' },
-  chipWrap: { alignItems: 'center', gap: 5 },
-  chip: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
-  chipNumber: { ...rounded('800'), fontSize: 24, lineHeight: 26 },
+  hint: { textAlign: "center", marginTop: 10 },
+  chips: { flexDirection: "row", justifyContent: "space-between" },
+  chipWrap: { alignItems: "center", gap: 5 },
+  chip: { width: 62, height: 62, alignItems: "center", justifyContent: "center" },
+  chipNumber: { ...rounded("800"), fontSize: 24, lineHeight: 26 },
   chipUnit: { fontSize: 10, marginTop: -2, opacity: 0.9 },
 });

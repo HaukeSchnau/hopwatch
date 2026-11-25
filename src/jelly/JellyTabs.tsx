@@ -6,18 +6,18 @@
 // Android gets a Material navigation bar in Jelly's colors with Material Symbols, and the
 // mini player as a card above it inside Day, Week and Stuff (see TabStack in nav.tsx).
 
-import { router } from 'expo-router';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useEffect } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { router } from "expo-router";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useEffect } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 
-import { actions, useIntent, useRunning, useHopwatch, useTree } from '@/core';
-import { shellText } from '@/i18n/shell';
+import { actions, useIntent, useRunning, useHopwatch, useTree } from "@/core";
+import { shellText } from "@/i18n/shell";
 
-import { MiniPlayer } from './MiniPlayer';
-import { showTab, useShownTab } from './showing';
-import { alpha, rounded, type Theme, useTheme } from './theme';
-import { Welcome } from './welcome/Welcome';
+import { MiniPlayer } from "./MiniPlayer";
+import { showTab, useShownTab } from "./showing";
+import { alpha, rounded, type Theme, useTheme } from "./theme";
+import { Welcome } from "./welcome/Welcome";
 
 export function JellyTabs() {
   const t = useTheme();
@@ -28,7 +28,7 @@ export function JellyTabs() {
   useDayGapsIntent();
 
   if (empty) return <Welcome />;
-  const accessory = running !== null && tab !== 'index';
+  const accessory = running !== null && tab !== "index";
   const tint = running ? t.candy[running.context.hue].ink : t.c.pinkDeep;
 
   return (
@@ -36,8 +36,11 @@ export function JellyTabs() {
       <NativeTabs
         minimizeBehavior="onScrollDown"
         tintColor={tint}
-        {...(Platform.OS === 'android' ? materialBar(t, tint, running ? t.candy[running.context.hue].tint : null) : {})}
-        screenListeners={({ route }) => ({ focus: () => showTab(route.name) })}>
+        {...(Platform.OS === "android"
+          ? materialBar(t, tint, running ? t.candy[running.context.hue].tint : null)
+          : {})}
+        screenListeners={({ route }) => ({ focus: () => showTab(route.name) })}
+      >
         {accessory ? (
           <NativeTabs.BottomAccessory>
             <MiniPlayer running={running} />
@@ -45,7 +48,10 @@ export function JellyTabs() {
         ) : null}
         <NativeTabs.Trigger name="index">
           <NativeTabs.Trigger.Label>{shellText.tabs.now}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf={{ default: 'face.smiling', selected: 'face.smiling.inverse' }} md="mood" />
+          <NativeTabs.Trigger.Icon
+            sf={{ default: "face.smiling", selected: "face.smiling.inverse" }}
+            md="mood"
+          />
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="day">
           <NativeTabs.Trigger.Label>{shellText.tabs.day}</NativeTabs.Trigger.Label>
@@ -53,11 +59,17 @@ export function JellyTabs() {
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="week">
           <NativeTabs.Trigger.Label>{shellText.tabs.week}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf={{ default: 'circle.hexagongrid', selected: 'circle.hexagongrid.fill' }} md="bubble_chart" />
+          <NativeTabs.Trigger.Icon
+            sf={{ default: "circle.hexagongrid", selected: "circle.hexagongrid.fill" }}
+            md="bubble_chart"
+          />
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="stuff">
           <NativeTabs.Trigger.Label>{shellText.tabs.stuff}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf={{ default: 'square.stack.3d.up', selected: 'square.stack.3d.up.fill' }} md="stacks" />
+          <NativeTabs.Trigger.Icon
+            sf={{ default: "square.stack.3d.up", selected: "square.stack.3d.up.fill" }}
+            md="stacks"
+          />
         </NativeTabs.Trigger>
       </NativeTabs>
     </View>
@@ -69,14 +81,14 @@ export function JellyTabs() {
  * selected one in `tint` on a pill in the running jelly's wash (pink when nothing runs).
  */
 function materialBar(t: Theme, tint: string, wash: string | null) {
-  const label = { ...rounded('700'), fontSize: 12 };
+  const label = { ...rounded("700"), fontSize: 12 };
   return {
     backgroundColor: t.c.card,
     iconColor: { default: t.c.muted, selected: tint },
     labelStyle: { default: { ...label, color: t.c.muted }, selected: { ...label, color: tint } },
     indicatorColor: wash ?? t.candy.pink.tint,
     rippleColor: alpha(tint, 0.16),
-    labelVisibilityMode: 'labeled',
+    labelVisibilityMode: "labeled",
   } as const;
 }
 
@@ -84,11 +96,14 @@ function materialBar(t: Theme, tint: string, wash: string | null) {
 function useDayGapsIntent() {
   const intent = useIntent();
   useEffect(() => {
-    if (intent?.kind !== 'day-gaps') return;
+    if (intent?.kind !== "day-gaps") return;
     actions.consumeIntent();
     // Close any sheet in front first; navigating to a tab leaves it open.
     if (router.canDismiss()) router.dismissAll();
-    router.navigate({ pathname: '/day', params: { day: String(intent.day), open: String(Date.now()) } });
+    router.navigate({
+      pathname: "/day",
+      params: { day: String(intent.day), open: String(Date.now()) },
+    });
   }, [intent]);
 }
 
@@ -96,11 +111,11 @@ function useDayGapsIntent() {
 function useStopSheetIntent() {
   const intent = useIntent();
   useEffect(() => {
-    if (intent?.kind !== 'stop-sheet') return;
+    if (intent?.kind !== "stop-sheet") return;
     actions.consumeIntent();
     if (!useHopwatch.getState().entries.some((e) => e.endUtc === null)) return;
-    router.navigate('/');
-    router.push('/stop');
+    router.navigate("/");
+    router.push("/stop");
   }, [intent]);
 }
 

@@ -3,9 +3,9 @@
 // stretch to fill it. The header steps through days; its title jumps back to today.
 // Each day opens where the action is: today at now, a past day at its first bean.
 
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useHeaderHeight } from 'expo-router/react-navigation';
-import { useRef, useState } from 'react';
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { useRef, useState } from "react";
 import {
   type GestureResponderEvent,
   type LayoutChangeEvent,
@@ -15,32 +15,42 @@ import {
   Text,
   useWindowDimensions,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { addDays, type EntryId, formatDuration, startOfDay, useDayReport, useNow, useRunning } from '@/core';
-import { dayText } from '@/i18n/day';
-import { shellText } from '@/i18n/shell';
+import {
+  addDays,
+  type EntryId,
+  formatDuration,
+  startOfDay,
+  useDayReport,
+  useNow,
+  useRunning,
+} from "@/core";
+import { dayText } from "@/i18n/day";
+import { shellText } from "@/i18n/shell";
 
-import { CandyDial, dayBeans } from '../dial/CandyDial';
-import { dialFrame, pointDeg, pointRadius, timeAtDeg } from '../dial/geometry';
-import { buzz } from '../feedback';
-import { HeaderTitle } from '../HeaderTitle';
-import { useHeaderIcon } from '../nav';
-import { rounded, tabular, text, useTheme } from '../theme';
-import { dayTitles } from '../titles';
-import { DayOffPill } from './DayOffPill';
-import { axisFor, Timeline, yOf } from './Timeline';
+import { CandyDial, dayBeans } from "../dial/CandyDial";
+import { dialFrame, pointDeg, pointRadius, timeAtDeg } from "../dial/geometry";
+import { buzz } from "../feedback";
+import { HeaderTitle } from "../HeaderTitle";
+import { useHeaderIcon } from "../nav";
+import { rounded, tabular, text, useTheme } from "../theme";
+import { dayTitles } from "../titles";
+import { DayOffPill } from "./DayOffPill";
+import { axisFor, Timeline, yOf } from "./Timeline";
 
 export function DayScreen() {
   const t = useTheme();
   const { width, height } = useWindowDimensions();
   const header = useHeaderHeight();
   const params = useLocalSearchParams<{ day?: string; open?: string }>();
-  const previousIcon = useHeaderIcon('chevron.left', 'chevron_left');
-  const nextIcon = useHeaderIcon('chevron.right', 'chevron_right');
+  const previousIcon = useHeaderIcon("chevron.left", "chevron_left");
+  const nextIcon = useHeaderIcon("chevron.right", "chevron_right");
   const now = useNow(30_000);
   const today = startOfDay(now);
-  const [day, setDay] = useState(() => (params.day ? startOfDay(Number(params.day)) : startOfDay(Date.now())));
+  const [day, setDay] = useState(() =>
+    params.day ? startOfDay(Number(params.day)) : startOfDay(Date.now()),
+  );
   const [selected, setSelected] = useState<EntryId | null>(null);
   // A tapped evening check navigates here with a new `open`; follow it even when Day is
   // already showing another day.
@@ -94,7 +104,7 @@ export function DayScreen() {
     if (hit) {
       buzz.tick();
       if (hit.entry.id === selected) {
-        router.push({ pathname: '/entry', params: { id: hit.entry.id } });
+        router.push({ pathname: "/entry", params: { id: hit.entry.id } });
         return;
       }
       setSelected(hit.entry.id);
@@ -107,9 +117,9 @@ export function DayScreen() {
     if (gap && gap.start < (live ? now : dayEnd)) {
       buzz.tap();
       router.push({
-        pathname: '/pick',
+        pathname: "/pick",
         params: {
-          mode: 'fill',
+          mode: "fill",
           from: String(gap.start),
           to: String(Math.min(gap.end, live ? now : dayEnd)),
           at: String(at),
@@ -123,33 +133,57 @@ export function DayScreen() {
   return (
     <>
       <Stack.Title asChild>
-        <HeaderTitle title={titles.title} subtitle={titles.subtitle} onPress={day === today ? undefined : () => go(today)} />
+        <HeaderTitle
+          title={titles.title}
+          subtitle={titles.subtitle}
+          onPress={day === today ? undefined : () => go(today)}
+        />
       </Stack.Title>
       <Stack.Toolbar placement="left">
         {previousIcon && (
-          <Stack.Toolbar.Button icon={previousIcon} accessibilityLabel={shellText.header.previous('day')} onPress={() => go(addDays(day, -1))} />
+          <Stack.Toolbar.Button
+            icon={previousIcon}
+            accessibilityLabel={shellText.header.previous("day")}
+            onPress={() => go(addDays(day, -1))}
+          />
         )}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        {nextIcon && <Stack.Toolbar.Button icon={nextIcon} accessibilityLabel={shellText.header.next('day')} onPress={() => go(addDays(day, 1))} />}
+        {nextIcon && (
+          <Stack.Toolbar.Button
+            icon={nextIcon}
+            accessibilityLabel={shellText.header.next("day")}
+            onPress={() => go(addDays(day, 1))}
+          />
+        )}
       </Stack.Toolbar>
       <ScrollView
         key={day}
         ref={scroll}
         contentInsetAdjustmentBehavior="automatic"
         style={{ backgroundColor: t.c.bg }}
-        contentContainerStyle={styles.content}>
+        contentContainerStyle={styles.content}
+      >
         <Pressable
           onPress={tapDial}
           accessibilityLabel={dayText.dialLabel}
-          style={[styles.dial, { width: frame.size, height: frame.size }]}>
-          <CandyDial frame={frame} dayStart={day} dayEnd={dayEnd} beans={beans} now={isToday ? now : null} />
+          style={[styles.dial, { width: frame.size, height: frame.size }]}
+        >
+          <CandyDial
+            frame={frame}
+            dayStart={day}
+            dayEnd={dayEnd}
+            beans={beans}
+            now={isToday ? now : null}
+          />
           <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
             <Text style={[text.footnote, { color: t.c.muted }]}>{dayText.tracked}</Text>
-            <Text style={[styles.total, tabular, { color: t.c.ink }]}>{formatDuration(report.totals.total)}</Text>
+            <Text style={[styles.total, tabular, { color: t.c.ink }]}>
+              {formatDuration(report.totals.total)}
+            </Text>
             <Text style={[text.footnote, tabular, { color: t.c.muted }]}>
               {dayText.beans(blocks)}
-              {blocks ? dayText.median(formatDuration(median)) : ''}
+              {blocks ? dayText.median(formatDuration(median)) : ""}
             </Text>
             {day <= today && (
               <Text style={[text.caption, styles.hint, { color: t.c.faint }]}>
@@ -164,14 +198,21 @@ export function DayScreen() {
 
         {report.segments.length === 0 && (
           <View style={[styles.emptyCard, { backgroundColor: t.c.card }]}>
-            <Text style={styles.emptyEmoji}>{day > today ? '🔮' : '🫘'}</Text>
+            <Text style={styles.emptyEmoji}>{day > today ? "🔮" : "🫘"}</Text>
             <Text style={[text.subhead, styles.empty, { color: t.c.muted }]}>
               {day > today ? dayText.future : dayText.empty}
             </Text>
           </View>
         )}
         <View onLayout={open}>
-          <Timeline report={report} axis={axis} now={now} width={width} selected={selected} onSelect={setSelected} />
+          <Timeline
+            report={report}
+            axis={axis}
+            now={now}
+            width={width}
+            selected={selected}
+            onSelect={setSelected}
+          />
         </View>
       </ScrollView>
     </>
@@ -182,19 +223,19 @@ const styles = StyleSheet.create({
   // Room under the last hour: scrollTo stops where the content ends behind the tab bar
   // and mini player, and the opening scroll must still be able to lift a late "now" above them.
   content: { paddingBottom: 160 },
-  dial: { alignSelf: 'center', marginTop: 4 },
-  dayOff: { alignItems: 'center', marginTop: 4, marginBottom: 8 },
-  center: { alignItems: 'center', justifyContent: 'center' },
+  dial: { alignSelf: "center", marginTop: 4 },
+  dayOff: { alignItems: "center", marginTop: 4, marginBottom: 8 },
+  center: { alignItems: "center", justifyContent: "center" },
   total: {
-    ...rounded('800'),
+    ...rounded("800"),
     fontSize: 40,
     letterSpacing: -0.8,
     marginVertical: -1,
   },
-  hint: { textAlign: 'center', marginTop: 10, lineHeight: 15 },
+  hint: { textAlign: "center", marginTop: 10, lineHeight: 15 },
   emptyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     marginHorizontal: 16,
     marginTop: 12,

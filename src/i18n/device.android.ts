@@ -1,4 +1,4 @@
-import { I18nManager } from 'react-native';
+import { I18nManager } from "react-native";
 
 /**
  * The app's language on Android, e.g. ["de_DE"]: the first locale of the app's

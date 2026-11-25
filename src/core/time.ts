@@ -2,8 +2,8 @@
 // current time zone; weeks start on Monday. Durations are shown as h:mm, never decimals.
 // Names of days and months are in the app's language.
 
-import { locale } from '@/i18n';
-import { coreText } from '@/i18n/core';
+import { locale } from "@/i18n";
+import { coreText } from "@/i18n/core";
 
 const text = coreText.time;
 
@@ -50,40 +50,45 @@ export const isSameDay = (a: number, b: number) => startOfDay(a) === startOfDay(
 /** The local day `ts` falls on, as YYYY-MM-DD: how days off and balance starts are stored. */
 export function dayKey(ts: number): string {
   const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 /** Local midnight of a YYYY-MM-DD day key. */
 export function dayStart(key: string): number {
-  const [y, m, d] = key.split('-').map(Number);
+  const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d).getTime();
 }
 
 /** 0 for Monday through 6 for Sunday, in local time. */
 export const weekdayOf = (ts: number) => (new Date(ts).getDay() + 6) % 7;
 
-const MINUS = '−';
+const MINUS = "−";
 
 /** 36:40, 0:05. Negative values get a real minus sign: −3:20. */
 export function formatDuration(ms: number): string {
-  const sign = ms < 0 ? MINUS : '';
+  const sign = ms < 0 ? MINUS : "";
   const totalMinutes = Math.floor(Math.abs(ms) / MINUTE);
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  return `${sign}${h}:${String(m).padStart(2, '0')}`;
+  return `${sign}${h}:${String(m).padStart(2, "0")}`;
 }
 
 /** +1:20 or −3:20, for differences against a target. */
-export const formatSignedDuration = (ms: number) => (ms >= 0 ? `+${formatDuration(ms)}` : formatDuration(ms));
+export const formatSignedDuration = (ms: number) =>
+  ms >= 0 ? `+${formatDuration(ms)}` : formatDuration(ms);
 
 /** Hours, minutes and seconds, for live timers that want to animate seconds. */
 export function durationParts(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
-  return { hours: Math.floor(total / 3600), minutes: Math.floor(total / 60) % 60, seconds: total % 60 };
+  return {
+    hours: Math.floor(total / 3600),
+    minutes: Math.floor(total / 60) % 60,
+    seconds: total % 60,
+  };
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
+const pad = (n: number) => String(n).padStart(2, "0");
 
 /** 24-hour wall clock: 09:05. */
 export function formatClock(ts: number): string {
@@ -91,9 +96,13 @@ export function formatClock(ts: number): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const weekdayFormat = new Intl.DateTimeFormat(locale, { weekday: 'short' });
-const dayMonthFormat = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
-const longDayFormat = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' });
+const weekdayFormat = new Intl.DateTimeFormat(locale, { weekday: "short" });
+const dayMonthFormat = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
+const longDayFormat = new Intl.DateTimeFormat(locale, {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
 
 /** Mon, Mo. */
 export const formatWeekday = (ts: number) => weekdayFormat.format(ts);
@@ -116,7 +125,8 @@ export function formatWeekRange(weekStart: number): string {
   const last = addDays(weekStart, 6);
   const a = new Date(weekStart);
   const b = new Date(last);
-  if (a.getMonth() === b.getMonth()) return `${text.rangeStart(a.getDate())}–${formatDayMonth(last)}`;
+  if (a.getMonth() === b.getMonth())
+    return `${text.rangeStart(a.getDate())}–${formatDayMonth(last)}`;
   return `${formatDayMonth(weekStart)} – ${formatDayMonth(last)}`;
 }
 

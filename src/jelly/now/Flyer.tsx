@@ -1,20 +1,25 @@
 // The flying blobs of the switch choreography. Each flight hops along an arc with a
 // little squash and stretch, waking up on the way in and yawning on the way out.
 
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
-import { type ResolvedContext, useTree } from '@/core';
+import { type ResolvedContext, useTree } from "@/core";
 
-import { Character } from '../Character';
-import { sleep, useFace, wake } from '../Gummy';
-import { FLIGHT_MS, type Flight, isFlying, land, useAnchor, useChoreo, warmed } from './choreo';
+import { Character } from "../Character";
+import { sleep, useFace, wake } from "../Gummy";
+import { FLIGHT_MS, type Flight, isFlying, land, useAnchor, useChoreo, warmed } from "./choreo";
 
 /** Full-screen, touch-transparent layer that hosts the flights. */
 export function FlyerLayer() {
-  const ref = useAnchor('layer');
+  const ref = useAnchor("layer");
   const flights = useChoreo((s) => s.flights);
   const tree = useTree();
   return (
@@ -30,7 +35,7 @@ export function FlyerLayer() {
 function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }) {
   const { from, to, kind } = flight;
   const size = Math.max(from.width, to.width, 1);
-  const face = useFace(kind === 'in' ? 'asleep' : 'awake');
+  const face = useFace(kind === "in" ? "asleep" : "awake");
   const progress = useSharedValue(0);
   const go = useChoreo(isFlying);
 
@@ -46,7 +51,7 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
 
   useEffect(() => {
     if (!go) return;
-    if (kind === 'in') wake(face);
+    if (kind === "in") wake(face);
     else sleep(face);
     progress.set(
       withTiming(1, { duration: FLIGHT_MS, easing: Easing.bezier(0.33, 0, 0.2, 1) }, (finished) => {
@@ -61,12 +66,12 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
     const fy = from.y + from.height / 2;
     const tx = to.x + to.width / 2;
     const ty = to.y + to.height / 2;
-    const arc = kind === 'in' ? 110 : 70;
+    const arc = kind === "in" ? 110 : 70;
     const x = fx + (tx - fx) * t;
     const y = fy + (ty - fy) * t - arc * 4 * t * (1 - t);
     const width = from.width + (to.width - from.width) * t;
     const stretch = Math.sin(Math.PI * t) * 0.18;
-    const spin = (kind === 'in' ? -1 : 1) * 16 * Math.sin(Math.PI * t);
+    const spin = (kind === "in" ? -1 : 1) * 16 * Math.sin(Math.PI * t);
     return {
       transform: [
         { translateX: x - size / 2 },
@@ -80,12 +85,14 @@ function Flyer({ flight, context }: { flight: Flight; context: ResolvedContext }
   });
 
   return (
-    <Animated.View style={[styles.flyer, { width: size, height: size, opacity: go ? 1 : 0 }, style]}>
+    <Animated.View
+      style={[styles.flyer, { width: size, height: size, opacity: go ? 1 : 0 }, style]}
+    >
       <Character context={context} size={size} face={face} shadow={false} />
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  flyer: { position: 'absolute', left: 0, top: 0 },
+  flyer: { position: "absolute", left: 0, top: 0 },
 });

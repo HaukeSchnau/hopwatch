@@ -7,13 +7,16 @@
 // Expo's own primaryColor plugin writes the day color into colors.xml and the theme, so this
 // sets `primaryColor` and adds the rest.
 
-const { AndroidConfig, withAndroidColorsNight, withAndroidStyles } = require('expo/config-plugins');
+const { AndroidConfig, withAndroidColorsNight, withAndroidStyles } = require("expo/config-plugins");
 
 module.exports = function withAndroidAccent(config, { day, night }) {
   config = { ...config, primaryColor: day };
 
   config = withAndroidColorsNight(config, (c) => {
-    c.modResults = AndroidConfig.Colors.assignColorValue(c.modResults, { name: 'colorPrimary', value: night });
+    c.modResults = AndroidConfig.Colors.assignColorValue(c.modResults, {
+      name: "colorPrimary",
+      value: night,
+    });
     return c;
   });
 
@@ -21,8 +24,8 @@ module.exports = function withAndroidAccent(config, { day, night }) {
     c.modResults = AndroidConfig.Styles.assignStylesValue(c.modResults, {
       add: true,
       parent: AndroidConfig.Styles.getAppThemeGroup(),
-      name: 'colorAccent',
-      value: '@color/colorPrimary',
+      name: "colorAccent",
+      value: "@color/colorPrimary",
     });
     return c;
   });

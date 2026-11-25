@@ -181,10 +181,6 @@ export default defineConfig({
   // picking in src/i18n and the jelly characters' model logic (src/jelly/character/ask.ts,
   // topics.ts). The few React Native imports they reach (src/i18n/device.ts) get a stub.
   test: {
-    include: [
-      "src/core/**/*.test.ts",
-      "src/i18n/**/*.test.ts",
-      "src/jelly/character/**/*.test.ts",
-    ],
+    include: ["src/core/**/*.test.ts", "src/i18n/**/*.test.ts", "src/jelly/character/**/*.test.ts"],
   },
 });

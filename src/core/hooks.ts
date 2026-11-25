@@ -1,17 +1,17 @@
 // Read-side hooks for screens. All derived data is memoized on the store's
 // immutable arrays, so selectors stay cheap.
 
-import { useEffect, useMemo, useState } from 'react';
-import { AppState } from 'react-native';
+import { useEffect, useMemo, useState } from "react";
+import { AppState } from "react-native";
 
-import { type GermanState, type HolidayId, isGermanState } from './holidays';
-import type { ContextId, DayOffKind, EntryId } from './model';
-import { dayReport, overtimeBalance, weekReport } from './reports';
-import { actions, type Json, type LastAction, useHopwatch } from './store';
-import { addDays, dayKey } from './time';
-import { holidayOn, type OffDays, offDaysOf } from './workdays';
-import { findOpen, gapAt, previousContextId } from './timeline';
-import { pickable, type ResolvedContext } from './tree';
+import { type GermanState, type HolidayId, isGermanState } from "./holidays";
+import type { ContextId, DayOffKind, EntryId } from "./model";
+import { dayReport, overtimeBalance, weekReport } from "./reports";
+import { actions, type Json, type LastAction, useHopwatch } from "./store";
+import { addDays, dayKey } from "./time";
+import { holidayOn, type OffDays, offDaysOf } from "./workdays";
+import { findOpen, gapAt, previousContextId } from "./timeline";
+import { pickable, type ResolvedContext } from "./tree";
 
 export const useTree = () => useHopwatch((s) => s.tree);
 export const useEntries = () => useHopwatch((s) => s.entries);
@@ -40,14 +40,17 @@ export function useNow(intervalMs: number | null = 1000): number {
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const tick = () => setNow(Date.now());
-    const sub = AppState.addEventListener('change', (state) => state === 'active' && tick());
+    const sub = AppState.addEventListener("change", (state) => state === "active" && tick());
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
       if (intervalMs === null) return;
-      timer = setTimeout(() => {
-        tick();
-        schedule();
-      }, intervalMs - (Date.now() % intervalMs) + 5);
+      timer = setTimeout(
+        () => {
+          tick();
+          schedule();
+        },
+        intervalMs - (Date.now() % intervalMs) + 5,
+      );
     };
     schedule();
     return () => {
@@ -78,14 +81,14 @@ export function useRunning(): Running | null {
  * What the big "back" button offers: "Back to X" while something runs, "Resume X"
  * when nothing does. Null when there is no sensible target. `actions.back()` starts it.
  */
-export function useSwitchTarget(): { kind: 'back' | 'resume'; context: ResolvedContext } | null {
+export function useSwitchTarget(): { kind: "back" | "resume"; context: ResolvedContext } | null {
   const entries = useEntries();
   const tree = useTree();
   return useMemo(() => {
     const id = previousContextId(entries);
     const context = id && tree.byId.get(id);
     if (!context || context.hidden) return null;
-    return { kind: findOpen(entries) ? 'back' : 'resume', context };
+    return { kind: findOpen(entries) ? "back" : "resume", context };
   }, [entries, tree]);
 }
 
@@ -140,13 +143,17 @@ export function useWeekReport(weekStart: number) {
   const tree = useTree();
   const offDays = useOffDays();
   const at = Math.min(useNow(30_000), addDays(weekStart, 7));
-  return useMemo(() => weekReport(entries, tree, weekStart, at, offDays), [entries, tree, weekStart, at, offDays]);
+  return useMemo(
+    () => weekReport(entries, tree, weekStart, at, offDays),
+    [entries, tree, weekStart, at, offDays],
+  );
 }
 
-const HOLIDAYS = 'holidays.region';
+const HOLIDAYS = "holidays.region";
 
 /** The German state whose public holidays count as days off, or null for none. */
-export const useHolidayRegion = () => usePref<GermanState | null>(HOLIDAYS, null, (v) => (isGermanState(v) ? v : undefined));
+export const useHolidayRegion = () =>
+  usePref<GermanState | null>(HOLIDAYS, null, (v) => (isGermanState(v) ? v : undefined));
 export const setHolidayRegion = (region: GermanState | null) => actions.setPref(HOLIDAYS, region);
 
 /** Which days are off work: marked days off and the region's public holidays. */
@@ -157,7 +164,10 @@ export function useOffDays(): OffDays {
 }
 
 /** Why the day starting at `dayStart` is off work, if it is: a marked kind, or a holiday. */
-export function useDayOff(dayStart: number): { kind: DayOffKind | null; holiday: HolidayId | null } {
+export function useDayOff(dayStart: number): {
+  kind: DayOffKind | null;
+  holiday: HolidayId | null;
+} {
   const day = dayKey(dayStart);
   const kind = useHopwatch((s) => s.daysOff.find((o) => o.day === day)?.kind ?? null);
   const region = useHolidayRegion();
@@ -171,7 +181,10 @@ export function useOvertimeBalance(contextId: ContextId) {
   const offDays = useOffDays();
   const now = useNow(60_000);
   const context = tree.byId.get(contextId);
-  return useMemo(() => (context ? overtimeBalance(entries, tree, context, offDays, now) : null), [entries, tree, context, offDays, now]);
+  return useMemo(
+    () => (context ? overtimeBalance(entries, tree, context, offDays, now) : null),
+    [entries, tree, context, offDays, now],
+  );
 }
 
 /** The gap around `at`, for "what was this?" sheets. Null inside an entry. */
@@ -193,7 +206,10 @@ export function useUndoToast(windowMs = 5000): { action: LastAction | null; visi
   );
   useEffect(() => {
     if (!action) return;
-    const timer = setTimeout(() => setExpired(action), Math.max(0, action.at + windowMs - Date.now()));
+    const timer = setTimeout(
+      () => setExpired(action),
+      Math.max(0, action.at + windowMs - Date.now()),
+    );
     return () => clearTimeout(timer);
   }, [action, windowMs]);
   return { action, visible: action !== null && expired !== action };

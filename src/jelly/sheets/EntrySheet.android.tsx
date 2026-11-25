@@ -1,16 +1,16 @@
 // Entry detail on Android: the same draft as iOS (entry.tsx) under the candy header, with
 // a dropdown for the jelly and calendar-style day and time pills for start and end.
 
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 
-import { type Entry, pathLabel, useEntries } from '@/core';
-import { sheetsText } from '@/i18n/sheets';
+import { type Entry, pathLabel, useEntries } from "@/core";
+import { sheetsText } from "@/i18n/sheets";
 
-import { HostedRow, JellyForm } from '../forms';
-import { DateTimeRow, FieldRow, PickerRow, Row, Section, sentence, TonalButton } from '../material';
-import { useTheme } from '../theme';
-import { EntryHeader, putInside, useEntryDraft } from './entry';
+import { HostedRow, JellyForm } from "../forms";
+import { DateTimeRow, FieldRow, PickerRow, Row, Section, sentence, TonalButton } from "../material";
+import { useTheme } from "../theme";
+import { EntryHeader, putInside, useEntryDraft } from "./entry";
 
 const s = sheetsText.entry;
 
@@ -32,40 +32,96 @@ export function EntrySheet() {
 
 function EntryForm({ entry }: { entry: Entry }) {
   const t = useTheme();
-  const { contextId, setContextId, start, setStart, end, setEnd, now, context, options, invalid, save, remove } = useEntryDraft(entry);
-  const [note, setNote] = useState(entry.note ?? '');
+  const {
+    contextId,
+    setContextId,
+    start,
+    setStart,
+    end,
+    setEnd,
+    now,
+    context,
+    options,
+    invalid,
+    save,
+    remove,
+  } = useEntryDraft(entry);
+  const [note, setNote] = useState(entry.note ?? "");
 
   return (
     <JellyForm
       title={end === null ? s.running : s.title}
       tint={context ? t.candy[context.hue].ink : undefined}
-      confirm={{ label: sheetsText.done, onPress: () => save(note), disabled: invalid }}>
+      confirm={{ label: sheetsText.done, onPress: () => save(note), disabled: invalid }}
+    >
       {context ? (
-        <HostedRow color={t.candy[context.hue].tint} render={(width) => <EntryHeader width={width} context={context} start={start} end={end} />} />
+        <HostedRow
+          color={t.candy[context.hue].tint}
+          render={(width) => (
+            <EntryHeader width={width} context={context} start={start} end={end} />
+          )}
+        />
       ) : null}
       <Section>
         <PickerRow
           label={s.jelly}
-          choices={options.map((c) => ({ value: c.id, label: `${c.glyph ? `${c.glyph} ` : ''}${pathLabel(c)}` }))}
+          choices={options.map((c) => ({
+            value: c.id,
+            label: `${c.glyph ? `${c.glyph} ` : ""}${pathLabel(c)}`,
+          }))}
           value={contextId}
           onChange={setContextId}
         />
       </Section>
       <Section title={s.time} footer={invalid ? s.endsBeforeStart : s.trims}>
         {/* Clamped like the iOS pickers' ranges: start before the end, the end between start and now. */}
-        <DateTimeRow label={s.starts} value={start} latest={end ?? now} onChange={(at) => setStart(Math.min(at, end ?? now))} />
+        <DateTimeRow
+          label={s.starts}
+          value={start}
+          latest={end ?? now}
+          onChange={(at) => setStart(Math.min(at, end ?? now))}
+        />
         {end === null ? (
-          <Row label={s.ends} trailing={<TonalButton label={sentence(s.stopNow)} icon="stop" onPress={() => setEnd(Math.max(start + 60_000, Date.now()))} />} />
+          <Row
+            label={s.ends}
+            trailing={
+              <TonalButton
+                label={sentence(s.stopNow)}
+                icon="stop"
+                onPress={() => setEnd(Math.max(start + 60_000, Date.now()))}
+              />
+            }
+          />
         ) : (
-          <DateTimeRow label={s.ends} value={end} earliest={start} latest={now} onChange={(at) => setEnd(Math.min(Math.max(at, start), now))} />
+          <DateTimeRow
+            label={s.ends}
+            value={end}
+            earliest={start}
+            latest={now}
+            onChange={(at) => setEnd(Math.min(Math.max(at, start), now))}
+          />
         )}
       </Section>
       <Section title={s.note}>
-        <FieldRow value={note} onChangeText={setNote} placeholder={s.notePlaceholder} multiline style={{ maxHeight: 160 }} />
+        <FieldRow
+          value={note}
+          onChangeText={setNote}
+          placeholder={s.notePlaceholder}
+          multiline
+          style={{ maxHeight: 160 }}
+        />
       </Section>
       <Section>
-        <Row label={sentence(s.putIn)} icon="vertical_split" onPress={() => router.replace(putInside(entry))} />
-        <Row label={sentence(s.cutBreak)} icon="content_cut" onPress={() => router.replace(putInside(entry, true))} />
+        <Row
+          label={sentence(s.putIn)}
+          icon="vertical_split"
+          onPress={() => router.replace(putInside(entry))}
+        />
+        <Row
+          label={sentence(s.cutBreak)}
+          icon="content_cut"
+          onPress={() => router.replace(putInside(entry, true))}
+        />
       </Section>
       <Section>
         <Row label={sentence(s.delete)} icon="delete" destructive onPress={remove} />

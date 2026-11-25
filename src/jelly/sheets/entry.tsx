@@ -1,9 +1,9 @@
 // What both platforms' entry sheets share: the draft of an entry's jelly, start and end,
 // saved together on Done so a half-picked time never trims a neighbour, and the candy header.
 
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 import {
   actions,
@@ -18,13 +18,13 @@ import {
   useNow,
   usePickableContexts,
   useTree,
-} from '@/core';
-import { sheetsText } from '@/i18n/sheets';
+} from "@/core";
+import { sheetsText } from "@/i18n/sheets";
 
-import { Character } from '../Character';
-import { buzz } from '../feedback';
-import { useFace, useLively } from '../Gummy';
-import { rounded, tabular, text, useTheme } from '../theme';
+import { Character } from "../Character";
+import { buzz } from "../feedback";
+import { useFace, useLively } from "../Gummy";
+import { rounded, tabular, text, useTheme } from "../theme";
 
 /**
  * The pick sheet for putting a block inside `entry`, like lunch in a workday; `untracked`
@@ -32,7 +32,10 @@ import { rounded, tabular, text, useTheme } from '../theme';
  * draft can't write the old times back over the split.
  */
 export const putInside = (entry: Entry, untracked = false) =>
-  ({ pathname: '/pick', params: { mode: 'place', entry: entry.id, ...(untracked ? { untracked: '1' } : {}) } }) as const;
+  ({
+    pathname: "/pick",
+    params: { mode: "place", entry: entry.id, ...(untracked ? { untracked: "1" } : {}) },
+  }) as const;
 
 export function useEntryDraft(entry: Entry) {
   const tree = useTree();
@@ -42,7 +45,8 @@ export function useEntryDraft(entry: Entry) {
   const [end, setEnd] = useState(entry.endUtc);
   const now = useNow(60_000);
   const context = tree.byId.get(contextId) ?? null;
-  const options = pickable.some((c) => c.id === contextId) || !context ? pickable : [context, ...pickable];
+  const options =
+    pickable.some((c) => c.id === contextId) || !context ? pickable : [context, ...pickable];
   const invalid = end !== null && end <= start;
 
   /** Saves what changed, with the note as typed, and closes the sheet. */
@@ -68,13 +72,36 @@ export function useEntryDraft(entry: Entry) {
     router.back();
   };
 
-  return { contextId, setContextId, start, setStart, end, setEnd, now, context, options, invalid, save, remove };
+  return {
+    contextId,
+    setContextId,
+    start,
+    setStart,
+    end,
+    setEnd,
+    now,
+    context,
+    options,
+    invalid,
+    save,
+    remove,
+  };
 }
 
 /** The candy header: the jelly, when it ran and for how long (ticking while it runs). */
-export function EntryHeader({ width, context, start, end }: { width: number; context: ResolvedContext; start: number; end: number | null }) {
+export function EntryHeader({
+  width,
+  context,
+  start,
+  end,
+}: {
+  width: number;
+  context: ResolvedContext;
+  start: number;
+  end: number | null;
+}) {
   const t = useTheme();
-  const face = useFace(end === null ? 'awake' : 'asleep');
+  const face = useFace(end === null ? "awake" : "asleep");
   useLively(face, end === null);
   const now = useNow(end === null ? 1000 : null);
   return (
@@ -82,25 +109,38 @@ export function EntryHeader({ width, context, start, end }: { width: number; con
       <Character context={context} size={76} face={face} />
       <View style={styles.titles}>
         {context.ancestors.length ? (
-          <Text style={[text.caption, styles.path, { color: t.candy[context.hue].ink }]} numberOfLines={1}>
-            {context.ancestors.map((a) => a.name).join(' › ')}
+          <Text
+            style={[text.caption, styles.path, { color: t.candy[context.hue].ink }]}
+            numberOfLines={1}
+          >
+            {context.ancestors.map((a) => a.name).join(" › ")}
           </Text>
         ) : null}
         <Text style={[text.title3, { color: t.c.ink }]} numberOfLines={1}>
           {context.name}
         </Text>
         <Text style={[text.footnote, tabular, { color: t.c.muted }]} numberOfLines={1}>
-          {formatWeekday(start)} {formatDayMonth(start)} · {formatClock(start)}–{end === null ? sheetsText.now : formatClock(end)}
+          {formatWeekday(start)} {formatDayMonth(start)} · {formatClock(start)}–
+          {end === null ? sheetsText.now : formatClock(end)}
         </Text>
       </View>
-      <Text style={[styles.length, tabular, { color: t.c.ink }]}>{formatDuration(Math.max(0, (end ?? now) - start))}</Text>
+      <Text style={[styles.length, tabular, { color: t.c.ink }]}>
+        {formatDuration(Math.max(0, (end ?? now) - start))}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingLeft: 8, paddingRight: 16 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+    paddingLeft: 8,
+    paddingRight: 16,
+  },
   titles: { flex: 1 },
-  path: { textTransform: 'uppercase', letterSpacing: 0.5 },
-  length: { ...rounded('800'), fontSize: 24 },
+  path: { textTransform: "uppercase", letterSpacing: 0.5 },
+  length: { ...rounded("800"), fontSize: 24 },
 });

@@ -5,10 +5,17 @@
 //   /jelly/context?parent=…     new jelly inside another
 //   /jelly/context[?pin=1]      new top-level jelly
 
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Animated, { type SharedValue, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import Animated, {
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 import {
   actions,
@@ -23,18 +30,18 @@ import {
   subtreeIds,
   useHopwatch,
   useTree,
-} from '@/core';
-import { stuffText } from '@/i18n/stuff';
+} from "@/core";
+import { stuffText } from "@/i18n/stuff";
 
-import { Character } from '../Character';
-import { saveSuggestedLook } from '../character/suggest';
-import type { Look } from '../character/traits';
-import { buzz, play } from '../feedback';
-import { firstGrapheme } from '../fields';
-import { useFace, useLively } from '../Gummy';
-import type { PreviewJelly } from '../preview';
-import { useNameSuggestion } from '../suggestions';
-import { springs, text, useTheme } from '../theme';
+import { Character } from "../Character";
+import { saveSuggestedLook } from "../character/suggest";
+import type { Look } from "../character/traits";
+import { buzz, play } from "../feedback";
+import { firstGrapheme } from "../fields";
+import { useFace, useLively } from "../Gummy";
+import type { PreviewJelly } from "../preview";
+import { useNameSuggestion } from "../suggestions";
+import { springs, text, useTheme } from "../theme";
 
 const s = stuffText.editor;
 
@@ -63,7 +70,7 @@ export function useEditorTarget(): EditorTarget | null {
   return {
     context: existing,
     initialParent: existing ? existing.parentId : (parent?.id ?? null),
-    pin: params.pin === '1' || (!existing && !parent),
+    pin: params.pin === "1" || (!existing && !parent),
   };
 }
 
@@ -71,12 +78,14 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const tree = useTree();
   // A new jelly's preview uses the id it will be created with, so its look doesn't change on Add.
   const [draftId] = useState(newContextId);
-  const [name, setName] = useState(context?.name ?? '');
+  const [name, setName] = useState(context?.name ?? "");
   const [emoji, setEmoji] = useState<string | null>(context?.emoji ?? null);
   // A new jelly's emoji and color stay open to suggestions until they're touched.
   const [emojiTouched, setEmojiTouched] = useState(context !== null);
   const [colorTouched, setColorTouched] = useState(context !== null);
-  const [color, setColor] = useState<Hue | null>(context ? context.color : initialParent ? null : 'pink');
+  const [color, setColor] = useState<Hue | null>(
+    context ? context.color : initialParent ? null : "pink",
+  );
   const [parentId, setParentId] = useState<ContextId | null>(initialParent);
   const [pinned, setPinned] = useState(context ? context.pinPosition !== null : pin);
   const [target, setTarget] = useState<number | null>(context?.weeklyTargetMinutes ?? null);
@@ -85,15 +94,21 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const [balanceSince, setBalanceSince] = useState<string | null>(context?.balanceSince ?? null);
   const [balanceStart, setBalanceStart] = useState(context?.balanceStartMinutes ?? 0);
   const ownSlack = context?.slackStatus ?? null;
-  const [slackText, setSlackText] = useState(ownSlack?.text ?? '');
+  const [slackText, setSlackText] = useState(ownSlack?.text ?? "");
   // Only a status someone edited gets saved, so opening the editor never rewrites one.
   const slackTouched = useRef(false);
 
   // Only top-level jellies get a suggested color; inside a group they share the parent's.
-  const suggested = useNameSuggestion(context ? '' : name, parentId, emojiTouched ? emoji : null, !colorTouched && parentId === null);
+  const suggested = useNameSuggestion(
+    context ? "" : name,
+    parentId,
+    emojiTouched ? emoji : null,
+    !colorTouched && parentId === null,
+  );
   const suggestedEmoji = !emojiTouched ? (suggested?.suggestion.emoji ?? null) : null;
   const shownEmoji = suggestedEmoji ?? emoji;
-  const suggestedHue = !colorTouched && parentId === null ? (suggested?.suggestion.hue ?? null) : null;
+  const suggestedHue =
+    !colorTouched && parentId === null ? (suggested?.suggestion.hue ?? null) : null;
   const shownColor = suggestedHue ?? color;
 
   const parent = parentId ? (tree.byId.get(parentId) ?? null) : null;
@@ -103,9 +118,13 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
 
   // An empty field is no status. An emoji set elsewhere (a backup) stays; the editor only
   // edits the text.
-  const slackStatus: SlackStatus | null = slackText.trim() ? { text: slackText.trim(), emoji: ownSlack?.emoji ?? null } : null;
+  const slackStatus: SlackStatus | null = slackText.trim()
+    ? { text: slackText.trim(), emoji: ownSlack?.emoji ?? null }
+    : null;
   /** What Slack shows while it runs, for the footer. */
-  const slackShown: SlackLine | null = slackStatus ? { text: slackStatus.text, emoji: slackStatus.emoji ?? glyph } : null;
+  const slackShown: SlackLine | null = slackStatus
+    ? { text: slackStatus.text, emoji: slackStatus.emoji ?? glyph }
+    : null;
   const excluded = context ? subtreeIds(tree, context.id) : new Set<ContextId>();
   const parents = tree.ordered.filter((p) => !p.hidden && !excluded.has(p.id));
 
@@ -130,11 +149,13 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   }, [context?.id]);
 
   const bump = useSharedValue(0);
-  const jiggle = () => bump.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
+  const jiggle = () =>
+    bump.set(withSequence(withTiming(0.2, { duration: 70 }), withSpring(0, springs.wobble)));
 
   const saveName = () => {
     const typed = name.trim();
-    if (context && typed && typed !== context.name) actions.updateContext(context.id, { name: typed });
+    if (context && typed && typed !== context.name)
+      actions.updateContext(context.id, { name: typed });
   };
 
   const pickEmoji = (value: string | null) => {
@@ -185,7 +206,11 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
   const changeWorkDays = (next: number | null) => {
     setWorkDays(next);
     if (next === null) setBalanceSince(null);
-    if (context) actions.updateContext(context.id, next === null ? { workDays: null, balanceSince: null } : { workDays: next });
+    if (context)
+      actions.updateContext(
+        context.id,
+        next === null ? { workDays: null, balanceSince: null } : { workDays: next },
+      );
   };
 
   /** The balance from a day on (this week's Monday to start), or none. */
@@ -209,7 +234,6 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
     if (context && slackTouched.current) saveSlackStatus(context.id, slackStatus);
   };
 
-
   const create = () => {
     const typed = name.trim();
     if (!typed) return buzz.warn();
@@ -230,9 +254,10 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
         balanceStartMinutes: balanceStart,
         slackStatus,
       });
-    if (suggested && suggested.forName === typed) saveSuggestedLook(id, suggested.suggestion, typed, glyph);
+    if (suggested && suggested.forName === typed)
+      saveSuggestedLook(id, suggested.suggestion, typed, glyph);
     buzz.success();
-    play('pop');
+    play("pop");
     router.back();
   };
 
@@ -287,11 +312,13 @@ export function useJellyDraft({ context, initialParent, pin }: EditorTarget) {
 /** Stores a jelly's Slack status if it changed. */
 function saveSlackStatus(id: ContextId, next: SlackStatus | null) {
   const current = useHopwatch.getState().contexts.find((c) => c.id === id)?.slackStatus ?? null;
-  if (JSON.stringify(current) !== JSON.stringify(next)) actions.updateContext(id, { slackStatus: next });
+  if (JSON.stringify(current) !== JSON.stringify(next))
+    actions.updateContext(id, { slackStatus: next });
 }
 
 /** "🐕 Walking the dog", as the editor's footer quotes a status. */
-export const slackLabel = (line: SlackLine) => (line.emoji ? `${line.emoji} ${line.text}` : line.text);
+export const slackLabel = (line: SlackLine) =>
+  line.emoji ? `${line.emoji} ${line.text}` : line.text;
 
 /** The candy header of a new jelly: the live draft, its name and where it will live. */
 export function Header({
@@ -313,14 +340,14 @@ export function Header({
   suggested: boolean;
 }) {
   const t = useTheme();
-  const face = useFace('awake');
+  const face = useFace("awake");
   useLively(face, true);
   const style = useAnimatedStyle(() => ({
     transform: [{ scaleY: 1 - bump.get() }, { scaleX: 1 + bump.get() * 0.8 }],
   }));
   return (
     <View style={[styles.header, { width }]}>
-      <Animated.View style={[{ transformOrigin: 'bottom' }, style]}>
+      <Animated.View style={[{ transformOrigin: "bottom" }, style]}>
         <Character context={jelly} size={116} face={face} look={look} />
       </Animated.View>
       <Text style={[text.title2, styles.headerName, { color: t.c.ink }]} numberOfLines={1}>
@@ -335,7 +362,7 @@ export function Header({
 
 const styles = StyleSheet.create({
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 16,
     paddingBottom: 14,
     paddingHorizontal: 16,

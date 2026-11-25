@@ -5,15 +5,15 @@
    the final image (the 10-inch tablet set is rendered at 4/3 scale). */
 
 :root {
-  --bg: #FFF4E8;
-  --ink: #2B1B3D;
-  --accent: #C22B74;
-  --bezel: #1E1626;
-  --rim: #4A3B57;
+  --bg: #fff4e8;
+  --ink: #2b1b3d;
+  --accent: #c22b74;
+  --bezel: #1e1626;
+  --rim: #4a3b57;
   --shadow: rgb(43 27 61 / 0.42);
-  --blob-a: #FF6FB5;
-  --blob-b: #FFC53D;
-  --blob-c: #4B8BFF;
+  --blob-a: #ff6fb5;
+  --blob-b: #ffc53d;
+  --blob-c: #4b8bff;
   --blob-opacity: 0.32;
 
   --page-w: 1320px;
@@ -29,18 +29,21 @@
 }
 
 .dark {
-  --bg: #150F1D;
-  --ink: #FBF3FF;
-  --accent: #FF8CC8;
-  --bezel: #0B070F;
-  --rim: #4A3B57;
+  --bg: #150f1d;
+  --ink: #fbf3ff;
+  --accent: #ff8cc8;
+  --bezel: #0b070f;
+  --rim: #4a3b57;
   --shadow: rgb(0 0 0 / 0.6);
   --blob-opacity: 0.22;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   width: var(--page-w);
   height: var(--page-h);
@@ -63,9 +66,27 @@ body {
   filter: blur(120px);
   opacity: var(--blob-opacity);
 }
-.blob.a { width: 760px; height: 760px; left: -300px; top: -260px; background: var(--blob-a); }
-.blob.b { width: 640px; height: 640px; right: -280px; top: 260px; background: var(--blob-b); }
-.blob.c { width: 900px; height: 900px; left: -260px; bottom: -420px; background: var(--blob-c); }
+.blob.a {
+  width: 760px;
+  height: 760px;
+  left: -300px;
+  top: -260px;
+  background: var(--blob-a);
+}
+.blob.b {
+  width: 640px;
+  height: 640px;
+  right: -280px;
+  top: 260px;
+  background: var(--blob-b);
+}
+.blob.c {
+  width: 900px;
+  height: 900px;
+  left: -260px;
+  bottom: -420px;
+  background: var(--blob-c);
+}
 
 h1 {
   position: absolute;
@@ -80,8 +101,13 @@ h1 {
   letter-spacing: -0.015em;
   word-spacing: 0.08em;
 }
-h1 span { display: block; white-space: nowrap; }
-h1 span + span { color: var(--accent); }
+h1 span {
+  display: block;
+  white-space: nowrap;
+}
+h1 span + span {
+  color: var(--accent);
+}
 
 .phone {
   position: absolute;
@@ -103,7 +129,11 @@ h1 span + span { color: var(--accent); }
   border-radius: var(--screen-radius);
   overflow: hidden;
 }
-.screen img { display: block; width: 100%; height: 100%; }
+.screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
 /* The Dynamic Island, drawn on every frame since the simulator only sometimes captures it.
    Same box as in the captures (x 518-801, y 42-151 of 1320 x 2868), scaled. */
@@ -117,7 +147,9 @@ h1 span + span { color: var(--accent); }
   background: #000;
 }
 
-.camera { display: none; }
+.camera {
+  display: none;
+}
 
 /* Google Play: 1080 x 1920 (9:16, which Play asks for) with an Android phone, the Pixel 9
    emulator's 1080 x 2424 capture. */
@@ -137,11 +169,30 @@ html.play h1 {
   top: 92px;
   font-size: 88px;
 }
-html.play .phone { bottom: 60px; }
-html.play .island { display: none; }
-html.play .blob.a { width: 620px; height: 620px; left: -250px; top: -220px; }
-html.play .blob.b { width: 520px; height: 520px; right: -230px; top: 200px; }
-html.play .blob.c { width: 740px; height: 740px; left: -220px; bottom: -340px; }
+html.play .phone {
+  bottom: 60px;
+}
+html.play .island {
+  display: none;
+}
+html.play .blob.a {
+  width: 620px;
+  height: 620px;
+  left: -250px;
+  top: -220px;
+}
+html.play .blob.b {
+  width: 520px;
+  height: 520px;
+  right: -230px;
+  top: 200px;
+}
+html.play .blob.c {
+  width: 740px;
+  height: 740px;
+  left: -220px;
+  bottom: -340px;
+}
 
 /* The punch-hole camera, which screencap leaves out: a 42 px circle around (539.5, 86.5) of
    the capture. */
