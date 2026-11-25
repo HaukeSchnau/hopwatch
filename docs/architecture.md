@@ -38,9 +38,10 @@ the migration steps in `db.ts`.
 
 ## Development
 
-- Node and pnpm come from `devenv.nix`, which shares `nix/toolchain.nix` with the dev shell
-  Calder checks in. `pnpm test` runs the domain tests, `pnpm typecheck` type-checks, `pnpm lint`
-  lints. Calder runs all three on every pull request and push.
+- Node and pnpm come from nix-infra-modules' shared toolchain, which `devenv.nix` and the dev
+  shell Calder checks in (`flake.nix`) both take. `pnpm test` runs the domain tests and
+  `pnpm check` formats, lints and type-checks (`vite.config.ts`, through Vite+). Calder runs both
+  on every pull request and push.
 - `pnpm start --dev-client` runs Metro for development builds, which `pnpm expo run:ios`
   (a Mac with Xcode) and `pnpm expo run:android` make. `scripts/model.sh` runs on-device
   model prompts on a Mac with Apple Intelligence.
@@ -140,7 +141,7 @@ minute. Each look returns when to look next: the other status's end, or half an 
 
 ## Releasing
 
-Every push to `main` releases what it changed, once typecheck, test and lint pass
+Every push to `main` releases what it changed, once check and test pass
 (`.calder/ci.ts`); the same push deploys the website (`site/`) to Cloudflare with
 `alchemy.run.ts`, and a pull request gets a preview of it that's destroyed when it closes.
 Follow a run with `calder status` and `calder logs`, or at https://calder.schnau.dev/app/.

@@ -5,7 +5,8 @@
 // shortcuts.ts).
 // Swift in ios/, Kotlin in android/.
 
-import { NativeModule, requireOptionalNativeModule } from 'expo';
+import type { NativeModule } from "expo";
+import { requireOptionalNativeModule } from "expo";
 
 /** A jelly drawn as an icon. Colors are hex strings like "#FF6FB5". */
 export interface Icon {
@@ -92,4 +93,4 @@ declare class Native extends NativeModule<Events> {
 }
 
 /** Null in builds from before this module (iOS before 1.2.0, Android before 1.1.0). */
-export const systemSurfaces = requireOptionalNativeModule<Native>('SystemSurfaces');
+export const systemSurfaces = requireOptionalNativeModule<Native>("SystemSurfaces");

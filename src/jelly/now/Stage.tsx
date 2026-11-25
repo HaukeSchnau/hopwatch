@@ -3,10 +3,10 @@
 // total, "since 09:12" and Stop. When the running context changes, the stage plans the
 // hop; when the new jelly lands in the ring, its bean lights up.
 
-import { BlurMask, Canvas, Oval } from '@shopify/react-native-skia';
-import { router, useIsFocused } from 'expo-router';
-import { useEffect, useLayoutEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { BlurMask, Canvas, Oval } from "@shopify/react-native-skia";
+import { router, useIsFocused } from "expo-router";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -18,7 +18,7 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 import {
   actions,
@@ -33,23 +33,23 @@ import {
   useDayReport,
   useNow,
   useTree,
-} from '@/core';
-import { menuText } from '@/i18n/menus';
-import { nowText } from '@/i18n/now';
+} from "@/core";
+import { menuText } from "@/i18n/menus";
+import { nowText } from "@/i18n/now";
 
-import { Character } from '../Character';
-import { CandyDial, dayBeans } from '../dial/CandyDial';
-import { dialFrame } from '../dial/geometry';
-import { buzz, play } from '../feedback';
-import { useFace, useLively, wake } from '../Gummy';
-import { Menu } from '../Menu';
-import { onStopMenu, stopMenu } from '../menus';
-import { Mould } from '../Mould';
-import { useShowing } from '../showing';
-import { springs, tabular, text, useTheme } from '../theme';
-import { Timer } from '../Timer';
-import { Icon, RoundButton } from '../ui';
-import { choreograph, useAnchor, useChoreo } from './choreo';
+import { Character } from "../Character";
+import { CandyDial, dayBeans } from "../dial/CandyDial";
+import { dialFrame } from "../dial/geometry";
+import { buzz, play } from "../feedback";
+import { useFace, useLively, wake } from "../Gummy";
+import { Menu } from "../Menu";
+import { onStopMenu, stopMenu } from "../menus";
+import { Mould } from "../Mould";
+import { useShowing } from "../showing";
+import { springs, tabular, text, useTheme } from "../theme";
+import { Timer } from "../Timer";
+import { Icon, RoundButton } from "../ui";
+import { choreograph, useAnchor, useChoreo } from "./choreo";
 
 export const STAGE_BLOB = 104;
 
@@ -61,7 +61,7 @@ export function Stage({ running }: { running: Running | null }) {
   const tree = useTree();
   const shownId = useChoreo((s) => s.shownId);
   const shown = shownId ? (tree.byId.get(shownId) ?? null) : null;
-  const inFlight = useChoreo((s) => s.flights.some((f) => f.kind === 'in' && !f.landed));
+  const inFlight = useChoreo((s) => s.flights.some((f) => f.kind === "in" && !f.landed));
   const runningId = running?.context.id ?? null;
 
   // The hop only plays where it can be seen, and not with Reduce Motion.
@@ -81,11 +81,12 @@ export function Stage({ running }: { running: Running | null }) {
     if (previous.current === runningId) return;
     const from = previous.current;
     previous.current = runningId;
-    choreograph(from, runningId, animate.current);
+    void choreograph(from, runningId, animate.current);
   }, [runningId]);
 
   // Lights the new running bean up as its jelly lands in the ring.
   const ignite = useSharedValue(1);
+
   const light = () => {
     if (reduced) return;
     ignite.set(0);
@@ -99,24 +100,36 @@ export function Stage({ running }: { running: Running | null }) {
 
   return (
     <View style={[styles.stage, { width: size, height: size }]}>
-      <CandyDial frame={frame} dayStart={dayStart} dayEnd={addDays(dayStart, 1)} beans={beans} now={now} ignite={ignite} />
+      <CandyDial
+        frame={frame}
+        dayStart={dayStart}
+        dayEnd={addDays(dayStart, 1)}
+        beans={beans}
+        now={now}
+        ignite={ignite}
+      />
       <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="box-none">
         <BlobSpot shown={shown} empty={!running && !inFlight} onLand={light} />
         {running ? <Readout context={running.context} since={running.entry.startUtc} /> : <Idle />}
       </View>
       <View style={[styles.corner, styles.topLeft]} pointerEvents="none">
-        <Text style={[text.headline, { color: t.c.ink }]}>{nowText.greeting(new Date(now).getHours())}</Text>
+        <Text style={[text.headline, { color: t.c.ink }]}>
+          {nowText.greeting(new Date(now).getHours())}
+        </Text>
         <Text style={[text.footnote, { color: t.c.muted }]}>
           {formatWeekday(now)} {formatDayMonth(now)}
         </Text>
       </View>
       <Pressable
-        onPress={() => router.navigate('/day')}
+        onPress={() => router.navigate("/day")}
         accessibilityRole="button"
         accessibilityLabel={nowText.todayLabel(formatDuration(report.totals.total))}
         hitSlop={8}
-        style={({ pressed }) => [styles.corner, styles.topRight, pressed && { opacity: 0.5 }]}>
-        <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatDuration(report.totals.total)}</Text>
+        style={({ pressed }) => [styles.corner, styles.topRight, pressed && { opacity: 0.5 }]}
+      >
+        <Text style={[text.headline, tabular, { color: t.c.ink }]}>
+          {formatDuration(report.totals.total)}
+        </Text>
         <Text style={[text.footnote, { color: t.c.muted }]}>{nowText.today}</Text>
       </Pressable>
       {running && <Since context={running.context} since={running.entry.startUtc} />}
@@ -126,10 +139,18 @@ export function Stage({ running }: { running: Running | null }) {
 }
 
 /** The jelly in the middle of the ring: breathing, hopping now and then, squashing when it lands. */
-function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; empty: boolean; onLand: () => void }) {
+function BlobSpot({
+  shown,
+  empty,
+  onLand,
+}: {
+  shown: ResolvedContext | null;
+  empty: boolean;
+  onLand: () => void;
+}) {
   const t = useTheme();
-  const anchor = useAnchor('stage');
-  const face = useFace('awake');
+  const anchor = useAnchor("stage");
+  const face = useFace("awake");
   const reduced = useReducedMotion();
   const showing = useShowing();
   useLively(face, shown !== null && !reduced);
@@ -141,7 +162,10 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
   // Breathes while it can be seen and rests otherwise, so other tabs and the background draw nothing.
   useEffect(() => {
     if (reduced || !showing) return;
-    breath.set(withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }), -1, true));
+    breath.set(
+      withRepeat(withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }), -1, true),
+    );
+
     return () => {
       cancelAnimation(breath);
       breath.set(0);
@@ -154,11 +178,12 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
   useEffect(() => {
     if (shownId === lastShown.current) return;
     lastShown.current = shownId;
+
     if (!shownId) return;
     squash.set(withSequence(withTiming(0.26, { duration: 70 }), withSpring(0, springs.wobble)));
     wake(face);
     buzz.tap();
-    play('pop');
+    play("pop");
     onLand();
   }, [face, onLand, shownId, squash]);
 
@@ -166,22 +191,46 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
   useEffect(() => {
     if (!shownId || reduced || !showing) return;
     let timer: ReturnType<typeof setTimeout>;
+
     const schedule = () => {
-      timer = setTimeout(() => {
-        hop.set(withSequence(withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 190, easing: Easing.in(Easing.quad) })));
-        squash.set(withDelay(390, withSequence(withTiming(0.14, { duration: 60 }), withSpring(0, springs.wobble))));
-        schedule();
-      }, 6000 + Math.random() * 6000);
+      timer = setTimeout(
+        () => {
+          hop.set(
+            withSequence(
+              withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
+              withTiming(0, { duration: 190, easing: Easing.in(Easing.quad) }),
+            ),
+          );
+          squash.set(
+            withDelay(
+              390,
+              withSequence(withTiming(0.14, { duration: 60 }), withSpring(0, springs.wobble)),
+            ),
+          );
+          schedule();
+        },
+        6000 + Math.random() * 6000,
+      );
     };
+
     schedule();
+
     return () => clearTimeout(timer);
   }, [hop, reduced, showing, shownId, squash]);
 
   const body = useAnimatedStyle(() => {
     const b = breath.get() * 0.035;
     const s = squash.get();
-    return { transform: [{ translateY: -hop.get() * 14 }, { scaleY: 1 + b - s }, { scaleX: 1 - b * 0.5 + s * 0.8 }] };
+
+    return {
+      transform: [
+        { translateY: -hop.get() * 14 },
+        { scaleY: 1 + b - s },
+        { scaleX: 1 - b * 0.5 + s * 0.8 },
+      ],
+    };
   });
+
   const floor = useAnimatedStyle(() => ({
     opacity: (t.dark ? 0.5 : 0.2) - hop.get() * 0.1,
     transform: [{ scaleX: 1 - hop.get() * 0.25 + squash.get() * 0.5 }],
@@ -192,7 +241,13 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
       {shown && (
         <Animated.View style={[styles.floor, floor]}>
           <Canvas style={{ width: STAGE_BLOB * 0.8, height: 22 }}>
-            <Oval x={STAGE_BLOB * 0.1} y={6} width={STAGE_BLOB * 0.6} height={10} color={t.dark ? '#000000' : t.c.ink}>
+            <Oval
+              x={STAGE_BLOB * 0.1}
+              y={6}
+              width={STAGE_BLOB * 0.6}
+              height={10}
+              color={t.dark ? "#000000" : t.c.ink}
+            >
               <BlurMask blur={5} style="normal" />
             </Oval>
           </Canvas>
@@ -200,11 +255,16 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
       )}
       <View ref={anchor} style={styles.blob}>
         {shown ? (
-          <Animated.View style={[styles.fill, { transformOrigin: 'bottom' }, body]}>
+          <Animated.View style={[styles.fill, { transformOrigin: "bottom" }, body]}>
             <Character context={shown} size={STAGE_BLOB} face={face} shadow={false} />
           </Animated.View>
         ) : empty ? (
-          <Mould seed="empty-stage" size={STAGE_BLOB} color={t.c.faint} fill={t.dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.55)'} />
+          <Mould
+            seed="empty-stage"
+            size={STAGE_BLOB}
+            color={t.c.faint}
+            fill={t.dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.55)"}
+          />
         ) : null}
       </View>
     </View>
@@ -213,19 +273,30 @@ function BlobSpot({ shown, empty, onLand }: { shown: ResolvedContext | null; emp
 
 function Readout({ context, since }: { context: ResolvedContext; since: number }) {
   const t = useTheme();
-  const path = context.ancestors.map((a) => a.name).join(' › ');
+  const path = context.ancestors.map((a) => a.name).join(" › ");
+
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/start', params: { context: context.id } })}
+      onPress={() => router.push({ pathname: "/start", params: { context: context.id } })}
       accessibilityRole="button"
       accessibilityLabel={nowText.runningLabel(context.name, formatClock(since))}
-      style={styles.readout}>
+      style={styles.readout}
+    >
       {path ? (
-        <Text style={[text.caption, styles.path, { color: t.candy[context.hue].ink }]} numberOfLines={1} ellipsizeMode="head">
+        <Text
+          style={[text.caption, styles.path, { color: t.candy[context.hue].ink }]}
+          numberOfLines={1}
+          ellipsizeMode="head"
+        >
           {path}
         </Text>
       ) : null}
-      <Text style={[text.title2, styles.name, { color: t.c.ink }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+      <Text
+        style={[text.title2, styles.name, { color: t.c.ink }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
         {context.name}
       </Text>
       <Timer since={since} size={40} />
@@ -235,6 +306,7 @@ function Readout({ context, since }: { context: ResolvedContext; since: number }
 
 function Idle() {
   const t = useTheme();
+
   return (
     <View style={styles.readout}>
       <Text style={[text.title3, { color: t.c.ink }]}>{nowText.nothingRunning}</Text>
@@ -246,17 +318,19 @@ function Idle() {
 /** "since 09:12": tap to correct when it really started. */
 function Since({ context, since }: { context: ResolvedContext; since: number }) {
   const t = useTheme();
+
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/start', params: { context: context.id } })}
+      onPress={() => router.push({ pathname: "/start", params: { context: context.id } })}
       accessibilityRole="button"
       accessibilityLabel={nowText.startedLabel(formatClock(since))}
       hitSlop={10}
-      style={({ pressed }) => [styles.corner, styles.bottomLeft, pressed && { opacity: 0.5 }]}>
+      style={({ pressed }) => [styles.corner, styles.bottomLeft, pressed && { opacity: 0.5 }]}
+    >
       <Text style={[text.footnote, { color: t.c.muted }]}>{nowText.since}</Text>
       <View style={styles.sinceRow}>
         <Text style={[text.headline, tabular, { color: t.c.ink }]}>{formatClock(since)}</Text>
-        <Icon name={{ ios: 'pencil', android: 'edit' }} size={12} color={t.c.muted} weight="bold" />
+        <Icon name={{ ios: "pencil", android: "edit" }} size={12} color={t.c.muted} weight="bold" />
       </View>
     </Pressable>
   );
@@ -266,18 +340,23 @@ function Since({ context, since }: { context: ResolvedContext; since: number }) 
 function Stop({ context, since }: { context: ResolvedContext; since: number }) {
   const t = useTheme();
   const now = useNow(60_000);
+
   return (
     <View style={[styles.corner, styles.bottomRight]}>
-      <Menu title={menuText.stop(context.name)} items={stopMenu(context.name, since, now)} onPress={onStopMenu}>
+      <Menu
+        title={menuText.stop(context.name)}
+        items={stopMenu(context.name, since, now)}
+        onPress={onStopMenu}
+      >
         <RoundButton
-          icon={{ ios: 'stop.fill', android: 'stop' }}
+          icon={{ ios: "stop.fill", android: "stop" }}
           size={54}
           palette={t.inkCandy}
           accessibilityLabel={menuText.stop(context.name)}
           accessibilityHint={menuText.stopHint}
           onPress={() => {
             actions.stop();
-            play('boop');
+            play("boop");
           }}
         />
       </Menu>
@@ -286,20 +365,25 @@ function Stop({ context, since }: { context: ResolvedContext; since: number }) {
 }
 
 const styles = StyleSheet.create({
-  stage: { alignSelf: 'center' },
-  center: { alignItems: 'center', justifyContent: 'center', paddingBottom: 6 },
-  spot: { width: STAGE_BLOB + 8, alignItems: 'center', justifyContent: 'flex-end', height: STAGE_BLOB + 6 },
-  blob: { width: STAGE_BLOB, height: STAGE_BLOB, position: 'absolute', top: 0 },
+  stage: { alignSelf: "center" },
+  center: { alignItems: "center", justifyContent: "center", paddingBottom: 6 },
+  spot: {
+    width: STAGE_BLOB + 8,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    height: STAGE_BLOB + 6,
+  },
+  blob: { width: STAGE_BLOB, height: STAGE_BLOB, position: "absolute", top: 0 },
   fill: { flex: 1 },
-  floor: { position: 'absolute', bottom: 0 },
-  readout: { alignItems: 'center', maxWidth: 230, marginTop: 2 },
-  path: { textTransform: 'uppercase', letterSpacing: 0.6, maxWidth: 200 },
+  floor: { position: "absolute", bottom: 0 },
+  readout: { alignItems: "center", maxWidth: 230, marginTop: 2 },
+  path: { textTransform: "uppercase", letterSpacing: 0.6, maxWidth: 200 },
   name: { maxWidth: 220, marginTop: -1 },
-  idleHint: { marginTop: 2, textAlign: 'center' },
-  corner: { position: 'absolute' },
+  idleHint: { marginTop: 2, textAlign: "center" },
+  corner: { position: "absolute" },
   topLeft: { left: 4, top: 0 },
-  topRight: { right: 4, top: 0, alignItems: 'flex-end' },
+  topRight: { right: 4, top: 0, alignItems: "flex-end" },
   bottomLeft: { left: 4, bottom: 2 },
   bottomRight: { right: 0, bottom: 0 },
-  sinceRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  sinceRow: { flexDirection: "row", alignItems: "center", gap: 5 },
 });

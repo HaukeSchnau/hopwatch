@@ -3,10 +3,10 @@
 // as smaller gray text: "15 min ago · 14:50" over "Deep work stops at 14:50".
 // TODO: go back to MenuView from @expo/ui/community/menu once its actions take a subtitle.
 
-import { Button, ContextMenu, Host, Image, RNHostView, Section, Text } from '@expo/ui/swift-ui';
-import type { ReactNode } from 'react';
+import { Button, ContextMenu, Host, Image, RNHostView, Section, Text } from "@expo/ui/swift-ui";
+import type { ReactNode } from "react";
 
-import type { MenuSymbol } from './menuSymbols';
+import type { MenuSymbol } from "./menuSymbols";
 
 export interface MenuItem {
   id: string;
@@ -36,7 +36,7 @@ export interface MenuProps {
 
 export function Menu({ title, items, onPress, children }: MenuProps) {
   const rendered = items.map((entry) =>
-    'items' in entry ? (
+    "items" in entry ? (
       <Section key={entry.title} title={entry.title}>
         {entry.items.map((item) => (
           <Item key={item.id} item={item} onPress={onPress} />
@@ -46,6 +46,7 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
       <Item key={entry.id} item={entry} onPress={onPress} />
     ),
   );
+
   return (
     <Host matchContents ignoreSafeArea="all">
       <ContextMenu>
@@ -54,18 +55,27 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
             <>{children}</>
           </RNHostView>
         </ContextMenu.Trigger>
-        <ContextMenu.Items>{title ? <Section title={title}>{rendered}</Section> : rendered}</ContextMenu.Items>
+        <ContextMenu.Items>
+          {title ? <Section title={title}>{rendered}</Section> : rendered}
+        </ContextMenu.Items>
       </ContextMenu>
     </Host>
   );
 }
 
 function Item({ item, onPress }: { item: MenuItem; onPress: (id: string) => void }) {
-  const role = item.destructive ? 'destructive' : undefined;
+  const role = item.destructive ? "destructive" : undefined;
   const press = () => onPress(item.id);
-  if (!item.subtitle) return <Button label={item.title} systemImage={item.image} role={role} onPress={press} />;
+
+  if (!item.subtitle)
+    return <Button label={item.title} systemImage={item.image} role={role} onPress={press} />;
+
   // A label of image, title and subtitle: the system menu lays them out itself.
-  const label = [<Text key="title">{item.title}</Text>, <Text key="subtitle">{item.subtitle}</Text>];
+  const label = [
+    <Text key="title">{item.title}</Text>,
+    <Text key="subtitle">{item.subtitle}</Text>,
+  ];
+
   return (
     <Button role={role} onPress={press}>
       {item.image ? [<Image key="image" systemName={item.image} />, ...label] : label}

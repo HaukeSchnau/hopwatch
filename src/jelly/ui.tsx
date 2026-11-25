@@ -1,9 +1,15 @@
 // Small building blocks shared by Jelly's screens: squishy pressables, candy-coated
 // surfaces, buttons and section titles. Colors come from the current theme.
 
-import { LinearGradient } from 'expo-linear-gradient';
-import { type AndroidSymbol, type SFSymbol, SymbolView, type SymbolWeight, unstable_getMaterialSymbolSourceAsync } from 'expo-symbols';
-import { type ReactNode, useEffect, useState } from 'react';
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  type AndroidSymbol,
+  type SFSymbol,
+  SymbolView,
+  type SymbolWeight,
+  unstable_getMaterialSymbolSourceAsync,
+} from "expo-symbols";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   type GestureResponderEvent,
   type ImageSourcePropType,
@@ -15,14 +21,20 @@ import {
   Text,
   View,
   type ViewStyle,
-} from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
-import type { Hue } from '@/core';
+import type { Hue } from "@/core";
 
-import { buzz } from './feedback';
-import { symbolWeight } from './symbolWeight';
-import { alpha, type Candy, rounded, springs, text, useTheme } from './theme';
+import { buzz } from "./feedback";
+import { symbolWeight } from "./symbolWeight";
+import { alpha, type Candy, rounded, springs, text, useTheme } from "./theme";
 
 /** An icon on both platforms: an SF Symbol for iOS and a Material Symbol for Android. */
 export interface IconName {
@@ -43,19 +55,31 @@ interface IconProps {
  * outlined, so Android draws `stop` and `play_arrow` solid itself, like their SF twins.
  */
 export function Icon({ name, size, color, weight }: IconProps) {
-  if (Platform.OS === 'android' && (name.android === 'stop' || name.android === 'play_arrow')) {
+  if (Platform.OS === "android" && (name.android === "stop" || name.android === "play_arrow")) {
     return <Solid shape={name.android} size={size} color={color} />;
   }
+
   return <SymbolView name={name} size={size} tintColor={color} weight={symbolWeight(weight)} />;
 }
 
 /** A solid stop square or play triangle in a `size` box. */
-function Solid({ shape, size, color }: { shape: 'stop' | 'play_arrow'; size: number; color: string }) {
+function Solid({
+  shape,
+  size,
+  color,
+}: {
+  shape: "stop" | "play_arrow";
+  size: number;
+  color: string;
+}) {
   const side = size * 0.72;
+
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      {shape === 'stop' ? (
-        <View style={{ width: side, height: side, borderRadius: size * 0.16, backgroundColor: color }} />
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      {shape === "stop" ? (
+        <View
+          style={{ width: side, height: side, borderRadius: size * 0.16, backgroundColor: color }}
+        />
       ) : (
         // A border triangle, nudged right so it looks centered.
         <View
@@ -65,8 +89,8 @@ function Solid({ shape, size, color }: { shape: 'stop' | 'play_arrow'; size: num
             borderTopWidth: side / 2,
             borderBottomWidth: side / 2,
             borderLeftColor: color,
-            borderTopColor: 'transparent',
-            borderBottomColor: 'transparent',
+            borderTopColor: "transparent",
+            borderBottomColor: "transparent",
           }}
         />
       )}
@@ -80,16 +104,19 @@ const drawing = new Map<AndroidSymbol, Promise<ImageSourcePropType | null>>();
 
 function drawSymbol(symbol: AndroidSymbol): Promise<ImageSourcePropType | null> {
   let pending = drawing.get(symbol);
+
   if (!pending) {
     // Drawn black: native headers and Compose's Icon tint it themselves.
-    pending = unstable_getMaterialSymbolSourceAsync(symbol, 24, '#000000')
+    pending = unstable_getMaterialSymbolSourceAsync(symbol, 24, "#000000")
       .catch(() => null)
       .then((source) => {
         symbolImages.set(symbol, source);
+
         return source;
       });
     drawing.set(symbol, pending);
   }
+
   return pending;
 }
 
@@ -104,20 +131,27 @@ export function preloadSymbolImages(symbols: readonly AndroidSymbol[]) {
  */
 export function useSymbolImage(symbol: AndroidSymbol | undefined): ImageSourcePropType | null {
   // A fresh drawing arrives through state: React Compiler doesn't see the cache change.
-  const [drawn, setDrawn] = useState<{ symbol: AndroidSymbol; source: ImageSourcePropType | null } | null>(null);
+  const [drawn, setDrawn] = useState<{
+    symbol: AndroidSymbol;
+    source: ImageSourcePropType | null;
+  } | null>(null);
+
   useEffect(() => {
     if (!symbol) return;
     let live = true;
     void drawSymbol(symbol).then((source) => live && setDrawn({ symbol, source }));
+
     return () => {
       live = false;
     };
   }, [symbol]);
+
   if (!symbol) return null;
+
   return drawn?.symbol === symbol ? drawn.source : (symbolImages.get(symbol) ?? null);
 }
 
-interface SquishyProps extends Omit<PressableProps, 'style' | 'children'> {
+interface SquishyProps extends Omit<PressableProps, "style" | "children"> {
   children: ReactNode;
   /** Styles the squishing body. */
   style?: StyleProp<ViewStyle>;
@@ -147,16 +181,20 @@ export function Squishy({
   ...rest
 }: SquishyProps) {
   const squash = useSharedValue(0);
+
   const animated = useAnimatedStyle(() => {
     const s = squash.get();
+
     return { transform: [{ scaleX: 1 + s * 0.6 }, { scaleY: 1 - s }] };
   });
+
   return (
     <Pressable
       {...rest}
       style={outerStyle}
       onPressIn={(e) => {
         squash.set(withSpring(amount, springs.snappy));
+
         if (haptic) buzz.squish();
         onPressIn?.(e);
       }}
@@ -168,11 +206,19 @@ export function Squishy({
         onLongPress &&
         ((e: GestureResponderEvent) => {
           buzz.thud();
-          squash.set(withSequence(withTiming(-amount * 0.6, { duration: 90 }), withSpring(0, springs.wobble)));
+          squash.set(
+            withSequence(
+              withTiming(-amount * 0.6, { duration: 90 }),
+              withSpring(0, springs.wobble),
+            ),
+          );
           onLongPress(e);
         })
-      }>
-      <Animated.View style={[style, grounded && { transformOrigin: 'bottom' }, animated]}>{children}</Animated.View>
+      }
+    >
+      <Animated.View style={[style, grounded && { transformOrigin: "bottom" }, animated]}>
+        {children}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -189,20 +235,43 @@ interface CandySurfaceProps {
 }
 
 /** A glossy candy-coated rounded surface: gradient body, top gloss and a colored shadow. */
-export function CandySurface({ hue = 'pink', palette, radius, style, children, flat = false }: CandySurfaceProps) {
+export function CandySurface({
+  hue = "pink",
+  palette,
+  radius,
+  style,
+  children,
+  flat = false,
+}: CandySurfaceProps) {
   const t = useTheme();
   const c = palette ?? t.candy[hue];
+
   return (
     <View
       style={[
         { borderRadius: radius, backgroundColor: c.fill },
         !flat &&
-          (Platform.OS === 'android'
+          (Platform.OS === "android"
             ? // The same colored shadow; Android ignores the shadow props.
-              { boxShadow: [{ offsetX: 0, offsetY: 6, blurRadius: 10, color: alpha(c.deep, t.dark ? 0.5 : 0.35) }] }
-            : { shadowColor: c.deep, shadowOpacity: t.dark ? 0.5 : 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 6 } }),
+              {
+                boxShadow: [
+                  {
+                    offsetX: 0,
+                    offsetY: 6,
+                    blurRadius: 10,
+                    color: alpha(c.deep, t.dark ? 0.5 : 0.35),
+                  },
+                ],
+              }
+            : {
+                shadowColor: c.deep,
+                shadowOpacity: t.dark ? 0.5 : 0.35,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 6 },
+              }),
         style,
-      ]}>
+      ]}
+    >
       <LinearGradient
         colors={[c.light, c.fill, c.deep]}
         locations={[0, 0.5, 1]}
@@ -211,13 +280,13 @@ export function CandySurface({ hue = 'pink', palette, radius, style, children, f
       <View
         pointerEvents="none"
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: Math.min(5, radius * 0.18),
           left: radius * 0.55,
-          width: '28%',
+          width: "28%",
           height: Math.min(8, radius * 0.3),
           borderRadius: 99,
-          backgroundColor: 'rgba(255,255,255,0.34)',
+          backgroundColor: "rgba(255,255,255,0.34)",
         }}
       />
       {children}
@@ -232,18 +301,30 @@ interface JellyButtonProps {
   hue?: Hue;
   palette?: Candy;
   icon?: IconName;
-  size?: 'large' | 'medium' | 'small';
+  size?: "large" | "medium" | "small";
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
   accessibilityHint?: string;
 }
 
 /** A gummy pill button. */
-export function JellyButton({ label, onPress, onLongPress, hue, palette, icon, size = 'medium', style, disabled, accessibilityHint }: JellyButtonProps) {
+export function JellyButton({
+  label,
+  onPress,
+  onLongPress,
+  hue,
+  palette,
+  icon,
+  size = "medium",
+  style,
+  disabled,
+  accessibilityHint,
+}: JellyButtonProps) {
   const t = useTheme();
-  const c = palette ?? t.candy[hue ?? 'pink'];
-  const height = size === 'large' ? 58 : size === 'medium' ? 50 : 40;
-  const fontSize = size === 'large' ? 20 : size === 'medium' ? 17 : 15;
+  const c = palette ?? t.candy[hue ?? "pink"];
+  const height = size === "large" ? 58 : size === "medium" ? 50 : 40;
+  const fontSize = size === "large" ? 20 : size === "medium" ? 17 : 15;
+
   return (
     <Squishy
       onPress={onPress}
@@ -252,8 +333,13 @@ export function JellyButton({ label, onPress, onLongPress, hue, palette, icon, s
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
-      style={[{ opacity: disabled ? 0.45 : 1 }, style]}>
-      <CandySurface palette={c} radius={height / 2} style={[styles.button, { height, paddingHorizontal: height * 0.45 }]}>
+      style={[{ opacity: disabled ? 0.45 : 1 }, style]}
+    >
+      <CandySurface
+        palette={c}
+        radius={height / 2}
+        style={[styles.button, { height, paddingHorizontal: height * 0.45 }]}
+      >
         {icon && <Icon name={icon} size={fontSize} color={c.on} weight="bold" />}
         <Text style={[styles.buttonLabel, { fontSize, color: c.on }]} numberOfLines={1}>
           {label}
@@ -274,9 +360,18 @@ interface RoundButtonProps {
 }
 
 /** A round gummy icon button. */
-export function RoundButton({ icon, onPress, onLongPress, size = 44, palette, accessibilityLabel, accessibilityHint }: RoundButtonProps) {
+export function RoundButton({
+  icon,
+  onPress,
+  onLongPress,
+  size = 44,
+  palette,
+  accessibilityLabel,
+  accessibilityHint,
+}: RoundButtonProps) {
   const t = useTheme();
   const c = palette ?? t.plainCandy;
+
   return (
     <Squishy
       onPress={onPress}
@@ -285,8 +380,13 @@ export function RoundButton({ icon, onPress, onLongPress, size = 44, palette, ac
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      hitSlop={Math.max(0, (44 - size) / 2)}>
-      <CandySurface palette={c} radius={size / 2} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      hitSlop={Math.max(0, (44 - size) / 2)}
+    >
+      <CandySurface
+        palette={c}
+        radius={size / 2}
+        style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}
+      >
         <Icon name={icon} size={size * 0.4} color={c.on} weight="bold" />
       </CandySurface>
     </Squishy>
@@ -297,14 +397,31 @@ export function RoundButton({ icon, onPress, onLongPress, size = 44, palette, ac
 export function useWiggle() {
   const r = useSharedValue(0);
   const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.get()}deg` }] }));
+
   const wiggle = () =>
-    r.set(withSequence(withTiming(-7, { duration: 60 }), withTiming(6, { duration: 80 }), withSpring(0, springs.wobble)));
+    r.set(
+      withSequence(
+        withTiming(-7, { duration: 60 }),
+        withTiming(6, { duration: 80 }),
+        withSpring(0, springs.wobble),
+      ),
+    );
+
   return { style, wiggle };
 }
 
 /** A section heading in the page's own voice: bold rounded ink, with an optional control. */
-export function SectionTitle({ children, right, style }: { children: ReactNode; right?: ReactNode; style?: StyleProp<ViewStyle> }) {
+export function SectionTitle({
+  children,
+  right,
+  style,
+}: {
+  children: ReactNode;
+  right?: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
   const t = useTheme();
+
   return (
     <View style={[styles.sectionRow, style]}>
       <Text style={[text.title3, { color: t.c.ink }]}>{children}</Text>
@@ -314,7 +431,12 @@ export function SectionTitle({ children, right, style }: { children: ReactNode; 
 }
 
 const styles = StyleSheet.create({
-  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  buttonLabel: { ...rounded('700'), letterSpacing: 0.1 },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  button: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  buttonLabel: { ...rounded("700"), letterSpacing: 0.1 },
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
 });

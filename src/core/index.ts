@@ -2,10 +2,14 @@
 // with the time helpers. Nothing in src/jelly talks to SQLite, notifications or the
 // timeline module directly.
 
-export { markBreak, setEveningCheck, useEveningCheck } from './evening';
-export * from './hooks';
-export { parseCommand, type RemoteCommand, type Snapshot, snapshotOf, tapCommand } from './remote';
-export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from './links';
+export { markBreak, setEveningCheck, useEveningCheck } from "./evening";
+
+export * from "./hooks";
+
+export { parseCommand, type RemoteCommand, type Snapshot, snapshotOf, tapCommand } from "./remote";
+
+export { type LinkAction, parseLink, resumeLink, startLink, stopLink } from "./links";
+
 export {
   type ConnectResult,
   connectSlack,
@@ -14,11 +18,16 @@ export {
   syncSlack,
   useSlackAvailable,
   useSlackLink,
-} from './slack-link';
-export type { SlackLine } from './tree';
-export * from './model';
-export { type GermanState, germanStates, type HolidayId } from './holidays';
-export { isJobHours } from './workdays';
+} from "./slack-link";
+
+export type { SlackLine } from "./tree";
+
+export * from "./model";
+
+export { type GermanState, germanStates, type HolidayId } from "./holidays";
+
+export { isJobHours } from "./workdays";
+
 export {
   type DayReport,
   formatTargetLine,
@@ -31,7 +40,8 @@ export {
   type TotalsNode,
   totalsText,
   type WeekReport,
-} from './reports';
+} from "./reports";
+
 export {
   actions,
   connectRemoteQueue,
@@ -43,8 +53,10 @@ export {
   newContextId,
   type HopwatchState,
   useHopwatch,
-} from './store';
-export * from './time';
+} from "./store";
+
+export * from "./time";
+
 export {
   blockInside,
   type EntryPatch,
@@ -55,11 +67,24 @@ export {
   previousContextId,
   previewStart,
   type StartPreview,
-} from './timeline';
-export { type Plan, type Reading, readSentence, type SentenceAnswer, sentenceRequest } from './sentence';
-export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from './tree';
-export type { Backup, ParseResult } from './backup';
-export { LAST_EXPORT, pickBackup, shareExport } from './export';
-export { requestNudgePermission } from './permissions';
-export { eraseAllData, loadSampleData } from './sample-loader';
-export { checkSummary, summaryRequest, weekFacts, type WeekFacts } from './week-facts';
+} from "./timeline";
+
+export {
+  type Plan,
+  type Reading,
+  readSentence,
+  type SentenceAnswer,
+  sentenceRequest,
+} from "./sentence";
+
+export { type ContextTree, pathLabel, type ResolvedContext, subtreeIds } from "./tree";
+
+export type { Backup, ParseResult } from "./backup";
+
+export { LAST_EXPORT, pickBackup, shareExport } from "./export";
+
+export { requestNudgePermission } from "./permissions";
+
+export { eraseAllData, loadSampleData } from "./sample-loader";
+
+export { checkSummary, summaryRequest, weekFacts, type WeekFacts } from "./week-facts";

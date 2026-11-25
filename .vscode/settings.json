@@ -1,7 +1,11 @@
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit",
+    "source.fixAll.oxc": "always",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": true,
+  "js/ts.experimental.useTsgo": true,
+  "js/ts.tsdk.path": "./node_modules/tsrs/tsdk"
 }

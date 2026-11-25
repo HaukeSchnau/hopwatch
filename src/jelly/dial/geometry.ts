@@ -2,7 +2,7 @@
 // the top, so the working day arcs overhead like the sun. Angles are degrees clockwise
 // from 12 o'clock.
 
-import { Skia } from '@shopify/react-native-skia';
+import { Skia } from "@shopify/react-native-skia";
 
 export interface DialFrame {
   /** Canvas side length. */
@@ -31,27 +31,35 @@ export function degToFrac(deg: number): number {
 }
 
 export function polar(frame: DialFrame, deg: number, radius = frame.r) {
-  'worklet';
+  "worklet";
   const rad = (deg * Math.PI) / 180;
+
   return { x: frame.cx + radius * Math.sin(rad), y: frame.cy - radius * Math.cos(rad) };
 }
 
 /** The angle of a point around the dial's center, in [0, 360). */
 export function pointDeg(frame: DialFrame, x: number, y: number): number {
   const deg = (Math.atan2(x - frame.cx, frame.cy - y) * 180) / Math.PI;
+
   return (deg + 360) % 360;
 }
 
-export const pointRadius = (frame: DialFrame, x: number, y: number) => Math.hypot(x - frame.cx, y - frame.cy);
+export const pointRadius = (frame: DialFrame, x: number, y: number) =>
+  Math.hypot(x - frame.cx, y - frame.cy);
 
 /** Degrees covered by `px` along the ring at `radius`. */
 export const pxToDeg = (px: number, radius: number) => (px / radius) * (180 / Math.PI);
 
 /** A clockwise arc starting at `fromDeg`. */
 export function arcPath(frame: DialFrame, fromDeg: number, sweepDeg: number, radius = frame.r) {
-  'worklet';
+  "worklet";
   const path = Skia.Path.Make();
-  path.addArc(Skia.XYWHRect(frame.cx - radius, frame.cy - radius, radius * 2, radius * 2), fromDeg - 90, sweepDeg);
+  path.addArc(
+    Skia.XYWHRect(frame.cx - radius, frame.cy - radius, radius * 2, radius * 2),
+    fromDeg - 90,
+    sweepDeg,
+  );
+
   return path;
 }
 

@@ -1,9 +1,9 @@
-import * as Alchemy from 'alchemy';
-import * as Cloudflare from '@alchemy.run/cloudflare';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
+import * as Alchemy from "alchemy";
+import * as Cloudflare from "@alchemy.run/cloudflare";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
-const productionStage = 'prod';
+const productionStage = "prod";
 
 const headers = `
 /*
@@ -18,7 +18,7 @@ const state = Layer.unwrap(
   Effect.gen(function* () {
     return (yield* Alchemy.ALCHEMY_DEV)
       ? Alchemy.localState()
-      : Cloudflare.state({ workerName: 'alchemy-state-store-fleet' });
+      : Cloudflare.state({ workerName: "alchemy-state-store-fleet" });
   }).pipe(Effect.orDie),
 );
 
@@ -29,29 +29,31 @@ const state = Layer.unwrap(
  * https://pr-42-hopwatch.hauke-911.workers.dev. `alchemy dev` serves it from workerd on HOST:PORT.
  */
 export default Alchemy.Stack(
-  'Hopwatch',
+  "Hopwatch",
   { providers: Cloudflare.providers(), state },
   Effect.gen(function* () {
     const { stage } = yield* Alchemy.Stack;
-    const site = yield* Cloudflare.Worker('Site', {
-      compatibility: { date: '2026-10-01' },
-      assets: { directory: 'site', headers },
+
+    const site = yield* Cloudflare.Worker("Site", {
+      compatibility: { date: "2026-10-01" },
+      assets: { directory: "site", headers },
       ...((yield* Alchemy.ALCHEMY_DEV)
         ? {
             dev: {
-              host: process.env.HOST ?? 'localhost',
+              host: process.env.HOST ?? "localhost",
               port: Number(process.env.PORT ?? 1337),
               strictPort: true,
             },
           }
         : stage === productionStage
           ? {
-              name: 'hopwatch',
+              name: "hopwatch",
               workersDev: { enabled: false, previewsEnabled: true },
-              domain: 'hopwatch.schnau.dev',
+              domain: "hopwatch.schnau.dev",
             }
-          : { preview: { of: yield* Cloudflare.Worker.ref('Site', { stage: productionStage }) } }),
+          : { preview: { of: yield* Cloudflare.Worker.ref("Site", { stage: productionStage }) } }),
     });
+
     return { url: site.url };
   }),
 );

@@ -8,7 +8,7 @@ import {
   DEFAULT_NUDGE_MINUTES,
   type Entry,
   type Hue,
-} from './model';
+} from "./model";
 
 /** A resolved Slack status: what Slack shows while the jelly runs. */
 export interface SlackLine {
@@ -42,56 +42,72 @@ export interface ContextTree {
   ordered: ResolvedContext[];
 }
 
-const bySortOrder = (a: Context, b: Context) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
+const bySortOrder = (a: Context, b: Context) =>
+  a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
 
 export function buildTree(contexts: Iterable<Context>): ContextTree {
   const live = [...contexts].filter((c) => c.deletedAt === null);
   const known = new Set(live.map((c) => c.id));
   const children = new Map<ContextId | null, Context[]>();
+
   for (const c of live) {
     // Orphans (parent deleted or missing) are shown as roots rather than lost.
     const parent = c.parentId && known.has(c.parentId) ? c.parentId : null;
     children.set(parent, [...(children.get(parent) ?? []), c]);
   }
+
   for (const list of children.values()) list.sort(bySortOrder);
 
   const byId = new Map<ContextId, ResolvedContext>();
   const ordered: ResolvedContext[] = [];
+
   const visit = (c: Context, parent: ResolvedContext | null) => {
     const glyph = c.emoji ?? parent?.glyph ?? null;
+
     const node: ResolvedContext = {
       ...c,
       hue: c.color ?? parent?.hue ?? DEFAULT_HUE,
       glyph,
       nudgeMinutes: c.nudgeAfterMinutes ?? parent?.nudgeMinutes ?? DEFAULT_NUDGE_MINUTES,
-      slack: c.slackStatus ? { text: c.slackStatus.text, emoji: c.slackStatus.emoji ?? glyph } : null,
+      slack: c.slackStatus
+        ? { text: c.slackStatus.text, emoji: c.slackStatus.emoji ?? glyph }
+        : null,
       depth: parent ? parent.depth + 1 : 0,
       ancestors: parent ? [...parent.ancestors, parent] : [],
       childIds: (children.get(c.id) ?? []).map((child) => child.id),
       hidden: c.archivedAt !== null || (parent?.hidden ?? false),
     };
+
     byId.set(c.id, node);
     ordered.push(node);
+
     for (const child of children.get(c.id) ?? []) visit(child, node);
   };
+
   const roots = children.get(null) ?? [];
+
   for (const root of roots) visit(root, null);
+
   return { byId, roots: roots.map((r) => r.id), ordered };
 }
 
 /** The node and all of its descendants. */
 export function subtreeIds(tree: ContextTree, id: ContextId): Set<ContextId> {
   const ids = new Set<ContextId>();
+
   const walk = (current: ContextId) => {
     ids.add(current);
+
     for (const child of tree.byId.get(current)?.childIds ?? []) walk(child);
   };
+
   walk(id);
+
   return ids;
 }
 
 /** "Clients › Acme › Website" */
-export const pathLabel = (node: ResolvedContext, separator = ' › ') =>
+export const pathLabel = (node: ResolvedContext, separator = " › ") =>
   [...node.ancestors.map((a) => a.name), node.name].join(separator);
 
 /** Contexts that can be started from pickers: not archived and not under an archived node. */
@@ -108,9 +124,14 @@ export interface NewContextInput {
   pinned?: boolean;
 }
 
-export function createContext(contexts: readonly Context[], input: NewContextInput, now: number): Context[] {
+export function createContext(
+  contexts: readonly Context[],
+  input: NewContextInput,
+  now: number,
+): Context[] {
   const parentId = input.parentId ?? null;
   const siblings = contexts.filter((c) => c.deletedAt === null && c.parentId === parentId);
+
   const context: Context = {
     id: input.id,
     parentId,
@@ -130,14 +151,22 @@ export function createContext(contexts: readonly Context[], input: NewContextInp
     updatedAt: now,
     deletedAt: null,
   };
+
   return [context];
 }
 
 /** The lowest free pin slot, so pinning never shifts existing tiles. */
 export function nextFreePin(contexts: readonly Context[]): number {
-  const taken = new Set(contexts.filter((c) => c.deletedAt === null && c.pinPosition !== null).map((c) => c.pinPosition));
+  const taken = new Set(
+    contexts.flatMap((c) =>
+      c.deletedAt === null && c.pinPosition !== null ? [c.pinPosition] : [],
+    ),
+  );
+
   let slot = 0;
+
   while (taken.has(slot)) slot++;
+
   return slot;
 }
 
@@ -145,12 +174,24 @@ export function nextFreePin(contexts: readonly Context[]): number {
  * Moves a pinned context to `slot`. A context already in that slot takes the
  * vacated one, so every other tile keeps its place.
  */
-export function movePin(contexts: readonly Context[], id: ContextId, slot: number, now: number): Context[] {
+export function movePin(
+  contexts: readonly Context[],
+  id: ContextId,
+  slot: number,
+  now: number,
+): Context[] {
   const moving = contexts.find((c) => c.id === id);
+
   if (!moving || moving.pinPosition === slot) return [];
-  const occupant = contexts.find((c) => c.deletedAt === null && c.pinPosition === slot && c.id !== id);
+
+  const occupant = contexts.find(
+    (c) => c.deletedAt === null && c.pinPosition === slot && c.id !== id,
+  );
+
   const rows: Context[] = [{ ...moving, pinPosition: slot, updatedAt: now }];
+
   if (occupant) rows.push({ ...occupant, pinPosition: moving.pinPosition, updatedAt: now });
+
   return rows;
 }
 
@@ -166,29 +207,48 @@ export function moveContext(
   now: number,
 ): Context[] {
   const moving = contexts.find((c) => c.id === id);
+
   if (!moving) return [];
   const tree = buildTree(contexts);
+
   if (parentId !== null && subtreeIds(tree, id).has(parentId)) return [];
 
   const siblings = contexts
     .filter((c) => c.deletedAt === null && c.parentId === parentId && c.id !== id)
     .sort(bySortOrder);
+
   const clamped = Math.max(0, Math.min(index, siblings.length));
   const order = [...siblings.slice(0, clamped), moving, ...siblings.slice(clamped)];
+
   return order.flatMap((c, sortOrder) => {
     const changed = c.id === id ? { ...c, parentId, sortOrder } : { ...c, sortOrder };
+
     return c.sortOrder === sortOrder && c.id !== id ? [] : [{ ...changed, updatedAt: now }];
   });
 }
 
 /** Archiving also frees the pin slot; the history stays. */
-export const archive = (c: Context, now: number): Context => ({ ...c, archivedAt: now, pinPosition: null, updatedAt: now });
+export const archive = (c: Context, now: number): Context => ({
+  ...c,
+  archivedAt: now,
+  pinPosition: null,
+  updatedAt: now,
+});
 
-export const unarchive = (c: Context, now: number): Context => ({ ...c, archivedAt: null, updatedAt: now });
+export const unarchive = (c: Context, now: number): Context => ({
+  ...c,
+  archivedAt: null,
+  updatedAt: now,
+});
 
 /** A context without entries and without children can be deleted; others are archived. */
-export function canDelete(contexts: readonly Context[], entries: readonly Entry[], id: ContextId): boolean {
+export function canDelete(
+  contexts: readonly Context[],
+  entries: readonly Entry[],
+  id: ContextId,
+): boolean {
   const hasChildren = contexts.some((c) => c.deletedAt === null && c.parentId === id);
   const hasEntries = entries.some((e) => e.contextId === id);
+
   return !hasChildren && !hasEntries;
 }

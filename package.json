@@ -1,7 +1,14 @@
 {
   "name": "hopwatch",
-  "main": "index.ts",
   "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo run:ios",
+    "check": "vp check",
+    "test": "vp test run"
+  },
   "dependencies": {
     "@bacons/apple-targets": "^5.0.0",
     "@expo/ui": "~57.0.21",
@@ -44,25 +51,20 @@
   "devDependencies": {
     "@alchemy.run/cloudflare": "2.0.0-beta.85",
     "@effect/platform-node": "4.1.2",
-    "@types/node": "^24.19.2",
+    "@oxlint/plugins": "1.94.0",
+    "@schnau/tsconfig": "^0.1.0",
+    "@types/node": "^26.6.5",
     "@types/react": "~19.2.2",
     "alchemy": "2.0.0-beta.85",
     "canvaskit-wasm": "0.41.0",
     "eas-cli": "25.3.0",
     "effect": "4.1.2",
-    "eslint": "^9.0.0",
-    "eslint-config-expo": "~57.0.2",
     "fast-check": "^4.10.2",
-    "typescript": "~6.0.3",
-    "vitest": "^5.0.1"
+    "tsrs": "7.1.0-beta.tsrs4",
+    "vite-plus": "catalog:"
   },
-  "scripts": {
-    "start": "expo start",
-    "ios": "expo run:ios",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "lint": "expo lint"
+  "engines": {
+    "node": ">=26"
   },
-  "private": true,
-  "packageManager": "pnpm@11.27.0"
+  "packageManager": "pnpm@12.9.0"
 }

@@ -3,10 +3,10 @@
 // neckwear go) are measured from the outline, so parts fit every body and every seeded
 // variation of it.
 
-import { Skia, type SkPath } from '@shopify/react-native-skia';
+import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-import { closedSpline, hashSeed, random } from '../geometry';
-import type { Body } from './traits';
+import { around, closedSpline, hashSeed, random } from "../geometry";
+import type { Body } from "./traits";
 
 export const UNIT = 100;
 export const FLOOR = 90;
@@ -44,23 +44,26 @@ interface Def {
 
 function svg(d: string): SkPath {
   const path = Skia.Path.MakeFromSVGString(d);
+
   if (!path) throw new Error(`Bad body path: ${d}`);
+
   return path;
 }
 
-/** A polygon with rounded corners; `radii` per vertex. */
-function roundedPolygon(points: [number, number][], radii: number[]): SkPath {
+/** A polygon with rounded corners, each `[x, y, radius]`. */
+function roundedPolygon(corners: readonly [number, number, number][]): SkPath {
   const b = Skia.PathBuilder.Make();
-  const n = points.length;
-  const [ax, ay] = points[n - 1];
-  const [bx, by] = points[0];
+  const [ax, ay] = around(corners, -1);
+  const [bx, by] = around(corners, 0);
   b.moveTo((ax + bx) / 2, (ay + by) / 2);
-  for (let i = 0; i < n; i++) {
-    const [x1, y1] = points[i];
-    const [x2, y2] = points[(i + 1) % n];
-    b.arcToTangent(x1, y1, x2, y2, radii[i]);
+
+  for (const [i, [x1, y1, radius]] of corners.entries()) {
+    const [x2, y2] = around(corners, i + 1);
+    b.arcToTangent(x1, y1, x2, y2, radius);
   }
+
   b.close();
+
   return b.detach();
 }
 
@@ -75,27 +78,29 @@ function ghostPath(): SkPath {
   b.cubicTo(right, 66, right + 1.5, 76, right + 1.5, hemTop);
   const scallops = 3;
   const span = (right + 1.5 - (left - 1.5)) / scallops;
+
   for (let i = 0; i < scallops; i++) {
     const xa = right + 1.5 - i * span;
     const xb = xa - span;
     b.cubicTo(xa, FLOOR + 2.4, xb, FLOOR + 2.4, xb, hemTop);
   }
+
   b.cubicTo(left - 1.5, 76, left, 66, left, 54);
   b.close();
+
   return b.detach();
 }
 
 function starPath(): SkPath {
-  const points: [number, number][] = [];
+  const corners: [number, number, number][] = [];
+
   for (let i = 0; i < 10; i++) {
     const angle = -Math.PI / 2 + (i * Math.PI) / 5;
     const r = i % 2 === 0 ? 50 : 27;
-    points.push([50 + Math.cos(angle) * r, 55 + Math.sin(angle) * r]);
+    corners.push([50 + Math.cos(angle) * r, 55 + Math.sin(angle) * r, i % 2 === 0 ? 7.5 : 6]);
   }
-  return roundedPolygon(
-    points,
-    points.map((_, i) => (i % 2 === 0 ? 7.5 : 6)),
-  );
+
+  return roundedPolygon(corners);
 }
 
 const defs: Record<Body, Def> = {
@@ -104,21 +109,32 @@ const defs: Record<Body, Def> = {
     face: { x: 50, y: 61.5, s: 1.12 },
   },
   gumdrop: {
-    path: () => svg('M 22 90 C 12 90 9 84 10.5 75 C 13 55 27 27 50 27 C 73 27 87 55 89.5 75 C 91 84 88 90 78 90 Z'),
+    path: () =>
+      svg(
+        "M 22 90 C 12 90 9 84 10.5 75 C 13 55 27 27 50 27 C 73 27 87 55 89.5 75 C 91 84 88 90 78 90 Z",
+      ),
     face: { x: 50, y: 65, s: 1.06 },
   },
   drop: {
-    path: () => svg('M 53 11 C 55 27 85 40 85 63 C 85 79 70 90 50 90 C 30 90 15 79 15 63 C 15 42 43 30 53 11 Z'),
+    path: () =>
+      svg(
+        "M 53 11 C 55 27 85 40 85 63 C 85 79 70 90 50 90 C 30 90 15 79 15 63 C 15 42 43 30 53 11 Z",
+      ),
     face: { x: 50, y: 65, s: 1.06 },
     mirror: true,
   },
   bean: {
     path: () =>
-      svg('M 12 65 C 12 49 24 40.5 37 41.5 C 43 42 46 45 50 45 C 54 45 57 42 63 41.5 C 76 40.5 88 49 88 65 C 88 81 72 90 50 90 C 28 90 12 81 12 65 Z'),
+      svg(
+        "M 12 65 C 12 49 24 40.5 37 41.5 C 43 42 46 45 50 45 C 54 45 57 42 63 41.5 C 76 40.5 88 49 88 65 C 88 81 72 90 50 90 C 28 90 12 81 12 65 Z",
+      ),
     face: { x: 50, y: 67, s: 1.06 },
   },
   mochi: {
-    path: () => svg('M 21 90 C 12.5 90 9 85 9 78 C 9 58.5 28.5 44 50 44 C 71.5 44 91 58.5 91 78 C 91 85 87.5 90 79 90 Z'),
+    path: () =>
+      svg(
+        "M 21 90 C 12.5 90 9 85 9 78 C 9 58.5 28.5 44 50 44 C 71.5 44 91 58.5 91 78 C 91 85 87.5 90 79 90 Z",
+      ),
     face: { x: 50, y: 69, s: 1 },
   },
   capsule: {
@@ -127,14 +143,11 @@ const defs: Record<Body, Def> = {
   },
   onigiri: {
     path: () =>
-      roundedPolygon(
-        [
-          [50, 6],
-          [95, 90],
-          [5, 90],
-        ],
-        [14, 16, 16],
-      ),
+      roundedPolygon([
+        [50, 6, 14],
+        [95, 90, 16],
+        [5, 90, 16],
+      ]),
     face: { x: 50, y: 64, s: 1 },
   },
   star: {
@@ -152,12 +165,15 @@ function blobPath(seed: string): SkPath {
   const next = random(hashSeed(`lumps:${seed}`));
   const count = 12;
   const raw = Array.from({ length: count }, () => next() * 2 - 1);
-  const wobble = raw.map((v, i) => (raw[(i + count - 1) % count] + 2 * v + raw[(i + 1) % count]) / 4);
+
+  const wobble = raw.map((v, i) => (around(raw, i - 1) + 2 * v + around(raw, i + 1)) / 4);
+
   const exponent = 2.6;
   const cx = 50;
   const cy = 61;
   const rx = 37;
   const ry = 30;
+
   return closedSpline(
     wobble.map((w, i) => {
       const theta = -Math.PI / 2 + (2 * Math.PI * i) / count;
@@ -167,7 +183,9 @@ function blobPath(seed: string): SkPath {
       const ux = Math.sign(c) * Math.pow(Math.abs(c), 2 / exponent);
       let uy = Math.sign(s) * Math.pow(Math.abs(s), 2 / exponent);
       const pear = 1 + 0.07 * uy;
+
       if (uy > 0) uy *= 0.95;
+
       return { x: cx + ux * rx * k * pear, y: cy + uy * ry * k };
     }),
   );
@@ -179,17 +197,21 @@ function reach(path: SkPath, x: number, y: number, deg: number): number {
   const dy = Math.sin((deg * Math.PI) / 180);
   let lo = 0;
   let hi = 80;
+
   for (let i = 0; i < 18; i++) {
     const mid = (lo + hi) / 2;
+
     if (path.contains(x + dx * mid, y + dy * mid)) lo = mid;
     else hi = mid;
   }
+
   return lo;
 }
 
 function edge(path: SkPath, x: number, y: number, deg: number) {
   const r = reach(path, x, y, deg);
   const rad = (deg * Math.PI) / 180;
+
   return { x: x + Math.cos(rad) * r, y: y + Math.sin(rad) * r };
 }
 
@@ -199,7 +221,7 @@ const widthAt = (path: SkPath, x: number, y: number) =>
 /** The body's width at height `y` through the face's centre line (0 outside the body). */
 export const widthOf = (geo: BodyGeo, y: number) => widthAt(geo.path, geo.face.x, y);
 
-function measure(path: SkPath, face: Def['face']): BodyGeo {
+function measure(path: SkPath, face: Def["face"]): BodyGeo {
   const bounds = path.computeTightBounds();
   const top = bounds.y;
   const bottom = bounds.y + bounds.height;
@@ -207,6 +229,7 @@ function measure(path: SkPath, face: Def['face']): BodyGeo {
 
   // Hats sit where the head first gets wide enough to hold one.
   let crownY = top + 0.5;
+
   while (crownY < face.y && widthAt(path, cx, crownY) < 22) crownY += 0.5;
 
   const ear = edge(path, cx, face.y, -90 + 42);
@@ -255,6 +278,7 @@ const cache = new Map<string, BodyGeo>();
 export function bodyGeo(body: Body, seed: string): BodyGeo {
   const key = `${body}:${seed}`;
   const hit = cache.get(key);
+
   if (hit) return hit;
   const def = defs[body];
   const next = random(hashSeed(`shape:${seed}`));
@@ -265,10 +289,14 @@ export function bodyGeo(body: Body, seed: string): BodyGeo {
   // Settle every body on the floor before stretching it around its foot.
   const raw = path.computeTightBounds();
   path.offset(0, FLOOR - (raw.y + raw.height));
-  path.transform(Skia.Matrix([sx * flip, 0, 50 - 50 * sx * flip, 0, sy, FLOOR - FLOOR * sy, 0, 0, 1]));
+  path.transform(
+    Skia.Matrix([sx * flip, 0, 50 - 50 * sx * flip, 0, sy, FLOOR - FLOOR * sy, 0, 0, 1]),
+  );
   const face = { x: def.face.x, y: FLOOR - (FLOOR - def.face.y) * sy, s: def.face.s };
   const geo = measure(path, face);
+
   if (cache.size > 400) cache.clear();
   cache.set(key, geo);
+
   return geo;
 }

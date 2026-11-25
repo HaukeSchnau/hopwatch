@@ -4,23 +4,42 @@
 // on Now; here it's one menu away, so a near miss never starts anything. Archived jellies
 // hide behind a switch.
 
-import { router, Stack } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from 'react-native';
-import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { router, Stack } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import Swipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
-import { actions, formatDuration, MINUTE, pathLabel, type ResolvedContext, useNow, useRunning, useTree } from '@/core';
-import { stuffText } from '@/i18n/stuff';
+import {
+  actions,
+  formatDuration,
+  MINUTE,
+  pathLabel,
+  type ResolvedContext,
+  useNow,
+  useRunning,
+  useTree,
+} from "@/core";
+import { stuffText } from "@/i18n/stuff";
 
-import { Character } from '../Character';
-import { buzz, play } from '../feedback';
-import { Menu } from '../Menu';
-import { onStartMenu, useStartMenu } from '../menus';
-import { useHeaderIcon } from '../nav';
-import { alpha, headerFont, text, useTheme } from '../theme';
-import { Icon, type IconName } from '../ui';
+import { Character } from "../Character";
+import { buzz, play } from "../feedback";
+import { Menu } from "../Menu";
+import { onStartMenu, useStartMenu } from "../menus";
+import { useHeaderIcon } from "../nav";
+import { alpha, headerFont, text, useTheme } from "../theme";
+import { Icon, type IconName } from "../ui";
 
-const edit = (id: string) => router.push({ pathname: '/context', params: { id } });
+const edit = (id: string) => router.push({ pathname: "/context", params: { id } });
 
 export function StuffScreen() {
   const t = useTheme();
@@ -30,16 +49,25 @@ export function StuffScreen() {
   const tint = running ? t.candy[running.context.hue].ink : t.c.pinkDeep;
   const now = useNow(60_000);
   const [showArchived, setShowArchived] = useState(false);
-  const [query, setQuery] = useState('');
-  const settingsIcon = useHeaderIcon('gearshape', 'settings');
-  const addIcon = useHeaderIcon('plus', 'add');
+  const [query, setQuery] = useState("");
+  const settingsIcon = useHeaderIcon("gearshape", "settings");
+  const addIcon = useHeaderIcon("plus", "add");
   const archivedCount = tree.ordered.filter((c) => c.archivedAt !== null).length;
   const q = query.trim().toLowerCase();
-  const visible = tree.ordered.filter((c) => (showArchived || !c.hidden) && (!q || pathLabel(c).toLowerCase().includes(q)));
+
+  const visible = tree.ordered.filter(
+    (c) => (showArchived || !c.hidden) && (!q || pathLabel(c).toLowerCase().includes(q)),
+  );
+
   const live = tree.ordered.filter((c) => !c.hidden).length;
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ backgroundColor: t.c.bg }} contentContainerStyle={styles.content} keyboardDismissMode="on-drag">
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={{ backgroundColor: t.c.bg }}
+      contentContainerStyle={styles.content}
+      keyboardDismissMode="on-drag"
+    >
       <Stack.Title large largeStyle={{ color: t.c.ink }} style={{ color: t.c.ink, ...headerFont }}>
         {stuffText.title}
       </Stack.Title>
@@ -48,18 +76,30 @@ export function StuffScreen() {
         hideWhenScrolling={false}
         placeholder={stuffText.find}
         onChangeText={(e) => setQuery(e.nativeEvent.text)}
-        onCancelButtonPress={() => setQuery('')}
+        onCancelButtonPress={() => setQuery("")}
         // Android only: the search icon and field in the header's colors, and closing clears.
         headerIconColor={tint}
-        textColor={Platform.OS === 'android' ? t.c.ink : undefined}
+        textColor={Platform.OS === "android" ? t.c.ink : undefined}
         hintTextColor={t.c.faint}
-        onClose={() => setQuery('')}
+        onClose={() => setQuery("")}
       />
       <Stack.Toolbar placement="left">
-        {settingsIcon && <Stack.Toolbar.Button icon={settingsIcon} accessibilityLabel={stuffText.settings} onPress={() => router.push('/settings')} />}
+        {settingsIcon && (
+          <Stack.Toolbar.Button
+            icon={settingsIcon}
+            accessibilityLabel={stuffText.settings}
+            onPress={() => router.push("/settings")}
+          />
+        )}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        {addIcon && <Stack.Toolbar.Button icon={addIcon} accessibilityLabel={stuffText.newJelly} onPress={() => router.push('/context')} />}
+        {addIcon && (
+          <Stack.Toolbar.Button
+            icon={addIcon}
+            accessibilityLabel={stuffText.newJelly}
+            onPress={() => router.push("/context")}
+          />
+        )}
       </Stack.Toolbar>
 
       <Text style={[text.footnote, styles.caption, { color: t.c.muted }]}>
@@ -77,13 +117,24 @@ export function StuffScreen() {
             flat={q.length > 0}
           />
         ))}
-        {visible.length === 0 && <Text style={[text.body, styles.none, { color: t.c.muted }]}>{q ? stuffText.noMatch(query) : stuffText.allArchived}</Text>}
+        {visible.length === 0 && (
+          <Text style={[text.body, styles.none, { color: t.c.muted }]}>
+            {q ? stuffText.noMatch(query) : stuffText.allArchived}
+          </Text>
+        )}
       </View>
 
       {archivedCount > 0 && !q && (
         <View style={[styles.card, styles.archived, { backgroundColor: t.c.card }]}>
-          <Text style={[text.body, { color: t.c.ink }]}>{stuffText.showArchivedCount(archivedCount)}</Text>
-          <Switch value={showArchived} onValueChange={setShowArchived} trackColor={{ true: t.c.pink }} accessibilityLabel={stuffText.showArchived} />
+          <Text style={[text.body, { color: t.c.ink }]}>
+            {stuffText.showArchivedCount(archivedCount)}
+          </Text>
+          <Switch
+            value={showArchived}
+            onValueChange={setShowArchived}
+            trackColor={{ true: t.c.pink }}
+            accessibilityLabel={stuffText.showArchived}
+          />
         </View>
       )}
     </ScrollView>
@@ -106,31 +157,46 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
   const c = t.candy[context.hue];
   const pinned = context.pinPosition !== null;
   const archived = context.archivedAt !== null;
+
   const meta = [
     running && stuffText.meta.running,
     pinned && stuffText.meta.pinned,
-    context.weeklyTargetMinutes !== null && stuffText.meta.perWeek(formatDuration(context.weeklyTargetMinutes * MINUTE)),
-    context.nudgeAfterMinutes !== null && stuffText.meta.nudgeAfter(formatDuration(context.nudgeAfterMinutes * MINUTE)),
+    context.weeklyTargetMinutes !== null &&
+      stuffText.meta.perWeek(formatDuration(context.weeklyTargetMinutes * MINUTE)),
+    context.nudgeAfterMinutes !== null &&
+      stuffText.meta.nudgeAfter(formatDuration(context.nudgeAfterMinutes * MINUTE)),
     archived && stuffText.meta.archived,
   ].filter(Boolean);
+
   const depth = flat ? 0 : context.depth;
+
   // Tapping the row edits, so the start menu's own "Edit" item would only repeat it.
-  const startItems = useStartMenu(context, now, running).filter((item) => !('id' in item && item.id === 'edit'));
+  const startItems = useStartMenu(context, now, running).filter(
+    (item) => !("id" in item && item.id === "edit"),
+  );
 
   const onMenu = (event: string) => {
-    if (event === 'start') return start();
-    if (event === 'child') return router.push({ pathname: '/context', params: { parent: context.id } });
-    if (event === 'pin') return pinned ? actions.unpin(context.id) : actions.pin(context.id);
-    if (event === 'move') return router.push({ pathname: '/pick', params: { mode: 'parent', id: context.id } });
-    if (event === 'archive') return archived ? actions.unarchive(context.id) : actions.archive(context.id);
-    if (event === 'delete') return confirmDelete(context);
+    if (event === "start") return start();
+
+    if (event === "child")
+      return router.push({ pathname: "/context", params: { parent: context.id } });
+
+    if (event === "pin") return pinned ? actions.unpin(context.id) : actions.pin(context.id);
+
+    if (event === "move")
+      return router.push({ pathname: "/pick", params: { mode: "parent", id: context.id } });
+
+    if (event === "archive")
+      return archived ? actions.unarchive(context.id) : actions.archive(context.id);
+
+    if (event === "delete") return confirmDelete(context);
     onStartMenu(context.id, event);
   };
 
   const start = () => {
     if (context.hidden || running) return buzz.tap();
     buzz.thud();
-    play('pop');
+    play("pop");
     actions.start(context.id);
   };
 
@@ -144,40 +210,76 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
       renderLeftActions={(_p, _x, swipe) =>
         context.hidden ? null : (
           <SwipeAction
-            icon={pinned ? { ios: 'pin.slash.fill', android: 'keep_off' } : { ios: 'pin.fill', android: 'keep' }}
+            icon={
+              pinned
+                ? { ios: "pin.slash.fill", android: "keep_off" }
+                : { ios: "pin.fill", android: "keep" }
+            }
             label={pinned ? stuffText.unpin : stuffText.pin}
             color={t.candy.orange.fill}
             swipe={swipe}
-            onPress={() => onMenu('pin')}
+            onPress={() => onMenu("pin")}
           />
         )
       }
       renderRightActions={(_p, _x, swipe) => (
         <View style={styles.actions}>
           {!context.hidden && !running && (
-            <SwipeAction icon={{ ios: 'play.fill', android: 'play_arrow' }} label={stuffText.start} color={c.fill} swipe={swipe} onPress={start} />
+            <SwipeAction
+              icon={{ ios: "play.fill", android: "play_arrow" }}
+              label={stuffText.start}
+              color={c.fill}
+              swipe={swipe}
+              onPress={start}
+            />
           )}
           <SwipeAction
-            icon={archived ? { ios: 'tray.and.arrow.up.fill', android: 'unarchive' } : { ios: 'archivebox.fill', android: 'archive' }}
+            icon={
+              archived
+                ? { ios: "tray.and.arrow.up.fill", android: "unarchive" }
+                : { ios: "archivebox.fill", android: "archive" }
+            }
             label={archived ? stuffText.unarchive : stuffText.archive}
             color={t.candy.indigo.fill}
             swipe={swipe}
-            onPress={() => onMenu('archive')}
+            onPress={() => onMenu("archive")}
           />
         </View>
-      )}>
+      )}
+    >
       <Menu
         title={pathLabel(context)}
         onPress={onMenu}
         items={[
-          ...(context.hidden || running ? [] : [{ id: 'start', title: stuffText.startName(context.name), image: 'play.fill' as const }]),
+          ...(context.hidden || running
+            ? []
+            : [
+                {
+                  id: "start",
+                  title: stuffText.startName(context.name),
+                  image: "play.fill" as const,
+                },
+              ]),
           ...(context.hidden ? [] : startItems),
-          { id: 'child', title: stuffText.addInside, image: 'plus' },
-          ...(context.hidden ? [] : [{ id: 'pin', title: pinned ? stuffText.unpinFromNow : stuffText.pinToNow, image: pinned ? ('pin.slash' as const) : ('pin' as const) }]),
-          { id: 'move', title: stuffText.move, image: 'arrow.turn.down.right' },
-          { id: 'archive', title: archived ? stuffText.unarchive : stuffText.archive, image: archived ? 'tray.and.arrow.up' : 'archivebox' },
-          { id: 'delete', title: stuffText.delete, image: 'trash', destructive: true },
-        ]}>
+          { id: "child", title: stuffText.addInside, image: "plus" },
+          ...(context.hidden
+            ? []
+            : [
+                {
+                  id: "pin",
+                  title: pinned ? stuffText.unpinFromNow : stuffText.pinToNow,
+                  image: pinned ? ("pin.slash" as const) : ("pin" as const),
+                },
+              ]),
+          { id: "move", title: stuffText.move, image: "arrow.turn.down.right" },
+          {
+            id: "archive",
+            title: archived ? stuffText.unarchive : stuffText.archive,
+            image: archived ? "tray.and.arrow.up" : "archivebox",
+          },
+          { id: "delete", title: stuffText.delete, image: "trash", destructive: true },
+        ]}
+      >
         <View style={[styles.row, { width }]}>
           {depth > 0 && <Guides depth={depth} color={alpha(t.c.ink, 0.08)} />}
           <Pressable
@@ -185,20 +287,38 @@ function Row({ context, running, last, width, now, flat }: RowProps) {
             onPress={() => edit(context.id)}
             accessibilityRole="button"
             accessibilityLabel={stuffText.editName(context.name)}
-            accessibilityHint={stuffText.holdHint}>
-            <Character context={context} size={46} mood={running ? 'awake' : 'asleep'} shadow={false} dim={context.hidden} style={styles.jelly} />
+            accessibilityHint={stuffText.holdHint}
+          >
+            <Character
+              context={context}
+              size={46}
+              mood={running ? "awake" : "asleep"}
+              shadow={false}
+              dim={context.hidden}
+              style={styles.jelly}
+            />
             <View style={styles.titles}>
-              <Text style={[text.body, { color: context.hidden ? t.c.muted : t.c.ink }]} numberOfLines={1}>
+              <Text
+                style={[text.body, { color: context.hidden ? t.c.muted : t.c.ink }]}
+                numberOfLines={1}
+              >
                 {flat ? pathLabel(context) : context.name}
               </Text>
               {meta.length > 0 && (
-                <Text style={[text.footnote, { color: running ? c.ink : t.c.muted }]} numberOfLines={1}>
-                  {meta.join(' · ')}
+                <Text
+                  style={[text.footnote, { color: running ? c.ink : t.c.muted }]}
+                  numberOfLines={1}
+                >
+                  {meta.join(" · ")}
                 </Text>
               )}
             </View>
           </Pressable>
-          {!last && <View style={[styles.separator, { left: 16 + depth * 18 + 64, backgroundColor: t.c.line }]} />}
+          {!last && (
+            <View
+              style={[styles.separator, { left: 16 + depth * 18 + 64, backgroundColor: t.c.line }]}
+            />
+          )}
         </View>
       </Menu>
     </Swipeable>
@@ -227,7 +347,8 @@ function SwipeAction({
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={[styles.swipeAction, { backgroundColor: color }]}>
+      style={[styles.swipeAction, { backgroundColor: color }]}
+    >
       <Icon name={icon} size={18} color="#FFFFFF" weight="semibold" />
       <Text style={[text.caption, styles.swipeLabel]}>{label}</Text>
     </Pressable>
@@ -247,14 +368,16 @@ function Guides({ depth, color }: { depth: number; color: string }) {
 
 export function confirmDelete(context: ResolvedContext, after?: () => void) {
   Alert.alert(stuffText.deleteTitle(context.name), stuffText.deleteMessage, [
-    { text: stuffText.cancel, style: 'cancel' },
+    { text: stuffText.cancel, style: "cancel" },
     {
       text: stuffText.delete,
-      style: 'destructive',
+      style: "destructive",
       onPress: () => {
         const result = actions.deleteContext(context.id);
         buzz.thud();
-        if (result === 'archived') Alert.alert(stuffText.archivedInstead, stuffText.archivedInsteadMessage(context.name));
+
+        if (result === "archived")
+          Alert.alert(stuffText.archivedInstead, stuffText.archivedInsteadMessage(context.name));
         after?.();
       },
     },
@@ -264,19 +387,32 @@ export function confirmDelete(context: ResolvedContext, after?: () => void) {
 const styles = StyleSheet.create({
   content: { paddingBottom: 40 },
   caption: { marginHorizontal: 20, marginTop: 4, marginBottom: 8 },
-  card: { marginHorizontal: 16, borderRadius: 24, overflow: 'hidden' },
-  swipe: { overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', minHeight: 62, paddingLeft: 12, paddingRight: 4 },
-  main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
+  card: { marginHorizontal: 16, borderRadius: 24, overflow: "hidden" },
+  swipe: { overflow: "hidden" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 62,
+    paddingLeft: 12,
+    paddingRight: 4,
+  },
+  main: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   titles: { flex: 1 },
   // Room for the emoji sticker, which hangs out of a small jelly's box.
   jelly: { marginRight: 6 },
-  separator: { position: 'absolute', right: 0, bottom: 0, height: StyleSheet.hairlineWidth },
-  guides: { flexDirection: 'row', alignSelf: 'stretch' },
+  separator: { position: "absolute", right: 0, bottom: 0, height: StyleSheet.hairlineWidth },
+  guides: { flexDirection: "row", alignSelf: "stretch" },
   guide: { width: 18, borderLeftWidth: 2, marginLeft: 8 },
-  actions: { flexDirection: 'row' },
-  swipeAction: { width: 78, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  swipeLabel: { color: '#FFFFFF' },
-  none: { padding: 20, textAlign: 'center' },
-  archived: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, paddingHorizontal: 18, height: 56 },
+  actions: { flexDirection: "row" },
+  swipeAction: { width: 78, alignItems: "center", justifyContent: "center", gap: 4 },
+  swipeLabel: { color: "#FFFFFF" },
+  none: { padding: 20, textAlign: "center" },
+  archived: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 16,
+    paddingHorizontal: 18,
+    height: 56,
+  },
 });

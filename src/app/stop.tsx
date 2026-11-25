@@ -1,4 +1,5 @@
-import { StopSheet } from '@/jelly/sheets/StopSheet';
+import { StopSheet } from "@/jelly/sheets/StopSheet";
 
 export default StopSheet;
-export { ErrorScreen as ErrorBoundary } from '@/jelly/ErrorScreen';
+
+export { ErrorScreen as ErrorBoundary } from "@/jelly/ErrorScreen";

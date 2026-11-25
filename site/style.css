@@ -4,46 +4,52 @@
 
 :root {
   color-scheme: light dark;
-  --bg: #FFF4E8;
-  --card: #FFFBF6;
-  --sunken: #F8E7D5;
-  --line: #EEDCCB;
-  --ink: #2B1B3D;
+  --bg: #fff4e8;
+  --card: #fffbf6;
+  --sunken: #f8e7d5;
+  --line: #eedccb;
+  --ink: #2b1b3d;
   /* The app's muted (#8C7A99) is too light for running text on cream; this one clears 5:1. */
-  --muted: #6E5C7D;
-  --link: #C22B74;
-  --track: #F4E2D0;
-  --track-rim: #FFF9F2;
-  --track-shade: #E6CDB6;
+  --muted: #6e5c7d;
+  --link: #c22b74;
+  --track: #f4e2d0;
+  --track-rim: #fff9f2;
+  --track-shade: #e6cdb6;
 
-  --pink: #FF6FB5;
-  --blue: #4B8BFF;
-  --violet: #A36AFF;
-  --amber: #FFC53D;
-  --orange: #FF8A3D;
-  --green: #34C97E;
+  --pink: #ff6fb5;
+  --blue: #4b8bff;
+  --violet: #a36aff;
+  --amber: #ffc53d;
+  --orange: #ff8a3d;
+  --green: #34c97e;
 
-  --font: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Nunito, Quicksand, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font:
+    ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Nunito, Quicksand, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
   --measure: 36rem;
   --gutter: clamp(1.25rem, 5vw, 2.5rem);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #150F1D;
-    --card: #1E1728;
-    --sunken: #241B2F;
-    --line: #30263C;
-    --ink: #FBF3FF;
-    --muted: #A99BB8;
-    --link: #FF8CC8;
-    --track: #261D31;
-    --track-rim: #3A2E47;
-    --track-shade: #1A1323;
+    --bg: #150f1d;
+    --card: #1e1728;
+    --sunken: #241b2f;
+    --line: #30263c;
+    --ink: #fbf3ff;
+    --muted: #a99bb8;
+    --link: #ff8cc8;
+    --track: #261d31;
+    --track-rim: #3a2e47;
+    --track-shade: #1a1323;
   }
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -59,8 +65,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--link); text-underline-offset: 0.18em; text-decoration-thickness: 0.08em; }
-a:hover { text-decoration-thickness: 0.14em; }
+a {
+  color: var(--link);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
+}
+a:hover {
+  text-decoration-thickness: 0.14em;
+}
 
 :focus-visible {
   outline: 3px solid var(--link);
@@ -68,7 +80,11 @@ a:hover { text-decoration-thickness: 0.14em; }
   border-radius: 6px;
 }
 
-img { display: block; max-width: 100%; height: auto; }
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
 
 .wrap {
   width: 100%;
@@ -81,7 +97,14 @@ img { display: block; max-width: 100%; height: auto; }
   position: absolute;
   left: -999px;
 }
-.skip:focus { left: var(--gutter); top: 0.75rem; z-index: 10; background: var(--card); padding: 0.5rem 0.9rem; border-radius: 999px; }
+.skip:focus {
+  left: var(--gutter);
+  top: 0.75rem;
+  z-index: 10;
+  background: var(--card);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+}
 
 /* Top bar: the app icon, the name, and a few quiet links. */
 .bar {
@@ -101,10 +124,25 @@ img { display: block; max-width: 100%; height: auto; }
   font-size: 1.2rem;
   letter-spacing: -0.01em;
 }
-.brand img { width: 2.25rem; height: 2.25rem; border-radius: 22%; }
-.bar nav { margin-left: auto; display: flex; gap: 1.1rem; font-weight: 600; font-size: 0.98rem; }
-.bar nav a { color: var(--ink); text-decoration: none; }
-.bar nav a:hover { color: var(--link); }
+.brand img {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 22%;
+}
+.bar nav {
+  margin-left: auto;
+  display: flex;
+  gap: 1.1rem;
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+.bar nav a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.bar nav a:hover {
+  color: var(--link);
+}
 
 /* Landing: the hero. Phones stack headline, lede, demo, stores; wide screens put the
    copy on the left and the live dial on the right. */
@@ -114,13 +152,29 @@ img { display: block; max-width: 100%; height: auto; }
   padding-top: clamp(0.5rem, 3vw, 2.5rem);
   padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
 }
-.hero .demo { margin-top: 1.6rem; }
+.hero .demo {
+  margin-top: 1.6rem;
+}
 @media (min-width: 52rem) {
-  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); grid-template-rows: 1fr auto auto 1fr; }
-  .hero h1 { grid-row: 2; }
-  .hero .lede { grid-row: 3; }
-  .hero .stores { grid-row: 4; align-self: start; }
-  .hero .demo { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; }
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-rows: 1fr auto auto 1fr;
+  }
+  .hero h1 {
+    grid-row: 2;
+  }
+  .hero .lede {
+    grid-row: 3;
+  }
+  .hero .stores {
+    grid-row: 4;
+    align-self: start;
+  }
+  .hero .demo {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    margin-top: 0;
+  }
 }
 
 h1 {
@@ -131,7 +185,9 @@ h1 {
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
-.hero h1 span { display: block; }
+.hero h1 span {
+  display: block;
+}
 
 .lede {
   margin: 1.1rem 0 0;
@@ -140,19 +196,49 @@ h1 {
   line-height: 1.5;
 }
 
-.stores { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem; margin-top: 1.6rem; }
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1.6rem;
+}
 
 /* Store badges: Apple's and Google's artwork, unmodified (no tint, tilt or animation, as
    both brand guidelines ask), all 48 px tall. The Google PNGs are cropped to the badge, and the
    gap keeps the clear space of a quarter of the badge height that both ask for. */
-.badge { display: block; flex: none; line-height: 0; }
-.badge img { display: block; width: auto; height: 48px; }
+.badge {
+  display: block;
+  flex: none;
+  line-height: 0;
+}
+.badge img {
+  display: block;
+  width: auto;
+  height: 48px;
+}
 
 /* Jellies (jelly.js): a character in a box of --size, its body moving inside .jelly-move
    around the floor at 90 % of the height. Napping jellies breathe slowly. */
-.jelly { position: relative; display: block; width: var(--size); height: var(--size); transform-origin: 50% 90%; }
-.jelly-move { position: absolute; inset: 0; transform-origin: 50% 90%; will-change: transform; }
-.jelly-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.jelly {
+  position: relative;
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  transform-origin: 50% 90%;
+}
+.jelly-move {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+.jelly-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
 .jelly-sticker {
   position: absolute;
   display: grid;
@@ -164,46 +250,138 @@ h1 {
   transform: rotate(var(--lean, 0deg));
   user-select: none;
 }
-.jelly.breathe { animation: jelly-breathe var(--breath, 2300ms) ease-in-out var(--phase, 0ms) infinite alternate; }
-.jelly.breathe-stage { --breath: 1700ms; --b: 0.035; }
-.jelly.is-offscreen { animation-play-state: paused; }
+.jelly.breathe {
+  animation: jelly-breathe var(--breath, 2300ms) ease-in-out var(--phase, 0ms) infinite alternate;
+}
+.jelly.breathe-stage {
+  --breath: 1700ms;
+  --b: 0.035;
+}
+.jelly.is-offscreen {
+  animation-play-state: paused;
+}
 @keyframes jelly-breathe {
-  to { transform: scale(calc(1 - var(--b, 0.028) * 0.5), calc(1 + var(--b, 0.028))); }
+  to {
+    transform: scale(calc(1 - var(--b, 0.028) * 0.5), calc(1 + var(--b, 0.028)));
+  }
 }
 /* The glow under a jelly: a touch stronger at night, like the app. */
-.jglow { stop-opacity: 0.32; }
-.jglow-mid { stop-opacity: 0.16; }
-@media (prefers-color-scheme: dark) {
-  .jglow { stop-opacity: 0.55; }
-  .jglow-mid { stop-opacity: 0.28; }
+.jglow {
+  stop-opacity: 0.32;
 }
-.jelly-mould { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; opacity: 0; }
-.jelly-mould path { fill: var(--sunken); stroke: var(--c, var(--muted)); stroke-width: 1.8; stroke-dasharray: 4.5 4; stroke-linecap: round; opacity: 0.8; }
+.jglow-mid {
+  stop-opacity: 0.16;
+}
+@media (prefers-color-scheme: dark) {
+  .jglow {
+    stop-opacity: 0.55;
+  }
+  .jglow-mid {
+    stop-opacity: 0.28;
+  }
+}
+.jelly-mould {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: 0;
+}
+.jelly-mould path {
+  fill: var(--sunken);
+  stroke: var(--c, var(--muted));
+  stroke-width: 1.8;
+  stroke-dasharray: 4.5 4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
 
 /* The demo: a 24-hour candy dial with the running jelly on stage. */
-.demo { display: grid; justify-items: center; gap: 0.4rem; }
+.demo {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
 
 .dial {
   position: relative;
   width: min(100%, 25rem);
   aspect-ratio: 1;
 }
-.dial > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.dial .groove { fill: none; stroke: var(--track); stroke-width: 30; }
-.dial .groove-rim { fill: none; stroke: var(--track-rim); stroke-width: 2; }
-.dial .groove-shade { fill: none; stroke: var(--track-shade); stroke-width: 2; opacity: 0.8; }
-.dial .flash { fill: none; stroke-width: 34; }
-.dial .tick { fill: var(--muted); opacity: 0.35; }
-.dial .hour { fill: var(--muted); font: 600 11px var(--font); letter-spacing: 0.04em; }
-.dial .bean { fill: none; stroke-width: 19; stroke-linecap: round; }
-.dial .bean-gloss { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; opacity: 0.45; }
-.dial .head { filter: blur(5px); opacity: 0.8; }
-.dial .head-dot { fill: #fff; }
+.dial > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.dial .groove {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 30;
+}
+.dial .groove-rim {
+  fill: none;
+  stroke: var(--track-rim);
+  stroke-width: 2;
+}
+.dial .groove-shade {
+  fill: none;
+  stroke: var(--track-shade);
+  stroke-width: 2;
+  opacity: 0.8;
+}
+.dial .flash {
+  fill: none;
+  stroke-width: 34;
+}
+.dial .tick {
+  fill: var(--muted);
+  opacity: 0.35;
+}
+.dial .hour {
+  fill: var(--muted);
+  font: 600 11px var(--font);
+  letter-spacing: 0.04em;
+}
+.dial .bean {
+  fill: none;
+  stroke-width: 19;
+  stroke-linecap: round;
+}
+.dial .bean-gloss {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.dial .head {
+  filter: blur(5px);
+  opacity: 0.8;
+}
+.dial .head-dot {
+  fill: #fff;
+}
 /* The running bean, its glowing head and the ring flash redraw on their own layer, so the
    rest of the dial never repaints while a bean pours in. */
-.dial-live { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; will-change: transform; }
-.dial-live .head { filter: none; opacity: 1; }
-.head-stop { stop-color: var(--head, #4B8BFF); }
+.dial-live {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  will-change: transform;
+}
+.dial-live .head {
+  filter: none;
+  opacity: 1;
+}
+.head-stop {
+  stop-color: var(--head, #4b8bff);
+}
 
 .center {
   position: absolute;
@@ -213,9 +391,22 @@ h1 {
   align-content: center;
   text-align: center;
 }
-.stage { position: relative; width: 52%; aspect-ratio: 1; margin-bottom: -4%; }
-.stage-slot { position: absolute; inset: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.stage-slot .jelly { width: 100%; height: 100%; }
+.stage {
+  position: relative;
+  width: 52%;
+  aspect-ratio: 1;
+  margin-bottom: -4%;
+}
+.stage-slot {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.stage-slot .jelly {
+  width: 100%;
+  height: 100%;
+}
 .stage-floor {
   position: absolute;
   left: 18%;
@@ -226,9 +417,19 @@ h1 {
   background: radial-gradient(closest-side, rgb(43 27 61 / 0.2), transparent);
   transition: opacity 0.2s;
 }
-@media (prefers-color-scheme: dark) { .stage-floor { background: radial-gradient(closest-side, rgb(0 0 0 / 0.5), transparent); } }
-.stage .is-away { opacity: 0; }
-.center .name { font-weight: 800; font-size: clamp(1rem, 3.6vw, 1.2rem); line-height: 1.2; }
+@media (prefers-color-scheme: dark) {
+  .stage-floor {
+    background: radial-gradient(closest-side, rgb(0 0 0 / 0.5), transparent);
+  }
+}
+.stage .is-away {
+  opacity: 0;
+}
+.center .name {
+  font-weight: 800;
+  font-size: clamp(1rem, 3.6vw, 1.2rem);
+  line-height: 1.2;
+}
 .timer {
   font-weight: 900;
   font-size: clamp(2rem, 8.6vw, 2.8rem);
@@ -236,17 +437,78 @@ h1 {
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
-.timer small { font-size: 0.42em; font-weight: 800; color: var(--muted); letter-spacing: 0; }
-.since { margin-top: 0.3rem; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.timer small {
+  font-size: 0.42em;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.since {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 /* A label that just changed drops in with a jelly bounce. */
-.boing { animation: boing 0.75s both; transform-origin: 50% 80%; }
+.boing {
+  animation: boing 0.75s both;
+  transform-origin: 50% 80%;
+}
 @keyframes boing {
-  from { transform: scale(1.18, 0.62); }
-  to { transform: none; }
+  from {
+    transform: scale(1.18, 0.62);
+  }
+  to {
+    transform: none;
+  }
 }
 @supports (animation-timing-function: linear(0, 1)) {
-  .boing { animation-timing-function: linear(0, 0.054, 0.196, 0.394, 0.618, 0.84, 1.039, 1.197, 1.306, 1.365, 1.375, 1.345, 1.285, 1.207, 1.122, 1.04, 0.968, 0.913, 0.877, 0.86, 0.86, 0.875, 0.9, 0.93, 0.962, 0.993, 1.018, 1.037, 1.049, 1.053, 1.052, 1.045, 1.035, 1.023, 1.011, 1, 0.991, 0.985, 0.981, 0.98, 1); }
+  .boing {
+    animation-timing-function: linear(
+      0,
+      0.054,
+      0.196,
+      0.394,
+      0.618,
+      0.84,
+      1.039,
+      1.197,
+      1.306,
+      1.365,
+      1.375,
+      1.345,
+      1.285,
+      1.207,
+      1.122,
+      1.04,
+      0.968,
+      0.913,
+      0.877,
+      0.86,
+      0.86,
+      0.875,
+      0.9,
+      0.93,
+      0.962,
+      0.993,
+      1.018,
+      1.037,
+      1.049,
+      1.053,
+      1.052,
+      1.045,
+      1.035,
+      1.023,
+      1.011,
+      1,
+      0.991,
+      0.985,
+      0.981,
+      0.98,
+      1
+    );
+  }
 }
 
 /* The cast: tap a jelly to switch to it. They nap until picked, like in the app. */
@@ -275,19 +537,53 @@ h1 {
   user-select: none;
   -webkit-user-select: none;
 }
-.cast .slot { position: relative; width: 100%; aspect-ratio: 1; }
-.cast .slot .jelly { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cast .slot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.cast .slot .jelly {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 /* The running jelly's slot keeps an empty dimple in exactly its shape. */
-.slot.is-away .jelly { opacity: 0; }
-.slot.is-away .jelly-mould { opacity: 1; }
-.cast [aria-pressed="true"] .label { color: var(--link); }
+.slot.is-away .jelly {
+  opacity: 0;
+}
+.slot.is-away .jelly-mould {
+  opacity: 1;
+}
+.cast [aria-pressed="true"] .label {
+  color: var(--link);
+}
 
-.hint { margin: 0.2rem 0 0; font-size: 0.86rem; color: var(--muted); transition: opacity 0.6s; }
-.hint.is-done { opacity: 0; }
+.hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+  transition: opacity 0.6s;
+}
+.hint.is-done {
+  opacity: 0;
+}
 
 /* Flying jellies live above everything while they hop. */
-.flyer-layer { position: fixed; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
-.flyer { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; will-change: transform; }
+.flyer-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+}
+.flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
 
 .splash {
   position: absolute;
@@ -299,16 +595,35 @@ h1 {
   animation: splash 0.55s cubic-bezier(0.2, 0.75, 0.3, 1) forwards;
 }
 @keyframes splash {
-  from { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-  70% { opacity: 1; }
-  to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2); opacity: 0; }
+  from {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2);
+    opacity: 0;
+  }
 }
 
-.confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
+.confetti {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+  pointer-events: none;
+}
 
 /* Screens: a scroll-snapping strip on phones, four across on wide screens. */
-main { overflow-x: clip; }
-.section { padding-top: clamp(2.5rem, 7vw, 5rem); }
+main {
+  overflow-x: clip;
+}
+.section {
+  padding-top: clamp(2.5rem, 7vw, 5rem);
+}
 h2 {
   margin: 0 0 0.6rem;
   font-size: clamp(1.6rem, 5vw, 2.3rem);
@@ -317,7 +632,11 @@ h2 {
   letter-spacing: -0.025em;
   text-wrap: balance;
 }
-.section > p { max-width: var(--measure); margin: 0; color: var(--muted); }
+.section > p {
+  max-width: var(--measure);
+  margin: 0;
+  color: var(--muted);
+}
 
 .shots {
   display: grid;
@@ -332,21 +651,48 @@ h2 {
   list-style: none;
   scrollbar-width: none;
 }
-.shots::-webkit-scrollbar { display: none; }
-@media (min-width: 60rem) {
-  .shots { grid-auto-flow: row; grid-template-columns: repeat(4, 1fr); overflow: visible; margin-inline: 0; padding-inline: 0; }
+.shots::-webkit-scrollbar {
+  display: none;
 }
-.shots li { position: relative; scroll-snap-align: start; }
-.shots figure { position: relative; z-index: 1; margin: 0; }
+@media (min-width: 60rem) {
+  .shots {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, 1fr);
+    overflow: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+.shots li {
+  position: relative;
+  scroll-snap-align: start;
+}
+.shots figure {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
 .shots img {
   width: 100%;
   aspect-ratio: 460 / 1000;
   border-radius: 1.6rem;
   background: var(--sunken);
-  box-shadow: 0 0 0 1px var(--line), 0 18px 36px -22px rgb(43 27 61 / 0.55);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 18px 36px -22px rgb(43 27 61 / 0.55);
 }
-.shots figcaption { margin-top: 0.8rem; font-size: 0.95rem; line-height: 1.4; color: var(--muted); }
-.shots figcaption b { display: block; color: var(--ink); font-weight: 800; font-size: 1.05rem; }
+.shots figcaption {
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.shots figcaption b {
+  display: block;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
 
 /* A jelly peeking over the top of the first screenshot; boop it and it ducks. */
 .peek {
@@ -361,7 +707,9 @@ h2 {
   -webkit-tap-highlight-color: transparent;
   transform: translateY(calc(16px - var(--rise, 0) * 80px));
 }
-html:not(.js-jelly) .peek { display: none; }
+html:not(.js-jelly) .peek {
+  display: none;
+}
 
 /* What else it does: every feature has a jelly doing its thing. */
 .features {
@@ -371,11 +719,30 @@ html:not(.js-jelly) .peek { display: none; }
   padding: 0;
   list-style: none;
 }
-@media (min-width: 46rem) { .features { grid-template-columns: 1fr 1fr; } }
-.feat { display: grid; grid-template-columns: 5.4rem minmax(0, 1fr); gap: 0 1rem; align-items: start; max-width: 34rem; }
-.feat.has-card { grid-template-columns: minmax(0, 1fr); }
-.feat h3 { margin: 0.2rem 0 0.25rem; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
-.feat p { margin: 0; }
+@media (min-width: 46rem) {
+  .features {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.feat {
+  display: grid;
+  grid-template-columns: 5.4rem minmax(0, 1fr);
+  gap: 0 1rem;
+  align-items: start;
+  max-width: 34rem;
+}
+.feat.has-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+.feat h3 {
+  margin: 0.2rem 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.feat p {
+  margin: 0;
+}
 .feat-jelly {
   position: relative;
   display: grid;
@@ -391,15 +758,43 @@ html:not(.js-jelly) .peek { display: none; }
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-.feat-jelly > [data-jelly] { display: block; }
+.feat-jelly > [data-jelly] {
+  display: block;
+}
 
-.mini-dial { position: absolute; inset: -0.2rem; width: calc(100% + 0.4rem); height: calc(100% + 0.4rem); overflow: visible; }
-.mini-groove { fill: none; stroke: var(--track); stroke-width: 9; }
-.mini-day path { fill: none; stroke-width: 7; stroke-linecap: round; }
-.mini-head { fill: #A36AFF; stroke: #fff; stroke-width: 2.4; }
-.mini-day { transform-origin: 50px 50px; }
-.mini-dial.is-spinning .mini-day { animation: day-spin 1.1s cubic-bezier(0.3, 0.1, 0.2, 1); }
-@keyframes day-spin { to { transform: rotate(360deg); } }
+.mini-dial {
+  position: absolute;
+  inset: -0.2rem;
+  width: calc(100% + 0.4rem);
+  height: calc(100% + 0.4rem);
+  overflow: visible;
+}
+.mini-groove {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 9;
+}
+.mini-day path {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.mini-head {
+  fill: #a36aff;
+  stroke: #fff;
+  stroke-width: 2.4;
+}
+.mini-day {
+  transform-origin: 50px 50px;
+}
+.mini-dial.is-spinning .mini-day {
+  animation: day-spin 1.1s cubic-bezier(0.3, 0.1, 0.2, 1);
+}
+@keyframes day-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .surprise {
   margin-top: 0.7rem;
@@ -410,10 +805,15 @@ html:not(.js-jelly) .peek { display: none; }
   color: #fff;
   font: 800 0.92rem/1.2 var(--font);
   cursor: pointer;
-  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.35), inset 0 -3px 0 rgb(0 0 0 / 0.12), 0 6px 14px -8px #DC3F8A;
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.35),
+    inset 0 -3px 0 rgb(0 0 0 / 0.12),
+    0 6px 14px -8px #dc3f8a;
   touch-action: manipulation;
 }
-.surprise:active { transform: scale(1.05, 0.9); }
+.surprise:active {
+  transform: scale(1.05, 0.9);
+}
 
 .jar {
   position: relative;
@@ -431,17 +831,65 @@ html:not(.js-jelly) .peek { display: none; }
   cursor: pointer;
   touch-action: manipulation;
 }
-.jar svg { grid-row: span 2; width: 5.2rem; height: auto; overflow: visible; }
-.jar-glass { fill: rgb(255 255 255 / 0.45); stroke: var(--line); stroke-width: 3; }
-@media (prefers-color-scheme: dark) { .jar-glass { fill: rgb(255 255 255 / 0.05); stroke: #3A2E47; } }
-.jar-fill { fill: #34C97E; }
-.jar-surface { fill: none; stroke: #86E7B5; stroke-width: 5; stroke-linecap: round; }
-.jar-shine { fill: #fff; opacity: 0.55; }
-.jar-lid { fill: #34C97E; stroke: #1B9A5B; stroke-width: 2; }
-.jar-label { font-weight: 800; font-variant-numeric: tabular-nums; align-self: end; }
-.jar-star { align-self: start; font-weight: 800; color: #1B9A5B; opacity: 0; transform: scale(0.6); transition: opacity 0.2s, transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1); }
-@media (prefers-color-scheme: dark) { .jar-star { color: #86E7B5; } }
-.jar-star.is-on { opacity: 1; transform: none; }
+.jar svg {
+  grid-row: span 2;
+  width: 5.2rem;
+  height: auto;
+  overflow: visible;
+}
+.jar-glass {
+  fill: rgb(255 255 255 / 0.45);
+  stroke: var(--line);
+  stroke-width: 3;
+}
+@media (prefers-color-scheme: dark) {
+  .jar-glass {
+    fill: rgb(255 255 255 / 0.05);
+    stroke: #3a2e47;
+  }
+}
+.jar-fill {
+  fill: #34c97e;
+}
+.jar-surface {
+  fill: none;
+  stroke: #86e7b5;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.jar-shine {
+  fill: #fff;
+  opacity: 0.55;
+}
+.jar-lid {
+  fill: #34c97e;
+  stroke: #1b9a5b;
+  stroke-width: 2;
+}
+.jar-label {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  align-self: end;
+}
+.jar-star {
+  align-self: start;
+  font-weight: 800;
+  color: #1b9a5b;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 0.2s,
+    transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@media (prefers-color-scheme: dark) {
+  .jar-star {
+    color: #86e7b5;
+  }
+}
+.jar-star.is-on {
+  opacity: 1;
+  transform: none;
+}
 
 /* The Lock Screen card mirrors whatever runs in the hero above. */
 .live {
@@ -453,22 +901,62 @@ html:not(.js-jelly) .peek { display: none; }
   padding: 0.75rem 0.9rem 0.8rem;
   border-radius: 1.4rem;
   background: rgb(43 27 61 / 0.88);
-  color: #FBF3FF;
+  color: #fbf3ff;
   max-width: 22rem;
   box-shadow: 0 14px 30px -18px rgb(43 27 61 / 0.8);
 }
-@media (prefers-color-scheme: dark) { .live { background: #241B2F; box-shadow: 0 0 0 1px #30263C; } }
-.live-jelly { width: 44px; height: 44px; }
-.live-text { display: grid; line-height: 1.25; }
-.live-name { font-weight: 800; }
-.live-since { font-size: 0.82rem; opacity: 0.7; }
-.live-timer { font-weight: 900; font-size: 1.6rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-.live-pills { grid-column: 1 / -1; display: flex; gap: 0.45rem; margin-top: 0.45rem; }
-.live-pills span { padding: 0.32rem 0.8rem; border-radius: 999px; font-size: 0.85rem; font-weight: 800; background: rgb(255 255 255 / 0.14); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-color-scheme: dark) {
+  .live {
+    background: #241b2f;
+    box-shadow: 0 0 0 1px #30263c;
+  }
+}
+.live-jelly {
+  width: 44px;
+  height: 44px;
+}
+.live-text {
+  display: grid;
+  line-height: 1.25;
+}
+.live-name {
+  font-weight: 800;
+}
+.live-since {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+.live-timer {
+  font-weight: 900;
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.live-pills {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+.live-pills span {
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: rgb(255 255 255 / 0.14);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* The ghost goes see-through, all but its face. */
-.jelly .skin { transition: opacity 0.6s; }
-.jelly.is-boo .skin { transition: opacity 0.25s; opacity: 0.12; }
+.jelly .skin {
+  transition: opacity 0.6s;
+}
+.jelly.is-boo .skin {
+  transition: opacity 0.25s;
+  opacity: 0.12;
+}
 
 /* Apple Intelligence: the jelly thinks, then gets its suggestion. */
 .suggested {
@@ -485,9 +973,14 @@ html:not(.js-jelly) .peek { display: none; }
   white-space: nowrap;
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity 0.2s, transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  transition:
+    opacity 0.2s,
+    transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
-.suggested.is-on { opacity: 1; transform: none; }
+.suggested.is-on {
+  opacity: 1;
+  transform: none;
+}
 [data-feature="ai"].is-thinking .feat-jelly::before {
   content: "···";
   position: absolute;
@@ -498,11 +991,28 @@ html:not(.js-jelly) .peek { display: none; }
   color: var(--muted);
   animation: think 0.9s ease-in-out infinite alternate;
 }
-@keyframes think { from { opacity: 0.3; } to { opacity: 1; } }
+@keyframes think {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
 
 /* English and German: two jellies chatting. */
-.chat { display: flex; align-items: end; justify-content: center; gap: 0.1rem; width: 5.4rem; }
-.talker { position: relative; display: grid; justify-items: center; }
+.chat {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 0.1rem;
+  width: 5.4rem;
+}
+.talker {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
 .bubble {
   position: relative;
   margin-bottom: 0.2rem;
@@ -516,41 +1026,149 @@ html:not(.js-jelly) .peek { display: none; }
 }
 
 /* Sections pop in with a squish as they scroll into view (hop.js adds .is-in). */
-html.will-pop .pop { opacity: 0; }
-html.will-pop .pop.is-in { animation: pop-in 0.9s var(--delay, 0ms) both; transform-origin: 50% 100%; }
+html.will-pop .pop {
+  opacity: 0;
+}
+html.will-pop .pop.is-in {
+  animation: pop-in 0.9s var(--delay, 0ms) both;
+  transform-origin: 50% 100%;
+}
 @keyframes pop-in {
-  from { opacity: 0; transform: translateY(18px) scale(0.92, 0.84); }
-  25% { opacity: 1; }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92, 0.84);
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @supports (animation-timing-function: linear(0, 1)) {
-  html.will-pop .pop.is-in { animation-timing-function: linear(0, 0.045, 0.161, 0.323, 0.506, 0.691, 0.862, 1.007, 1.119, 1.196, 1.24, 1.254, 1.244, 1.215, 1.174, 1.127, 1.08, 1.037, 0.999, 0.971, 0.951, 0.939, 0.935, 0.938, 0.945, 0.955, 0.967, 0.979, 0.99, 1, 1.007, 1.012, 1.015, 1.016, 1.016, 1.014, 1.011, 1.008, 1.005, 1.003, 1); }
+  html.will-pop .pop.is-in {
+    animation-timing-function: linear(
+      0,
+      0.045,
+      0.161,
+      0.323,
+      0.506,
+      0.691,
+      0.862,
+      1.007,
+      1.119,
+      1.196,
+      1.24,
+      1.254,
+      1.244,
+      1.215,
+      1.174,
+      1.127,
+      1.08,
+      1.037,
+      0.999,
+      0.971,
+      0.951,
+      0.939,
+      0.935,
+      0.938,
+      0.945,
+      0.955,
+      0.967,
+      0.979,
+      0.99,
+      1,
+      1.007,
+      1.012,
+      1.015,
+      1.016,
+      1.016,
+      1.014,
+      1.011,
+      1.008,
+      1.005,
+      1.003,
+      1
+    );
+  }
 }
 
 /* Text pages: privacy, support, Impressum. A calm jelly keeps the title company. */
-.page { padding-top: clamp(1rem, 4vw, 2.5rem); padding-bottom: 1rem; }
-.page-title { display: flex; align-items: end; justify-content: space-between; gap: 1rem; max-width: var(--measure); }
-.page-title [data-jelly] { flex: none; margin-bottom: -0.2rem; }
-.page h1 { font-size: clamp(2.3rem, 8vw, 3.4rem); }
-.page .lede { max-width: var(--measure); }
-.updated { margin: 0.8rem 0 0; font-size: 0.9rem; color: var(--muted); }
-.prose { max-width: var(--measure); }
-.prose h2 { margin-top: 2.4rem; font-size: clamp(1.3rem, 4vw, 1.6rem); }
-.prose p, .prose ul, .prose ol, .prose address { margin: 0 0 0.9rem; }
-.prose ul, .prose ol { padding-left: 1.3rem; }
-.prose li { margin-bottom: 0.4rem; }
-.prose address { font-style: normal; }
-.prose dl { margin: 0 0 0.9rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; }
-.prose dt { color: var(--muted); }
-.prose dd { margin: 0; }
+.page {
+  padding-top: clamp(1rem, 4vw, 2.5rem);
+  padding-bottom: 1rem;
+}
+.page-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: var(--measure);
+}
+.page-title [data-jelly] {
+  flex: none;
+  margin-bottom: -0.2rem;
+}
+.page h1 {
+  font-size: clamp(2.3rem, 8vw, 3.4rem);
+}
+.page .lede {
+  max-width: var(--measure);
+}
+.updated {
+  margin: 0.8rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.prose {
+  max-width: var(--measure);
+}
+.prose h2 {
+  margin-top: 2.4rem;
+  font-size: clamp(1.3rem, 4vw, 1.6rem);
+}
+.prose p,
+.prose ul,
+.prose ol,
+.prose address {
+  margin: 0 0 0.9rem;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3rem;
+}
+.prose li {
+  margin-bottom: 0.4rem;
+}
+.prose address {
+  font-style: normal;
+}
+.prose dl {
+  margin: 0 0 0.9rem;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.3rem 1rem;
+}
+.prose dt {
+  color: var(--muted);
+}
+.prose dd {
+  margin: 0;
+}
 .note {
   margin: 1.4rem 0 0;
   padding: 1rem 1.2rem;
   border-radius: 1.1rem;
   background: var(--sunken);
 }
-.note p { margin: 0; }
-.mail { font-weight: 800; font-size: 1.15rem; }
+.note p {
+  margin: 0;
+}
+.mail {
+  font-weight: 800;
+  font-size: 1.15rem;
+}
 
 /* Footer: the credit, and the legal links every page needs. */
 .site-foot {
@@ -565,9 +1183,18 @@ html.will-pop .pop.is-in { animation: pop-in 0.9s var(--delay, 0ms) both; transf
   font-size: 0.95rem;
   color: var(--muted);
 }
-.site-foot nav { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+.site-foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
 /* The trademark credits the store badges require. */
-.site-foot .marks { flex-basis: 100%; margin: 0; font-size: 0.75rem; line-height: 1.5; }
+.site-foot .marks {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
 .credit {
   display: inline-flex;
   align-items: end;
@@ -579,9 +1206,18 @@ html.will-pop .pop.is-in { animation: pop-in 0.9s var(--delay, 0ms) both; transf
   letter-spacing: 0.01em;
   cursor: default;
 }
-.credit [data-jelly] { flex: none; }
-.credit a { color: inherit; }
+.credit [data-jelly] {
+  flex: none;
+}
+.credit a {
+  color: inherit;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

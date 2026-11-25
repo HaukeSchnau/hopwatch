@@ -5,40 +5,45 @@
 //   hopwatch://slack-app?client=<id> sign in to Slack with another Slack app than Hopwatch's
 //                                   (a personal one); without `client`, back to Hopwatch's
 
-import type { ContextId } from './model';
+import type { ContextId } from "./model";
 
-export const SCHEME = 'hopwatch';
+export const SCHEME = "hopwatch";
 
 export type LinkAction =
-  | { kind: 'start'; contextId: ContextId }
-  | { kind: 'stop' }
-  | { kind: 'resume' }
-  | { kind: 'slack-app'; clientId: string | null };
+  | { kind: "start"; contextId: ContextId }
+  | { kind: "stop" }
+  | { kind: "resume" }
+  | { kind: "slack-app"; clientId: string | null };
 
 /** Parses a URL or router path such as "hopwatch://start?context=…" or "/stop". */
 export function parseLink(pathOrUrl: string): LinkAction | null {
-  const withoutScheme = pathOrUrl.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/^\/+/, '');
-  const [route, query = ''] = withoutScheme.split('?');
+  const withoutScheme = pathOrUrl.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/^\/+/, "");
+  const [route = "", query = ""] = withoutScheme.split("?");
+
   const params = new Map(
     query
-      .split('&')
+      .split("&")
       .filter(Boolean)
       .map((pair): [string, string] => {
-        const [key, value = ''] = pair.split('=');
+        const [key = "", value = ""] = pair.split("=");
+
         return [decodeURIComponent(key), decodeURIComponent(value)];
       }),
   );
-  switch (route.replace(/\/+$/, '')) {
-    case 'start': {
-      const contextId = params.get('context');
-      return contextId ? { kind: 'start', contextId: contextId as ContextId } : null;
+
+  switch (route.replace(/\/+$/, "")) {
+    case "start": {
+      const contextId = params.get("context");
+
+      return contextId ? { kind: "start", contextId: contextId as ContextId } : null;
     }
-    case 'stop':
-      return { kind: 'stop' };
-    case 'resume':
-      return { kind: 'resume' };
-    case 'slack-app':
-      return { kind: 'slack-app', clientId: params.get('client') || null };
+
+    case "stop":
+      return { kind: "stop" };
+    case "resume":
+      return { kind: "resume" };
+    case "slack-app":
+      return { kind: "slack-app", clientId: params.get("client") || null };
     default:
       return null;
   }

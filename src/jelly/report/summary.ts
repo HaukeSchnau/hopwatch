@@ -5,8 +5,8 @@
 // Without the model nothing new is written and nothing waits on it. The summary is in the
 // app's language; after a language change the prompt differs, so a new one is written.
 
-import { generate } from '@modules/on-device-model';
-import { useEffect, useMemo, useState } from 'react';
+import { generate } from "@modules/on-device-model";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   actions,
@@ -21,23 +21,28 @@ import {
   useTree,
   weekFacts,
   type WeekFacts,
-} from '@/core';
-import { language } from '@/i18n';
+} from "@/core";
+import { language } from "@/i18n";
 
-import { useModelAvailable } from '../character/suggest';
+import { useModelAvailable } from "../character/suggest";
 
 /** Asks the model to word `week`, once more when the first answer doesn't check out. */
 async function write(week: WeekFacts): Promise<string | null> {
   const request = summaryRequest(week);
+
   for (let attempt = 0; attempt < 2; attempt++) {
     const answer = await generate(request);
+
     if (!answer) return null;
     // Hopwatch's text uses plain punctuation; the model likes em dashes.
-    const text = answer.summary.trim().replace(/\s*—\s*/g, ', ');
+    const text = answer.summary.trim().replace(/\s*—\s*/g, ", ");
     const problem = checkSummary(text, week);
+
     if (!problem) return text;
+
     if (__DEV__) console.warn(`week summary turned down (${problem}): ${text}`);
   }
+
   return null;
 }
 
@@ -47,21 +52,30 @@ interface Stored {
 }
 
 const parseStored = (value: Json): Stored | undefined =>
-  typeof value === 'object' && value !== null && !Array.isArray(value) && typeof value.hash === 'string' && typeof value.text === 'string'
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  typeof value.hash === "string" &&
+  typeof value.text === "string"
     ? { hash: value.hash, text: value.text }
     : undefined;
 
 /** A short, stable fingerprint of what the model is asked (32-bit FNV-1a). */
 function hashOf(week: WeekFacts): string {
   let hash = 0x811c9dc5;
-  for (const char of summaryRequest(week).prompt) hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 0x01000193);
+
+  for (const char of summaryRequest(week).prompt)
+    hash = Math.imul(hash ^ (char.codePointAt(0) ?? 0), 0x01000193);
+
   return (hash >>> 0).toString(36);
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
+const pad = (n: number) => String(n).padStart(2, "0");
+
 /** The pref holding a week's summary: jelly.summary.2026-09-28. */
 const keyOf = (weekStart: number) => {
   const d = new Date(weekStart);
+
   return `jelly.summary.${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
@@ -75,7 +89,7 @@ export type SummaryState =
   /** The summary; `stale` while a newer one is being written for changed facts. */
   | { text: string; stale: boolean }
   /** The first summary for this week is on its way. */
-  | 'writing';
+  | "writing";
 
 /**
  * The summary for the week starting at `weekStart`, or null when there is none to show:
@@ -88,7 +102,12 @@ export function useWeekSummary(weekStart: number): SummaryState | null {
   // twice an hour, while edits change the facts at once.
   const now = Math.floor(useNow(STEP) / STEP) * STEP;
   const offDays = useOffDays();
-  const facts = useMemo(() => weekFacts(entries, tree, weekStart, now, language, offDays), [entries, tree, weekStart, now, offDays]);
+
+  const facts = useMemo(
+    () => weekFacts(entries, tree, weekStart, now, language, offDays),
+    [entries, tree, weekStart, now, offDays],
+  );
+
   const hash = facts ? hashOf(facts) : null;
   const key = keyOf(weekStart);
   const stored = usePref<Stored | null>(key, null, parseStored);
@@ -102,6 +121,7 @@ export function useWeekSummary(weekStart: number): SummaryState | null {
     if (!facts || hash === null || fresh || !available || failed.has(id)) return;
     let live = true;
     let request = pending.get(id);
+
     if (!request) {
       request = write(facts)
         .then((text) => {
@@ -114,14 +134,19 @@ export function useWeekSummary(weekStart: number): SummaryState | null {
         .finally(() => pending.delete(id));
       pending.set(id, request);
     }
+
     void request.then(() => live && settle((n) => n + 1));
+
     return () => {
       live = false;
     };
   }, [available, facts, fresh, hash, id, key]);
 
   if (hash === null) return null;
+
   if (fresh) return { text: stored.text, stale: false };
+
   if (!available || failed.has(id)) return null;
-  return stored ? { text: stored.text, stale: true } : 'writing';
+
+  return stored ? { text: stored.text, stale: true } : "writing";
 }

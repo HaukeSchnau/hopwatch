@@ -12,15 +12,15 @@ Code lives in `src/jelly/character/`, plus `Gummy.tsx`, `Character.tsx`,
 A look is seven traits. Color and emoji stay on the context. Every combination renders,
 so looks can be derived, rerolled and edited one trait at a time.
 
-| Trait | Options |
-| --- | --- |
-| Body | blob, gumdrop, drop, bean, mochi, capsule, onigiri, star, ghost |
-| Eyes | dots, shiny, googly, sleepy, happy, cyclops, glasses, shades |
-| Mouth | smile, grin, cat, oh, blep, fang, munch (buck teeth), smirk, wobbly |
-| Head | none, curl, sprout, flower, antenna, horns, cat ears, bear ears, bunny ears, dog ears, bow, party hat, chef hat, crown, headphones, halo, sweatband, grad cap, beanie, propeller |
-| Neck | none, bow tie, tie, scarf, collar, bib, medal |
-| Coat | plain, freckles, sprinkles, spots, stripes, sugar, belly, sparkle |
-| Mood | bouncy, dozy, jittery, proud, curious, dreamy, wiggly |
+| Trait | Options                                                                                                                                                                          |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Body  | blob, gumdrop, drop, bean, mochi, capsule, onigiri, star, ghost                                                                                                                  |
+| Eyes  | dots, shiny, googly, sleepy, happy, cyclops, glasses, shades                                                                                                                     |
+| Mouth | smile, grin, cat, oh, blep, fang, munch (buck teeth), smirk, wobbly                                                                                                              |
+| Head  | none, curl, sprout, flower, antenna, horns, cat ears, bear ears, bunny ears, dog ears, bow, party hat, chef hat, crown, headphones, halo, sweatband, grad cap, beanie, propeller |
+| Neck  | none, bow tie, tie, scarf, collar, bib, medal                                                                                                                                    |
+| Coat  | plain, freckles, sprinkles, spots, stripes, sugar, belly, sparkle                                                                                                                |
+| Mood  | bouncy, dozy, jittery, proud, curious, dreamy, wiggly                                                                                                                            |
 
 The lists and the editor's names are in `traits.ts`. The editor calls the topper "Head",
 the surface "Coat" and the motion "Mood".

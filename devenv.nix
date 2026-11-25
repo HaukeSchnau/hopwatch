@@ -1,7 +1,4 @@
 { pkgs, inputs, ... }:
-let
-  tools = import ./nix/toolchain.nix { inherit pkgs; };
-in
 {
   imports = [
     (inputs.projectSdk + "/modules/devenv/project.nix")
@@ -9,10 +6,7 @@ in
   ];
 
   # Node and pnpm for Expo/Metro, the checks and Alchemy. Native builds need a Mac (iOS) or the Android SDK.
-  packages = [
-    tools.nodejs
-    tools.pnpm
-  ];
+  packages = builtins.attrValues (import (inputs.projectSdk + "/lib/toolchain.nix") { inherit pkgs; });
 
   project = {
     enable = true;

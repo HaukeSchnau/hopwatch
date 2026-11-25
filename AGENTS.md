@@ -20,7 +20,8 @@ details there.
   exported on the tower, plus TestFlight and Play internal builds on the Mac when Expo's
   fingerprint of the native code changed (`fingerprint.config.js`). Store submission is a manual Calder run. See `docs/architecture.md`.
 - `scripts/app-store.mjs`: pushes the App Store listing in `store/` through the `asc` CLI.
-- Node and pnpm come from `devenv.nix` (`nix/toolchain.nix`, shared with Calder's dev shell).
+- Node and pnpm come from nix-infra-modules' shared toolchain, in `devenv.nix` and in Calder's dev
+  shell (`flake.nix`).
 - `site/`: the website at hopwatch.schnau.dev, on Cloudflare through `alchemy.run.ts`; Calder
   deploys it on push to `main` and previews pull requests. `project dev up` serves it with
   `alchemy dev`, one instance per checkout.
@@ -42,13 +43,13 @@ The project uses pnpm.
 ```bash
 pnpm expo install <package>  # ALWAYS use instead of pnpm add — resolves SDK-compatible versions
 pnpm start                   # start the dev server
-pnpm lint                    # lint
-pnpm typecheck               # typecheck
+pnpm check                   # format, lint and type check (vp check)
+pnpm test                    # domain tests (vp test run)
 pnpm dlx expo-doctor         # diagnose dependency and config issues
 pnpm expo install --fix      # fix incompatible package versions
 ```
 
-Run lint and typecheck before declaring any task done.
+Run `pnpm check` and `pnpm test` before declaring any task done.
 
 ## Navigation & Routing
 

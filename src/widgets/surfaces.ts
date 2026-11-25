@@ -5,19 +5,30 @@
 // controls and Siri, whose app-side code (native/ios/AppSurfaces.swift) catches up on
 // each write.
 
-import { systemSurfaces } from '@modules/system-surfaces';
-import { AppState } from 'react-native';
+import { systemSurfaces } from "@modules/system-surfaces";
+import { AppState } from "react-native";
 
-import { connectRemoteQueue, drainRemote, type Hue, type HopwatchState, parseCommand, type RemoteCommand, snapshotOf, syncSlack, useHopwatch } from '@/core';
-import { coreText } from '@/i18n/core';
-import { widgetText } from '@/i18n/widgets';
-import { darkTheme, lightTheme, mix } from '@/jelly/theme';
+import {
+  connectRemoteQueue,
+  drainRemote,
+  type Hue,
+  type HopwatchState,
+  parseCommand,
+  type RemoteCommand,
+  snapshotOf,
+  syncSlack,
+  useHopwatch,
+} from "@/core";
+import { coreText } from "@/i18n/core";
+import { widgetText } from "@/i18n/widgets";
+import { darkTheme, lightTheme, mix } from "@/jelly/theme";
 
 const day = lightTheme.c;
 const night = darkTheme.c;
 
 function colors(hue: Hue) {
   const candy = lightTheme.candy[hue];
+
   return {
     light: candy.light,
     fill: candy.fill,
@@ -40,49 +51,60 @@ const paint = {
 /** The surfaces' words in the app's language, with `{name}` and `{duration}` to fill in. */
 const strings = {
   stop: widgetText.stop,
-  stopName: widgetText.stopName('{name}'),
-  back: widgetText.back('{name}'),
-  resume: widgetText.resume('{name}'),
+  stopName: widgetText.stopName("{name}"),
+  back: widgetText.back("{name}"),
+  resume: widgetText.resume("{name}"),
   nothing: widgetText.nothing,
-  switched: coreText.toast.switched('{name}'),
-  stopped: coreText.toast.stopped('{name}'),
-  nudgeTitle: coreText.nudge.title('{name}'),
-  nudgeBody: coreText.nudge.body('{duration}'),
+  switched: coreText.toast.switched("{name}"),
+  stopped: coreText.toast.stopped("{name}"),
+  nudgeTitle: coreText.nudge.title("{name}"),
+  nudgeBody: coreText.nudge.body("{duration}"),
 };
 
 /** Lets the store replay taps from the native queue. False in builds without the native side. */
 export function connectSurfaces(): boolean {
   const native = systemSurfaces;
-  if (!native || typeof native.writeSnapshot !== 'function') return false;
+
+  if (!native || typeof native.writeSnapshot !== "function") return false;
+
   const remove = (seqs: number[]) => {
     native.removeCommands(seqs);
     // Surfaces show the snapshot plus the queue, so they change with the queue even when
     // a replay changed nothing: write the snapshot again to make them catch up.
     publishSnapshot(useHopwatch.getState(), { force: true });
   };
+
   connectRemoteQueue({
     read: () => {
       const unreadable: number[] = [];
+
       const commands = native.readCommands().flatMap((json): RemoteCommand[] => {
         const command = parseCommand(json);
+
         if (command) return [command];
         // Native code may still read it and keep showing its tap: drop it.
         const seq = seqOf(json);
+
         if (seq !== null) unreadable.push(seq);
+
         return [];
       });
+
       if (unreadable.length > 0) remove(unreadable);
+
       return commands;
     },
     remove,
   });
+
   return true;
 }
 
 function seqOf(json: string): number | null {
   try {
     const seq: unknown = (JSON.parse(json) as { seq?: unknown } | null)?.seq;
-    return typeof seq === 'number' ? seq : null;
+
+    return typeof seq === "number" ? seq : null;
   } catch {
     return null;
   }
@@ -91,8 +113,12 @@ function seqOf(json: string): number | null {
 let written: string | null = null;
 
 /** Writes the snapshot of `state` for the native surfaces, unless it's what they have. */
-export function publishSnapshot(state: HopwatchState = useHopwatch.getState(), { force = false } = {}) {
+export function publishSnapshot(
+  state: HopwatchState = useHopwatch.getState(),
+  { force = false } = {},
+) {
   const json = JSON.stringify(snapshotOf(state.entries, state.tree, colors, paint, strings));
+
   if (json === written && !force) return;
   written = json;
   systemSurfaces?.writeSnapshot(json);
@@ -105,20 +131,25 @@ export function publishSnapshot(state: HopwatchState = useHopwatch.getState(), {
  */
 export function startSurfaces(): () => void {
   if (!connectSurfaces() || !systemSurfaces) return () => {};
+
   publishSnapshot();
-  syncSlack({ eager: true });
+  void syncSlack({ eager: true });
+
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries === prev.entries && state.tree === prev.tree) return;
     publishSnapshot(state);
-    syncSlack();
+    void syncSlack();
   });
-  const taps = systemSurfaces.addListener('onCommands', () => drainRemote());
-  const foreground = AppState.addEventListener('change', (status) => {
-    if (status !== 'active') return;
+
+  const taps = systemSurfaces.addListener("onCommands", () => drainRemote());
+
+  const foreground = AppState.addEventListener("change", (status) => {
+    if (status !== "active") return;
     drainRemote();
     // Another look at Slack: a meeting's status may have ended, or a call failed offline.
-    syncSlack({ eager: true });
+    void syncSlack({ eager: true });
   });
+
   return () => {
     unsubscribe();
     taps.remove();

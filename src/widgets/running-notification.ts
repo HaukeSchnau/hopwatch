@@ -9,9 +9,9 @@
 // was posted, which Android queues and the app replays in a headless task (src/core/remote.ts,
 // src/widgets/headless.ts).
 
-import { systemSurfaces, type Icon, type RunningNotification } from '@modules/system-surfaces';
-import { randomUUID } from 'expo-crypto';
-import { AppState, Platform } from 'react-native';
+import { systemSurfaces, type Icon, type RunningNotification } from "@modules/system-surfaces";
+import { randomUUID } from "expo-crypto";
+import { AppState, Platform } from "react-native";
 
 import {
   findOpen,
@@ -22,20 +22,23 @@ import {
   type ResolvedContext,
   tapCommand,
   useHopwatch,
-} from '@/core';
-import { androidText } from '@/i18n/android';
-import { lightTheme } from '@/jelly/theme';
+} from "@/core";
+import { androidText } from "@/i18n/android";
+import { lightTheme } from "@/jelly/theme";
 
 /** A jelly's icon: its candy and emoji, or its initial when it has none. Shortcuts use it too. */
 export function jellyIcon(context: ResolvedContext): Icon {
   const { light, fill, deep, on } = lightTheme.candy[context.hue];
+
   return { mark: context.glyph ?? context.name.slice(0, 1).toUpperCase(), light, fill, deep, on };
 }
 
 /** The id "Back" starts its entry with, one per running entry so reposts stay the same. */
 let backEntry: { open: string; id: string } | null = null;
+
 const backEntryId = (open: string) => {
   if (backEntry?.open !== open) backEntry = { open, id: randomUUID() };
+
   return backEntry.id;
 };
 
@@ -43,10 +46,12 @@ const backEntryId = (open: string) => {
 function describe(state: HopwatchState): RunningNotification | null {
   const open = findOpen(state.entries);
   const context = open && state.tree.byId.get(open.contextId);
+
   if (!open || !context) return null;
   const backId = previousContextId(state.entries);
   const back = backId ? state.tree.byId.get(backId) : undefined;
   const text = androidText.running;
+
   return {
     title: pathLabel(context),
     text: text.since(formatClock(open.startUtc)),
@@ -54,7 +59,14 @@ function describe(state: HopwatchState): RunningNotification | null {
     icon: jellyIcon(context),
     actions: [
       { label: text.stop, command: JSON.stringify(tapCommand(open.id, null, randomUUID)) },
-      ...(back && !back.hidden ? [{ label: text.back(back.name), command: JSON.stringify(tapCommand(open.id, back.id, () => backEntryId(open.id))) }] : []),
+      ...(back && !back.hidden
+        ? [
+            {
+              label: text.back(back.name),
+              command: JSON.stringify(tapCommand(open.id, back.id, () => backEntryId(open.id))),
+            },
+          ]
+        : []),
     ],
     channelName: text.channel,
     channelDescription: text.channelDescription,
@@ -63,8 +75,9 @@ function describe(state: HopwatchState): RunningNotification | null {
 
 /** Posts, updates or removes the notification once, for the headless task (headless.ts). */
 export async function syncRunningNotification() {
-  if (Platform.OS !== 'android' || !systemSurfaces) return;
+  if (Platform.OS !== "android" || !systemSurfaces) return;
   const want = describe(useHopwatch.getState());
+
   if (want) await systemSurfaces.showRunning(want);
   else await systemSurfaces.hideRunning();
 }
@@ -76,7 +89,8 @@ export async function syncRunningNotification() {
  */
 export function startRunningNotification(): () => void {
   const native = systemSurfaces;
-  if (Platform.OS !== 'android' || !native) return () => {};
+
+  if (Platform.OS !== "android" || !native) return () => {};
 
   /** JSON of what's posted, null for nothing, undefined when unknown (at launch, or after a failed post). */
   let shown: string | null | undefined;
@@ -88,6 +102,7 @@ export function startRunningNotification(): () => void {
     queue = queue
       .then(async () => {
         if (json === shown && !repost) return;
+
         if (want) {
           shown = (await native.showRunning(want)) ? json : undefined;
         } else {
@@ -97,15 +112,21 @@ export function startRunningNotification(): () => void {
       })
       .catch((error: unknown) => {
         shown = undefined;
-        console.warn('running notification sync failed', error);
+        console.warn("running notification sync failed", error);
       });
   };
 
   enqueue(false);
+
   const unsubscribe = useHopwatch.subscribe((state, prev) => {
     if (state.entries !== prev.entries || state.tree !== prev.tree) enqueue(false);
   });
-  const foreground = AppState.addEventListener('change', (status) => status === 'active' && enqueue(true));
+
+  const foreground = AppState.addEventListener(
+    "change",
+    (status) => status === "active" && enqueue(true),
+  );
+
   return () => {
     unsubscribe();
     foreground.remove();

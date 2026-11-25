@@ -1,7 +1,7 @@
 {
   "name": "system-surfaces",
   "version": "1.0.0",
+  "private": true,
   "description": "Surfaces outside the app: the snapshot and tap queue for widgets, controls and Siri, and Android's notification and shortcuts",
-  "main": "index.ts",
-  "private": true
+  "main": "index.ts"
 }

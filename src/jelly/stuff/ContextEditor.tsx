@@ -20,7 +20,7 @@ import {
   useNativeState,
   VStack,
   ZStack,
-} from '@expo/ui/swift-ui';
+} from "@expo/ui/swift-ui";
 import {
   background,
   environment,
@@ -33,11 +33,11 @@ import {
   shapes,
   tag,
   textSelection,
-} from '@expo/ui/swift-ui/modifiers';
-import * as Clipboard from 'expo-clipboard';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+} from "@expo/ui/swift-ui/modifiers";
+import * as Clipboard from "expo-clipboard";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 
 import {
   actions,
@@ -56,28 +56,37 @@ import {
   startOfWeek,
   useNow,
   useSlackLink,
-} from '@/core';
-import { stuffText } from '@/i18n/stuff';
+} from "@/core";
+import { stuffText } from "@/i18n/stuff";
 
-import { lookFor } from '../character/derive';
-import { LookEditor } from '../character/LookEditor';
-import { saveSuggestedLook, suggestForContext, useModelAvailable } from '../character/suggest';
-import { buzz } from '../feedback';
-import { EMOJI_SUGGESTIONS } from '../fields';
-import { HostedRow, JellyForm } from '../forms';
-import { suggestInput } from '../suggestions';
-import { pickerLocale } from '../sheets/parts';
-import { useTheme } from '../theme';
-import { type EditorTarget, Header, NUDGE_CHIPS, slackLabel, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
-import { WeekdayChips } from './WeekdayChips';
-import { confirmDelete } from './StuffScreen';
+import { lookFor } from "../character/derive";
+import { LookEditor } from "../character/LookEditor";
+import { saveSuggestedLook, suggestForContext, useModelAvailable } from "../character/suggest";
+import { buzz } from "../feedback";
+import { EMOJI_SUGGESTIONS } from "../fields";
+import { HostedRow, JellyForm } from "../forms";
+import { suggestInput } from "../suggestions";
+import { pickerLocale } from "../sheets/parts";
+import { useTheme } from "../theme";
+import {
+  type EditorTarget,
+  Header,
+  NUDGE_CHIPS,
+  slackLabel,
+  TARGET_CHIPS,
+  useEditorTarget,
+  useJellyDraft,
+} from "./editor";
+import { WeekdayChips } from "./WeekdayChips";
+import { confirmDelete } from "./StuffScreen";
 
 const s = stuffText.editor;
-const secondary = foregroundStyle({ type: 'hierarchical', style: 'secondary' });
-const ROOT = 'root';
+const secondary = foregroundStyle({ type: "hierarchical", style: "secondary" });
+const ROOT = "root";
 
 export function ContextEditor() {
   const target = useEditorTarget();
+
   if (!target) {
     return (
       <JellyForm title={s.title}>
@@ -87,12 +96,14 @@ export function ContextEditor() {
       </JellyForm>
     );
   }
-  return <Editor key={target.context?.id ?? 'new'} {...target} />;
+
+  return <Editor key={target.context?.id ?? "new"} {...target} />;
 }
 
 function Editor(props: EditorTarget) {
   const { context } = props;
   const t = useTheme();
+
   const {
     name,
     setName,
@@ -134,11 +145,12 @@ function Editor(props: EditorTarget) {
     bump,
     create,
   } = useJellyDraft(props);
+
   const now = useNow(60_000);
   const slack = useSlackLink();
-  const nameState = useNativeState(context?.name ?? '');
+  const nameState = useNativeState(context?.name ?? "");
   const slackState = useNativeState(slackText);
-  const emojiState = useNativeState(context?.emoji ?? '');
+  const emojiState = useNativeState(context?.emoji ?? "");
   useEffect(() => {
     if (suggestedEmoji) emojiState.set(suggestedEmoji);
   }, [emojiState, suggestedEmoji]);
@@ -146,7 +158,7 @@ function Editor(props: EditorTarget) {
 
   const pickEmoji = (value: string | null) => {
     pickDraftEmoji(value);
-    emojiState.set(value ?? '');
+    emojiState.set(value ?? "");
   };
 
   return (
@@ -154,7 +166,12 @@ function Editor(props: EditorTarget) {
       title={title}
       tint={c.ink}
       cancel={context ? null : { label: stuffText.cancel, onPress: () => router.back() }}
-      confirm={context ? { label: s.done, onPress: () => router.back() } : { label: s.add, onPress: create, disabled: !name.trim() }}>
+      confirm={
+        context
+          ? { label: s.done, onPress: () => router.back() }
+          : { label: s.add, onPress: create, disabled: !name.trim() }
+      }
+    >
       {context ? (
         <HostedRow
           render={(width) => (
@@ -193,10 +210,26 @@ function Editor(props: EditorTarget) {
 
       <Section
         title={s.emoji}
-        footer={<SwiftText>{suggestedEmoji ? s.emojiSuggestedFooter : parent && !emoji ? s.emojiInherited(parent.name) : s.emojiFooter}</SwiftText>}>
+        footer={
+          <SwiftText>
+            {suggestedEmoji
+              ? s.emojiSuggestedFooter
+              : parent && !emoji
+                ? s.emojiInherited(parent.name)
+                : s.emojiFooter}
+          </SwiftText>
+        }
+      >
         <LabeledContent label={suggestedEmoji ? s.emojiSuggested : s.emoji}>
           <HStack spacing={12}>
-            {context ? <SuggestButton context={context} name={name} parentId={parentId} onEmoji={pickEmoji} /> : null}
+            {context ? (
+              <SuggestButton
+                context={context}
+                name={name}
+                parentId={parentId}
+                onEmoji={pickEmoji}
+              />
+            ) : null}
             <TextField
               text={emojiState}
               placeholder={parent?.glyph ?? s.emojiNone}
@@ -215,7 +248,8 @@ function Editor(props: EditorTarget) {
                   frame({ width: 44, height: 44 }),
                   ...(shownEmoji === e ? [background(c.tint, shapes.circle())] : []),
                   onTapGesture(() => pickEmoji(shownEmoji === e && !suggestedEmoji ? null : e)),
-                ]}>
+                ]}
+              >
                 {e}
               </SwiftText>
             ))}
@@ -223,47 +257,45 @@ function Editor(props: EditorTarget) {
         </ScrollView>
       </Section>
 
-      <Section title={suggestedHue ? s.colorSuggested : s.color} footer={suggestedHue ? <SwiftText>{s.colorSuggestedFooter}</SwiftText> : undefined}>
+      <Section
+        title={suggestedHue ? s.colorSuggested : s.color}
+        footer={suggestedHue ? <SwiftText>{s.colorSuggestedFooter}</SwiftText> : undefined}
+      >
         {parentId ? (
           <Toggle
             label={s.sameAs(parent?.name ?? null)}
             isOn={color === null}
-            onIsOnChange={(on) => pickColor(on ? null : (parent?.hue ?? 'pink'))}
+            onIsOnChange={(on) => pickColor(on ? null : (parent?.hue ?? "pink"))}
           />
         ) : null}
-        {shownColor !== null || !parentId ? <Swatches value={shownColor} onChange={pickColor} /> : null}
+        {shownColor !== null || !parentId ? (
+          <Swatches value={shownColor} onChange={pickColor} />
+        ) : null}
       </Section>
 
       <Section title={s.place}>
         <Picker
           label={s.insidePicker}
           selection={parentId ?? ROOT}
-          onSelectionChange={(value: string) => moveTo(value === ROOT ? null : (parents.find((p) => p.id === value)?.id ?? null))}
-          modifiers={[pickerStyle('menu')]}>
+          onSelectionChange={(value: string) =>
+            moveTo(value === ROOT ? null : (parents.find((p) => p.id === value)?.id ?? null))
+          }
+          modifiers={[pickerStyle("menu")]}
+        >
           <SwiftText modifiers={[tag(ROOT)]}>{s.topLevel}</SwiftText>
           {parents.map((p) => (
             <SwiftText key={p.id} modifiers={[tag(p.id)]}>
-              {`${p.glyph ? `${p.glyph} ` : ''}${pathLabel(p)}`}
+              {`${p.glyph ? `${p.glyph} ` : ""}${pathLabel(p)}`}
             </SwiftText>
           ))}
         </Picker>
         {context?.hidden ? null : (
-          <Toggle
-            label={s.pinned}
-            systemImage="pin"
-            isOn={pinned}
-            onIsOnChange={pinTo}
-          />
+          <Toggle label={s.pinned} systemImage="pin" isOn={pinned} onIsOnChange={pinTo} />
         )}
       </Section>
 
       <Section title={s.target} footer={<SwiftText>{s.targetFooter}</SwiftText>}>
-        <Chips
-          options={TARGET_CHIPS}
-          none={s.targetNone}
-          value={target}
-          onChange={changeTarget}
-        />
+        <Chips options={TARGET_CHIPS} none={s.targetNone} value={target} onChange={changeTarget} />
         {target !== null ? (
           <Stepper
             label={s.perWeek(formatDuration(target * MINUTE))}
@@ -278,16 +310,39 @@ function Editor(props: EditorTarget) {
       </Section>
 
       {target !== null ? (
-        <Section title={s.jobHours} footer={<SwiftText>{workDays !== null && balanceSince !== null ? s.balanceFooter : s.jobHoursFooter}</SwiftText>}>
-          <Toggle label={s.countDaysOff} systemImage="calendar" isOn={workDays !== null} onIsOnChange={(on) => changeWorkDays(on ? MONDAY_TO_FRIDAY : null)} />
+        <Section
+          title={s.jobHours}
+          footer={
+            <SwiftText>
+              {workDays !== null && balanceSince !== null ? s.balanceFooter : s.jobHoursFooter}
+            </SwiftText>
+          }
+        >
+          <Toggle
+            label={s.countDaysOff}
+            systemImage="calendar"
+            isOn={workDays !== null}
+            onIsOnChange={(on) => changeWorkDays(on ? MONDAY_TO_FRIDAY : null)}
+          />
           {workDays !== null ? (
             <>
-              <HostedRow render={(width) => <WeekdayChips width={width} value={workDays} onChange={changeWorkDays} hue={hue} />} />
+              <HostedRow
+                render={(width) => (
+                  <WeekdayChips
+                    width={width}
+                    value={workDays}
+                    onChange={changeWorkDays}
+                    hue={hue}
+                  />
+                )}
+              />
               <Toggle
                 label={s.balance}
                 systemImage="plusminus"
                 isOn={balanceSince !== null}
-                onIsOnChange={(on) => changeBalanceSince(on ? dayKey(startOfWeek(Date.now())) : null)}
+                onIsOnChange={(on) =>
+                  changeBalanceSince(on ? dayKey(startOfWeek(Date.now())) : null)
+                }
               />
             </>
           ) : null}
@@ -297,9 +352,9 @@ function Editor(props: EditorTarget) {
                 title={s.balanceSince}
                 selection={new Date(dayStart(balanceSince))}
                 range={{ end: new Date(now) }}
-                displayedComponents={['date']}
+                displayedComponents={["date"]}
                 onDateChange={(date) => changeBalanceSince(dayKey(date.getTime()))}
-                modifiers={[environment('locale', pickerLocale)]}
+                modifiers={[environment("locale", pickerLocale)]}
               />
               <Stepper
                 label={s.balanceStart(formatSignedDuration(balanceStart * MINUTE))}
@@ -316,12 +371,7 @@ function Editor(props: EditorTarget) {
       ) : null}
 
       <Section title={s.nudge} footer={<SwiftText>{s.nudgeFooter}</SwiftText>}>
-        <Chips
-          options={NUDGE_CHIPS}
-          none={s.nudgeDefault}
-          value={nudge}
-          onChange={changeNudge}
-        />
+        <Chips options={NUDGE_CHIPS} none={s.nudgeDefault} value={nudge} onChange={changeNudge} />
         {nudge !== null ? (
           <Stepper
             label={s.nudgeAfter(formatDuration(nudge * MINUTE))}
@@ -334,13 +384,20 @@ function Editor(props: EditorTarget) {
           />
         ) : (
           <LabeledContent label={s.nudgesAfter}>
-            <SwiftText modifiers={[secondary, monospacedDigit()]}>{s.inheritedFrom(formatDuration(inheritedNudge * MINUTE), parent?.name ?? null)}</SwiftText>
+            <SwiftText modifiers={[secondary, monospacedDigit()]}>
+              {s.inheritedFrom(formatDuration(inheritedNudge * MINUTE), parent?.name ?? null)}
+            </SwiftText>
           </LabeledContent>
         )}
       </Section>
 
       {slack ? (
-        <Section title={s.slack} footer={<SwiftText>{s.slackFooter(slackShown ? slackLabel(slackShown) : null)}</SwiftText>}>
+        <Section
+          title={s.slack}
+          footer={
+            <SwiftText>{s.slackFooter(slackShown ? slackLabel(slackShown) : null)}</SwiftText>
+          }
+        >
           <TextField
             text={slackState}
             placeholder={s.slackPlaceholder}
@@ -360,7 +417,17 @@ function Editor(props: EditorTarget) {
  * One-tap minutes as a native segmented control. Option 0 reads `none` and means null; a
  * value set with the stepper that isn't an option leaves every segment unselected.
  */
-function Chips({ options, none, value, onChange }: { options: number[]; none: string; value: number | null; onChange: (minutes: number | null) => void }) {
+function Chips({
+  options,
+  none,
+  value,
+  onChange,
+}: {
+  options: number[];
+  none: string;
+  value: number | null;
+  onChange: (minutes: number | null) => void;
+}) {
   return (
     <Picker
       selection={value ?? 0}
@@ -368,7 +435,8 @@ function Chips({ options, none, value, onChange }: { options: number[]; none: st
         buzz.tick();
         onChange(picked === 0 ? null : picked);
       }}
-      modifiers={[pickerStyle('segmented')]}>
+      modifiers={[pickerStyle("segmented")]}
+    >
       {options.map((m) => (
         <SwiftText key={m} modifiers={[tag(m)]}>
           {m === 0 ? none : s.chip(m)}
@@ -392,7 +460,9 @@ function SuggestButton({
 }) {
   const available = useModelAvailable();
   const [busy, setBusy] = useState(false);
+
   if (!available) return null;
+
   return (
     <Button
       label={busy ? s.thinking : s.suggest}
@@ -406,6 +476,7 @@ function SuggestButton({
         })
           .then((suggestion) => {
             if (!suggestion) return;
+
             if (suggestion.emoji) onEmoji(suggestion.emoji);
             saveSuggestedLook(context.id, suggestion, typed, suggestion.emoji ?? context.glyph);
           })
@@ -419,12 +490,14 @@ function SuggestButton({
 /** Twelve candy drops in two rows. */
 function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue) => void }) {
   const t = useTheme();
+
   return (
     <VStack spacing={12}>
       {[hues.slice(0, 6), hues.slice(6)].map((row, r) => (
         <HStack key={r} spacing={12}>
           {row.map((h) => {
             const c = t.candy[h];
+
             return (
               <ZStack
                 key={h}
@@ -432,7 +505,7 @@ function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue)
                   frame({ width: 38, height: 38 }),
                   background(
                     {
-                      type: 'linearGradient',
+                      type: "linearGradient",
                       colors: [c.light, c.fill, c.deep],
                       startPoint: { x: 0.3, y: 0 },
                       endPoint: { x: 0.7, y: 1 },
@@ -440,7 +513,8 @@ function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue)
                     shapes.circle(),
                   ),
                   onTapGesture(() => onChange(h)),
-                ]}>
+                ]}
+              >
                 {value === h ? <Image systemName="checkmark" size={15} color={c.on} /> : null}
               </ZStack>
             );
@@ -455,31 +529,39 @@ function Swatches({ value, onChange }: { value: Hue | null; onChange: (hue: Hue)
 function ExistingSections({ context }: { context: ResolvedContext }) {
   const [copied, setCopied] = useState(false);
   const link = startLink(context.id);
+
   return (
     <>
       <Section title={s.startLink} footer={<SwiftText>{s.startLinkFooter}</SwiftText>}>
-        <SwiftText modifiers={[font({ textStyle: 'footnote', design: 'monospaced' }), secondary, textSelection(true)]}>{link}</SwiftText>
+        <SwiftText
+          modifiers={[
+            font({ textStyle: "footnote", design: "monospaced" }),
+            secondary,
+            textSelection(true),
+          ]}
+        >
+          {link}
+        </SwiftText>
         <Button
           label={copied ? s.copied : s.copyLink}
-          systemImage={copied ? 'checkmark' : 'link'}
+          systemImage={copied ? "checkmark" : "link"}
           onPress={() => {
-            Clipboard.setStringAsync(link);
+            void Clipboard.setStringAsync(link);
             buzz.success();
             setCopied(true);
           }}
         />
       </Section>
       <Section
-        footer={
-          <SwiftText>{context.archivedAt ? s.archivedFooter : s.archiveFooter}</SwiftText>
-        }>
+        footer={<SwiftText>{context.archivedAt ? s.archivedFooter : s.archiveFooter}</SwiftText>}
+      >
         {context.hidden ? null : (
           <Button
             label={s.addInside}
             systemImage="plus"
             onPress={() =>
               router.push({
-                pathname: '/context',
+                pathname: "/context",
                 params: { parent: context.id },
               })
             }
@@ -487,9 +569,10 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
         )}
         <Button
           label={context.archivedAt ? stuffText.unarchive : stuffText.archive}
-          systemImage={context.archivedAt ? 'tray.and.arrow.up' : 'archivebox'}
+          systemImage={context.archivedAt ? "tray.and.arrow.up" : "archivebox"}
           onPress={() => {
             buzz.thud();
+
             if (context.archivedAt) actions.unarchive(context.id);
             else {
               actions.archive(context.id);
@@ -497,7 +580,12 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
             }
           }}
         />
-        <Button role="destructive" label={s.delete} systemImage="trash" onPress={() => confirmDelete(context, () => router.back())} />
+        <Button
+          role="destructive"
+          label={s.delete}
+          systemImage="trash"
+          onPress={() => confirmDelete(context, () => router.back())}
+        />
       </Section>
     </>
   );

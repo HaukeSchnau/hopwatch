@@ -3,11 +3,11 @@
 // stage. Tiles, beans and the stage register measurable anchors here; the stage plans
 // flights and the flyer layer animates them. Purely visual: data changes are instant.
 
-import { type RefObject, useEffect, useRef } from 'react';
-import type { View } from 'react-native';
-import { create } from 'zustand';
+import { type RefObject, useEffect, useRef } from "react";
+import type { View } from "react-native";
+import { create } from "zustand";
 
-import type { ContextId } from '@/core';
+import type { ContextId } from "@/core";
 
 export interface Rect {
   x: number;
@@ -20,7 +20,7 @@ export interface Flight {
   key: number;
   contextId: ContextId;
   /** 'in' lands on the stage, 'out' goes back to a slot (or vanishes). */
-  kind: 'in' | 'out';
+  kind: "in" | "out";
   from: Rect;
   to: Rect;
   /** The flyer's canvas has drawn; the hop starts once every flight is warm. */
@@ -46,10 +46,12 @@ export function useAnchor(key: string) {
   const ref = useRef<View>(null);
   useEffect(() => {
     anchors.set(key, ref);
+
     return () => {
       if (anchors.get(key) === ref) anchors.delete(key);
     };
   }, [key]);
+
   return ref;
 }
 
@@ -69,8 +71,11 @@ export function noteSource(contextId: ContextId, key: string) {
 export function measureAnchor(key: string): Promise<Rect | null> {
   return new Promise((resolve) => {
     const node = anchors.get(key)?.current;
+
     if (!node) return resolve(null);
-    node.measureInWindow((x, y, width, height) => resolve(width > 0 && height > 0 ? { x, y, width, height } : null));
+    node.measureInWindow((x, y, width, height) =>
+      resolve(width > 0 && height > 0 ? { x, y, width, height } : null),
+    );
   });
 }
 
@@ -82,28 +87,68 @@ let generation = 0;
  * an instant swap when the stage can't be measured, e.g. while another tab is showing.
  * A newer switch supersedes flights still being planned.
  */
-export async function choreograph(prev: ContextId | null, next: ContextId | null, focused: boolean) {
+export async function choreograph(
+  prev: ContextId | null,
+  next: ContextId | null,
+  focused: boolean,
+) {
   const mine = ++generation;
   const swap = () => useChoreo.setState({ flights: [], shownId: next });
+
   if (!focused) return swap();
-  const [stage, layer] = await Promise.all([measureAnchor('stage'), measureAnchor('layer')]);
+  const [stage, layer] = await Promise.all([measureAnchor("stage"), measureAnchor("layer")]);
+
   if (mine !== generation) return;
+
   if (!stage || !layer) return swap();
   const local = (r: Rect): Rect => ({ ...r, x: r.x - layer.x, y: r.y - layer.y });
   const stageRect = local(stage);
 
   const flights: Flight[] = [];
+
   if (prev) {
     const slot = await measureAnchor(tileKey(prev));
-    const vanish: Rect = { x: stageRect.x + stageRect.width / 2, y: stageRect.y + stageRect.height * 0.8, width: 0, height: 0 };
-    flights.push({ key: nextKey++, contextId: prev, kind: 'out', from: stageRect, to: slot ? local(slot) : vanish });
+
+    const vanish: Rect = {
+      x: stageRect.x + stageRect.width / 2,
+      y: stageRect.y + stageRect.height * 0.8,
+      width: 0,
+      height: 0,
+    };
+
+    flights.push({
+      key: nextKey++,
+      contextId: prev,
+      kind: "out",
+      from: stageRect,
+      to: slot ? local(slot) : vanish,
+    });
   }
+
   if (next) {
-    const recent = lastSource && lastSource.contextId === next && Date.now() - lastSource.at < 2000 ? lastSource.rect : null;
+    const recent =
+      lastSource && lastSource.contextId === next && Date.now() - lastSource.at < 2000
+        ? lastSource.rect
+        : null;
+
     const source = (recent && (await recent)) || (await measureAnchor(tileKey(next)));
-    const drop: Rect = { x: stageRect.x + stageRect.width * 0.3, y: stageRect.y - stageRect.height * 0.9, width: stageRect.width * 0.4, height: stageRect.height * 0.4 };
-    flights.push({ key: nextKey++, contextId: next, kind: 'in', from: source ? local(source) : drop, to: stageRect });
+
+    const drop: Rect = {
+      x: stageRect.x + stageRect.width * 0.3,
+      y: stageRect.y - stageRect.height * 0.9,
+      width: stageRect.width * 0.4,
+      height: stageRect.height * 0.4,
+    };
+
+    flights.push({
+      key: nextKey++,
+      contextId: next,
+      kind: "in",
+      from: source ? local(source) : drop,
+      to: stageRect,
+    });
   }
+
   if (mine !== generation) return;
   lastSource = null;
   // The stage and tiles keep their blobs until every flyer has drawn (see `warmed`).
@@ -112,6 +157,7 @@ export async function choreograph(prev: ContextId | null, next: ContextId | null
   // must not leave the stage empty: finish the switch without the hop.
   setTimeout(() => {
     const s = useChoreo.getState();
+
     if (mine === generation && (s.shownId !== next || s.flights.length > 0)) swap();
   }, FLIGHT_MS + 900);
 }
@@ -127,6 +173,7 @@ export function warmed(flight: Flight) {
   useChoreo.setState((s) => {
     const flights = s.flights.map((f) => (f.key === flight.key ? { ...f, warm: true } : f));
     const go = flights.length > 0 && flights.every((f) => f.warm);
+
     return { flights, shownId: go ? null : s.shownId };
   });
 }
@@ -137,15 +184,20 @@ export function warmed(flight: Flight) {
  * few frames on top while it draws.
  */
 export function land(flight: Flight) {
-  if (flight.kind === 'out') {
+  if (flight.kind === "out") {
     useChoreo.setState((s) => ({ flights: s.flights.filter((f) => f.key !== flight.key) }));
+
     return;
   }
+
   useChoreo.setState((s) => ({
     flights: s.flights.map((f) => (f.key === flight.key ? { ...f, landed: true } : f)),
     shownId: flight.contextId,
   }));
-  setTimeout(() => useChoreo.setState((s) => ({ flights: s.flights.filter((f) => f.key !== flight.key) })), 70);
+  setTimeout(
+    () => useChoreo.setState((s) => ({ flights: s.flights.filter((f) => f.key !== flight.key) })),
+    70,
+  );
 }
 
 /** True while `id`'s blob is on the stage or travelling. */

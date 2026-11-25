@@ -3,21 +3,22 @@
 // ago · 14:50" over "Deep work stops at 14:50"). The hold is a gesture-handler long press,
 // so it cancels the held tile's own tap when the menu opens.
 
-import { HorizontalDivider } from '@expo/ui/jetpack-compose';
-import { Fragment, useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { HorizontalDivider } from "@expo/ui/jetpack-compose";
+import { Fragment, useMemo, useState } from "react";
+import { View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
-import { buzz } from './feedback';
-import { Dropdown, MenuLabel, MenuRow } from './material';
-import type { MenuEntry, MenuItem, MenuProps } from './Menu';
-import { menuSymbols } from './menuSymbols';
-import { preloadSymbolImages } from './ui';
+import { buzz } from "./feedback";
+import { Dropdown, MenuLabel, MenuRow } from "./material";
+import type { MenuEntry, MenuItem, MenuProps } from "./Menu";
+import { menuSymbols } from "./menuSymbols";
+import { preloadSymbolImages } from "./ui";
 
 preloadSymbolImages(Object.values(menuSymbols));
 
 export function Menu({ title, items, onPress, children }: MenuProps) {
   const [open, setOpen] = useState(false);
+
   const hold = useMemo(
     () =>
       Gesture.LongPress()
@@ -29,10 +30,12 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
         }),
     [],
   );
+
   const pick = (id: string) => {
     setOpen(false);
     onPress(id);
   };
+
   return (
     <GestureDetector gesture={hold}>
       <View collapsable={false}>
@@ -64,11 +67,14 @@ export function Menu({ title, items, onPress, children }: MenuProps) {
 /** Sections stay groups under their header; items between sections form untitled groups. */
 function groups(entries: MenuEntry[]): { title?: string; items: MenuItem[] }[] {
   const result: { title?: string; items: MenuItem[] }[] = [];
+
   for (const entry of entries) {
     const last = result.at(-1);
-    if ('items' in entry) result.push({ title: entry.title, items: entry.items });
+
+    if ("items" in entry) result.push({ title: entry.title, items: entry.items });
     else if (last && !last.title) last.items.push(entry);
     else result.push({ items: [entry] });
   }
+
   return result;
 }

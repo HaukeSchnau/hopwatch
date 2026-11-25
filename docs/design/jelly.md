@@ -295,7 +295,6 @@ switch in night candy: `.shots/j2s-switch.gif`.
 - The sample running entry from an old sample load can span days; the dial shows only
   today's part.
 
-
 ## Core requests
 
 - ~~A small UI-preferences store.~~ Done in round two (`usePref`, `actions.setPref`);

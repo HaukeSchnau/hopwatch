@@ -7,18 +7,18 @@
 //   their own: the app's Swift (plugins/with-app-surfaces.js), the widget extension
 //   (@bacons/apple-targets) and the icons only notifications use. Both platforms hash them, as
 //   the config has no per-platform sources.
-const { version } = require('./app.json').expo;
+const { version } = require("./app.json").expo;
 
 /** @type {import('expo/fingerprint').Config} */
 module.exports = {
-  sourceSkips: ['ExpoConfigVersions', 'PackageJsonAndroidAndIosScriptsIfNotContainRun'],
+  sourceSkips: ["ExpoConfigVersions", "PackageJsonAndroidAndIosScriptsIfNotContainRun"],
   // Prebuild writes it from expo-target.config.js, which is hashed. It exists when a build hashes
   // the app but not in CI's checkout, so hashing it would give the binary another runtime version.
-  ignorePaths: ['targets/*/Info.plist'],
+  ignorePaths: ["targets/*/Info.plist"],
   extraSources: [
-    { type: 'contents', id: 'version', contents: version, reasons: ['version'] },
-    { type: 'dir', filePath: 'native', reasons: ['configPluginFiles'] },
-    { type: 'dir', filePath: 'targets', reasons: ['appleTargets'] },
-    { type: 'dir', filePath: 'assets/images', reasons: ['nativeAssets'] },
+    { type: "contents", id: "version", contents: version, reasons: ["version"] },
+    { type: "dir", filePath: "native", reasons: ["configPluginFiles"] },
+    { type: "dir", filePath: "targets", reasons: ["appleTargets"] },
+    { type: "dir", filePath: "assets/images", reasons: ["nativeAssets"] },
   ],
 };

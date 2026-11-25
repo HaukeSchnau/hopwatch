@@ -2,15 +2,15 @@
 // timer never jitters, and a digit that changes drops in with a small jelly bounce.
 // Keep it a leaf: it re-renders every second.
 
-import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
-import Animated, { withSpring, withTiming } from 'react-native-reanimated';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
+import Animated, { withSpring, withTiming } from "react-native-reanimated";
 
-import { durationParts, useNow } from '@/core';
-import { shellText } from '@/i18n/shell';
+import { durationParts, useNow } from "@/core";
+import { shellText } from "@/i18n/shell";
 
-import { rounded, springs, useTheme } from './theme';
+import { rounded, springs, useTheme } from "./theme";
 
-const pad = (n: number) => String(n).padStart(2, '0');
+const pad = (n: number) => String(n).padStart(2, "0");
 
 interface TimerProps {
   since: number;
@@ -21,22 +21,59 @@ interface TimerProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export function Timer({ since, size = 52, color, secondsColor, seconds = true, style }: TimerProps) {
+export function Timer({
+  since,
+  size = 52,
+  color,
+  secondsColor,
+  seconds = true,
+  style,
+}: TimerProps) {
   const t = useTheme();
   const now = useNow(1000);
   const parts = durationParts(now - since);
+
   return (
-    <View style={[styles.row, style]} accessible accessibilityRole="timer" accessibilityLabel={shellText.timer(parts.hours, parts.minutes)}>
-      <Digits text={`${parts.hours}:${pad(parts.minutes)}`} size={size} color={color ?? t.c.ink} weight="800" />
+    <View
+      style={[styles.row, style]}
+      accessible
+      accessibilityRole="timer"
+      accessibilityLabel={shellText.timer(parts.hours, parts.minutes)}
+    >
+      <Digits
+        text={`${parts.hours}:${pad(parts.minutes)}`}
+        size={size}
+        color={color ?? t.c.ink}
+        weight="800"
+      />
       {seconds && (
-        <Digits text={`:${pad(parts.seconds)}`} size={size * 0.42} color={secondsColor ?? t.c.muted} weight="700" style={{ marginBottom: size * 0.14 }} />
+        <Digits
+          text={`:${pad(parts.seconds)}`}
+          size={size * 0.42}
+          color={secondsColor ?? t.c.muted}
+          weight="700"
+          style={{ marginBottom: size * 0.14 }}
+        />
       )}
     </View>
   );
 }
 
-function Digits({ text, size, color, weight, style }: { text: string; size: number; color: string; weight: '700' | '800'; style?: StyleProp<ViewStyle> }) {
-  const chars = [...text];
+function Digits({
+  text,
+  size,
+  color,
+  weight,
+  style,
+}: {
+  text: string;
+  size: number;
+  color: string;
+  weight: "700" | "800";
+  style?: StyleProp<ViewStyle>;
+}) {
+  const chars = Array.from(text);
+
   return (
     <View style={[styles.row, style]}>
       {chars.map((ch, i) => (
@@ -47,8 +84,15 @@ function Digits({ text, size, color, weight, style }: { text: string; size: numb
           allowFontScaling={false}
           style={[
             styles.digit,
-            { ...rounded(weight), fontSize: size, lineHeight: size * 1.15, color, width: ch === ':' ? size * 0.26 : size * 0.6 },
-          ]}>
+            {
+              ...rounded(weight),
+              fontSize: size,
+              lineHeight: size * 1.15,
+              color,
+              width: ch === ":" ? size * 0.26 : size * 0.6,
+            },
+          ]}
+        >
           {ch}
         </Animated.Text>
       ))}
@@ -57,17 +101,21 @@ function Digits({ text, size, color, weight, style }: { text: string; size: numb
 }
 
 function digitIn() {
-  'worklet';
+  "worklet";
+
   return {
     initialValues: { opacity: 0.3, transform: [{ translateY: -6 }, { scaleY: 0.7 }] },
     animations: {
       opacity: withTiming(1, { duration: 120 }),
-      transform: [{ translateY: withSpring(0, springs.jelly) }, { scaleY: withSpring(1, springs.jelly) }],
+      transform: [
+        { translateY: withSpring(0, springs.jelly) },
+        { scaleY: withSpring(1, springs.jelly) },
+      ],
     },
   };
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-end' },
-  digit: { textAlign: 'center', letterSpacing: -0.5, fontVariant: ['tabular-nums'] },
+  row: { flexDirection: "row", alignItems: "flex-end" },
+  digit: { textAlign: "center", letterSpacing: -0.5, fontVariant: ["tabular-nums"] },
 });

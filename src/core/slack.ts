@@ -5,20 +5,22 @@
 // on Android (slack-link.ts), headless after a tap. The Swift client mirrors `slackDue`,
 // `slackPlan` and `appliedKey`. Pure, so it's tested without React Native.
 
-import { addDays, dayKey, MINUTE, startOfDay } from './time';
-import type { SlackLine } from './tree';
+import { addDays, dayKey, MINUTE, startOfDay } from "./time";
+import type { SlackLine } from "./tree";
 
 /** Hopwatch's Slack app. Public: the sign-in uses PKCE, no secret. */
-export const SLACK_CLIENT_ID = '12359272740515.12360250962741';
+export const SLACK_CLIENT_ID = "12359272740515.12360250962741";
+
 /**
  * Another Slack app's client id to sign in with instead, set by a hopwatch://slack-app link
  * (links.ts): a personal Slack app with its own name, for a workspace that should list that
  * one. Device-local; a connection keeps the app it was made with.
  */
-export const SLACK_APP_PREF = 'slack.app';
+export const SLACK_APP_PREF = "slack.app";
+
 /** Slack only takes a custom scheme with PKCE, as a "desktop" redirect. */
-export const SLACK_REDIRECT = 'hopwatch://slack-auth';
-const USER_SCOPES = 'users.profile:read,users.profile:write';
+export const SLACK_REDIRECT = "hopwatch://slack-auth";
+const USER_SCOPES = "users.profile:read,users.profile:write";
 
 /**
  * A status the way Slack takes it. The emoji is the jelly's own, like 🐕, or '' for Slack's
@@ -32,7 +34,7 @@ export interface SlackWire {
 
 /** A jelly's resolved status as Slack takes it. Slack allows 100 characters. */
 export const slackWire = (line: SlackLine | null): SlackWire | null =>
-  line ? { text: line.text.trim().slice(0, 100), emoji: line.emoji ?? '' } : null;
+  line ? { text: line.text.trim().slice(0, 100), emoji: line.emoji ?? "" } : null;
 
 /**
  * When a status Hopwatch sets runs out on its own: the next local midnight, so a phone that
@@ -45,7 +47,8 @@ export const slackExpiry = (now: number) => Math.floor(addDays(startOfDay(now), 
  * What a client last brought Slack in line with. Syncing again with the same key is a no-op;
  * the day is part of it so the expiry renews daily.
  */
-export const appliedKey = (want: SlackWire | null, now: number) => (want ? `${want.text}|${want.emoji}|${dayKey(now)}` : 'none');
+export const appliedKey = (want: SlackWire | null, now: number) =>
+  want ? `${want.text}|${want.emoji}|${dayKey(now)}` : "none";
 
 /** What Slack shows now (users.profile.get). */
 export interface SlackShown {
@@ -73,8 +76,10 @@ export interface SlackMemory {
  * a calendar app cleared after a meeting comes back.
  */
 export const SLACK_RECHECK_MS = 30 * MINUTE;
+
 /** A look on demand (the app comes to the front, a background wake) waits at least this long. */
 const EAGER_MS = MINUTE;
+
 /** How long after another status runs out to look, so a calendar app is done with it. */
 const AFTER_OTHERS_MS = 2 * MINUTE;
 
@@ -84,11 +89,13 @@ const AFTER_OTHERS_MS = 2 * MINUTE;
  */
 export function slackDue(memory: SlackMemory, key: string, now: number, eager: boolean): boolean {
   if (memory.applied !== key) return true;
+
   if (key === appliedKey(null, now) && memory.ours === null) return false;
+
   return now - memory.checkedAt >= (eager ? EAGER_MS : SLACK_RECHECK_MS);
 }
 
-export type SlackStep = { kind: 'set'; status: SlackWire } | { kind: 'clear' } | { kind: 'leave' };
+export type SlackStep = { kind: "set"; status: SlackWire } | { kind: "clear" } | { kind: "leave" };
 
 export interface SlackPlan {
   step: SlackStep;
@@ -103,31 +110,51 @@ export interface SlackPlan {
  * Hopwatch only changes a status it set itself or an empty one. Any other (a meeting from a
  * calendar app, one set by hand) wins, and Hopwatch looks again when it runs out.
  */
-export function slackPlan(want: SlackWire | null, shown: SlackShown, memory: SlackMemory, key: string, now: number): SlackPlan {
+export function slackPlan(
+  want: SlackWire | null,
+  shown: SlackShown,
+  memory: SlackMemory,
+  key: string,
+  now: number,
+): SlackPlan {
   const mine = memory.ours !== null && shown.text === memory.ours;
-  const empty = shown.text === '' && shown.emoji === '';
+  const empty = shown.text === "" && shown.emoji === "";
   const checked: SlackMemory = { ...memory, applied: key, checkedAt: now };
+
   if (!mine && !empty) {
     const pending = want !== null || memory.ours !== null;
-    const wakeAt = !pending ? null : shown.until > now ? shown.until + AFTER_OTHERS_MS : now + SLACK_RECHECK_MS;
-    return { step: { kind: 'leave' }, memory: checked, wakeAt };
+
+    const wakeAt = !pending
+      ? null
+      : shown.until > now
+        ? shown.until + AFTER_OTHERS_MS
+        : now + SLACK_RECHECK_MS;
+
+    return { step: { kind: "leave" }, memory: checked, wakeAt };
   }
+
   if (want) {
     // Already showing this, from before: a key from the same switch and day.
     const showing = mine && shown.text === want.text && memory.applied === key;
+
     return {
-      step: showing ? { kind: 'leave' } : { kind: 'set', status: want },
+      step: showing ? { kind: "leave" } : { kind: "set", status: want },
       memory: { ...checked, ours: want.text },
       wakeAt: now + SLACK_RECHECK_MS,
     };
   }
-  return { step: mine ? { kind: 'clear' } : { kind: 'leave' }, memory: { ...checked, ours: null }, wakeAt: null };
+
+  return {
+    step: mine ? { kind: "clear" } : { kind: "leave" },
+    memory: { ...checked, ours: null },
+    wakeAt: null,
+  };
 }
 
 const query = (params: Record<string, string>) =>
   Object.entries(params)
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join('&');
+    .join("&");
 
 /** Slack's sign-in page, asking to read and set the person's profile (their status). */
 export const authorizeUrl = (clientId: string, challenge: string, state: string) =>
@@ -136,7 +163,7 @@ export const authorizeUrl = (clientId: string, challenge: string, state: string)
     user_scope: USER_SCOPES,
     redirect_uri: SLACK_REDIRECT,
     code_challenge: challenge,
-    code_challenge_method: 'S256',
+    code_challenge_method: "S256",
     state,
   })}`;
 
@@ -144,18 +171,21 @@ export const authorizeUrl = (clientId: string, challenge: string, state: string)
 export const formBody = query;
 
 /** Base64 to the URL-safe, unpadded form PKCE wants. */
-export const base64url = (base64: string) => base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+export const base64url = (base64: string) =>
+  base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
 /** The query parameters of the redirect Slack sends back. */
 export function redirectParams(url: string): Record<string, string> {
-  const search = url.split('?')[1]?.split('#')[0] ?? '';
+  const search = url.split("?")[1]?.split("#")[0] ?? "";
+
   return Object.fromEntries(
     search
-      .split('&')
+      .split("&")
       .filter(Boolean)
       .map((pair) => {
-        const [k, v = ''] = pair.split('=');
-        return [decodeURIComponent(k), decodeURIComponent(v.replace(/\+/g, ' '))];
+        const [k = "", v = ""] = pair.split("=");
+
+        return [decodeURIComponent(k), decodeURIComponent(v.replace(/\+/g, " "))];
       }),
   );
 }
@@ -173,8 +203,10 @@ export interface SlackGrant {
 
 export type GrantAnswer = { ok: true; grant: SlackGrant } | { ok: false; error: string };
 
-const record = (v: unknown): Record<string, unknown> => (typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {});
-const string = (v: unknown) => (typeof v === 'string' ? v : '');
+const record = (v: unknown): Record<string, unknown> =>
+  typeof v === "object" && v !== null ? (v as Record<string, unknown>) : {};
+
+const string = (v: unknown) => (typeof v === "string" ? v : "");
 
 /**
  * Reads oauth.v2.access's answer. The first sign-in has the user's tokens under
@@ -182,21 +214,33 @@ const string = (v: unknown) => (typeof v === 'string' ? v : '');
  */
 export function readGrant(json: unknown, now: number, before?: SlackGrant): GrantAnswer {
   const answer = record(json);
-  if (answer.ok !== true) return { ok: false, error: string(answer.error) || 'unreadable' };
+
+  if (answer.ok !== true) return { ok: false, error: string(answer.error) || "unreadable" };
   const authed = record(answer.authed_user);
-  const user = typeof authed.access_token === 'string' ? authed : answer;
+  const user = typeof authed.access_token === "string" ? authed : answer;
   const team = record(answer.team);
+
   const grant: SlackGrant = {
     access: string(user.access_token),
     refresh: string(user.refresh_token),
-    expiresAt: now + (typeof user.expires_in === 'number' ? user.expires_in : 0) * 1000,
-    team: string(team.name) || before?.team || '',
-    teamId: string(team.id) || before?.teamId || '',
-    userId: string(authed.id) || string(answer.user_id) || before?.userId || '',
+    expiresAt: now + (typeof user.expires_in === "number" ? user.expires_in : 0) * 1000,
+    team: string(team.name) || before?.team || "",
+    teamId: string(team.id) || before?.teamId || "",
+    userId: string(authed.id) || string(answer.user_id) || before?.userId || "",
   };
-  if (!grant.access || !grant.refresh) return { ok: false, error: 'no_token' };
+
+  if (!grant.access || !grant.refresh) return { ok: false, error: "no_token" };
+
   return { ok: true, grant };
 }
 
 /** Errors after which only signing in again helps. */
-export const SIGNED_OUT = new Set(['invalid_auth', 'not_authed', 'token_revoked', 'token_expired', 'invalid_refresh_token', 'account_inactive', 'missing_scope']);
+export const SIGNED_OUT = new Set([
+  "invalid_auth",
+  "not_authed",
+  "token_revoked",
+  "token_expired",
+  "invalid_refresh_token",
+  "account_inactive",
+  "missing_scope",
+]);

@@ -1,4 +1,4 @@
-import { Settings } from 'react-native';
+import { Settings } from "react-native";
 
 /**
  * The user's preferred languages for this app, most preferred first, e.g. ["de-DE", "en"].
@@ -7,6 +7,7 @@ import { Settings } from 'react-native';
  * `-AppleLanguages (de)` (an `xcrun simctl launch` argument).
  */
 export function preferredLanguages(): string[] {
-  const value: unknown = Settings.get('AppleLanguages');
-  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+  const value: unknown = Settings.get("AppleLanguages");
+
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 }

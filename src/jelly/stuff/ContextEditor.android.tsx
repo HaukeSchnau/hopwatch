@@ -3,10 +3,10 @@
 // dropdown for the place in the tree, and the Slack status once Slack is connected. The
 // on-device model is iOS only, so there's no Suggest button.
 
-import * as Clipboard from 'expo-clipboard';
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import * as Clipboard from "expo-clipboard";
+import { router } from "expo-router";
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 import {
   actions,
@@ -23,25 +23,44 @@ import {
   startOfWeek,
   useNow,
   useSlackLink,
-} from '@/core';
-import { stuffText } from '@/i18n/stuff';
+} from "@/core";
+import { stuffText } from "@/i18n/stuff";
 
-import { lookFor } from '../character/derive';
-import { LookEditor } from '../character/LookEditor';
-import { buzz } from '../feedback';
-import { EmojiField, HuePicker } from '../fields';
-import { HostedRow, JellyForm } from '../forms';
-import { ChoiceChips, DateRow, FieldRow, PickerRow, Row, Section, sentence, StepperRow, SwitchRow } from '../material';
-import { text, useTheme } from '../theme';
-import { type EditorTarget, Header, NUDGE_CHIPS, slackLabel, TARGET_CHIPS, useEditorTarget, useJellyDraft } from './editor';
-import { confirmDelete } from './StuffScreen';
-import { WeekdayChips } from './WeekdayChips';
+import { lookFor } from "../character/derive";
+import { LookEditor } from "../character/LookEditor";
+import { buzz } from "../feedback";
+import { EmojiField, HuePicker } from "../fields";
+import { HostedRow, JellyForm } from "../forms";
+import {
+  ChoiceChips,
+  DateRow,
+  FieldRow,
+  PickerRow,
+  Row,
+  Section,
+  sentence,
+  StepperRow,
+  SwitchRow,
+} from "../material";
+import { text, useTheme } from "../theme";
+import {
+  type EditorTarget,
+  Header,
+  NUDGE_CHIPS,
+  slackLabel,
+  TARGET_CHIPS,
+  useEditorTarget,
+  useJellyDraft,
+} from "./editor";
+import { confirmDelete } from "./StuffScreen";
+import { WeekdayChips } from "./WeekdayChips";
 
 const s = stuffText.editor;
-const ROOT = 'root';
+const ROOT = "root";
 
 export function ContextEditor() {
   const target = useEditorTarget();
+
   if (!target) {
     return (
       <JellyForm title={s.title}>
@@ -51,7 +70,8 @@ export function ContextEditor() {
       </JellyForm>
     );
   }
-  return <Editor key={target.context?.id ?? 'new'} {...target} />;
+
+  return <Editor key={target.context?.id ?? "new"} {...target} />;
 }
 
 function Editor(props: EditorTarget) {
@@ -68,9 +88,21 @@ function Editor(props: EditorTarget) {
       title={d.title}
       tint={c.ink}
       cancel={context ? null : { label: stuffText.cancel, onPress: () => router.back() }}
-      confirm={context ? { label: s.done, onPress: () => router.back() } : { label: s.add, onPress: d.create, disabled: !d.name.trim() }}>
+      confirm={
+        context
+          ? { label: s.done, onPress: () => router.back() }
+          : { label: s.add, onPress: d.create, disabled: !d.name.trim() }
+      }
+    >
       {context ? (
-        <HostedRow color="transparent" render={(width) => <View style={{ width }}><LookEditor context={context} /></View>} />
+        <HostedRow
+          color="transparent"
+          render={(width) => (
+            <View style={{ width }}>
+              <LookEditor context={context} />
+            </View>
+          )}
+        />
       ) : (
         <HostedRow
           color={c.tint}
@@ -89,12 +121,26 @@ function Editor(props: EditorTarget) {
       )}
 
       <Section title={s.name}>
-        <FieldRow value={d.name} onChangeText={d.setName} onBlur={d.saveName} placeholder={s.namePlaceholder} autoFocus={!context} maxLength={40} />
+        <FieldRow
+          value={d.name}
+          onChangeText={d.setName}
+          onBlur={d.saveName}
+          placeholder={s.namePlaceholder}
+          autoFocus={!context}
+          maxLength={40}
+        />
       </Section>
 
       <Section
         title={d.suggestedEmoji ? s.emojiSuggested : s.emoji}
-        footer={d.suggestedEmoji ? s.emojiSuggestedFooter : parent && !d.emoji ? s.emojiInherited(parent.name) : s.emojiFooter}>
+        footer={
+          d.suggestedEmoji
+            ? s.emojiSuggestedFooter
+            : parent && !d.emoji
+              ? s.emojiInherited(parent.name)
+              : s.emojiFooter
+        }
+      >
         <View style={styles.padded}>
           <EmojiField
             value={d.shownEmoji}
@@ -106,9 +152,16 @@ function Editor(props: EditorTarget) {
         </View>
       </Section>
 
-      <Section title={d.suggestedHue ? s.colorSuggested : s.color} footer={d.suggestedHue ? s.colorSuggestedFooter : undefined}>
+      <Section
+        title={d.suggestedHue ? s.colorSuggested : s.color}
+        footer={d.suggestedHue ? s.colorSuggestedFooter : undefined}
+      >
         {d.parentId ? (
-          <SwitchRow label={s.sameAs(parent?.name ?? null)} value={d.color === null} onChange={(on) => d.pickColor(on ? null : (parent?.hue ?? 'pink'))} />
+          <SwitchRow
+            label={s.sameAs(parent?.name ?? null)}
+            value={d.color === null}
+            onChange={(on) => d.pickColor(on ? null : (parent?.hue ?? "pink"))}
+          />
         ) : null}
         {d.shownColor !== null || !d.parentId ? (
           <View style={styles.padded}>
@@ -121,16 +174,29 @@ function Editor(props: EditorTarget) {
         <PickerRow
           label={s.insidePicker}
           icon="subdirectory_arrow_right"
-          choices={[{ value: ROOT, label: s.topLevel }, ...d.parents.map((p) => ({ value: p.id, label: `${p.glyph ? `${p.glyph} ` : ''}${pathLabel(p)}` }))]}
+          choices={[
+            { value: ROOT, label: s.topLevel },
+            ...d.parents.map((p) => ({
+              value: p.id,
+              label: `${p.glyph ? `${p.glyph} ` : ""}${pathLabel(p)}`,
+            })),
+          ]}
           value={d.parentId ?? ROOT}
-          onChange={(value) => d.moveTo(value === ROOT ? null : (d.parents.find((p) => p.id === value)?.id ?? null))}
+          onChange={(value) =>
+            d.moveTo(value === ROOT ? null : (d.parents.find((p) => p.id === value)?.id ?? null))
+          }
         />
-        {context?.hidden ? null : <SwitchRow label={s.pinned} icon="keep" value={d.pinned} onChange={d.pinTo} />}
+        {context?.hidden ? null : (
+          <SwitchRow label={s.pinned} icon="keep" value={d.pinned} onChange={d.pinTo} />
+        )}
       </Section>
 
       <Section title={s.target} footer={s.targetFooter}>
         <ChoiceChips
-          choices={TARGET_CHIPS.map((m) => ({ value: m, label: m === 0 ? s.targetNone : s.chip(m) }))}
+          choices={TARGET_CHIPS.map((m) => ({
+            value: m,
+            label: m === 0 ? s.targetNone : s.chip(m),
+          }))}
           value={d.target ?? 0}
           onChange={(m) => {
             buzz.tick();
@@ -138,13 +204,30 @@ function Editor(props: EditorTarget) {
           }}
         />
         {d.target !== null ? (
-          <StepperRow label={s.perWeek(formatDuration(d.target * MINUTE))} value={d.target} step={60} min={60} max={100 * 60} onChange={d.changeTarget} />
+          <StepperRow
+            label={s.perWeek(formatDuration(d.target * MINUTE))}
+            value={d.target}
+            step={60}
+            min={60}
+            max={100 * 60}
+            onChange={d.changeTarget}
+          />
         ) : null}
       </Section>
 
       {d.target !== null ? (
-        <Section title={s.jobHours} footer={d.workDays !== null && d.balanceSince !== null ? s.balanceFooter : s.jobHoursFooter}>
-          <SwitchRow label={s.countDaysOff} icon="calendar_month" value={d.workDays !== null} onChange={(on) => d.changeWorkDays(on ? MONDAY_TO_FRIDAY : null)} />
+        <Section
+          title={s.jobHours}
+          footer={
+            d.workDays !== null && d.balanceSince !== null ? s.balanceFooter : s.jobHoursFooter
+          }
+        >
+          <SwitchRow
+            label={s.countDaysOff}
+            icon="calendar_month"
+            value={d.workDays !== null}
+            onChange={(on) => d.changeWorkDays(on ? MONDAY_TO_FRIDAY : null)}
+          />
           {d.workDays !== null ? (
             <>
               <WeekdayChips value={d.workDays} onChange={d.changeWorkDays} hue={d.hue} />
@@ -179,7 +262,10 @@ function Editor(props: EditorTarget) {
 
       <Section title={s.nudge} footer={s.nudgeFooter}>
         <ChoiceChips
-          choices={NUDGE_CHIPS.map((m) => ({ value: m, label: m === 0 ? s.nudgeDefault : s.chip(m) }))}
+          choices={NUDGE_CHIPS.map((m) => ({
+            value: m,
+            label: m === 0 ? s.nudgeDefault : s.chip(m),
+          }))}
           value={d.nudge ?? 0}
           onChange={(m) => {
             buzz.tick();
@@ -187,15 +273,37 @@ function Editor(props: EditorTarget) {
           }}
         />
         {d.nudge !== null ? (
-          <StepperRow label={s.nudgeAfter(formatDuration(d.nudge * MINUTE))} value={d.nudge} step={15} min={15} max={12 * 60} onChange={d.changeNudge} />
+          <StepperRow
+            label={s.nudgeAfter(formatDuration(d.nudge * MINUTE))}
+            value={d.nudge}
+            step={15}
+            min={15}
+            max={12 * 60}
+            onChange={d.changeNudge}
+          />
         ) : (
-          <Row label={s.nudgesAfter} detail={s.inheritedFrom(formatDuration(d.inheritedNudge * MINUTE), parent?.name ?? null)} />
+          <Row
+            label={s.nudgesAfter}
+            detail={s.inheritedFrom(
+              formatDuration(d.inheritedNudge * MINUTE),
+              parent?.name ?? null,
+            )}
+          />
         )}
       </Section>
 
       {slack ? (
-        <Section title={s.slack} footer={s.slackFooter(d.slackShown ? slackLabel(d.slackShown) : null)}>
-          <FieldRow value={d.slackText} onChangeText={d.setSlackText} onBlur={d.saveSlack} placeholder={s.slackPlaceholder} maxLength={100} />
+        <Section
+          title={s.slack}
+          footer={s.slackFooter(d.slackShown ? slackLabel(d.slackShown) : null)}
+        >
+          <FieldRow
+            value={d.slackText}
+            onChangeText={d.setSlackText}
+            onBlur={d.saveSlack}
+            placeholder={s.slackPlaceholder}
+            maxLength={100}
+          />
         </Section>
       ) : null}
 
@@ -208,6 +316,7 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
   const t = useTheme();
   const [copied, setCopied] = useState(false);
   const link = startLink(context.id);
+
   return (
     <>
       <Section title={s.startLink} footer={s.startLinkFooter}>
@@ -216,21 +325,28 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
         </Text>
         <Row
           label={copied ? s.copied : sentence(s.copyLink)}
-          icon={copied ? 'check' : 'link'}
+          icon={copied ? "check" : "link"}
           onPress={() => {
-            Clipboard.setStringAsync(link);
+            void Clipboard.setStringAsync(link);
             buzz.success();
             setCopied(true);
           }}
         />
       </Section>
       <Section footer={context.archivedAt ? s.archivedFooter : s.archiveFooter}>
-        {context.hidden ? null : <Row label={sentence(s.addInside)} icon="add" onPress={() => router.push({ pathname: '/context', params: { parent: context.id } })} />}
+        {context.hidden ? null : (
+          <Row
+            label={sentence(s.addInside)}
+            icon="add"
+            onPress={() => router.push({ pathname: "/context", params: { parent: context.id } })}
+          />
+        )}
         <Row
           label={context.archivedAt ? stuffText.unarchive : stuffText.archive}
-          icon={context.archivedAt ? 'unarchive' : 'archive'}
+          icon={context.archivedAt ? "unarchive" : "archive"}
           onPress={() => {
             buzz.thud();
+
             if (context.archivedAt) actions.unarchive(context.id);
             else {
               actions.archive(context.id);
@@ -238,7 +354,12 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
             }
           }}
         />
-        <Row label={sentence(s.delete)} icon="delete" destructive onPress={() => confirmDelete(context, () => router.back())} />
+        <Row
+          label={sentence(s.delete)}
+          icon="delete"
+          destructive
+          onPress={() => confirmDelete(context, () => router.back())}
+        />
       </Section>
     </>
   );
@@ -246,5 +367,5 @@ function ExistingSections({ context }: { context: ResolvedContext }) {
 
 const styles = StyleSheet.create({
   padded: { paddingHorizontal: 16, paddingVertical: 14 },
-  link: { fontFamily: 'monospace', fontWeight: '400', paddingHorizontal: 16, paddingTop: 14 },
+  link: { fontFamily: "monospace", fontWeight: "400", paddingHorizontal: 16, paddingTop: 14 },
 });
