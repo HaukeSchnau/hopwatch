@@ -300,8 +300,8 @@ importers:
         specifier: 1.94.0
         version: 1.94.0
       '@schnau/tsconfig':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.6
@@ -2246,8 +2246,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@schnau/tsconfig@0.1.0':
-    resolution: {integrity: sha512-QI6sDA5xufEGbvOf/m5AzFqzOOu9W4AgmihH8cFIrtYsoTuGOmMlRd5+xu+QdcwWEUNNvnEayWFkpg/b9kf+Rg==, tarball: https://git.schnau.dev/api/packages/schnau/npm/@schnau/tsconfig/-/tsconfig-0.1.0.tgz}
+  '@schnau/tsconfig@0.1.1':
+    resolution: {integrity: sha512-mLrQmKG5grlce+587FTjGqbDbeasUJmX5dVKR41Te4oItMdipxwUHdFY6kOw93XgjH+fItdCEbgnvQynpuY9GA==}
 
   '@segment/ajv-human-errors@2.16.0':
     resolution: {integrity: sha512-cHNfZcbHrmuYOA7/Sn7HlIDHanamiRTZtngfxcAuFaKQjP7cSqsVHjLz38FI2FQ8JDLz3syGLaz10Gn2ddo7+w==}
@@ -8090,7 +8090,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@schnau/tsconfig@0.1.0': {}
+  '@schnau/tsconfig@0.1.1': {}
 
   '@segment/ajv-human-errors@2.16.0(ajv@8.11.0)':
     dependencies:
