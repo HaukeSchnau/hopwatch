@@ -29,7 +29,10 @@ const website = Project.alchemy({
 const ios = Expo.runtimeVersion("ios", { shell, setup: install });
 const android = Expo.runtimeVersion("android", { shell, setup: install });
 
-/** The Mac agent, in Hauke's GUI session, where Xcode and the signing keychain work. */
+/**
+ * The Mac agent, in Hauke's GUI session, where Xcode and the signing keychain work. Its store builds
+ * install in the `ci` shell, whose pnpm is the one `packageManager` names.
+ */
 const mac = { platform: "aarch64-darwin" } as const;
 
 /** Exports on the tower, x86_64 Linux, where React Native's hermesc runs. */
@@ -56,6 +59,7 @@ const appStoreConnect = {
 };
 
 const testflight = Expo.testflight({
+  shell,
   runtime: ios,
   appId: "6818526671",
   appStoreConnect,
@@ -65,6 +69,7 @@ const testflight = Expo.testflight({
 /** On the Mac until the tower has an Android SDK, a JDK and gplay. */
 const play = Expo.playInternal({
   ...mac,
+  shell,
   runtime: android,
   keystore: "play-upload-keystore",
   password: "play-upload-password",
