@@ -38,7 +38,7 @@ the migration steps in `db.ts`.
 
 ## Development
 
-- Node and pnpm come from nix-infra-modules' shared toolchain, which `devenv.nix` and the dev
+- Node and pnpm come from projects-sdk's shared toolchain, which `devenv.nix` and the dev
   shell Calder checks in (`flake.nix`) both take. `pnpm test` runs the domain tests and
   `pnpm check` formats, lints and type-checks (`vite.config.ts`, through Vite+). Calder runs both
   on every pull request and push.
